@@ -1815,8 +1815,8 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                 $('#loginHrNewPasswordSetGuard').modal('hide');
 
                 if (guardPinPurpose === 'roster') {
-                    var fromLogbook = window.location.pathname.indexOf('/Incident/') > -1 || window.location.pathname.indexOf('/Guard/') > -1;
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), false, fromLogbook);
+                    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), result.isROEditor || false, fromLogbook);
                     return;
                 }
 
@@ -1906,8 +1906,8 @@ $('#btnGuardHrUpdate').on('click', function () {
                 $('#loginHrEditGuard').modal('hide');
 
                 if (guardPinPurpose === 'roster') {
-                    var fromLogbook = window.location.pathname.indexOf('/Incident/') > -1 || window.location.pathname.indexOf('/Guard/') > -1;
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), false, fromLogbook);
+                    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), result.isROEditor || false, fromLogbook);
                     return;
                 }
 

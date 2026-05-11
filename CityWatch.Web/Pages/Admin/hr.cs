@@ -2140,7 +2140,18 @@ namespace CityWatch.Web.Pages.Admin
             int? SuccessCode = 0;
             int? GuId = 0;
             (AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage) = _viewDataService.ValidateGuardHrPin(guardId, key);
-            return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
+            
+            bool isROEditor = false;
+            if (AccessPermission)
+            {
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId)?.FirstOrDefault();
+                if (guard != null)
+                {
+                    isROEditor = guard.IsROEditorAccess || guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess;
+                }
+            }
+            
+            return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage, isROEditor });
         }
 
 
@@ -2197,7 +2208,17 @@ namespace CityWatch.Web.Pages.Admin
 
             }
 
-            return new JsonResult(new { AccessPermission, SuccessMessage });
+            bool isROEditor = false;
+            if (AccessPermission)
+            {
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId)?.FirstOrDefault();
+                if (guard != null)
+                {
+                    isROEditor = guard.IsROEditorAccess || guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess;
+                }
+            }
+
+            return new JsonResult(new { AccessPermission, SuccessMessage, isROEditor });
         }
         public JsonResult OnPostSaveHandovernotes(int ClientSiteID, string Notes)
         {
