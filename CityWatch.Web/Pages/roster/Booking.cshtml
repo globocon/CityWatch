@@ -644,7 +644,7 @@
                         </div>
                         <div class="col-6">
                             <label>Type</label>
-                            <select id="modalShiftType" class="form-control" style="width: 100%" @(Model.RosterAccessRole == "ROEditor" ? "disabled" : "")>
+                            <select id="modalShiftType" class="form-control" style="width: 100%">
                                 <option value="Regular" data-color="#FFA726">Unassigned - FIXED</option>
                                 <option value="Adhoc" data-color="#E65100">Unassigned - ADHOC</option>
                                 <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
@@ -664,10 +664,10 @@
                         <div class="col-6">
                             <label>Pay Rate</label>
                             <div class="input-group">
-                                <div class="input-group-prepend" style="@(Model.RosterAccessRole == "ROEditor" ? "visibility: hidden;" : "")">
+                                <div class="input-group-prepend" style="@(Model.RosterAccessRole == "Base" ? "visibility: hidden;" : "")">
                                     <span class="input-group-text">$</span>
                                 </div>
-                                <input type="text" id="modalPayRate" class="form-control" readonly style="@(Model.RosterAccessRole == "Base" || Model.RosterAccessRole == "ROEditor" ? "color: transparent;" : "")" />
+                                <input type="text" id="modalPayRate" class="form-control" @(Model.RosterAccessRole == "Base" ? "readonly" : "") style="@(Model.RosterAccessRole == "Base" ? "color: transparent;" : "")" />
                             </div>
                         </div>
                     </div>
