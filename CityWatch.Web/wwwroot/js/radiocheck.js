@@ -1764,6 +1764,21 @@ $('#btnHRDetails').on('click', function () {
 });
 
 $('#btnRosterDetails').on('click', function () {
+    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+    var guardId = $('#GuardLog_GuardLogin_GuardId').val();
+
+    if (fromLogbook && guardId) {
+        // Skip PIN verification in logbook context
+        $.ajax({
+            url: '/Admin/Roster?handler=GetGuardPermissions',
+            type: 'GET',
+            data: { guardId: guardId }
+        }).done(function (result) {
+            openGuardRosterPortal($('#ClientSiteID').val(), result.isAdminRoster, guardId, result.isROEditor, true);
+        });
+        return;
+    }
+
     guardPinPurpose = 'roster';
     $('#txt_guardKey').val('');
     $('#txt_guardKeyNewPIN').val('');
@@ -1773,7 +1788,7 @@ $('#btnRosterDetails').on('click', function () {
         url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
         type: 'POST',
         data: {
-            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+            guardId: guardId
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {

@@ -360,5 +360,19 @@ namespace CityWatch.Web.Pages.Admin
                 isROEditor = isSystemAdmin || isRosterAdmin || (isSuccess && guard != null && guard.IsROEditorAccess)
             });
         }
+
+        public async Task<JsonResult> OnGetGetGuardPermissions(int guardId)
+        {
+            var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId)?.FirstOrDefault();
+            bool isSystemAdmin = AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser;
+            bool isRosterAdmin = guard != null && (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess);
+            bool isROEditor = isSystemAdmin || isRosterAdmin || (guard != null && guard.IsROEditorAccess);
+
+            return new JsonResult(new
+            {
+                isAdminRoster = isRosterAdmin || isSystemAdmin,
+                isROEditor = isROEditor
+            });
+        }
     }
 }

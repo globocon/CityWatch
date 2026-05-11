@@ -644,7 +644,7 @@
                         </div>
                         <div class="col-6">
                             <label>Type</label>
-                            <select id="modalShiftType" class="form-control" style="width: 100%">
+                            <select id="modalShiftType" class="form-control" style="width: 100%" @(Model.RosterAccessRole == "ROEditor" ? "disabled" : "")>
                                 <option value="Regular" data-color="#FFA726">Unassigned - FIXED</option>
                                 <option value="Adhoc" data-color="#E65100">Unassigned - ADHOC</option>
                                 <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
@@ -1900,9 +1900,12 @@
             $('#modalPositionId').on('select2:select', function (e) {
                 var data = e.params.data;
                 var rate = data.guardPayRate !== undefined ? data.guardPayRate : data.rate;
-                // Auto-populate pay rate
-                if (rate !== null && rate !== undefined) {
+                // Auto-populate pay rate (Skip for ROEditor as they should enter it manually/see it blank initially)
+                var isROEditor = '@Model.RosterAccessRole' === 'ROEditor';
+                if (rate !== null && rate !== undefined && !isROEditor) {
                     $('#modalPayRate').val('$' + parseFloat(rate).toFixed(2));
+                } else if (isROEditor) {
+                    $('#modalPayRate').val(''); // Keep blank for ROEditor
                 }
             }).on('select2:unselect', function (e) {
                 $('#modalPayRate').val('');
@@ -2352,7 +2355,11 @@
                              var rOption = new Option(pr.text, pr.id, true, true);
                              $(rOption).data('rate', pr.guardPayRate);
                              $('#modalPositionId').append(rOption).val(pr.id).trigger('change');
-                             $('#modalPayRate').val('$' + parseFloat(pr.guardPayRate).toFixed(2));
+                             if ('@Model.RosterAccessRole' !== 'ROEditor') {
+                                 $('#modalPayRate').val('$' + parseFloat(pr.guardPayRate).toFixed(2));
+                             } else {
+                                 $('#modalPayRate').val('');
+                             }
                          }
                     });
                 } else {
