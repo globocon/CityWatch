@@ -4987,7 +4987,19 @@ $(function () {
         gridGuardLicensesAndLicence.ajax.reload();
         gridGuardTrainingAndAssessmentByAdmin.clear().draw();
         gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
-        $("#Guard_Access").multiselect();
+        $("#Guard_Access").multiselect({
+            onChange: function (option, checked) {
+                var value = $(option).val();
+                var rosterIds = ['18', '19', '20'];
+                if (checked && rosterIds.includes(value)) {
+                    rosterIds.forEach(function (id) {
+                        if (id !== value) {
+                            $("#Guard_Access").multiselect('deselect', id);
+                        }
+                    });
+                }
+            }
+        });
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
 
@@ -5710,7 +5722,19 @@ $(function () {
         $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
         $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", false);
         // Initialize the multiselect dropdown
-        $("#Guard_Access").multiselect();
+        $("#Guard_Access").multiselect({
+            onChange: function (option, checked) {
+                var value = $(option).val();
+                var rosterIds = ['18', '19', '20'];
+                if (checked && rosterIds.includes(value)) {
+                    rosterIds.forEach(function (id) {
+                        if (id !== value) {
+                            $("#Guard_Access").multiselect('deselect', id);
+                        }
+                    });
+                }
+            }
+        });
         $("#Guard_Access").val(value);
         $("#Guard_Access").multiselect("refresh");
         $("#Guard_Lote").multiselect();

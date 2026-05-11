@@ -449,14 +449,20 @@ namespace CityWatch.Web.Pages.Admin
                     else if (val == 18)
                     {
                         guard.IsAdminRosterAccess = true;
+                        guard.IsAdminRosterBaseAccess = false;
+                        guard.IsAdminRosterGSAccess = false;
                     }
                     else if (val == 19)
                     {
                         guard.IsAdminRosterBaseAccess = true;
+                        guard.IsAdminRosterAccess = false;
+                        guard.IsAdminRosterGSAccess = false;
                     }
                     else if (val == 20)
                     {
                         guard.IsAdminRosterGSAccess = true;
+                        guard.IsAdminRosterAccess = false;
+                        guard.IsAdminRosterBaseAccess = false;
                     }
 
                 }
