@@ -361,7 +361,5 @@ namespace CityWatch.Web.Pages.Admin
                 isROEditor = isSystemAdmin || isRosterAdmin || (isSuccess && guard != null && guard.IsROEditorAccess)
             });
         }
-
-        }
     }
 }
