@@ -4973,6 +4973,12 @@ $(function () {
         if (data.isAdminRosterAccess) {
             selectedValues.push(18);
         }
+        if (data.isAdminRosterBaseAccess) {
+            selectedValues.push(19);
+        }
+        if (data.isAdminRosterGSAccess) {
+            selectedValues.push(20);
+        }
         selectedValues.forEach(function (value) {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
