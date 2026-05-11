@@ -9957,7 +9957,7 @@ $(function () {
                 $('#mdlAuthGuardForRosterSelector').modal('hide');
                 // Open the roster modal for the selected site
                 if (typeof openGuardRosterPortal === 'function') {
-                    var fromLogbook = window.location.pathname.indexOf('/Incident/') > -1;
+                    var fromLogbook = window.location.pathname.indexOf('/Incident/') > -1 || window.location.pathname.indexOf('/Guard/') > -1;
                     openGuardRosterPortal(siteId, result.isAdminRoster, result.guardId, result.isROEditor, fromLogbook);
                 } else {
                     alert('Roster component not loaded correctly.');
