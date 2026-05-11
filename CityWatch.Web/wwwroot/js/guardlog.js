@@ -8896,6 +8896,15 @@ $(function () {
         $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
 
         $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+        
+        var isChecked = $('#patrolCarToggle').is(':checked');
+        $('#WandStrikeAuditLogRequest_IspatrolCarToggleOn').val(isChecked);
+        if (isChecked) {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val($('#wandstrikePatrolCarId').val());
+        }
+        else {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val('');
+        }
 
         $('#loader').show();
 
