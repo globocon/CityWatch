@@ -123,18 +123,15 @@
                                 <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
                                 <input type="checkbox" id="projectFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
                                 
-                                @if (Model.RosterAccessRole == "GSS" || Model.RosterAccessRole == "GS")
-                                {
-                                    <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
-                                    @if (Model.RosterAccessRole == "GSS")
-                                    {
-                                        <div class="custom-control custom-switch mr-2">
-                                            <input type="checkbox" class="custom-control-input" id="designToggle1" disabled>
-                                            <label class="custom-control-label" for="designToggle1"></label>
-                                        </div>
-                                        <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
-                                    }
-                                }
+                                <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555; @(Model.RosterAccessRole == "Base" ? "visibility: hidden;" : "")" title="Guard Pay Rate"></i>
+                                
+                                <span class="d-inline-flex align-items-center" style="@(Model.RosterAccessRole != "GSS" ? "visibility: hidden;" : "")">
+                                    <div class="custom-control custom-switch mr-2">
+                                        <input type="checkbox" class="custom-control-input" id="designToggle1" disabled>
+                                        <label class="custom-control-label" for="designToggle1"></label>
+                                    </div>
+                                    <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                                </span>
                             </div>
 
                         <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle; @(Model.RosterAccessRole != "GSS" ? "visibility: hidden;" : "")">
@@ -267,18 +264,14 @@
                                       <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
                                       <input type="checkbox" id="groupFinancialMaster" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
                                       
-                                      @if (Model.RosterAccessRole == "GSS" || Model.RosterAccessRole == "GS")
-                                      {
-                                          <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
-                                          @if (Model.RosterAccessRole == "GSS")
-                                          {
-                                              <div class="custom-control custom-switch mr-2">
-                                                  <input type="checkbox" class="custom-control-input" id="binderToggle1" disabled>
-                                                  <label class="custom-control-label" for="binderToggle1"></label>
-                                              </div>
-                                              <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
-                                          }
-                                      }
+                                      <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555; @(Model.RosterAccessRole == "Base" ? "visibility: hidden;" : "")" title="Guard Pay Rate"></i>
+                                      <span class="d-inline-flex align-items-center" style="@(Model.RosterAccessRole != "GSS" ? "visibility: hidden;" : "")">
+                                          <div class="custom-control custom-switch mr-2">
+                                              <input type="checkbox" class="custom-control-input" id="binderToggle1" disabled>
+                                              <label class="custom-control-label" for="binderToggle1"></label>
+                                          </div>
+                                          <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                                      </span>
                                   </div>
 
                              <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle; @(Model.RosterAccessRole != "GSS" ? "visibility: hidden;" : "")">
@@ -670,11 +663,11 @@
                         </div>
                         <div class="col-6">
                             <label>Pay Rate</label>
-                            <div class="input-group" @(Model.RosterAccessRole == "Base" ? "style=display:none;" : "")>
+                            <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">$</span>
                                 </div>
-                                <input type="text" id="modalPayRate" class="form-control" readonly />
+                                <input type="text" id="modalPayRate" class="form-control" readonly style="@(Model.RosterAccessRole == "Base" ? "color: transparent;" : "")" />
                             </div>
                         </div>
                     </div>
