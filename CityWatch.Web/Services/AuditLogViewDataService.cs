@@ -2,6 +2,7 @@
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using NuGet.Protocol;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -168,6 +169,10 @@ namespace CityWatch.Web.Services
             //patrolCars = _clientSiteWandDataProvider.GetPatrolCarsForSite(wsRequest.ClientSiteIds);
             patrolCars = _clientSiteWandDataProvider.GetPatrolCars();
 
+            if (!wsRequest.IspatrolCarToggleOn)
+            {
+                strikeLogs = strikeLogs.Where(x => x.LoggedInClientSite.PatrolTourMode == PatrolTouringMode.STND).ToList();
+            }
 
             if (strikeLogs.Any())
             {
@@ -179,7 +184,8 @@ namespace CityWatch.Web.Services
                         item.SmartWandNameId = smartWand.SmartWandId;
                         item.PatrolCarId = smartWand.PatrolCarId;
                         item.PatrolCarName = patrolCars?.FirstOrDefault(z=> z.Id ==  smartWand.PatrolCarId)?.Name;
-                        item.GPS = _guardLogDataProvider.GetTagScanGpsFromLogBook(item.Id);
+                        //item.GPScoordinates = _guardLogDataProvider.GetTagScanGpsFromLogBook(item.Id);
+                        item.LoggedInUser.Password = null; // Hide user password
                     }
                 }
                                 
@@ -192,6 +198,11 @@ namespace CityWatch.Web.Services
                    (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
                    (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
                ).ToList();
+
+                if (wsRequest.IspatrolCarToggleOn && wsRequest.PatrolCarIds.Count() > 0)
+                {
+                    filterLogs = filterLogs.Where(x => x.LoggedInClientSite.PatrolTourMode != PatrolTouringMode.STND).ToList();
+                }
             }
 
             var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()

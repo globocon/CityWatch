@@ -1054,6 +1054,13 @@ namespace CityWatch.Kpi.Pages.Admin
         //Menu chage -start
         public JsonResult OnGetSmartWandSettings(int clientSiteId)
         {
+            var records = _clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).OrderBy(z => z.SmartWandId).ToList();
+            var pcar = _clientSiteWandDataProvider.GetPatrolCars();
+            foreach(var r in records)
+            {
+                r.PatrolCarId = r.PatrolCarId ?? -1 ;
+                r.PatrolCarName = pcar?.FirstOrDefault(x => x.Id == r.PatrolCarId)?.Name ?? "";
+            }
             return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).OrderBy(z=>z.SmartWandId).ToList());
         }
 

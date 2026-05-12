@@ -44,10 +44,8 @@ namespace CityWatch.Data.Models
         public int? PatrolCarId { get; set; }
 
         [NotMapped]
-        public string? PatrolCarName { get; set; }
-
-        [NotMapped]
-        public string? GPS { get; set; }
+        public string? PatrolCarName { get; set; }        
+        public string? GPScoordinates { get; set; }
     }
 
     public class ClientSiteSmartWandTagsHitLogCacheOffline

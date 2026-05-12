@@ -12,14 +12,14 @@ $(function () {
 
     let smartWandPatrolCarGroupListForDDL = [];
     $('#smartwandPatrolCarGroupsDDL option').each(function () {
-        var value = $(this).val();
-        var text = $(this).text();
+        var ddlvalue = Number($(this).val());// $(this).val();
+        var ddltext = $(this).text();
 
-        if (value) {
-            smartWandPatrolCarGroupListForDDL.push({ value: value, text: text });
+        if (ddlvalue) {
+            smartWandPatrolCarGroupListForDDL.push({ value: ddlvalue, text: ddltext });
         }
     });
-
+        
     var clientSiteId = getUrlVars()["clientSiteId"];
     $("#gl_client_site_id").val(window.sharedVariable);
     $("#ClientSiteKey_ClientSiteId").val(window.sharedVariable);
@@ -46,20 +46,11 @@ $(function () {
             },
             {
                 width: 150,
-                field: 'patrolCarId',
+                field: 'patrolCarName',
                 title: 'Patrol Car',
-                editor: smartWandPatrolCarGroupEditor, 
-                renderer: function (value, record) {
-                    if (value != null && value != '') {
-                        if (value == '0')
-                            return "";
-
-                        const item = smartWandPatrolCarGroupListForDDL.find(function (elem) { return elem.value == value });
-                        return item ? item.text : '';
-                    }
-                    else
-                        return "";
-                }
+                type: 'dropdown',
+                editor: { dataSource: smartWandPatrolCarGroupListForDDL, valueField: 'value' },
+                editField: 'patrolCarId'
             }
         ],
         rowDataBound: function (e, $row, id, record) {
@@ -85,46 +76,13 @@ $(function () {
             });
         }
     });
-    
-    function smartWandPatrolCarGroupEditor($container, value, record) {
-        let $select = $('<select class="form-control form-control-sm"></select>');
-
-        smartWandPatrolCarGroupListForDDL.forEach(item => {
-            $select.append(
-                $('<option>', {
-                    value: item.value,
-                    text: item.text
-                })
-            );
-        });
-
-        $select.val(value);
-
-        // Directly update record (most reliable)
-        $select.on('change', function () {
-            record.patrolCarId = Number($(this).val());
-            $(this).closest('td').data('changed', true);
-        });
-
-        $container.empty().append($select);
-    }
 
     if (gritdSmartWands) {
         gritdSmartWands.on('rowDataChanged', function (e, id, record) {
 
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
-            // FIX: Convert text back to ID
-            if (isNaN(data.patrolCarId)) {
-                if ((data.patrolCarId ?? '').toString().toLowerCase() === 'select' || (data.patrolCarId ?? '').toString().toLowerCase() === '0') {
-                    data.patrolCarId = null;
-                }
-                else {
-                    const item = smartWandPatrolCarGroupListForDDL.find(x => x.text == data.patrolCarId);
-                    data.patrolCarId = item ? Number(item.value) : null;
-                }
-            }
-            else if ((data.patrolCarId ?? '').toString().toLowerCase() === '0') { data.patrolCarId = null; }
+           
 
             $.ajax({
                 url: '/admin/settings?handler=SmartWandPhoneNumber',
@@ -135,6 +93,10 @@ $(function () {
                     alert('Number already in use at site ' + response.clientSite.name + ' please deregister this number before trying to allocate it to a different site');
                 }
                 else {
+                    // FIX: Convert -1 back to null
+                    var pid = (data.patrolCarId ?? '').toString().toLowerCase();
+                    if (pid === '-1') { data.patrolCarId = null; }
+
                     $.ajax({
                         url: '/admin/settings?handler=SmartWandSettings',
                         data: { record: data },
@@ -220,7 +182,7 @@ $(function () {
             alert('Unsaved changes in the grid. Refresh the page');
         } else {
             isSmartWandAdding = true;
-            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', patrolCarId: '0', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', patrolCarId: '-1', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
 
