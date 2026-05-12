@@ -439,7 +439,7 @@ namespace CityWatch.Web.Pages.roster
                 if (conflict != null)
                 {
                     var guard = await _context.Guards.FindAsync(guardId);
-                    return new JsonResult(new { success = false, message = $"Conflict: Guard {guard.Name} is currently assigned to {conflict.ClientSite.Name} from {conflict.ShiftStart:HH:mm} to {conflict.ShiftEnd:HH:mm}. (Conflict ID: {conflict.Id}, Edit ID: {shiftId})" });
+                    return new JsonResult(new { success = false, message = $"Conflict: Guard {guard.Name} is currently assigned to {conflict.ClientSite.Name} from {conflict.ShiftStart:HH:mm} to {conflict.ShiftEnd:HH:mm}." });
                 }
 
                 // Check Guard Unavailability
