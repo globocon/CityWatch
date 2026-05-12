@@ -9571,17 +9571,6 @@ $('#btnBookingAuthConfirm').on('click', function () {
     });
 });
 
-$(document).on('show.bs.modal', '#mdlAuthBookingAccess', function () {
-    $('#BookingAuth_SecurityNo').val('');
-    $('#BookingAuth_PIN').val('');
-    $('#bookingAuthValidationSummary').html('');
-});
-
-$(document).on('hidden.bs.modal', '#mdlAuthBookingAccess', function () {
-    $('#BookingAuth_SecurityNo').val('');
-    $('#BookingAuth_PIN').val('');
-    $('#bookingAuthValidationSummary').html('');
-});
 
 $('#btnTimesheetSiteConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
