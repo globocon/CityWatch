@@ -2,6 +2,7 @@
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using NuGet.Protocol;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -184,6 +185,7 @@ namespace CityWatch.Web.Services
                         item.PatrolCarId = smartWand.PatrolCarId;
                         item.PatrolCarName = patrolCars?.FirstOrDefault(z=> z.Id ==  smartWand.PatrolCarId)?.Name;
                         //item.GPScoordinates = _guardLogDataProvider.GetTagScanGpsFromLogBook(item.Id);
+                        item.LoggedInUser.Password = null; // Hide user password
                     }
                 }
                                 

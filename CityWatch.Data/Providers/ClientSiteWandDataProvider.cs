@@ -408,7 +408,8 @@ namespace CityWatch.Data.Providers
                     SmartWandNameId = log.SmartWandNameId,
                     SmartWandId = log.SmartWandId,
                     LoggedInGuard = log.LoggedInGuard,
-                    LoggedInUser = log.LoggedInUser
+                    LoggedInUser = log.LoggedInUser,
+                    GPScoordinates = log.GPScoordinates
                 }).Where(l => l.HitLocalDateTime.Date >= fromDate.Date && l.HitLocalDateTime.Date < toDate.Date).ToList();
 
                 matchingLogs.AddRange(logsWithLocal);
