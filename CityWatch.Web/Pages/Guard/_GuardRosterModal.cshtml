@@ -1291,7 +1291,7 @@
                         else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
                         
                         var dStr = loopDate.getFullYear() + '-' + String(loopDate.getMonth() + 1).padStart(2, '0') + '-' + String(loopDate.getDate()).padStart(2, '0');
-                        rowHtml += '<td class="guard-roster-cell ' + phClass + ' ' + weekendClass + '" data-date="' + dStr + '" data-site-id="' + site.id + '" title="' + phReason + '">';
+                        rowHtml += '<td class="guard-roster-cell ' + phClass + ' ' + weekendClass + '" data-date="' + dStr + '" data-site-id="' + row.siteId + '" title="' + phReason + '">';
                         
                         dayShifts.forEach(function (s) {
                             var guardId = s.reliefGuardId || s.guardId;
