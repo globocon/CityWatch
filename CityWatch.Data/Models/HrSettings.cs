@@ -26,6 +26,8 @@ namespace CityWatch.Data.Models
         PayRates = 9,
         [Display(Name = "Renumeration – Allowance")]
         Allowances = 10,
+        [Display(Name = "HR Groups - Onboarding Welcome Pack")]
+        HRGroupsOnBoarding = 11,
     }
     public enum HrCriticalType
     {

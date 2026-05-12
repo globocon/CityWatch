@@ -3570,6 +3570,38 @@ namespace CityWatch.Web.Services
         }
 
         //p7-137--pax-end
+        public List<object> GetAllUsersClientSiteAccessForOnboardingUsers(string searchterm)
+        {
+            var results = new List<object>();
+            var users = _userDataProvider.GetUsers();
+            var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
+            foreach (var user in users)
+            {
+                var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
+                var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
+                results.Add(new
+                {
+                    user.Id,
+                    user.UserName,
+                    ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
+                    ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+                    ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null
+                });
+            }
+            var filteredResults = results;
+
+            if (!string.IsNullOrEmpty(searchterm))
+            {
+                filteredResults = results
+                    .Where(x =>
+                        ((dynamic)x).UserName.Contains(searchterm, StringComparison.OrdinalIgnoreCase) ||
+                        ((dynamic)x).ClientTypeCsv.Contains(searchterm, StringComparison.OrdinalIgnoreCase) ||
+                        ((dynamic)x).ClientSiteCsv.Contains(searchterm, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            return filteredResults;
+        }
     }
 
     public class DropdownItemWithAddress

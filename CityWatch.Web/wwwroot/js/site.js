@@ -2446,7 +2446,7 @@ $(function () {
             }
         }
     }
-
+  
     $('#user_settings tbody').on('click', '#btnLoginDetailsforUser', function () {
 
         $('#userLoginHistoryInfoModal').modal('show');
@@ -6225,6 +6225,282 @@ gridHrSettingswithCourseLibrary = $('#tbl_hr_settings_with_CourseLibrary').grid(
         $('#tbl_hr_settings_with_CourseLibrary thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
+function passwordRendererForOnboarding(value, record) {
+    return '<span id="user_password_' + record.id + '"></span><button class="btn btn-light showPassword" data-uid="' + record.id + '"><i class="fa fa-eye mr-2"></i>Show</button>';
+}
+
+function userButtonRendererForOnboarding(value, record) {
+    let userButtonHtml = '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#user-modal" data-id="' + record.id + '" data-uname="' + record.userName + '"' +
+        'data-udeleted="' + record.isDeleted + '" data-action="editUser"><i class="fa fa-pencil"></i></button>';
+
+    if (record.isDeleted) {
+        userButtonHtml += '<button class="btn btn-outline-success activateuser" data-user-id="' + record.id + '""> <i class="fa fa-check " aria-hidden="true"></i></button>';
+    } else {
+        userButtonHtml += '<button class="btn btn-outline-danger deleteuser" data-user-id="' + record.id + '""> <i class="fa fa-trash" aria-hidden="true"></i></button>';
+    }
+
+    return userButtonHtml;
+}
+
+let gridHrSettingswithOnboardingHRWelcomePack
+gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingHRWWelcomePack').grid({
+    dataSource: '/Admin/Settings?handler=OnBoardingUsers',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'userName', title: 'User Name', width: 100 },
+        { title: 'Password', width: 100, renderer: passwordRendererForOnboarding },
+        { title: 'Activity', width: 350, renderer: activityDeatilsOnBoarding },
+        { field: 'isDeleted', title: 'Deleted?', align: 'center', width: 75, renderer: function (value) { return value ? 'Yes' : '&nbsp;'; } },
+        { width: 100, renderer: userButtonRendererForOnboarding },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+    dataBound: function (e,records) {
+        
+
+        $('#tbl_hr_settings_with_OnboardingHRWWelcomePack > tbody > tr')
+            .not('.child-row')
+            .each(function (index) {
+
+                let row = $(this);
+                let d = records[index];
+                var clientAccessId = 'user_client_access_onboard_' + d.Id;
+                let childRow =
+                    '<tr class="child-row">' +
+                    '<td colspan="4">' +
+                    '<div class="col-md-12">' +
+                    '<table class="table" id=' + clientAccessId +'>' +
+
+                    
+
+                    '</table>' +
+                    '</div>' +
+                    '<div class="row mt-3">' +
+                    '<div class="col-md-6">' +
+                    '<div class="form-group">' +
+                    '<label class="form-label">HR Group</label>' +
+                    '<select class="form-control " ' +
+                    'id="HRGroupDoc_' + d.id + '" ' +
+                    'name="HRGroupID">' +
+
+                     
+
+
+                '</select>' + 
+                    ' </div>' +
+                    ' <div class="form-group">' +
+                    '  <label for="clientSites">Description</label>' +
+                    ' <select class="form-control" id="DescriptionDoc_' + d.id +'" >' +
+                    
+                    '  </select>' +
+                    '  </div>' +
+                    '  </div>' +
+                    '<div class="col-md-6">' +
+                    '  <div class="form-group">' +
+                    '  <label for="selectedSites">Selected Description <span class="badge badge-pill badge-info" id="selectedDescCountDoc_' + d.id +'">0</span></label>' +
+                    ' <select class="form-control" id="selectedDescDoc_' + d.id +'"  multiple style="height: 100px"></select>' +
+
+                    '<button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSitesDocForOnboarding_' + d.id +'" title="Remove selected docs from the list"><i class="fa fa-trash-o mr-2"></i>Remove Description</button>' +
+                    '</div>' +
+                    ' </div > ' +
+                    ' </div > ' +
+                    '<div class="row mt-3">' +
+                    '<div class="col-md-12">' +
+                    '<div class="col-md-2 offset-md-10 text-right">' +
+                    '<button class="btn btn-success" id="btnAddOnboardCourse_' + d.id +'"><i class="fa fa-plus mr-2"></i>Add Course</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="form-row col-md-12">' +
+                    '<div class="col-md-12">' +
+                    '<table id="tbl_onboard_trainingAndAssessment_by_Admin" class="table table-bordered table-sm" width="100%">' +
+                    '<thead>' +
+                    '<tr>' +
+                    '<th>Course Id</th>' +
+                    '<th>HR Group</th>' +
+                    '<th>Description</th>' +
+                    '<th>RPL</th>' +
+
+                    '<th class="text-center">Course</th>' +
+                    '<th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>' +
+                    '</tr>' +
+                    '</thead>' +
+                    '</table>' +
+                    '</div>' +
+                    '</div>' +
+                
+                      '</td>' +
+                    '</tr>';
+
+                row.after(childRow);
+
+                // Apply rowspan only on main table row
+                row.children('td:eq(0)')
+                    .attr('rowspan', '2')
+                    .css('vertical-align', 'top');
+                $('#' + clientAccessId).grid({
+
+                    dataSource: [d],
+
+                    uiLibrary: 'bootstrap4',
+                    iconsLibrary: 'fontawesome',
+                    primaryKey: 'id',
+                       
+                    
+                    columns: [
+
+                        {
+                            field: 'clientTypeCsv',
+                            title: 'Client Type Access',
+                            width: 100
+                        },
+
+                        {
+                            field: 'clientSiteCsv',
+                            title: 'Client Site Access',
+                            width: 120
+                        },
+
+                        { title: '3rd Party', width: 50, renderer: domainSettingsForOnboardingUsers, cssClass: 'text-center' },
+
+                        { width: 100, tmpl: '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal" data-id="{id}"><i class="fa fa-pencil mr-2"></i>Edit</button>', align: 'center' }
+
+
+                        
+
+                        
+                    ],
+                    
+                    initialized: function (e) {
+                        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+                    }
+                });
+                $.each(d.criticalDocs, function (indexnew, item) {
+                    $('#selectedDescDoc_' + d.id).append('<option value="' + item.hrSettings.id + '">' + item.description + '</option>');
+                    updateSelectedSitesCount();
+                });
+                // HR Group Dropdown Id
+                let hrGroupDropdown = $('#HRGroupDoc_' + d.id);
+
+                // Load HR Groups
+                $.ajax({
+                    url: '/Admin/Settings?handler=HRGroups',
+                    type: 'GET',
+                    success: function (response) {
+
+                        hrGroupDropdown.empty();
+                        hrGroupDropdown.append('<option value="">Select</option>');
+
+                        $.each(response, function (i, item) {
+
+                            hrGroupDropdown.append(
+                                $('<option>', {
+                                    value: item.id,
+                                    text: item.name
+                                })
+                            );
+
+                        });
+                    },
+                    error: function () {
+                        console.log('Failed to load HR Groups');
+                    }
+                });
+                $('#HRGroupDoc_' + d.id).on('change', function () {
+                    const option = $(this).val();
+                    if (option === '') {
+                        $('#DescriptionDoc_' + d.id).html('');
+                        $('#DescriptionDoc_' + d.id).append('<option value="">Select</option>');
+                    }
+
+                    $.ajax({
+                        url: '/admin/settings?handler=DescriptionList&HRGroupId=' + encodeURIComponent(option),
+                        type: 'GET',
+                        dataType: 'json',
+                    }).done(function (data) {
+                        $('#DescriptionDoc_' + d.id).html('');
+                        $('#DescriptionDoc_' + d.id).append('<option value="">Select</option>');
+                        data.map(function (site) {
+                            $('#DescriptionDoc_' + d.id).append('<option value="' + site.value + '">' + site.text + '</option>');
+                        });
+                    });
+                });
+                $('#DescriptionDoc_' + d.id).on('change', function () {
+                   
+                        const elem = $(this).find(":selected");
+                        if (elem.val() !== '') {
+                            const existing = $('#selectedDescDoc_' + d.id +' option[value="' + elem.val() + '"]');
+                            if (existing.length === 0) {
+                                $('#selectedDescDoc_' + d.id).append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+                                $('#selectedDescCountDoc_' + d.id).text($('#selectedDescDoc_' + d.id +' option').length);
+                            }
+                    }
+                    var optionsNew = $('#selectedDescDoc_' + d.id + ' option');
+                    var docIds = optionsNew.map(function () {
+                        return $(this).val();
+                    }).get().join(',');
+                    $.ajax({
+                        url: '/Admin/Settings?handler=SaveCriticalDocumentsForOnboardingUsers',
+                        type: 'POST',
+                        data:
+                        {
+                            userId: d.id,
+                            docIds: docIds,
+                            hrId: $('#HRGroupDoc_' + d.id).val()
+
+                        },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (data) {
+                        if (data.success) {
+                            
+                            gridCriticalDocument.reload();
+                        } 
+                    });
+                    
+
+                });
+            });
+        
+    }
+});
+function domainSettingsForOnboardingUsers(value, record) {
+
+    // Check if the row is a newly added row by ID or another condition
+    if (record.id === -1) {
+        // Skip rendering the checkbox for new rows
+        return '';
+    }
+
+    if (record.thirdParty != null) {
+
+        return '<input type="checkbox" checked><input type="hidden" id="typeId1" value="' + record.id + '"> <input type="hidden" id="typeName1" value="' + record.name + '">'
+
+    }
+    else {
+        return '<input type="checkbox"><input type="hidden" id="typeId1" value="' + record.id + '"> <input type="hidden" id="typeName1" value="' + record.name + '">'
+    }
+
+}
+function convertDbString(value) { return (value === null || value === undefined) ? '' : value; }
+function activityDeatilsOnBoarding(value, record) {
+    if (record.formattedLastLoginDate !== null) {
+
+        if (record.lastLoginIPAdress !== null) {
+            return '<table class="table table-sm m-0"><thead><tr><th scope="col" style="width:40%;">Last Login</th><th scope="col" style="width:50%;">IP Address</th><th scope="col" style="width:10%; text-align: center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
+                '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td><i class="fa fa-desktop" aria-hidden="true"></i> ' + record.lastLoginIPAdress + '</td><td style="text-align:center;">' +
+                '<i class="fa fa-check-circle text-success"></i>' +
+                '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
+        }
+        else {
+            return '<table class="table table-sm m-0"><thead><tr><th scope="col" style="width:40%;">Last Login</th><th scope="col" style="width:50%;">IP Address</th><th scope="col" style="width:10%; text-align: center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
+                '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td></td><td style="text-align:center;">' +
+                '<i class="fa fa-check-circle text-success"></i>' +
+                '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
+        }
+    }
+}
 function courseStatusColorRenderer(value, record) {
     var cellvalue;
     if (record.courseColour == 'Yellow') {
@@ -6902,6 +7178,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr3Settings.show()
         gridHr3Settings.clear();
         gridHr3Settings.reload();
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -6926,6 +7203,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -6948,6 +7226,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
@@ -6968,6 +7247,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
             type: 'GET',
@@ -7000,6 +7280,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
         $.ajax({
             url: '/Admin/Settings?handler=TimesheetDetails',
             type: 'GET',
@@ -7032,6 +7313,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 7) {
 
@@ -7053,6 +7335,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 8) {
 
@@ -7076,6 +7359,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
 
     }
     else if ($('#hr_settings_fields_types').val() == 9) {
@@ -7083,6 +7367,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
     }
     else if ($('#hr_settings_fields_types').val() == 10) {
         $('#AllowancesDiv').show();
@@ -7103,6 +7388,29 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
+    }
+    else if ($('#hr_settings_fields_types').val() == 11) {
+        $('#AllowancesDiv').hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        gridLanguage.hide();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').hide();
+        $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
+        $('#add_lote').hide();
+        gridClassroomLocation.hide();
+        $('#add_location').hide();
+        $('#ClassroomLocationDiv').hide();
+        gridHrSettingswithCourseLibrary.hide();
+        $('#guardHrGroupSettingsTab').hide();
+        $('#guardHrGroupSettingsTabContent').hide();
+        gridHr1Settings.hide()
+        gridHr2Settings.hide()
+        gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.show();
+        gridHrSettingswithOnboardingHRWelcomePack.reload();
     }
     else {
         gridLicenseTypes.hide();
@@ -7115,6 +7423,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr1Settings.hide()
         gridHr2Settings.hide()
         gridHr3Settings.hide()
+        gridHrSettingswithOnboardingHRWelcomePack.hide();
     }
 });
 if ($('#report_module_types_irtemplate').val() == 1) {
@@ -7530,6 +7839,7 @@ if ($('#hr_settings_fields_types').val() == '') {
     gridHr1Settings.hide()
     gridHr2Settings.hide()
     gridHr3Settings.hide()
+    gridHrSettingswithOnboardingHRWelcomePack.hide();
 
 }
 

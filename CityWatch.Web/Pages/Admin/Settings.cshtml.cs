@@ -4126,7 +4126,93 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnGetOnBoardingUsers()
+        {
+            string searchTerm = "onboarding";
 
+            var users = _userDataProvider.GetUsers()
+             .Where(x => string.IsNullOrEmpty(searchTerm) || x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+             .Select(x => new { x.Id, x.UserName, x.IsDeleted, x.LastLoginDate, x.LastLoginIPAdress, x.FormattedLastLoginDate });
+            var results = new List<object>();
+            foreach (var user in users)
+            {
+                var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
+                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
+                var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
+                int[] clientsites = currUserAccess.Select(y => y.ClientSiteId).ToArray();
+                var criticalDocs = _configDataProvider.GetCriticalDocs()
+                   .Select(z => CriticalDocumentViewModel.FromDataModelForDisplay(z));
+                var criticalDocsNew = criticalDocs.Where(x => x.ClientSiteIds.Any(y => clientsites.Contains(y)));
+                results.Add(new
+                {
+                    user.Id,
+                    user.UserName,
+                    user.IsDeleted,
+                    user.LastLoginDate,
+                    user.LastLoginIPAdress,
+                    user.FormattedLastLoginDate,
+                    ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
+                    ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+                    ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null,
+                    CriticaDocs = criticalDocsNew
+                });
+            }
+            return new JsonResult(results);
+        }
+        private string GetFormattedClientTypes(IEnumerable<UserClientSiteAccess> userClientSiteAccess)
+        {
+            var clientTypes = userClientSiteAccess.GroupBy(x => x.ClientSite.ClientType.Name).OrderBy(x => x.Key);
+            if (clientTypes.Count() == 0)
+                return "None";
+            if (clientTypes.Count() <= 3)
+                return string.Join(", ", clientTypes.Select(x => x.Key));
+
+            return $"{string.Join(", ", clientTypes.Select(x => x.Key).Take(3))} and {clientTypes.Count() - 3} more clients";
+        }
+        private string GetFormattedClientSites(IEnumerable<UserClientSiteAccess> userClientSiteAccess)
+        {
+            var clientSites = userClientSiteAccess.Select(x => x.ClientSite.Name).OrderBy(x => x);
+            if (clientSites.Count() == 0)
+                return "None";
+            if (clientSites.Count() <= 3)
+                return string.Join(", ", clientSites);
+
+            return $"{string.Join(", ", clientSites.Take(3))} and {clientSites.Count() - 3} more sites";
+        }
+        public JsonResult OnGetHRGroups()
+        {
+            
+            return new JsonResult(_viewDataService.GetHRGroups());
+        }
+        public JsonResult OnPostSaveCriticalDocumentsForOnboardingUsers(int userId,string docIds,int hrId)
+        {
+            CriticalDocumentViewModel CriticalDocModel = new CriticalDocumentViewModel();
+            var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+            var currUserAccess = allUserAccess.Where(x => x.UserId == userId);
+            CriticalDocModel.ClientSiteIds = currUserAccess.Select(x => x.ClientSiteId).ToArray();
+            CriticalDocModel.HRGroupID = hrId;
+            CriticalDocModel.ClientTypeId = currUserAccess.FirstOrDefault().ClientSite.TypeId;
+            CriticalDocModel.DescriptionIds = docIds.Split(",").Select(int.Parse).ToArray();
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
+                _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+               
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
     }
     public class helpDocttype
     {
