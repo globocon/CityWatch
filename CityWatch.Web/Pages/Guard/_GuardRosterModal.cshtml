@@ -1558,6 +1558,10 @@
     }
 
     function saveGuardRosterShift() {
+        saveGuardRosterShiftAttempt(false);
+    }
+
+    function saveGuardRosterShiftAttempt(ignoreUnavail) {
         var shiftId = $('#geModalShiftId').val();
         var groupId = $('#geModalGroupId').val();
         var siteId = $('#geModalSiteId').val();
@@ -1586,14 +1590,13 @@
         var cellDate = card.closest('.guard-roster-cell').data('date'); // e.g. "2026-05-11"
         
         if (!cellDate) {
-            // Fallback if cell date is missing (unlikely in this context)
             cellDate = new Date().toISOString().split('T')[0];
         }
 
         var startDateTime = cellDate + 'T' + startTime;
         var endDateTime = cellDate + 'T' + endTime;
         
-        // Handle overnight shifts (end time < start time)
+        // Handle overnight shifts
         if (endTime < startTime) {
             var startD = new Date(cellDate);
             var endD = new Date(startD);
@@ -1618,7 +1621,8 @@
             reliefGuardId: reliefGuardId,
             reliefProviderName: reliefProviderName,
             reliefReason: reliefReason,
-            reliefReasonOther: $('#geModalReliefReasonOther').val() || ""
+            reliefReasonOther: $('#geModalReliefReasonOther').val() || "",
+            ignoreUnavailability: ignoreUnavail
         };
 
         $.ajax({
@@ -1630,6 +1634,10 @@
                 if (res.success) {
                     $('#guardAddShiftModal').modal('hide');
                     loadGuardRoster();
+                } else if (res.isUnavailConflict || (res.message && res.message.indexOf('Conflict:') > -1)) {
+                    if (confirm(res.message + "\n\nDo you want to proceed and roster them anyway?")) {
+                        saveGuardRosterShiftAttempt(true);
+                    }
                 } else {
                     alert('Failed to save: ' + res.message);
                 }
