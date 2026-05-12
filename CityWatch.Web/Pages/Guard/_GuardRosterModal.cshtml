@@ -1625,6 +1625,11 @@
             ignoreUnavailability: ignoreUnavail
         };
 
+        // Debug Alert requested by user
+        if (!ignoreUnavail) {
+            alert("DEBUG - Sending to Server:\nShift ID: " + shiftId + "\nSite ID: " + siteId + "\nGuard ID: " + guardId);
+        }
+
         $.ajax({
             url: '/roster/Booking?handler=AddShift',
             type: 'POST',
