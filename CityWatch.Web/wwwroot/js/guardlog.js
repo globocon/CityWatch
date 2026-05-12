@@ -9493,49 +9493,33 @@ $('#btnTimesheetConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
 
     var guardLicNo = $('#GuardDownloadSop_SecurityNo').val();
-    var pinField = $('#GuardDownloadSop_PIN');
-    var guardPin = pinField.length > 0 ? pinField.val() : "ADMIN";
+    var pin = $('#GuardDownloadSop_PIN').val();
 
-    if (!guardLicNo) {
-        $('#AuthGuardForSopDwnldValidationSummary1').html('Please enter License Number.');
+    if (!guardLicNo || !pin) {
+        $('#AuthGuardForSopDwnldValidationSummary1').html('Please enter both license number and PIN.');
         return;
     }
 
     $('#loader').show();
 
-    // 1. Get Guard ID from License No
     $.ajax({
-        url: '/RoosterHub?handler=GuardID&LicenseNo=' + guardLicNo,
-        type: 'GET',
-        dataType: 'json'
-    }).done(function (guardId) {
-        if (!guardId || guardId <= 0) {
-            $('#AuthGuardForSopDwnldValidationSummary1').html('Invalid License Number.');
-            $('#loader').hide();
-            return;
-        }
-
-        // 2. Verify PIN if not Admin
-        if (guardPin !== "ADMIN") {
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
-                type: 'POST',
-                data: { guardId: guardId, key: guardPin },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (result) {
-                if (result.accessPermission) {
-                    proceedToTimesheetModal(guardLicNo, guardId);
-                } else {
-                    $('#AuthGuardForSopDwnldValidationSummary1').html(result.successMessage || 'Incorrect PIN.');
-                    $('#loader').hide();
-                }
-            });
+        url: '/RoosterHub?handler=VerifyGuardRosterAuth',
+        type: 'POST',
+        data: {
+            licenseNo: guardLicNo,
+            pin: pin
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            proceedToTimesheetModal(guardLicNo, result.guardId || 0);
         } else {
-            // Admin Bypass
-            proceedToTimesheetModal(guardLicNo, guardId);
+            $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
         }
-    }).fail(function () {
-        $('#AuthGuardForSopDwnldValidationSummary1').html('Error verifying guard details.');
+    }).fail(function (xhr, status, error) {
+        console.error('AJAX error:', status, error);
+        $('#AuthGuardForSopDwnldValidationSummary1').html('An error occurred during verification.');
+    }).always(function () {
         $('#loader').hide();
     });
 
