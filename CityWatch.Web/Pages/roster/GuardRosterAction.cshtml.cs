@@ -100,6 +100,11 @@ namespace CityWatch.Web.Pages.roster
                             guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.Guard != null ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             shiftType = s.ShiftType ?? "Regular",
                             status = (int)s.Status,
+                            providerName = s.ProviderName ?? "",
+                            reliefProviderName = s.ReliefProviderName ?? "",
+                            reliefReasonOther = s.ReliefReasonOther ?? "",
+                            adhocOffsiteText = s.AdhocOffsiteText ?? "",
+                            callsignId = s.CallsignId,
                             callsignName = s.Callsign != null ? s.Callsign.Name : "",
                             durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
                             sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
@@ -276,6 +281,79 @@ namespace CityWatch.Web.Pages.roster
             {
                 return new JsonResult(new { success = false, message = "Error saving summary" });
             }
+        }
+
+        public async Task<IActionResult> OnPostDeleteShift(int id)
+        {
+            var schedule = await _context.RosterSchedules.FindAsync(id);
+            if (schedule == null) return new JsonResult(new { success = false, message = "Shift not found" });
+
+            try
+            {
+                var today = DateTime.Today;
+                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
+                
+                if (weekEndDate < firstDayOfCurrentMonth)
+                {
+                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                }
+
+                int oldStatusVal = (int)schedule.Status;
+                schedule.IsDeleted = true;
+
+                // 1. Save the actual shift deletion first
+                await _context.SaveChangesAsync();
+
+                // 2. Try to log the audit entry
+                try
+                {
+                    var userIdString = AuthUserHelper.LoggedInUserId?.ToString();
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
+
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = schedule.Id,
+                        ActionTime = DateTime.Now,
+                        ActionBy = parsedUserId,
+                        Action = "Deleted",
+                        OldStatus = oldStatusVal,
+                        NewStatus = -1, // -1 or special value for Deleted
+                        Notes = "Shift deleted via Logbook portal."
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                catch { /* Ignore audit failures */ }
+
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = "Error deleting shift: " + ex.Message });
+            }
+        }
+
+        private DayOfWeek GetFirstDayOfWeek()
+        {
+            var timesheet = _clientDataProvider.GetTimesheetDetails();
+            if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
+            {
+                if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
+                {
+                    return parsedDay;
+                }
+            }
+            return DayOfWeek.Monday;
+        }
+
+        private DateTime StartOfWeek(DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
         }
     }
 }

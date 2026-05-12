@@ -1332,7 +1332,10 @@
 
                             rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
                                 'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '" ' +
-                                'data-guard-name="' + s.guardName + '" data-shift-start="' + s.shiftStart + '" data-shift-end="' + s.shiftEnd + '" ' +
+                                'data-guard-name="' + (s.guardName || '') + '" data-shift-start="' + s.shiftStart + '" data-shift-end="' + s.shiftEnd + '" ' +
+                                'data-provider-name="' + (s.providerName || '') + '" data-relief-provider-name="' + (s.reliefProviderName || '') + '" ' +
+                                'data-relief-reason="' + (s.reliefReason || '') + '" data-relief-reason-other="' + (s.reliefReasonOther || '') + '" ' +
+                                'data-adhoc-text="' + (s.adhocOffsiteText || '') + '" data-callsign-id="' + (s.callsignId || '') + '" ' +
                                 'data-payrate-id="' + (s.payRateId || '') + '" data-payrate-group-id="' + (s.payRateGroupId || '') + '" ' +
                                 'data-buy-rate="' + s.buyRate + '">' +
                                 (isEditMode ? '<span class="btn-delete-shift" onclick="deleteGuardRosterShift(event, ' + s.id + ')"><i class="fa fa-times"></i></span>' : '') +
@@ -1463,17 +1466,54 @@
         }
 
         // Populate Provider
-        // ... (Optional: find provider from card if needed)
+        var pName = card.data('provider-name');
+        if (pName) {
+            $('#geModalProviderId').empty().append(new Option(pName, pName, true, true)).trigger('change');
+        } else {
+            $('#geModalProviderId').empty().val(null).trigger('change');
+        }
+
+        // Populate Relief Data
+        var rGuardId = card.data('relief-guard-id');
+        var rProviderName = card.data('relief-provider-name');
+        var rReason = card.data('relief-reason');
+
+        if (rGuardId) {
+            var nameToUse = card.find('.text-truncate.font-weight-bold').text().replace(/^R/, '').trim();
+            $('#geModalReliefGuardId').empty().append(new Option(nameToUse, rGuardId, true, true)).trigger('change');
+        } else {
+            $('#geModalReliefGuardId').empty().val(null).trigger('change');
+        }
+
+        if (rProviderName) {
+            $('#geModalReliefProviderId').empty().append(new Option(rProviderName, rProviderName, true, true)).trigger('change');
+        } else {
+            $('#geModalReliefProviderId').empty().val(null).trigger('change');
+        }
+
+        $('#geModalReliefReason').val(rReason || "").trigger('change');
+
+        // Populate Callsign & Adhoc
+        $('#geModalCallsignId').val(card.data('callsign-id') || "").trigger('change');
+        $('#geModalAdhocOffsiteText').val(card.data('adhoc-text') || "");
 
         // Populate Times
         $('#geModalShiftStart').val(card.data('shift-start'));
         $('#geModalShiftEnd').val(card.data('shift-end'));
         
         // Populate Status/Type
-        $('#geModalShiftType').val(card.data('type')).trigger('change');
-
-        // Populate Adhoc Text
-        // ...
+        var currentType = card.data('type') || 'Regular';
+        var currentStatus = parseInt(card.data('status') || '0');
+        var compositeType = currentType;
+        
+        if (currentStatus === 1) {
+            compositeType = (currentType === 'Adhoc' ? 'AdhocAccepted' : 'RegularAccepted');
+        } else if (currentStatus === 2) {
+            compositeType = 'Declined';
+        } else if (currentStatus === 3) {
+            compositeType = 'Cancelled';
+        }
+        $('#geModalShiftType').val(compositeType).trigger('change');
 
         var pgId = card.data('payrate-group-id');
         var prId = card.data('payrate-id');
@@ -1523,15 +1563,21 @@
         var siteId = $('#geModalSiteId').val();
         
         var guardId = $('#geModalGuardId').val();
-        var providerId = $('#geModalProviderId').val();
+        var providerData = $('#geModalProviderId').select2('data');
+        var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
+        
         var payRateId = $('#geModalPositionId').val();
         var payRate = $('#geModalPayRate').val();
         var startTime = $('#geModalShiftStart').val();
         var endTime = $('#geModalShiftEnd').val();
         var shiftType = $('#geModalShiftType').val();
+        var callsignId = $('#geModalCallsignId').val();
+        var adhocOffsiteText = $('#geModalAdhocOffsiteText').val();
 
         // Relief Data
         var reliefGuardId = $('#geModalReliefGuardId').val();
+        var reliefProviderData = $('#geModalReliefProviderId').select2('data');
+        var reliefProviderName = (reliefProviderData && reliefProviderData.length > 0) ? reliefProviderData[0].text : null;
         var reliefReason = $('#geModalReliefReason').val();
 
         if (!payRateId) { alert('Please select a Rate Profile.'); return; }
@@ -1563,11 +1609,16 @@
             start: startDateTime,
             end: endDateTime,
             guardId: guardId,
+            providerName: providerName,
             payRateId: payRateId,
             payRate: payRate,
             shiftType: shiftType,
+            callsignId: callsignId,
+            adhocOffsiteText: adhocOffsiteText,
             reliefGuardId: reliefGuardId,
-            reliefReason: reliefReason
+            reliefProviderName: reliefProviderName,
+            reliefReason: reliefReason,
+            reliefReasonOther: $('#geModalReliefReasonOther').val() || ""
         };
 
         $.ajax({
