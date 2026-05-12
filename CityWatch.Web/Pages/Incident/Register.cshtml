@@ -616,6 +616,15 @@
                         </div>
                     </div>
                     <div class="form-row">
+                        <div class="col-md-2">
+                            <label>Authencity Declaration:</label>
+                        </div>
+                        <div class="col-md-10">
+                            <textarea asp-for="@Model.Report.AiDec" class="form-control" cols="30" rows="2"></textarea>
+
+                        </div>
+                    </div>
+                    <div class="form-row mt-3">
                         <div class="col-md-6">
                             <label>Supervisor or person you reported this to <strong>and/or</strong> will email:</label>
                         </div>
@@ -838,6 +847,7 @@
                 toggleClientGpsLink(true, liveGps);
             }
         });
+        document.getElementById("Report_AiDec").value = 'For integrity reasons, I acknowledge and declare that this submission is genuine, and I have NOT incorporated artificial intelligence (Ai) tools in the completion of this document.Where I have done so, the tool used was: __________  and the purpose was: ___________';
     }
 
     function onReportOfficerPositionChange(event) {
