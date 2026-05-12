@@ -197,7 +197,7 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             if (guard.IsActive)
                             {
-                                if (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess || guard.IsROEditorAccess)
+                                if (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess)
                                 {
                                     if (guard.Pin == pin.Trim())
                                     {
