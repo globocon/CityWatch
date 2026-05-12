@@ -101,7 +101,6 @@ namespace CityWatch.Web.Pages.roster
                             shiftType = s.ShiftType ?? "Regular",
                             status = (int)s.Status,
                             providerName = s.ProviderName ?? "",
-                            reliefProviderName = s.ReliefProviderName ?? "",
                             reliefReasonOther = s.ReliefReasonOther ?? "",
                             adhocOffsiteText = s.AdhocOffsiteText ?? "",
                             callsignId = s.CallsignId,
@@ -319,11 +318,14 @@ namespace CityWatch.Web.Pages.roster
                     {
                         RosterScheduleId = schedule.Id,
                         ActionTime = DateTime.Now,
-                        ActionBy = parsedUserId,
+                        UserId = parsedUserId,
                         Action = "Deleted",
                         OldStatus = oldStatusVal,
-                        NewStatus = -1, // -1 or special value for Deleted
-                        Notes = "Shift deleted via Logbook portal."
+                        NewStatus = null, // Using null like Booking.cshtml.cs for deleted
+                        Details = "Shift deleted via Logbook portal.",
+                        ActionSource = "Web",
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString()
                     });
                     await _context.SaveChangesAsync();
                 }
