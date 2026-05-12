@@ -1608,41 +1608,35 @@
         var postData = {
             groupId: groupId,
             siteId: siteId,
-            shiftId: shiftId,
             start: startDateTime,
             end: endDateTime,
             guardId: guardId,
             providerName: providerName,
             payRateId: payRateId,
             payRate: payRate,
-            shiftType: shiftType,
+            shiftId: shiftId,
             callsignId: callsignId,
-            adhocOffsiteText: adhocOffsiteText,
             reliefGuardId: reliefGuardId,
             reliefProviderName: reliefProviderName,
             reliefReason: reliefReason,
             reliefReasonOther: $('#geModalReliefReasonOther').val() || "",
+            shiftType: shiftType,
+            status: $('#geModalStatus').val() || null,
+            adhocOffsiteText: adhocOffsiteText,
             ignoreUnavailability: ignoreUnavail
         };
 
-        // Debug Alert requested by user
-        if (!ignoreUnavail) {
-            alert("DEBUG - Sending to Server:\nShift ID: " + shiftId + "\nSite ID: " + siteId + "\nGuard ID: " + guardId);
-        }
+        var verificationToken = $('input[name="__RequestVerificationToken"]').val();
 
         $.ajax({
             url: '/roster/Booking?handler=AddShift',
             type: 'POST',
             data: postData,
-            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            headers: { "RequestVerificationToken": verificationToken },
             success: function(res) {
                 if (res.success) {
                     $('#guardAddShiftModal').modal('hide');
                     loadGuardRoster();
-                } else if (res.isUnavailConflict || (res.message && res.message.indexOf('Conflict:') > -1)) {
-                    if (confirm(res.message + "\n\nDo you want to proceed and roster them anyway?")) {
-                        saveGuardRosterShiftAttempt(true);
-                    }
                 } else {
                     alert('Failed to save: ' + res.message);
                 }
