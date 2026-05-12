@@ -1290,7 +1290,8 @@
                         if (loopDate.getDay() === 6) weekendClass = "guard-sat-highlight";
                         else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
                         
-                        rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '" title="' + phReason + '">';
+                        var dStr = loopDate.getFullYear() + '-' + String(loopDate.getMonth() + 1).padStart(2, '0') + '-' + String(loopDate.getDate()).padStart(2, '0');
+                        rowHtml += '<td class="guard-roster-cell ' + phClass + ' ' + weekendClass + '" data-date="' + dStr + '" data-site-id="' + site.id + '" title="' + phReason + '">';
                         
                         dayShifts.forEach(function (s) {
                             var guardId = s.reliefGuardId || s.guardId;
@@ -1597,7 +1598,7 @@
         var endDateTime = cellDate + 'T' + endTime;
         
         if (endTime < startTime) {
-            var startD = new Date(cellDate);
+            var startD = new Date(cellDate + 'T00:00:00');
             var endD = new Date(startD);
             endD.setDate(endD.getDate() + 1);
             var endStr = endD.getFullYear() + '-' + String(endD.getMonth() + 1).padStart(2, '0') + '-' + String(endD.getDate()).padStart(2, '0');
