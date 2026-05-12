@@ -1631,7 +1631,7 @@
             url: '/roster/Booking?handler=AddShift',
             type: 'POST',
             data: postData,
-            headers: { "RequestVerificationToken": verificationToken },
+            headers: { "RequestVerificationToken": token },
             success: function(res) {
                 if (res.success) {
                     $('#guardAddShiftModal').modal('hide');
