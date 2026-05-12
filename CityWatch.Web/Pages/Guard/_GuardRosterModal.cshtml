@@ -1636,6 +1636,10 @@
                 if (res.success) {
                     $('#guardAddShiftModal').modal('hide');
                     loadGuardRoster();
+                } else if (res.isUnavailConflict || (res.message && res.message.indexOf('Conflict:') > -1)) {
+                    if (confirm(res.message + "\n\nDo you want to proceed anyway?")) {
+                        saveGuardRosterShiftAttempt(true);
+                    }
                 } else {
                     alert('Failed to save: ' + res.message);
                 }
@@ -1646,16 +1650,17 @@
     function deleteGuardRosterShift(event, shiftId) {
         if (event) event.stopPropagation();
         if (confirm('Are you sure you want to delete this shift?')) {
+            var token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
-                url: '/roster/GuardRosterAction?handler=DeleteShift',
+                url: '/roster/Booking?handler=DeleteShift',
                 type: 'POST',
                 data: { id: shiftId },
-                headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+                headers: { "RequestVerificationToken": token },
                 success: function(res) {
                     if (res.success) {
                         loadGuardRoster();
                     } else {
-                        alert('Error: ' + res.message);
+                        alert('Failed to delete: ' + res.message);
                     }
                 }
             });
