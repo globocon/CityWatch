@@ -8860,6 +8860,10 @@ $(function () {
                 get: x => x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
             },
             {
+                header: "TagID",
+                get: x => x.clientSiteSmartWandTagsHitLog?.tagUId ?? ''
+            },
+            {
                 header: "StrikeDateTime",
                 get: x => x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime ?? ''
             },
@@ -9053,14 +9057,17 @@ $(function () {
         // ---------- HEADERS ----------
         worksheet.getCell(2, 1).value = "Client Site";
         worksheet.getCell(2, 2).value = "Scan";
+        worksheet.getCell(2, 3).value = "Tag ID";
 
         worksheet.getCell(2, 1).fill = headerFill;
         worksheet.getCell(2, 2).fill = headerFill;
+        worksheet.getCell(2, 3).fill = headerFill;
 
         worksheet.getCell(2, 1).alignment = centerAlign;
         worksheet.getCell(2, 2).alignment = centerAlign;
+        worksheet.getCell(2, 3).alignment = centerAlign;
 
-        let col = 3;
+        let col = 4;
 
         // Day headers
         days.forEach(day => {
@@ -9074,7 +9081,7 @@ $(function () {
         });
 
         // Sub headers
-        col = 3;
+        col = 4;
         days.forEach(() => {
             let dtCell = worksheet.getCell(3, col);
             let gpsCell = worksheet.getCell(3, col + 1);
@@ -9107,12 +9114,17 @@ $(function () {
 
             scans.forEach(scanItem => {
 
-                let colIndex = 3;
+                let colIndex = 4;
 
                 // Scan column
                 worksheet.getCell(rowIndex, 2).value = scanItem.scan;
                 worksheet.getCell(rowIndex, 2).border = borderStyle;
                 worksheet.getCell(rowIndex, 2).alignment = { wrapText: true, vertical: 'top' };
+
+                // Tag ID column
+                worksheet.getCell(rowIndex, 3).value = scanItem.tagId;
+                worksheet.getCell(rowIndex, 3).border = borderStyle;
+                worksheet.getCell(rowIndex, 3).alignment = { wrapText: true, vertical: 'top' };
 
                 days.forEach(day => {
 
@@ -9171,7 +9183,7 @@ $(function () {
 
             separatorRow.height = 15;
 
-            for (let c = 1; c <= (2 + days.length * 2); c++) {
+            for (let c = 1; c <= (3 + days.length * 2); c++) {
                 let cell = worksheet.getCell(rowIndex, c);
                 cell.fill = {
                     type: 'pattern',
@@ -9185,8 +9197,11 @@ $(function () {
 
         // ---------- COLUMN WIDTH ----------
         worksheet.columns.forEach((col, i) => {
-            if (i === 0) col.width = 60; // Client Site
-            else if (i === 1) col.width = 45; // Scan
+            if (i === 0) col.width = 60; // Client Site Column
+            else if (i === 1) col.width = 45; // Scan Column
+            else if (i === 2) col.width = 16; // Tag ID Column
+            else if (i === 3 || i === 5 || i === 7 || i === 9 || i === 11 || i === 13 || i === 15) col.width = 18; // Date Columns
+            else if (i === 4 || i === 6 || i === 8 || i === 10 || i === 12 || i === 14 || i === 16) col.width = 12.6; // GPS  Columns
             else col.width = 22;
         });
 
@@ -9201,7 +9216,7 @@ $(function () {
         const fromDate = $('#wandstrikeAudtitFromDate').val();
         const toDate = $('#wandstrikeAudtitToDate').val();
 
-        const fileName = `Wand Strike Data Logs - ${fromDate} to ${toDate}.xlsx`;
+        const fileName = `Wand Strike Data Logs Mon-Sun - ${fromDate} to ${toDate}.xlsx`;
 
         saveAs(new Blob([buffer]), fileName);
     }
@@ -9217,6 +9232,7 @@ $(function () {
 
             const site = item.ClientSite;
             const scan = item.Scan;
+            const tagid = item.TagID;
 
             if (!result[site]) {
                 result[site] = {
@@ -9228,6 +9244,7 @@ $(function () {
             if (!result[site].scans[scan]) {
                 result[site].scans[scan] = {
                     scan: scan,
+                    tagId: tagid,
                     days: {}
                 };
             }

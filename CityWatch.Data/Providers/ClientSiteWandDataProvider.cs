@@ -40,6 +40,7 @@ namespace CityWatch.Data.Providers
         void DeleteClientSiteEquipments(int id);
         bool SaveOfflineSmartWandTagHitDataRecordError(ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced _offlineRecordsNotSynced);
         List<ClientSiteSmartWandTags> GetAllClientSitesSmartwandTags();
+        public List<ClientSiteSmartWandTags> GetAllSmartwandTags();
         List<IncidentReportPosition> GetPatrolCars();
         List<IncidentReportPosition> GetPatrolCarsForSite(int[] clientsiteid);
 
@@ -500,6 +501,18 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSite)
                 .ToList();
+            foreach (var item in smartwandtags)
+            {
+                item.TagsType = item.SmartWandTagsType.value;
+            }
+            return smartwandtags;
+        }
+
+        public List<ClientSiteSmartWandTags> GetAllSmartwandTags()
+        {
+            var smartwandtags = _dbContext.ClientSiteSmartWandTags
+             .Include(x => x.SmartWandTagsType)
+             .ToList();
             foreach (var item in smartwandtags)
             {
                 item.TagsType = item.SmartWandTagsType.value;
