@@ -1562,24 +1562,24 @@
     }
 
     function saveGuardRosterShiftAttempt(ignoreUnavail) {
-        var shiftId = $('#geModalShiftId').val();
-        var groupId = $('#geModalGroupId').val();
-        var siteId = $('#geModalSiteId').val();
+        var shiftId = parseInt($('#geModalShiftId').val()) || 0;
+        var groupId = parseInt($('#geModalGroupId').val()) || 0;
+        var siteId = parseInt($('#geModalSiteId').val()) || 0;
         
-        var guardId = $('#geModalGuardId').val();
+        var guardId = parseInt($('#geModalGuardId').val()) || null;
         var providerData = $('#geModalProviderId').select2('data');
         var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
         
-        var payRateId = $('#geModalPositionId').val();
+        var payRateId = parseInt($('#geModalPositionId').val()) || null;
         var payRate = $('#geModalPayRate').val();
         var startTime = $('#geModalShiftStart').val();
         var endTime = $('#geModalShiftEnd').val();
         var shiftType = $('#geModalShiftType').val();
-        var callsignId = $('#geModalCallsignId').val();
+        var callsignId = parseInt($('#geModalCallsignId').val()) || null;
         var adhocOffsiteText = $('#geModalAdhocOffsiteText').val();
 
         // Relief Data
-        var reliefGuardId = $('#geModalReliefGuardId').val();
+        var reliefGuardId = parseInt($('#geModalReliefGuardId').val()) || null;
         var reliefProviderData = $('#geModalReliefProviderId').select2('data');
         var reliefProviderName = (reliefProviderData && reliefProviderData.length > 0) ? reliefProviderData[0].text : null;
         var reliefReason = $('#geModalReliefReason').val();
