@@ -1571,7 +1571,7 @@
         var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
         
         var payRateId = parseInt($('#geModalPositionId').val()) || null;
-        var payRate = $('#geModalPayRate').val();
+        var payRateValue = $('#geModalPayRate').val();
         var startTime = $('#geModalShiftStart').val();
         var endTime = $('#geModalShiftEnd').val();
         var shiftType = $('#geModalShiftType').val();
@@ -1587,7 +1587,7 @@
         if (!payRateId) { alert('Please select a Rate Profile.'); return; }
         
         var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
-        var cellDate = card.closest('.guard-roster-cell').data('date'); // e.g. "2026-05-11"
+        var cellDate = card.closest('.guard-roster-cell').data('date');
         
         if (!cellDate) {
             cellDate = new Date().toISOString().split('T')[0];
@@ -1596,7 +1596,6 @@
         var startDateTime = cellDate + 'T' + startTime;
         var endDateTime = cellDate + 'T' + endTime;
         
-        // Handle overnight shifts
         if (endTime < startTime) {
             var startD = new Date(cellDate);
             var endD = new Date(startD);
@@ -1613,7 +1612,7 @@
             guardId: guardId,
             providerName: providerName,
             payRateId: payRateId,
-            payRate: payRate,
+            payRate: payRateValue,
             shiftId: shiftId,
             callsignId: callsignId,
             reliefGuardId: reliefGuardId,
@@ -1626,7 +1625,7 @@
             ignoreUnavailability: ignoreUnavail
         };
 
-        var verificationToken = $('input[name="__RequestVerificationToken"]').val();
+        var token = $('input[name="__RequestVerificationToken"]').val();
 
         $.ajax({
             url: '/roster/Booking?handler=AddShift',
