@@ -18,7 +18,7 @@ namespace CityWatch.Web.Services
         //    int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, int? SmartWandId = null);
 
         public Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId, int RowIdInServer)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
-          int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, int? SmartWandId = null);
+          int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, string gpsCordinates, int? SmartWandId = null);
 
         public (bool IsSuccess, string msg, int guardLoginId) PostMobileLogActivity(PostActivityRequest request, string IPAddress);
         //public (bool IsSuccess, string msg, int guardLoginId) PostMobileLogActivity(int guardId, int clientsiteId, int userId, string activityString, string gps,
@@ -50,7 +50,7 @@ namespace CityWatch.Web.Services
         }
 
         public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId, int RowIdInServer)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
-           int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, int? SmartWandId = null)
+           int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, string gpsCordinates, int? SmartWandId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
@@ -112,6 +112,7 @@ namespace CityWatch.Web.Services
                 _clientSiteSmartWandTagsHitLog.TagsTypeId = tagtypeid;
                 _clientSiteSmartWandTagsHitLog.SmartWandId = SmartWandId ?? 0;
                 _clientSiteSmartWandTagsHitLog.IsOfflineRecord = IsOfflineRecord;
+                _clientSiteSmartWandTagsHitLog.GPScoordinates = gpsCordinates;
 
                 if (IsOfflineRecord)
                 {
@@ -283,123 +284,7 @@ namespace CityWatch.Web.Services
             return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
         }
 
-        //public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandNFCHitLogRecord(int siteId, string TagUid, int GuardId,
-        //   int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, int? SmartWandId = null)
-        //{
-        //    bool IsSuccess = false;
-        //    string message = "An error occurred.";
-        //    bool TagFound = false;
-        //    string TagInfoLabel = string.Empty;
-        //    ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLog = new ClientSiteSmartWandTagsHitLog();
-        //    try
-        //    {
-        //        var _smartWandTagsTypes = _clientSiteWandDataProvider.GetSmartWandTagsType();
-        //        var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId, TagUid);
-
-        //        //Check if scanned tag recently with in a minute from the same site
-        //        if (!IsOfflineRecord)
-        //        {
-        //            if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalSeconds < 60)
-        //            {
-        //                message = "Tag already scanned !!!";
-        //                return (IsSuccess, TagFound, message, TagInfoLabel);
-        //            }
-        //        }
-        //        var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
-        //        var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(TagUid, "nfc");
-
-
-        //        _clientSiteSmartWandTagsHitLog.LoggedInClientSiteId = siteId;
-        //        _clientSiteSmartWandTagsHitLog.LoggedInGuardId = GuardId;
-        //        _clientSiteSmartWandTagsHitLog.LoggedInUserId = UserId;
-        //        _clientSiteSmartWandTagsHitLog.TagUId = TagUid;
-        //        _clientSiteSmartWandTagsHitLog.HitUtcDateTime = HitUtcDateTime;
-        //        _clientSiteSmartWandTagsHitLog.TagsTypeId = _smartWandTagsTypes.Where(x => x.value.ToLower().Equals("nfc")).FirstOrDefault()?.Id ?? null;
-        //        _clientSiteSmartWandTagsHitLog.SmartWandId = SmartWandId ?? 0;
-        //        _clientSiteSmartWandTagsHitLog.IsOfflineRecord = IsOfflineRecord;
-
-        //        if (IsOfflineRecord)
-        //        {
-        //            _clientSiteSmartWandTagsHitLog.UniqueRecordId = uniqueRecordID;
-        //            _clientSiteSmartWandTagsHitLog.OfflineRecordSyncUtcDateTime = DateTime.UtcNow;
-        //        }
-
-        //        if (TagInfoDetails == null)
-        //        {
-        //            // if tag not found show uid in log book entry
-        //            IsSuccess = true;
-        //            message = "Tag Not Found";
-        //            TagInfoLabel = $"{TagUid} [NFC]";
-        //            _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
-
-
-        //        }
-        //        else
-        //        {
-        //            _clientSiteSmartWandTagsHitLog.LabelDescription = TagInfoDetails.LabelDescription;
-        //            _clientSiteSmartWandTagsHitLog.TagLinkedClientSiteId = TagInfoDetails.ClientSiteId;
-        //            if (TagInfoDetails.ClientSiteId != siteId)
-        //            {
-        //                if (TagInfoDetails.ClientSiteId == 0)
-        //                {
-        //                    IsSuccess = true;
-        //                    message = "Tag Not Found";
-        //                    TagInfoLabel = $"{TagUid} [NFC]";
-        //                    _clientSiteSmartWandTagsHitLog.LabelDescription = TagUid;
-        //                }
-        //                else
-        //                {
-        //                    if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode == PatrolTouringMode.STND)
-        //                    {
-        //                        message = "Tag does not belong to logged in site. Please check.";
-        //                    }
-        //                    else
-        //                    {
-        //                        IsSuccess = true;
-        //                        TagFound = true;
-        //                        message = "Tag Found";
-        //                        TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                IsSuccess = true;
-        //                TagFound = true;
-        //                message = "Tag Found";
-        //                TagInfoLabel = $"{TagInfoDetails.LabelDescription} [NFC]";
-        //            }
-        //        }
-        //        try
-        //        {
-        //            // Log the tag details
-        //            _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
-        //            if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
-        //            {
-        //                // If tour mode enabled then log the tour activity  
-        //                if (siteId != TagInfoDetails.ClientSiteId && TagInfoDetails != null && TagInfoDetails?.ClientSiteId > 0)
-        //                {
-        //                    ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLogCorrespondingSite = _clientSiteSmartWandTagsHitLog;
-        //                    _clientSiteSmartWandTagsHitLogCorrespondingSite.Id = 0;
-        //                    _clientSiteSmartWandTagsHitLogCorrespondingSite.LoggedInClientSiteId = TagInfoDetails.ClientSiteId;
-        //                    _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLogCorrespondingSite);
-        //                }
-        //            }
-        //        }
-        //        catch (Exception exp)
-        //        {
-
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        message = ex.Message;
-        //    }
-
-        //    return (IsSuccess, TagFound, message, TagInfoLabel);
-        //}
-
-
+        
         public (bool IsSuccess, string msg, int guardLoginId) PostMobileLogActivity(PostActivityRequest request, string IPAddress)
         {
             bool IsSuccess = false;
@@ -495,101 +380,6 @@ namespace CityWatch.Web.Services
             msg = "Guard successfully logged in.";
             return (IsSuccess, msg, guardLoginId);
         }
-
-
-        //public (bool IsSuccess, string msg, int guardLoginId) PostMobileLogActivity(int guardId, int clientsiteId, int userId, string activityString, string gps, 
-        //    string IPAddress,DateTime LogDateTime, bool systemEntry = true, int scanningType = 0, string tagUID = "NA")
-        //{
-        //    bool IsSuccess = false;
-        //    int guardLoginId = 0;
-        //    string msg = "";
-
-        //    if (guardId <= 0 || clientsiteId <= 0)
-        //    {
-        //        msg = "Invalid guard ID or client site ID.";
-        //        return(IsSuccess, msg, guardLoginId);
-        //    }
-
-
-        //    var logBookType = LogBookType.DailyGuardLog;
-        //    var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType, LogDateTime.Date);
-
-        //    if (logBookId <= 0)
-        //    {
-        //        msg = "Failed to retrieve logbook ID.";
-        //        return (IsSuccess, msg, guardLoginId);
-        //    }
-
-
-        //    // Get Guard Login ID
-        //    guardLoginId = GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
-
-        //    if (guardLoginId <= 0)
-        //    {
-        //        msg = "Guard login failed.";
-        //        return (IsSuccess, msg, guardLoginId);
-        //    }
-
-        //    // Default GPS coordinates (should be replaced with actual values if available)
-        //    var gpsCoordinates = gps;
-
-        //    var _scanningType = (ScanningType)scanningType;
-
-        //    // Create a log entry
-        //    var signInEntry = new GuardLog
-        //    {
-        //        ClientSiteLogBookId = logBookId,
-        //        GuardLoginId = guardLoginId,
-        //        EventDateTime = LogDateTime,
-        //        /*your message */
-        //        Notes = activityString,
-        //        IsSystemEntry = systemEntry,
-        //        EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
-        //        EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
-        //        EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
-        //        EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
-        //        EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-        //        GpsCoordinates = gpsCoordinates,
-        //        WAND_TAG_ENTRY_TYPE = _scanningType
-        //    };
-
-        //    _guardLogDataProvider.SaveGuardLog(signInEntry);
-
-        //    //Check if tour mode is enabled for the site then log into corresponding tag attached site also
-        //    var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault();
-        //    if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND && !string.Equals(tagUID, "NA"))
-        //    {
-        //        var TagInfoDetails = _viewDataService.GetSmartWandTagDetailOfTag(tagUID, "nfc");
-        //        if (TagInfoDetails != null && TagInfoDetails?.ClientSiteId > 0)
-        //        {
-        //            var _CorrespondingSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(TagInfoDetails.ClientSiteId, logBookType);
-        //            guardLoginId = GetGuardLoginId(_CorrespondingSitelogBookId, guardId, TagInfoDetails.ClientSiteId, userId, IPAddress);
-
-
-        //            // If tour mode enabled then log the tour activity
-        //            GuardLog _CorrespondingSiteLogEntry = signInEntry;
-        //            _CorrespondingSiteLogEntry.Id = 0;
-        //            _CorrespondingSiteLogEntry.ClientSiteLogBookId = _CorrespondingSitelogBookId;
-        //            _CorrespondingSiteLogEntry.GuardLoginId = guardLoginId;
-        //            if (clientsiteId != TagInfoDetails.ClientSiteId)
-        //            {
-        //                _guardLogDataProvider.SaveGuardLog(_CorrespondingSiteLogEntry);
-        //            }
-        //        }
-
-        //    }
-
-        //    // Notify all SignalR clients in this ClientSiteId group to refresh the tag scan status
-        //    if (_scanningType != ScanningType.Normal)
-        //    {
-        //        _hubContext.Clients.Group(clientsiteId.ToString()).SendAsync("RefreshTagScanStatus");
-        //    }
-
-        //    IsSuccess = true;
-        //    msg = "Guard successfully logged in.";
-        //    return (IsSuccess, msg, guardLoginId);
-        //}
-
 
         public int GetGuardLoginId(int logBookId, int guardId, int clientsiteId, int userId, string IPAddress)
         {

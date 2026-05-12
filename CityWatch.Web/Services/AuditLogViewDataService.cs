@@ -183,7 +183,7 @@ namespace CityWatch.Web.Services
                         item.SmartWandNameId = smartWand.SmartWandId;
                         item.PatrolCarId = smartWand.PatrolCarId;
                         item.PatrolCarName = patrolCars?.FirstOrDefault(z=> z.Id ==  smartWand.PatrolCarId)?.Name;
-                        item.GPS = _guardLogDataProvider.GetTagScanGpsFromLogBook(item.Id);
+                        //item.GPScoordinates = _guardLogDataProvider.GetTagScanGpsFromLogBook(item.Id);
                     }
                 }
                                 

@@ -8865,7 +8865,7 @@ $(function () {
             },
             {
                 header: "GPS",
-                get: x => x.clientSiteSmartWandTagsHitLog?.gps ?? ''
+                get: x => x.clientSiteSmartWandTagsHitLog?.gpscoordinates ?? ''
             }
         ];
         generateDataForExportToExcel('MONTOSUN');
