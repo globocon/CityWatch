@@ -101,7 +101,7 @@
 </div>
 
 @section Scripts {
-    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
     <script>
         var accessKey = '@Model.AccessKey';
         var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
@@ -194,7 +194,7 @@
                                     html += '<div class="text-truncate" style="font-weight: 600;">';
                                     if (shift.reliefGuardName) html += '<span class="relief-badge">{R}</span>';
                                     else html += '<i class="fa fa-user mr-1 opacity-75"></i>';
-                                    html += shift.reliefGuardName || shift.guardName || 'Unassigned';
+                                    html += (shift.reliefGuardName || shift.guardName || 'Unassigned');
                                     html += '</div>';
                                     
                                     html += '<div class="shift-time-row">';
@@ -214,17 +214,15 @@
                     });
                     html += '</tbody></table></div>';
                 });
-                $('#roster-grid-content').html(html || '<div class="alert alert-info">No projects assigned to this group.</div>');
-            }
-
+                
                 if (projects.length === 0) {
-                    html = '<div class="alert alert-info">No projects found in this group.</div>';
+                    html = '<div class="alert alert-info">No projects assigned to this group.</div>';
                 }
-
                 $('#roster-grid-content').html(html);
             }
 
             function getStatusStampImage(status) {
+                if (!status) return '';
                 switch(status.toUpperCase()) {
                     case 'LIVE': return 'STAMP - LIVE.png';
                     case 'PAID': return 'STAMP - PAID.png';
@@ -233,26 +231,6 @@
                     case 'CANCELLED': case 'CANCELED': return 'STAMP - CANCELD.png';
                     default: return '';
                 }
-            }
-
-            function getShiftBgColor(shift) {
-                if (shift.status === 5) return '#ffffff'; // Cancelled (Crossed out)
-                if (shift.reliefGuardName) return '#e9d8fd'; // Purple for relief
-                
-                if (shift.shiftType === 'Adhoc') {
-                    return shift.status === 3 ? '#66bb6a' : '#ffa726'; // Green if accepted, Orange otherwise
-                }
-                
-                switch(shift.status) {
-                    case 3: return '#c8e6c9'; // Accepted - Light Green
-                    case 4: return '#424242'; // Declined - Dark Gray
-                    default: return '#fff9c4'; // Pushed/Default - Light Yellow
-                }
-            }
-
-            function getShiftTextColor(shift) {
-                if (shift.status === 4) return '#ffffff'; // White text for declined
-                return '#333333';
             }
 
             // SignalR Connection
