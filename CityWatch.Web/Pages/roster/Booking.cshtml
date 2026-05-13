@@ -3521,6 +3521,7 @@
                             (g.coverFileName ? '<button class="btn btn-outline-primary btn-sm btn-preview-cover" data-type="group" data-id="' + g.id + '" title="Preview Demo"><i class="fa fa-eye mr-1"></i>Preview</button>' : '') +
                             (g.coverFileName ? '<button class="btn btn-outline-info btn-sm btn-download-cover" data-type="group" data-id="' + g.id + '" title="Download PDF"><i class="fa fa-download mr-1"></i>Download</button>' : '') +
                             (g.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="group" data-id="' + g.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') +
+                            '<button class="btn btn-outline-dark btn-sm btn-copy-external-link" data-access-key="' + g.accessKey + '" title="Copy External View Link"><i class="fa fa-link mr-1"></i>Link</button>' +
                             '</div>' +
                             '</td>' +
                             '</tr>';
@@ -3528,6 +3529,23 @@
                     });
                 });
             }
+
+            $(document).on('click', '.btn-copy-external-link', function () {
+                var accessKey = $(this).data('access-key');
+                if (!accessKey || accessKey === 'undefined' || accessKey === '00000000-0000-0000-0000-000000000000') {
+                    alert('Access Key not generated yet. Please refresh or contact admin.');
+                    return;
+                }
+                var url = window.location.origin + '/roster/ExternalGroupView?accessKey=' + accessKey;
+                
+                var $temp = $("<input>");
+                $("body").append($temp);
+                $temp.val(url).select();
+                document.execCommand("copy");
+                $temp.remove();
+
+                alert('External View Link copied to clipboard:\n' + url);
+            });
 
             var activeUploadType = '';
             var activeUploadId = 0;

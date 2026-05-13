@@ -1,0 +1,236 @@
+@page
+@model CityWatch.Web.Pages.roster.ExternalGroupViewModel
+@{
+    ViewData["Title"] = "Roster - " + Model.GroupName;
+    Layout = "_Layout"; // Or null if you want a clean page, but _Layout usually has the scripts/styles
+}
+
+<style>
+    .roster-grid-table th { background-color: #f8f9fa; text-align: center; font-size: 0.85rem; vertical-align: middle !important; }
+    .roster-grid-table td { padding: 4px !important; vertical-align: top !important; }
+    .shift-block { padding: 4px; border-radius: 4px; margin-bottom: 3px; border: 1px solid rgba(0,0,0,0.1); font-size: 0.75rem; }
+    .shift-time { font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 2px; }
+    .shift-guard { color: #333; }
+    .shift-relief { color: #6f42c1; font-style: italic; }
+    .status-stamp-img { max-width: 80px; height: auto; display: block; margin: 4px auto 0; }
+    .project-header { background: #e9ecef; font-weight: bold; padding: 8px; border-radius: 4px; margin-top: 15px; }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0 text-primary font-weight-bold">@Model.GroupName</h2>
+            <p class="text-muted mb-0">External View Only - Read Only Mode</p>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 mr-3">
+                <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
+                <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;" id="weekRangeDisplay">@Model.WeekRange</span>
+                <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+            </div>
+            <button class="btn btn-outline-success btn-sm" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o mr-1"></i>Download PDF</button>
+        </div>
+    </div>
+
+    <div id="roster-grid-container" class="bg-white p-3 rounded shadow-sm">
+        <!-- Roster Grid will be loaded here -->
+        <div id="loading-spinner" class="text-center py-5">
+            <i class="fa fa-spinner fa-spin fa-3x text-muted"></i>
+            <p class="mt-2 text-muted">Loading roster data...</p>
+        </div>
+        <div id="roster-grid-content"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script>
+        var accessKey = '@Model.AccessKey';
+        var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+        var binderId = @Model.BinderId;
+
+        $(document).ready(function () {
+            loadRoster();
+
+            $('#btnPrevWeek').click(function (e) {
+                e.preventDefault();
+                changeWeek(-7);
+            });
+
+            $('#btnNextWeek').click(function (e) {
+                e.preventDefault();
+                changeWeek(7);
+            });
+
+            $('#btnDownloadPdf').click(function () {
+                window.open('/roster/Booking?handler=DownloadPdf&binderId=' + binderId + '&startDate=' + currentStartDate + '&weeks=1&includeFinancials=false&includeSuppliers=false', '_blank');
+            });
+
+            function changeWeek(days) {
+                var date = new Date(currentStartDate);
+                date.setDate(date.getDate() + days);
+                currentStartDate = date.toISOString().split('T')[0];
+                loadRoster();
+            }
+
+            function loadRoster() {
+                $('#loading-spinner').show();
+                $('#roster-grid-content').hide();
+
+                $.get('/roster/ExternalGroupView?handler=LoadRoster&accessKey=' + accessKey + '&startDate=' + currentStartDate, function (res) {
+                    $('#loading-spinner').hide();
+                    $('#roster-grid-content').show();
+
+                    if (res.results) {
+                        renderRoster(res.results);
+                        updateWeekRangeDisplay();
+                    } else {
+                        $('#roster-grid-content').html('<div class="alert alert-warning">Failed to load roster data.</div>');
+                    }
+                });
+            }
+
+            function updateWeekRangeDisplay() {
+                var start = new Date(currentStartDate);
+                var end = new Date(currentStartDate);
+                end.setDate(end.getDate() + 6);
+
+                var options = { day: '2-digit', month: 'short', year: 'numeric' };
+                var rangeText = start.toLocaleDateString('en-GB', options) + ' - ' + end.toLocaleDateString('en-GB', options);
+                $('#weekRangeDisplay').text(rangeText);
+            }
+
+            function renderRoster(projects) {
+                var html = '';
+                
+                projects.forEach(function(p) {
+                    html += '<div class="project-section mb-4">';
+                    html += '<div class="project-header d-flex justify-content-between align-items-center">';
+                    html += '<span><i class="fa fa-folder-open mr-2"></i>' + p.projectName + '</span>';
+                    html += '</div>';
+
+                    html += '<table class="table table-bordered table-sm roster-grid-table mb-0 mt-2">';
+                    html += '<thead><tr><th style="width: 15%;">Site</th>';
+                    
+                    var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    var start = new Date(currentStartDate);
+                    for(var i=0; i<7; i++) {
+                        var d = new Date(start);
+                        d.setDate(d.getDate() + i);
+                        html += '<th style="width: 12.14%;">' + d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) + '</th>';
+                    }
+                    html += '</tr></thead><tbody>';
+
+                    p.sites.forEach(function(site) {
+                        html += '<tr>';
+                        html += '<td class="bg-light font-weight-bold">';
+                        html += '<div>' + site.siteName + '</div>';
+                        html += '<div class="text-muted" style="font-size: 0.7rem;">' + site.clientTypeName + '</div>';
+                        
+                        // Status Stamp
+                        var stampImg = getStatusStampImage(site.status);
+                        if (stampImg) {
+                            html += '<img src="/images/stamps/' + stampImg + '" class="status-stamp-img" alt="' + site.status + '" />';
+                        }
+                        
+                        html += '</td>';
+
+                        for(var i=0; i<7; i++) {
+                            html += '<td>';
+                            if (site.days[i] && site.days[i].length > 0) {
+                                site.days[i].forEach(function(shift) {
+                                    var bgColor = getShiftBgColor(shift);
+                                    var textColor = getShiftTextColor(shift);
+                                    
+                                    html += '<div class="shift-block" style="background-color: ' + bgColor + '; color: ' + textColor + ';">';
+                                    html += '<div class="shift-time">' + shift.shiftStart + ' - ' + shift.shiftEnd + ' (' + shift.durationHours + 'h)</div>';
+                                    
+                                    var guardText = shift.guardName;
+                                    if (shift.reliefGuardName) {
+                                        guardText = '<span class="shift-relief">{R} ' + shift.reliefGuardName + '</span>';
+                                    }
+                                    html += '<div class="shift-guard">' + guardText + '</div>';
+                                    
+                                    if (shift.callsignName) {
+                                        html += '<div class="shift-callsign small opacity-75">[' + shift.callsignName + ']</div>';
+                                    }
+                                    
+                                    if (shift.adhocOffsiteText) {
+                                        html += '<div class="small italic text-danger font-weight-bold">' + shift.adhocOffsiteText + '</div>';
+                                    }
+                                    
+                                    html += '</div>';
+                                });
+                            }
+                            html += '</td>';
+                        }
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table></div>';
+                });
+
+                if (projects.length === 0) {
+                    html = '<div class="alert alert-info">No projects found in this group.</div>';
+                }
+
+                $('#roster-grid-content').html(html);
+            }
+
+            function getStatusStampImage(status) {
+                switch(status.toUpperCase()) {
+                    case 'LIVE': return 'STAMP - LIVE.png';
+                    case 'PAID': return 'STAMP - PAID.png';
+                    case 'INVOICED': case 'INV': return 'STAMP - INV.png';
+                    case 'DISPUTED': return 'STAMP - DISPUTED.png';
+                    case 'CANCELLED': case 'CANCELED': return 'STAMP - CANCELD.png';
+                    default: return '';
+                }
+            }
+
+            function getShiftBgColor(shift) {
+                if (shift.status === 5) return '#ffffff'; // Cancelled (Crossed out)
+                if (shift.reliefGuardName) return '#e9d8fd'; // Purple for relief
+                
+                if (shift.shiftType === 'Adhoc') {
+                    return shift.status === 3 ? '#66bb6a' : '#ffa726'; // Green if accepted, Orange otherwise
+                }
+                
+                switch(shift.status) {
+                    case 3: return '#c8e6c9'; // Accepted - Light Green
+                    case 4: return '#424242'; // Declined - Dark Gray
+                    default: return '#fff9c4'; // Pushed/Default - Light Yellow
+                }
+            }
+
+            function getShiftTextColor(shift) {
+                if (shift.status === 4) return '#ffffff'; // White text for declined
+                return '#333333';
+            }
+
+            // SignalR Connection
+            if (typeof signalR !== 'undefined') {
+                var connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/updateHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("UpdateRoster", function (data) {
+                    console.log("Roster update received via SignalR", data);
+                    loadRoster();
+                });
+
+                connection.on("RefreshRoster", function (data) {
+                    console.log("Roster refresh received via SignalR", data);
+                    loadRoster();
+                });
+
+                connection.start().then(function() {
+                    console.log("SignalR connected for real-time updates.");
+                }).catch(function (err) {
+                    console.error("SignalR Connection Error: ", err.toString());
+                });
+            }
+        });
+    </script>
+}

@@ -1378,6 +1378,7 @@ namespace CityWatch.Web.Pages.roster
                     x.Id,
                     x.Name,
                     x.CoverFileName,
+                    x.AccessKey,
                     CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
                 })
                 .OrderBy(x => x.Name)
