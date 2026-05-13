@@ -6377,9 +6377,10 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                         $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
                     }
                 });
+               
                 $.each(d.criticalDocs, function (indexnew, item) {
-                    $('#selectedDescDoc_' + d.id).append('<option value="' + item.hrSettings.id + '">' + item.description + '</option>');
-                    updateSelectedSitesCount();
+                    $('#selectedDescDoc_' + d.id).append('<option value="' + item.id + '">' + item.description + '</option>');
+                    $('#selectedDescCountDoc_' + d.id).text($('#selectedDescDoc_' + d.id + ' option').length);
                 });
                 // HR Group Dropdown Id
                 let hrGroupDropdown = $('#HRGroupDoc_' + d.id);

@@ -249,6 +249,7 @@ namespace CityWatch.Data.Providers
         List<Allowance> GetAllowances();
         void SaveAllowance(Allowance allowance);
         void DeleteAllowance(int id);
+        List<object> GetCriticalDocsUsingClientSiteIds(int[] clientSiteIds);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -2843,6 +2844,61 @@ namespace CityWatch.Data.Providers
             _context.PcarRouteDetails.RemoveRange(detailsToRemove);
             _context.SaveChanges();
             return true;
+        }
+        public List<object> GetCriticalDocsUsingClientSiteIds(int[] clientSiteIds)
+        {
+
+
+            var document1 = _context.CriticalDocuments
+    .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.ClientSite)
+            .ThenInclude(cs => cs.ClientType)
+    .Include(z => z.CriticalDocumentDescriptions)
+            .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.HRGroups)
+     .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+        .ThenInclude(z => z.ReferenceNoNumbers)
+         .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.ReferenceNoAlphabets)
+     .Where(x => x.CriticalDocumentsClientSites
+                                            .Any(cs => clientSiteIds.Contains(cs.ClientSiteId)))
+     .Select(d => new
+     {
+         CriticalDocument = d,
+         SortedDescriptions = d.CriticalDocumentDescriptions
+            .Where(desc => desc.HRSettings != null && desc.HRSettings.ReferenceNoNumbers != null && desc.HRSettings.ReferenceNoAlphabets != null)
+            .OrderBy(desc => desc.HRSettings.ReferenceNoNumbers)
+            .ThenBy(d => d.HRSettings.ReferenceNoAlphabets)
+            .ToList()
+     })
+    .ToList();
+            //var sortedDocuments = document1.Select(doc =>
+            //{
+            //    var criticalDocument = doc.CriticalDocument;
+            //    criticalDocument.CriticalDocumentDescriptions = doc.SortedDescriptions;
+            //    return criticalDocument;
+            //}).ToList();
+            var results = new List<object>();
+            foreach (var item in document1)
+            {
+                foreach (var itemnew in item.SortedDescriptions)
+                {
+                    results.Add(new
+                    {
+                        Id=itemnew.HRSettings.Id.ToString(),
+
+                        Description= itemnew.HRSettings.ReferenceNo + "&nbsp;&nbsp;&nbsp;&nbsp;" + itemnew.HRSettings.Description,
+                        
+                    });
+                }
+            }
+          
+
+            return results;
+
+
         }
 
     }

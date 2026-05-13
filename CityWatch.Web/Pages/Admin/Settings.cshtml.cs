@@ -55,6 +55,7 @@ using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using CityWatch.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 
 
@@ -4128,36 +4129,42 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetOnBoardingUsers()
         {
-            string searchTerm = "onboarding";
-
-            var users = _userDataProvider.GetUsers()
-             .Where(x => string.IsNullOrEmpty(searchTerm) || x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-             .Select(x => new { x.Id, x.UserName, x.IsDeleted, x.LastLoginDate, x.LastLoginIPAdress, x.FormattedLastLoginDate });
-            var results = new List<object>();
-            foreach (var user in users)
+            try
             {
-                var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
-                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
-                var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
-                int[] clientsites = currUserAccess.Select(y => y.ClientSiteId).ToArray();
-                var criticalDocs = _configDataProvider.GetCriticalDocs()
-                   .Select(z => CriticalDocumentViewModel.FromDataModelForDisplay(z));
-                var criticalDocsNew = criticalDocs.Where(x => x.ClientSiteIds.Any(y => clientsites.Contains(y)));
-                results.Add(new
+                string searchTerm = "onboarding";
+
+                var users = _userDataProvider.GetUsers()
+                 .Where(x => string.IsNullOrEmpty(searchTerm) || x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                 .Select(x => new { x.Id, x.UserName, x.IsDeleted, x.LastLoginDate, x.LastLoginIPAdress, x.FormattedLastLoginDate });
+                var results = new List<object>();
+                foreach (var user in users)
                 {
-                    user.Id,
-                    user.UserName,
-                    user.IsDeleted,
-                    user.LastLoginDate,
-                    user.LastLoginIPAdress,
-                    user.FormattedLastLoginDate,
-                    ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
-                    ClientSiteCsv = GetFormattedClientSites(currUserAccess),
-                    ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null,
-                    CriticaDocs = criticalDocsNew
-                });
+                    var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
+                    var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
+                    var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
+                    int[] clientsites = currUserAccess.Select(y => y.ClientSiteId).ToArray();
+                    var criticalDocs = _configDataProvider.GetCriticalDocsUsingClientSiteIds(clientsites);
+                    results.Add(new
+                    {
+                        user.Id,
+                        user.UserName,
+                        user.IsDeleted,
+                        user.LastLoginDate,
+                        user.LastLoginIPAdress,
+                        user.FormattedLastLoginDate,
+                        ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
+                        ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+                        ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null
+                        ,
+                        CriticalDocs = criticalDocs
+                    });
+                }
+                return new JsonResult(results);
             }
-            return new JsonResult(results);
+            catch(Exception ex)
+            {
+                return new JsonResult(ex);
+            }
         }
         private string GetFormattedClientTypes(IEnumerable<UserClientSiteAccess> userClientSiteAccess)
         {
