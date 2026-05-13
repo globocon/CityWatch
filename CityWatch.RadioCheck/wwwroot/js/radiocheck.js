@@ -3706,37 +3706,37 @@ $('#dglClientSiteIdActionList').on('change', function () {
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
                 $('#download_imageRCList').attr('href', data.sopAlarmFilePath + data.sopAlarmFileNme);
                 //p4-143-steps-update-start
-                $('#download_imageRCList').addClass('btn-primary');
-                $('#download_imageRCList').removeClass('text-primary');
+                //$('#download_imageRCList').addClass('btn-primary');
+                $('#download_imageRCList').removeClass('no-docs');
                 //p4-143-steps-update-end
             } else if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length > 1) {
                 $('#download_imageRCList')
                     .attr('data-toggle', 'modal')
                     .attr('data-target', '.bd-example-modal-lgAlarm');
-                $('#download_imageRCList').addClass('btn-primary');
-                $('#download_imageRCList').removeClass('text-primary');
+               // $('#download_imageRCList').addClass('btn-primary');
+                $('#download_imageRCList').removeClass('no-docs');
                 //$('.bd-example-modal-lg').show();
             }
             else {
                 $('#download_imageRCList').removeAttr('href');
                 //p4-143-steps-update-start
-                $('#download_imageRCList').addClass('text-primary');
-                $('#download_imageRCList').removeClass('btn-primary');
+                
+                $('#download_imageRCList').addClass('no-docs');
                 //p4-143-steps-update-end
             }
             if (data.sopFileNme != null) {
 
                 // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
                 //p4-143-steps-update-start
-                $('#download_siteRCSOPList').addClass('btn-primary');
-                $('#download_siteRCSOPList').removeClass('text-primary');
+                //$('#download_siteRCSOPList').addClass('btn-primary');
+                $('#download_siteRCSOPList').removeClass('no-docs');
                 //p4-143-steps-update-end
                 $('#download_siteRCSOPList').attr('href', 'https://cws-ir.com/StaffDocs/' + data.sopFileNme);
             } else {
                 $('#download_siteRCSOPList').removeAttr('href');
                 //p4-143-steps-update-start
-                $('#download_siteRCSOPList').addClass('text-primary');
-                $('#download_siteRCSOPList').removeClass('btn-primary');
+            
+                $('#download_siteRCSOPList').addClass('no-docs');
                 //p4-143-steps-update-end
             }
             $('.traffic-status')
