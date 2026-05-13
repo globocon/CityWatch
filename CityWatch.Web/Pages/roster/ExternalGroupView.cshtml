@@ -196,6 +196,17 @@
                                     else html += '<i class="fa fa-user mr-1 opacity-75"></i>';
                                     html += (shift.reliefGuardName || shift.guardName || 'Unassigned');
                                     html += '</div>';
+
+                                    // Relief details
+                                    if (shift.reliefGuardName && shift.reliefReason) {
+                                        html += '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; opacity: 0.9;">';
+                                        html += '[' + shift.reliefReason + '] ' + truncateName(shift.guardName, 15);
+                                        html += '</div>';
+                                    }
+                                    
+                                    // License number
+                                    var license = shift.reliefGuardName ? (shift.reliefGuardLicense || "N/A") : (shift.guardLicense || "N/A");
+                                    html += '<div class="shift-license" style="margin-top: 1px;">' + license + '</div>';
                                     
                                     html += '<div class="shift-time-row">';
                                     html += '<span>' + shift.shiftStart + ' - ' + shift.shiftEnd + '</span>';
@@ -255,6 +266,12 @@
                 }).catch(function (err) {
                     console.error("SignalR Connection Error: ", err.toString());
                 });
+            }
+
+            function truncateName(name, length) {
+                if (!name) return "";
+                if (name.length <= length) return name;
+                return name.substring(0, length) + "...";
             }
         });
     </script>

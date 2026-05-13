@@ -123,12 +123,15 @@ namespace CityWatch.Web.Pages.roster
                             {
                                 id = s.Id,
                                 guardName = s.GuardId.HasValue ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
+                                guardLicense = s.GuardId.HasValue ? s.Guard.SecurityNo : "",
                                 shiftStart = s.ShiftStart.ToString("HH:mm"),
                                 shiftEnd = s.ShiftEnd.ToString("HH:mm"),
                                 callsignName = s.Callsign?.Name ?? "",
                                 status = (int)s.Status,
                                 durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
                                 reliefGuardName = s.ReliefGuard?.Name ?? s.ReliefProviderName ?? "",
+                                reliefGuardLicense = s.ReliefGuardId.HasValue ? s.ReliefGuard.SecurityNo : "",
+                                reliefReason = s.ReliefReason ?? "",
                                 shiftType = s.ShiftType ?? "Regular",
                                 adhocOffsiteText = s.AdhocOffsiteText ?? ""
                             })
