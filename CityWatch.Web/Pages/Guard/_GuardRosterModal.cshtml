@@ -201,6 +201,53 @@
         text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
     
+    /* Standard Edit/Delete buttons from Booking module */
+    .btn-delete-shift {
+        position: absolute;
+        cursor: pointer;
+        right: 4px;
+        top: 4px;
+        color: white;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        opacity: 1;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+
+    .btn-edit-shift {
+        position: absolute;
+        cursor: pointer;
+        right: 4px;
+        bottom: 4px;
+        color: white;
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        opacity: 1;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+
+    .btn-delete-shift:hover, .btn-edit-shift:hover {
+        transform: scale(1.2);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        color: white !important;
+    }
+    
     .guard-shift-actions {
         margin-top: 8px;
         padding-top: 6px;
@@ -359,6 +406,9 @@
                     </div>
                 </div>
 
+                    <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
+                        <i class="fa fa-pencil-square-o mr-2"></i>Edit Roster
+                    </button>
                     <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
                         <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
                     </button>
@@ -508,6 +558,135 @@
     </div>
 </div>
 
+<!-- Full Add/Edit Shift Modal (Copied from Booking) -->
+<div class="modal fade" id="guardAddShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold"><i class="fa fa-calendar-plus-o mr-2"></i>Add/Edit Shift</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="geModalShiftId" />
+                <input type="hidden" id="geModalSiteId" />
+                <input type="hidden" id="geModalGroupId" />
+
+                <!-- Tab Headers -->
+                <ul class="nav nav-tabs mb-3" id="geModalShiftTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="geModal-guard-tab" data-toggle="tab" href="#geModal-guard" role="tab" style="font-size: 0.9rem; font-weight: 600;">Main Guard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="geModal-relief-tab" data-toggle="tab" href="#geModal-relief" role="tab" style="font-size: 0.9rem; font-weight: 600; color: #6f42c1;">
+                            <i class="fa fa-user-plus mr-1"></i>Relief Guard
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Main Guard Tab -->
+                    <div class="tab-pane fade show active" id="geModal-guard" role="tabpanel">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">GUARD</label>
+                            <select id="geModalGuardId" class="form-control" style="width: 100%"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">PROVIDER (SUBCONTRACTOR)</label>
+                            <select id="geModalProviderId" class="form-control" style="width: 100%"></select>
+                        </div>
+                    </div>
+
+                    <!-- Relief Guard Tab -->
+                    <div class="tab-pane fade" id="geModal-relief" role="tabpanel">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">RELIEF GUARD</label>
+                            <select id="geModalReliefGuardId" class="form-control" style="width: 100%"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">RELIEF PROVIDER</label>
+                            <select id="geModalReliefProviderId" class="form-control" style="width: 100%"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">REASON FOR RELIEF</label>
+                            <select id="geModalReliefReason" class="form-control">
+                                <option value="">Select Reason</option>
+                                <option value="Sick">Sick</option>
+                                <option value="AL">AL</option>
+                                <option value="RDO">RDO</option>
+                                <option value="LWOP">LWOP</option>
+                                <option value="Shift Swap">Shift Swap</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">CALLSIGN / POSITION</label>
+                        <select id="geModalCallsignId" class="form-control" style="width: 100%"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">ADHOC / OFFSITE</label>
+                        <input type="text" id="geModalAdhocOffsiteText" class="form-control" placeholder="Optional text..." />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">START TIME</label>
+                        <input type="time" id="geModalShiftStart" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">END TIME</label>
+                        <input type="time" id="geModalShiftEnd" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1 text-primary">PAYMENT PROFILE</label>
+                        <select id="geModalPayRateGroupId" class="form-control" style="width: 100%" disabled></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">SHIFT STATUS</label>
+                        <select id="geModalShiftType" class="form-control" style="width: 100%" disabled>
+                            <option value="Regular">Unassigned - FIXED</option>
+                            <option value="Adhoc">Unassigned - ADHOC</option>
+                            <option value="RegularAccepted">Accepted - FIXED</option>
+                            <option value="AdhocAccepted">Accepted - ADHOC</option>
+                            <option value="Declined">DECLINED (OPEN)</option>
+                            <option value="Cancelled">❌ CANCELLED (CLOSED)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1 text-primary">RATE PROFILE</label>
+                        <select id="geModalPositionId" class="form-control" style="width: 100%"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">PAY RATE</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            <input type="text" id="geModalPayRate" class="form-control font-weight-bold" style="color: transparent;" readonly />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary px-4 font-weight-bold" id="btnSaveGuardEditShift">SAVE SHIFT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     var guardRosterStartDate = null;
@@ -519,11 +698,21 @@
     var adminRateType = 'guard'; // 'guard' or 'sell'
     var currentRosterStatus = 'Live';
     var lastGuardRosterData = null;
+    var isROEditor = false;
+    var isEditMode = false;
     
     // Public Holiday Orange Sun SVG
     const phIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg>`;
 
     $(document).ready(function() {
+        $('#btnToggleRosterEditMode').on('click', function() {
+            isEditMode = !isEditMode;
+            $(this).toggleClass('btn-outline-dark btn-primary');
+            $(this).find('i').toggleClass('fa-pencil-square-o fa-check');
+            $(this).html(isEditMode ? '<i class="fa fa-check mr-2"></i>Exit Edit Mode' : '<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+            loadGuardRoster();
+        });
+
         $('#btnPrevWeekGuard').on('click', function() {
             var parts = guardRosterStartDate.split('-');
             var d = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -540,6 +729,148 @@
             guardRosterStartDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             loadGuardRoster();
             if (isAdminRoster) loadAdminRosterStatus();
+        });
+
+        // --- Initialize Guard Modal Select2s (Copied from Booking) ---
+        $('#geModalGuardId').select2({
+            placeholder: 'Select Guard',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchGuards',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 1
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            var pId = data.providerId || data.provider;
+            if (pId && data.provider && data.provider !== 'N/A') {
+                if ($('#geModalProviderId').find("option[value='" + pId + "']").length) {
+                    $('#geModalProviderId').val(pId).trigger('change');
+                } else {
+                    var newOption = new Option(data.provider, pId, true, true);
+                    $('#geModalProviderId').append(newOption).trigger('change');
+                }
+            }
+        });
+
+        $('#geModalProviderId').select2({
+            placeholder: 'Select Provider',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchProviders',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        });
+
+        $('#geModalReliefGuardId').select2({
+            placeholder: 'Select Relief Guard',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchGuards',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 1
+        });
+
+        $('#geModalReliefProviderId').select2({
+            placeholder: 'Select Relief Provider',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchProviders',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        });
+
+        $('#geModalPayRateGroupId').select2({
+            placeholder: 'Select Payment Profile',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchPayRateGroups',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { 
+                    return { 
+                        search: params.term,
+                        siteId: $('#geModalSiteId').val()
+                    }; 
+                },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        });
+
+        $('#geModalPositionId').select2({
+            placeholder: 'Select Rate Profile',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchPayRates',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { 
+                    return { 
+                        search: params.term,
+                        groupId: $('#geModalPayRateGroupId').val()
+                    }; 
+                },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            if (data && data.guardPayRate !== undefined) {
+                $('#geModalPayRate').val(data.guardPayRate);
+            }
+        });
+
+        $('#geModalCallsignId').select2({
+            placeholder: 'Select Position',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchCallsigns', // I should check if this handler exists
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            }
+        });
+
+        $('#btnSaveGuardEditShift').on('click', function() {
+            saveGuardRosterShift();
         });
 
         $('#btnDownloadGuardPdf').on('click', function() {
@@ -623,10 +954,23 @@
         });
     });
 
-    function openGuardRosterPortal(siteId, _isAdmin, guardId) {
+    function openGuardRosterPortal(siteId, _isAdmin, guardId, _isROEditor, fromLogbook) {
         currentGuardSiteId = siteId;
-        isAdminRoster = _isAdmin === true;
+        isAdminRoster = _isAdmin;
         loggedGuardId = guardId ? parseInt(guardId) : null;
+        isROEditor = _isROEditor || _isAdmin; // Admins are editors by default
+        isEditMode = false; // Always start with edit mode off as requested
+        
+        // Reset Edit Button
+        $('#btnToggleRosterEditMode').removeClass('btn-primary').addClass('btn-outline-dark');
+        $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+
+        // Only show Edit button if caller is Logbook and user has permission
+        if (isROEditor && fromLogbook === true) {
+            $('#btnToggleRosterEditMode').removeClass('d-none');
+        } else {
+            $('#btnToggleRosterEditMode').addClass('d-none');
+        }
         
         if (isAdminRoster) {
             $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
@@ -946,7 +1290,8 @@
                         if (loopDate.getDay() === 6) weekendClass = "guard-sat-highlight";
                         else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
                         
-                        rowHtml += '<td class="guard-day-cell ' + phClass + ' ' + weekendClass + '" title="' + phReason + '">';
+                        var dStr = loopDate.getFullYear() + '-' + String(loopDate.getMonth() + 1).padStart(2, '0') + '-' + String(loopDate.getDate()).padStart(2, '0');
+                        rowHtml += '<td class="guard-roster-cell ' + phClass + ' ' + weekendClass + '" data-date="' + dStr + '" data-site-id="' + row.siteId + '" title="' + phReason + '">';
                         
                         dayShifts.forEach(function (s) {
                             var guardId = s.reliefGuardId || s.guardId;
@@ -987,8 +1332,16 @@
                             var isFutureOrToday = shiftDate >= today;
 
                             rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
-                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '">' +
-                                (belongsToLoggedGuard ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
+                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '" ' +
+                                'data-guard-name="' + (s.guardName || '') + '" data-shift-start="' + s.shiftStart + '" data-shift-end="' + s.shiftEnd + '" ' +
+                                'data-provider-name="' + (s.providerName || '') + '" data-relief-provider-name="' + (s.reliefProviderName || '') + '" ' +
+                                'data-relief-reason="' + (s.reliefReason || '') + '" data-relief-reason-other="' + (s.reliefReasonOther || '') + '" ' +
+                                'data-adhoc-text="' + (s.adhocOffsiteText || '') + '" data-callsign-id="' + (s.callsignId || '') + '" ' +
+                                'data-payrate-id="' + (s.payRateId || '') + '" data-payrate-group-id="' + (s.payRateGroupId || '') + '" ' +
+                                'data-buy-rate="' + s.buyRate + '">' +
+                                (isEditMode ? '<span class="btn-delete-shift" onclick="deleteGuardRosterShift(event, ' + s.id + ')"><i class="fa fa-times"></i></span>' : '') +
+                                (isEditMode ? '<span class="btn-edit-shift" onclick="openEditShiftModal(' + s.id + ', ' + s.groupId + ', ' + row.siteId + ')"><i class="fa fa-pencil"></i></span>' : '') +
+                                (belongsToLoggedGuard && !isEditMode ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
                                 '<div class="text-truncate font-weight-bold">' + 
                                     (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
                                     (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
@@ -1090,6 +1443,229 @@
 
     function formatGuardDate(date) {
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function openAddShiftModal(date, siteId) {
+        // Redirect to Booking page for this site and date
+        window.location.href = '/roster/Booking?startDate=' + date + '&groupId=' + siteId;
+    }
+
+    function openEditShiftModal(shiftId, groupId, siteId) {
+        var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
+        
+        $('#geModalShiftId').val(shiftId);
+        $('#geModalGroupId').val(groupId);
+        $('#geModalSiteId').val(siteId);
+        
+        // Populate Guard
+        var gId = card.data('guard-id');
+        var gName = card.data('guard-name');
+        if (gId) {
+            $('#geModalGuardId').empty().append(new Option(gName, gId, true, true)).trigger('change');
+        } else {
+            $('#geModalGuardId').empty().trigger('change');
+        }
+
+        // Populate Provider
+        var pName = card.data('provider-name');
+        if (pName) {
+            $('#geModalProviderId').empty().append(new Option(pName, pName, true, true)).trigger('change');
+        } else {
+            $('#geModalProviderId').empty().val(null).trigger('change');
+        }
+
+        // Populate Relief Data
+        var rGuardId = card.data('relief-guard-id');
+        var rProviderName = card.data('relief-provider-name');
+        var rReason = card.data('relief-reason');
+
+        if (rGuardId) {
+            var nameToUse = card.find('.text-truncate.font-weight-bold').text().replace(/^R/, '').trim();
+            $('#geModalReliefGuardId').empty().append(new Option(nameToUse, rGuardId, true, true)).trigger('change');
+        } else {
+            $('#geModalReliefGuardId').empty().val(null).trigger('change');
+        }
+
+        if (rProviderName) {
+            $('#geModalReliefProviderId').empty().append(new Option(rProviderName, rProviderName, true, true)).trigger('change');
+        } else {
+            $('#geModalReliefProviderId').empty().val(null).trigger('change');
+        }
+
+        $('#geModalReliefReason').val(rReason || "").trigger('change');
+
+        // Populate Callsign & Adhoc
+        $('#geModalCallsignId').val(card.data('callsign-id') || "").trigger('change');
+        $('#geModalAdhocOffsiteText').val(card.data('adhoc-text') || "");
+
+        // Populate Times
+        $('#geModalShiftStart').val(card.data('shift-start'));
+        $('#geModalShiftEnd').val(card.data('shift-end'));
+        
+        // Populate Status/Type
+        var currentType = card.data('type') || 'Regular';
+        var currentStatus = parseInt(card.data('status') || '0');
+        var compositeType = currentType;
+        
+        if (currentStatus === 1) {
+            compositeType = (currentType === 'Adhoc' ? 'AdhocAccepted' : 'RegularAccepted');
+        } else if (currentStatus === 2) {
+            compositeType = 'Declined';
+        } else if (currentStatus === 3) {
+            compositeType = 'Cancelled';
+        }
+        $('#geModalShiftType').val(compositeType).trigger('change');
+
+        var pgId = card.data('payrate-group-id');
+        var prId = card.data('payrate-id');
+        
+        // Load Payment Profile
+        if (pgId) {
+            $.ajax({
+                url: '/roster/Booking?handler=SearchPayRateGroups',
+                dataType: 'json',
+                data: { search: '', siteId: siteId },
+                success: function(data) {
+                    var group = data.results.find(function(g) { return g.id == pgId; });
+                    if (group) {
+                        $('#geModalPayRateGroupId').empty().append(new Option(group.text, group.id, true, true)).trigger('change');
+                    }
+                }
+            });
+        } else {
+            $('#geModalPayRateGroupId').empty().trigger('change');
+        }
+        
+        // Load Rate Profile
+        if (prId) {
+            $.ajax({
+                url: '/roster/Booking?handler=SearchPayRates',
+                dataType: 'json',
+                data: { search: '', id: prId },
+                success: function(data) {
+                    var rate = data.results.find(function(r) { return r.id == prId; });
+                    if (rate) {
+                        $('#geModalPositionId').empty().append(new Option(rate.text, rate.id, true, true)).trigger('change');
+                    }
+                }
+            });
+        } else {
+            $('#geModalPositionId').empty().trigger('change');
+        }
+        
+        $('#geModalPayRate').val(card.data('buy-rate'));
+        
+        $('#guardAddShiftModal').modal('show');
+    }
+
+    function saveGuardRosterShift() {
+        saveGuardRosterShiftAttempt(false);
+    }
+
+    function saveGuardRosterShiftAttempt(ignoreUnavail) {
+        var shiftId = parseInt($('#geModalShiftId').val()) || 0;
+        var groupId = parseInt($('#geModalGroupId').val()) || 0;
+        var siteId = parseInt($('#geModalSiteId').val()) || 0;
+        
+        var guardId = parseInt($('#geModalGuardId').val()) || null;
+        var providerData = $('#geModalProviderId').select2('data');
+        var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
+        
+        var payRateId = parseInt($('#geModalPositionId').val()) || null;
+        var payRateValue = $('#geModalPayRate').val();
+        var startTime = $('#geModalShiftStart').val();
+        var endTime = $('#geModalShiftEnd').val();
+        var shiftType = $('#geModalShiftType').val();
+        var callsignId = parseInt($('#geModalCallsignId').val()) || null;
+        var adhocOffsiteText = $('#geModalAdhocOffsiteText').val();
+
+        // Relief Data
+        var reliefGuardId = parseInt($('#geModalReliefGuardId').val()) || null;
+        var reliefProviderData = $('#geModalReliefProviderId').select2('data');
+        var reliefProviderName = (reliefProviderData && reliefProviderData.length > 0) ? reliefProviderData[0].text : null;
+        var reliefReason = $('#geModalReliefReason').val();
+
+        if (!payRateId) { alert('Please select a Rate Profile.'); return; }
+        
+        var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
+        var cellDate = card.closest('.guard-roster-cell').data('date');
+        
+        if (!cellDate) {
+            cellDate = new Date().toISOString().split('T')[0];
+        }
+
+        var startDateTime = cellDate + 'T' + startTime;
+        var endDateTime = cellDate + 'T' + endTime;
+        
+        if (endTime < startTime) {
+            var startD = new Date(cellDate + 'T00:00:00');
+            var endD = new Date(startD);
+            endD.setDate(endD.getDate() + 1);
+            var endStr = endD.getFullYear() + '-' + String(endD.getMonth() + 1).padStart(2, '0') + '-' + String(endD.getDate()).padStart(2, '0');
+            endDateTime = endStr + 'T' + endTime;
+        }
+
+        var postData = {
+            groupId: groupId,
+            siteId: siteId,
+            start: startDateTime,
+            end: endDateTime,
+            guardId: guardId,
+            providerName: providerName,
+            payRateId: payRateId,
+            payRate: payRateValue,
+            shiftId: shiftId,
+            callsignId: callsignId,
+            reliefGuardId: reliefGuardId,
+            reliefProviderName: reliefProviderName,
+            reliefReason: reliefReason,
+            reliefReasonOther: $('#geModalReliefReasonOther').val() || "",
+            shiftType: shiftType,
+            status: $('#geModalStatus').val() || null,
+            adhocOffsiteText: adhocOffsiteText,
+            ignoreUnavailability: ignoreUnavail
+        };
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '/roster/Booking?handler=AddShift',
+            type: 'POST',
+            data: postData,
+            headers: { "RequestVerificationToken": token },
+            success: function(res) {
+                if (res.success) {
+                    $('#guardAddShiftModal').modal('hide');
+                    loadGuardRoster();
+                } else if (res.isUnavailConflict || (res.message && res.message.indexOf('Conflict:') > -1)) {
+                    if (confirm(res.message + "\n\nDo you want to proceed anyway?")) {
+                        saveGuardRosterShiftAttempt(true);
+                    }
+                } else {
+                    alert('Failed to save: ' + res.message);
+                }
+            }
+        });
+    }
+    
+    function deleteGuardRosterShift(event, shiftId) {
+        if (event) event.stopPropagation();
+        if (confirm('Are you sure you want to delete this shift?')) {
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/roster/Booking?handler=DeleteShift',
+                type: 'POST',
+                data: { id: shiftId },
+                headers: { "RequestVerificationToken": token },
+                success: function(res) {
+                    if (res.success) {
+                        loadGuardRoster();
+                    } else {
+                        alert('Failed to delete: ' + res.message);
+                    }
+                }
+            });
+        }
     }
 
     // Click-to-cycle status logic for Guard Roster

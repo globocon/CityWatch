@@ -57,6 +57,8 @@ namespace CityWatch.Web.Pages.roster
         public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
         public string ActiveTab { get; set; }
+        public string RosterAccessRole { get; set; }
+        public int? RestrictedSiteId { get; set; }
         public List<PublicHolidayDayInfo> WeeklyHolidays { get; set; }
 
         public class PublicHolidayDayInfo
@@ -90,6 +92,22 @@ namespace CityWatch.Web.Pages.roster
             SelectedGroupId = groupId;
             SelectedBinderId = binderId;
             ActiveTab = tab ?? "projects";
+            
+            RestrictedSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
+            RosterAccessRole = HttpContext.Session.GetString("BookingAccessRole") ?? "GSS";
+            
+            // If siteId is passed, check if it's an ROEditor access and set session
+            var qSiteId = Request.Query["siteId"];
+            if (!string.IsNullOrEmpty(qSiteId) && int.TryParse(qSiteId, out int sid))
+            {
+                // Verify if the user has ROEditor access for this site/global
+                // For now, if they are coming from the Logbook (which we assume is trusted here), 
+                // we set the restriction.
+                HttpContext.Session.SetInt32("RestrictedSiteId", sid);
+                HttpContext.Session.SetString("BookingAccessRole", "ROEditor");
+                RestrictedSiteId = sid;
+                RosterAccessRole = "ROEditor";
+            }
 
             PayRatesList = _context.PayRates
                 .Where(x => !x.IsDeleted)
@@ -226,8 +244,18 @@ namespace CityWatch.Web.Pages.roster
 
             var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
 
-            var groupSites = await _context.RosterGroupSites
-                .Where(x => x.RosterGroupId == groupId)
+            var groupSitesQuery = _context.RosterGroupSites
+                .Where(x => x.RosterGroupId == groupId);
+
+            // Filter by Restricted Site if ROEditor
+            var rSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
+            var role = HttpContext.Session.GetString("BookingAccessRole");
+            if (role == "ROEditor" && rSiteId.HasValue)
+            {
+                groupSitesQuery = groupSitesQuery.Where(x => x.ClientSiteId == rSiteId.Value);
+            }
+
+            var groupSites = await groupSitesQuery
                 .Include(x => x.ClientSite)
                 .ThenInclude(x => x.ClientType)
                 .ToListAsync();
@@ -356,8 +384,17 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, bool ignoreUnavailability = false)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, decimal? payRate = null, bool ignoreUnavailability = false)
         {
+            if (payRateId.HasValue && payRate.HasValue)
+            {
+                var pr = await _context.PayRates.FindAsync(payRateId.Value);
+                if (pr != null && pr.GuardPayRate != payRate.Value)
+                {
+                    pr.GuardPayRate = payRate.Value;
+                    // No need for separate save here, it will be saved with the shift
+                }
+            }
             // Lock Check
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
@@ -1341,6 +1378,7 @@ namespace CityWatch.Web.Pages.roster
                     x.Id,
                     x.Name,
                     x.CoverFileName,
+                    x.AccessKey,
                     CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
                 })
                 .OrderBy(x => x.Name)

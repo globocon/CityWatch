@@ -8,6 +8,8 @@ using System;
 using CityWatch.Web.Services;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -19,6 +21,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
         public string ClientNameTitle { get; set; }
+
         public RosterModel(ILogger<RosterModel> logger,
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider,IViewDataService viewDataService)
@@ -65,8 +68,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
 
                     ClientNameTitle = "Citywatch Security";
-                }
-            }
+                }            }
             }
         public JsonResult OnGetGuardID(string LicenseNo)
         {
@@ -186,6 +188,7 @@ namespace CityWatch.Web.Pages.Admin
                     if (isSystemAdmin && guardLicNo == "ADMIN" && pin == "ADMIN")
                     {
                         Issuccess = true;
+                        HttpContext.Session.SetString("BookingAccessRole", "GSS");
                     }
                     else if (!string.IsNullOrEmpty(guardLicNo) && !string.IsNullOrEmpty(pin))
                     {
@@ -194,11 +197,17 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             if (guard.IsActive)
                             {
-                                if (guard.IsAdminRosterAccess)
+                                if (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess)
                                 {
                                     if (guard.Pin == pin.Trim())
                                     {
                                         Issuccess = true;
+                                        string role = "ROEditor";
+                                        if (guard.IsAdminRosterAccess) role = "GSS";
+                                        else if (guard.IsAdminRosterGSAccess) role = "GS";
+                                        else if (guard.IsAdminRosterBaseAccess) role = "Base";
+                                        
+                                        HttpContext.Session.SetString("BookingAccessRole", role);
                                     }
                                     else
                                     {
@@ -308,7 +317,15 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             bool isSystemAdmin = AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser;
-            return new JsonResult(new { success = isSuccess || isSystemAdmin, message = message, guardId = guardId, isAdminRoster = isSuccess && guard != null && guard.IsAdminRosterAccess || isSystemAdmin });
+            bool isRosterAdmin = isSuccess && guard != null && (guard.IsAdminRosterAccess || guard.IsAdminRosterBaseAccess || guard.IsAdminRosterGSAccess);
+            
+            return new JsonResult(new { 
+                success = isSuccess || isSystemAdmin, 
+                message = message, 
+                guardId = guardId, 
+                isAdminRoster = isRosterAdmin || isSystemAdmin,
+                isROEditor = isSystemAdmin || isRosterAdmin || (isSuccess && guard != null && guard.IsROEditorAccess)
+            });
         }
     }
 }

@@ -1764,6 +1764,21 @@ $('#btnHRDetails').on('click', function () {
 });
 
 $('#btnRosterDetails').on('click', function () {
+    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+    var guardId = $('#GuardLog_GuardLogin_GuardId').val();
+
+    if (fromLogbook && guardId) {
+        // Skip PIN verification in logbook context
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=GetGuardPermissions',
+            type: 'GET',
+            data: { guardId: guardId }
+        }).done(function (result) {
+            openGuardRosterPortal($('#ClientSiteID').val(), result.isAdminRoster, guardId, result.isROEditor, true);
+        });
+        return;
+    }
+
     guardPinPurpose = 'roster';
     $('#txt_guardKey').val('');
     $('#txt_guardKeyNewPIN').val('');
@@ -1773,7 +1788,7 @@ $('#btnRosterDetails').on('click', function () {
         url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
         type: 'POST',
         data: {
-            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+            guardId: guardId
         },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (result) {
@@ -1815,7 +1830,8 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                 $('#loginHrNewPasswordSetGuard').modal('hide');
 
                 if (guardPinPurpose === 'roster') {
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val());
+                    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), result.isROEditor || false, fromLogbook);
                     return;
                 }
 
@@ -1905,7 +1921,8 @@ $('#btnGuardHrUpdate').on('click', function () {
                 $('#loginHrEditGuard').modal('hide');
 
                 if (guardPinPurpose === 'roster') {
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val());
+                    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), result.isROEditor || false, fromLogbook);
                     return;
                 }
 

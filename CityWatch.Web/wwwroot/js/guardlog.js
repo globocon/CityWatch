@@ -4973,6 +4973,15 @@ $(function () {
         if (data.isAdminRosterAccess) {
             selectedValues.push(18);
         }
+        if (data.isAdminRosterBaseAccess) {
+            selectedValues.push(19);
+        }
+        if (data.isAdminRosterGSAccess) {
+            selectedValues.push(20);
+        }
+        if (data.isROEditorAccess) {
+            selectedValues.push(21);
+        }
         selectedValues.forEach(function (value) {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
@@ -4981,7 +4990,19 @@ $(function () {
         gridGuardLicensesAndLicence.ajax.reload();
         gridGuardTrainingAndAssessmentByAdmin.clear().draw();
         gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
-        $("#Guard_Access").multiselect();
+        $("#Guard_Access").multiselect({
+            onChange: function (option, checked) {
+                var value = $(option).val();
+                var rosterIds = ['18', '19', '20'];
+                if (checked && rosterIds.includes(value)) {
+                    rosterIds.forEach(function (id) {
+                        if (id !== value) {
+                            $("#Guard_Access").multiselect('deselect', id);
+                        }
+                    });
+                }
+            }
+        });
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
 
@@ -5704,7 +5725,19 @@ $(function () {
         $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
         $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", false);
         // Initialize the multiselect dropdown
-        $("#Guard_Access").multiselect();
+        $("#Guard_Access").multiselect({
+            onChange: function (option, checked) {
+                var value = $(option).val();
+                var rosterIds = ['18', '19', '20'];
+                if (checked && rosterIds.includes(value)) {
+                    rosterIds.forEach(function (id) {
+                        if (id !== value) {
+                            $("#Guard_Access").multiselect('deselect', id);
+                        }
+                    });
+                }
+            }
+        });
         $("#Guard_Access").val(value);
         $("#Guard_Access").multiselect("refresh");
         $("#Guard_Lote").multiselect();
@@ -9486,49 +9519,33 @@ $('#btnTimesheetConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
 
     var guardLicNo = $('#GuardDownloadSop_SecurityNo').val();
-    var pinField = $('#GuardDownloadSop_PIN');
-    var guardPin = pinField.length > 0 ? pinField.val() : "ADMIN";
+    var pin = $('#GuardDownloadSop_PIN').val();
 
-    if (!guardLicNo) {
-        $('#AuthGuardForSopDwnldValidationSummary1').html('Please enter License Number.');
+    if (!guardLicNo || !pin) {
+        $('#AuthGuardForSopDwnldValidationSummary1').html('Please enter both license number and PIN.');
         return;
     }
 
     $('#loader').show();
 
-    // 1. Get Guard ID from License No
     $.ajax({
-        url: '/RoosterHub?handler=GuardID&LicenseNo=' + guardLicNo,
-        type: 'GET',
-        dataType: 'json'
-    }).done(function (guardId) {
-        if (!guardId || guardId <= 0) {
-            $('#AuthGuardForSopDwnldValidationSummary1').html('Invalid License Number.');
-            $('#loader').hide();
-            return;
-        }
-
-        // 2. Verify PIN if not Admin
-        if (guardPin !== "ADMIN") {
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
-                type: 'POST',
-                data: { guardId: guardId, key: guardPin },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (result) {
-                if (result.accessPermission) {
-                    proceedToTimesheetModal(guardLicNo, guardId);
-                } else {
-                    $('#AuthGuardForSopDwnldValidationSummary1').html(result.successMessage || 'Incorrect PIN.');
-                    $('#loader').hide();
-                }
-            });
+        url: '/RoosterHub?handler=VerifyGuardRosterAuth',
+        type: 'POST',
+        data: {
+            licenseNo: guardLicNo,
+            pin: pin
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            proceedToTimesheetModal(guardLicNo, result.guardId || 0);
         } else {
-            // Admin Bypass
-            proceedToTimesheetModal(guardLicNo, guardId);
+            $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
         }
-    }).fail(function () {
-        $('#AuthGuardForSopDwnldValidationSummary1').html('Error verifying guard details.');
+    }).fail(function (xhr, status, error) {
+        console.error('AJAX error:', status, error);
+        $('#AuthGuardForSopDwnldValidationSummary1').html('An error occurred during verification.');
+    }).always(function () {
         $('#loader').hide();
     });
 
@@ -9580,17 +9597,6 @@ $('#btnBookingAuthConfirm').on('click', function () {
     });
 });
 
-$(document).on('show.bs.modal', '#mdlAuthBookingAccess', function () {
-    $('#BookingAuth_SecurityNo').val('');
-    $('#BookingAuth_PIN').val('');
-    $('#bookingAuthValidationSummary').html('');
-});
-
-$(document).on('hidden.bs.modal', '#mdlAuthBookingAccess', function () {
-    $('#BookingAuth_SecurityNo').val('');
-    $('#BookingAuth_PIN').val('');
-    $('#bookingAuthValidationSummary').html('');
-});
 
 $('#btnTimesheetSiteConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
@@ -9950,7 +9956,8 @@ $(function () {
                 $('#mdlAuthGuardForRosterSelector').modal('hide');
                 // Open the roster modal for the selected site
                 if (typeof openGuardRosterPortal === 'function') {
-                    openGuardRosterPortal(siteId, result.isAdminRoster, result.guardId);
+                    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+                    openGuardRosterPortal(siteId, result.isAdminRoster, result.guardId, result.isROEditor, fromLogbook);
                 } else {
                     alert('Roster component not loaded correctly.');
                 }

@@ -1,0 +1,278 @@
+@page
+@model CityWatch.Web.Pages.roster.ExternalGroupViewModel
+@{
+    ViewData["Title"] = "Roster - " + Model.GroupName;
+    Layout = "_Layout"; // Or null if you want a clean page, but _Layout usually has the scripts/styles
+}
+
+<style>
+    .roster-grid-table { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 8px; table-layout: fixed; width: 100%; border-collapse: collapse; }
+    .roster-grid-table thead th { 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        color: white; 
+        font-weight: 600; 
+        text-transform: uppercase; 
+        font-size: 11px; 
+        letter-spacing: 0.5px; 
+        padding: 12px 8px; 
+        border: none; 
+        text-align: center;
+    }
+    .roster-grid-table tbody td { padding: 10px 8px !important; vertical-align: top !important; border-color: #dee2e6; }
+    
+    /* Column Colors to match Booking page */
+    .roster-grid-table tbody td:first-child { background-color: #e8e8e8 !important; }
+    .roster-grid-table tbody td.day-cell { background-color: #ffffff !important; }
+    .roster-grid-table tbody td.day-cell.sat-bg { background-color: #d7f0d7 !important; }
+    .roster-grid-table tbody td.day-cell.sun-bg { background-color: #fce4ec !important; }
+    .roster-grid-table tbody td.day-cell.ph-highlight { background-color: #FFF9C4 !important; }
+
+    /* Shift Cards - Exact match to Booking page */
+    .shift-card {
+        position: relative;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 6px 8px;
+        margin-bottom: 5px;
+        border-radius: 8px;
+        font-size: 10.5px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 3px solid rgba(255,255,255,0.3);
+    }
+    .shift-card.type-regular.status-pushed { background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%); }
+    .shift-card.type-adhoc.status-pushed { background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%); }
+    .shift-card.type-regular.status-accepted { background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); }
+    .shift-card.type-adhoc.status-accepted { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); }
+    .shift-card.status-declined { background: linear-gradient(135deg, #434343 0%, #000000 100%); color: #FFFFFF !important; }
+    .shift-card.shift-relief { background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important; border-left: 3px solid #e1bee7 !important; }
+    
+    .shift-card.status-cancelled {
+        background: #ffffff !important;
+        color: #B71C1C !important;
+        border: 2px solid #B71C1C !important;
+        overflow: hidden;
+    }
+    .shift-card.status-cancelled::before, .shift-card.status-cancelled::after {
+        content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
+        background-color: rgba(183, 28, 28, 0.5); z-index: 10; pointer-events: none;
+    }
+    .shift-card.status-cancelled::before { transform: rotate(15deg); }
+    .shift-card.status-cancelled::after { transform: rotate(-15deg); }
+
+    .shift-time-row { font-size: 10px; display: flex; align-items: center; justify-content: flex-start; white-space: nowrap; margin-top: 2px; }
+    .hour-badge {
+        background-color: rgba(0, 0, 0, 0.15); color: white; padding: 1px 4px; border-radius: 4px;
+        font-weight: 600; margin-left: 5px; font-size: 9px; border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .relief-badge {
+        background-color: #ffffff; color: #6f42c1; padding: 1px 4px; border-radius: 3px;
+        font-size: 9px; font-weight: bold; display: inline-block; margin-right: 3px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .shift-license { font-size: 9px; color: rgba(255,255,255,0.85); margin-top: 2px; }
+    .status-stamp-img { max-width: 80px; height: auto; display: block; margin: 8px auto 0; }
+    .project-header { background: #f8f9fa; font-weight: bold; padding: 10px 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #667eea; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+</style>
+
+<div class="container-fluid py-4" style="background-color: #f4f7f6; min-height: 100vh;">
+    <div class="d-flex justify-content-between align-items-center mb-4 px-3">
+        <div>
+            <h1 class="mb-0 text-primary font-weight-bold" style="letter-spacing: -1px;">@Model.GroupName</h1>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;"><i class="fa fa-lock mr-1"></i>External View Only • Read Only Mode</p>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="d-inline-flex align-items-center bg-white border rounded-pill shadow-sm px-3 py-2 mr-3">
+                <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
+                <span class="font-weight-bold text-dark px-3" style="min-width: 180px; font-size: 0.95rem;" id="weekRangeDisplay">@Model.WeekRange</span>
+                <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+            </div>
+            <button class="btn btn-success rounded-pill px-4 shadow-sm" id="btnDownloadPdf" title="Download PDF"><i class="fa fa-file-pdf-o mr-2"></i>Download PDF</button>
+        </div>
+    </div>
+
+    <div id="roster-grid-container" class="px-3">
+        <div id="loading-spinner" class="text-center py-5 bg-white rounded shadow-sm">
+            <i class="fa fa-circle-o-notch fa-spin fa-3x text-primary"></i>
+            <p class="mt-3 text-muted font-weight-bold">Fetching latest roster data...</p>
+        </div>
+        <div id="roster-grid-content"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+    <script>
+        var accessKey = '@Model.AccessKey';
+        var currentStartDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+        var binderId = @Model.BinderId;
+
+        $(document).ready(function () {
+            loadRoster();
+
+            $('#btnPrevWeek').click(function (e) { e.preventDefault(); changeWeek(-7); });
+            $('#btnNextWeek').click(function (e) { e.preventDefault(); changeWeek(7); });
+
+            $('#btnDownloadPdf').click(function () {
+                window.open('/roster/Booking?handler=DownloadPdf&binderId=' + binderId + '&startDate=' + currentStartDate + '&weeks=1&includeFinancials=false&includeSuppliers=false', '_blank');
+            });
+
+            function changeWeek(days) {
+                var date = new Date(currentStartDate);
+                date.setDate(date.getDate() + days);
+                currentStartDate = date.toISOString().split('T')[0];
+                loadRoster();
+            }
+
+            function loadRoster() {
+                $('#loading-spinner').show();
+                $('#roster-grid-content').hide();
+
+                $.get('/roster/ExternalGroupView?handler=LoadRoster&accessKey=' + accessKey + '&startDate=' + currentStartDate, function (res) {
+                    $('#loading-spinner').hide();
+                    $('#roster-grid-content').show();
+
+                    if (res.results) {
+                        renderRoster(res.results);
+                        updateWeekRangeDisplay();
+                    } else {
+                        $('#roster-grid-content').html('<div class="alert alert-danger">Error: Could not load roster. Please refresh.</div>');
+                    }
+                });
+            }
+
+            function updateWeekRangeDisplay() {
+                var start = new Date(currentStartDate);
+                var end = new Date(currentStartDate);
+                end.setDate(end.getDate() + 6);
+                var options = { day: '2-digit', month: 'short', year: 'numeric' };
+                $('#weekRangeDisplay').text(start.toLocaleDateString('en-GB', options) + ' - ' + end.toLocaleDateString('en-GB', options));
+            }
+
+            function renderRoster(projects) {
+                var html = '';
+                projects.forEach(function(p) {
+                    html += '<div class="project-section mb-5">';
+                    html += '<div class="project-header d-flex align-items-center">';
+                    html += '<i class="fa fa-folder-open text-primary mr-3" style="font-size: 1.2rem;"></i><span style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">' + p.projectName + '</span>';
+                    html += '</div>';
+
+                    html += '<table class="table roster-grid-table mb-0 mt-3">';
+                    html += '<thead><tr><th style="width: 15%;">Site</th>';
+                    for(var i=0; i<7; i++) {
+                        var d = new Date(currentStartDate); d.setDate(d.getDate() + i);
+                        html += '<th style="width: 12.14%;">' + d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) + '</th>';
+                    }
+                    html += '</tr></thead><tbody>';
+
+                    p.sites.forEach(function(site) {
+                        html += '<tr>';
+                        html += '<td>';
+                        html += '<div class="font-weight-bold" style="font-size: 0.9rem; color: #2c3e50;">' + site.siteName + '</div>';
+                        html += '<div class="text-muted" style="font-size: 0.75rem;">' + site.clientTypeName + '</div>';
+                        var stampImg = getStatusStampImage(site.status);
+                        if (stampImg) html += '<img src="/images/stamps/' + stampImg + '" class="status-stamp-img" />';
+                        html += '</td>';
+
+                        for(var i=0; i<7; i++) {
+                            var dayClass = 'day-cell';
+                            if (i === 5) dayClass += ' sat-bg';
+                            if (i === 6) dayClass += ' sun-bg';
+                            
+                            html += '<td class="' + dayClass + '">';
+                            if (site.days[i]) {
+                                site.days[i].forEach(function(shift) {
+                                    var classes = 'shift-card';
+                                    if (shift.status === 3) classes += ' status-cancelled';
+                                    else if (shift.status === 2) classes += ' status-declined';
+                                    else if (shift.status === 1) classes += (shift.shiftType === 'Adhoc' ? ' type-adhoc status-accepted' : ' type-regular status-accepted');
+                                    else classes += (shift.shiftType === 'Adhoc' ? ' type-adhoc status-pushed' : ' type-regular status-pushed');
+                                    
+                                    if (shift.reliefGuardName) classes += ' shift-relief';
+                                    
+                                    html += '<div class="' + classes + '">';
+                                    html += '<div class="text-truncate" style="font-weight: 600;">';
+                                    if (shift.reliefGuardName) html += '<span class="relief-badge">{R}</span>';
+                                    else html += '<i class="fa fa-user mr-1 opacity-75"></i>';
+                                    html += (shift.reliefGuardName || shift.guardName || 'Unassigned');
+                                    html += '</div>';
+
+                                    // Relief details
+                                    if (shift.reliefGuardName && shift.reliefReason) {
+                                        html += '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; opacity: 0.9;">';
+                                        html += '[' + shift.reliefReason + '] ' + truncateName(shift.guardName, 15);
+                                        html += '</div>';
+                                    }
+                                    
+                                    // License number
+                                    var license = shift.reliefGuardName ? (shift.reliefGuardLicense || "N/A") : (shift.guardLicense || "N/A");
+                                    html += '<div class="shift-license" style="margin-top: 1px;">' + license + '</div>';
+                                    
+                                    html += '<div class="shift-time-row">';
+                                    html += '<span>' + shift.shiftStart + ' - ' + shift.shiftEnd + '</span>';
+                                    html += '<span class="hour-badge">' + shift.durationHours + 'h</span>';
+                                    html += '</div>';
+
+                                    if (shift.callsignName) html += '<div class="mt-1 font-weight-bold" style="font-size: 9px;">' + shift.callsignName + '</div>';
+                                    if (shift.adhocOffsiteText) html += '<div class="mt-1 font-weight-bold text-white small" style="background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;">' + shift.adhocOffsiteText + '</div>';
+                                    
+                                    html += '</div>';
+                                });
+                            }
+                            html += '</td>';
+                        }
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div>';
+                });
+                
+                if (projects.length === 0) {
+                    html = '<div class="alert alert-info">No projects assigned to this group.</div>';
+                }
+                $('#roster-grid-content').html(html);
+            }
+
+            function getStatusStampImage(status) {
+                if (!status) return '';
+                switch(status.toUpperCase()) {
+                    case 'LIVE': return 'STAMP - LIVE.png';
+                    case 'PAID': return 'STAMP - PAID.png';
+                    case 'INVOICED': case 'INV': return 'STAMP - INV.png';
+                    case 'DISPUTED': return 'STAMP - DISPUTED.png';
+                    case 'CANCELLED': case 'CANCELED': return 'STAMP - CANCELD.png';
+                    default: return '';
+                }
+            }
+
+            // SignalR Connection
+            if (typeof signalR !== 'undefined') {
+                var connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/updateHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("UpdateRoster", function (data) {
+                    console.log("Roster update received via SignalR", data);
+                    loadRoster();
+                });
+
+                connection.on("RefreshRoster", function (data) {
+                    console.log("Roster refresh received via SignalR", data);
+                    loadRoster();
+                });
+
+                connection.start().then(function() {
+                    console.log("SignalR connected for real-time updates.");
+                }).catch(function (err) {
+                    console.error("SignalR Connection Error: ", err.toString());
+                });
+            }
+
+            function truncateName(name, length) {
+                if (!name) return "";
+                if (name.length <= length) return name;
+                return name.substring(0, length) + "...";
+            }
+        });
+    </script>
+}

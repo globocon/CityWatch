@@ -313,6 +313,9 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsMobileAppPlusTags = guard.IsMobileAppPlusTags;
                 updateGuard.IsPCARAccess = guard.IsPCARAccess;
                 updateGuard.IsAdminRosterAccess = guard.IsAdminRosterAccess;
+                updateGuard.IsAdminRosterBaseAccess = guard.IsAdminRosterBaseAccess;
+                updateGuard.IsAdminRosterGSAccess = guard.IsAdminRosterGSAccess;
+                updateGuard.IsROEditorAccess = guard.IsROEditorAccess;
 
             }
 
@@ -380,6 +383,10 @@ namespace CityWatch.Data.Providers
                 guard.IsMobileAppAccess = true;
                 guard.IsMobileAppPlusTags = false;
                 guard.IsPCARAccess = false;
+                guard.IsAdminRosterAccess = false;
+                guard.IsAdminRosterBaseAccess = false;
+                guard.IsAdminRosterGSAccess = false;
+                guard.IsROEditorAccess = false;
 
                 //P1-273 access levels-end
                 _context.Guards.Add(guard);
