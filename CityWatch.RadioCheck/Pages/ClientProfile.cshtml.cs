@@ -52,10 +52,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly IViewDataService _viewDataService;
         public readonly IConfigDataProvider _configDataProvider;
         private readonly ILogbookDataService _logbookDataService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public ClientProfileModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider, ILogbookDataService logbookDataService)
+            IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider, ILogbookDataService logbookDataService, IWebHostEnvironment webHostEnvironment)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -67,6 +68,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _viewDataService = viewDataService;
             _configDataProvider = configDataProvider;
             _logbookDataService = logbookDataService;
+            _webHostEnvironment = webHostEnvironment;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
