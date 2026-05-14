@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -125,43 +125,36 @@ namespace CityWatch.RadioCheck.Services
                     ActionListMessage += "Action 4: " + message.Action4 + "\r\n";
                     ActionListMessage += "Action 5: " + message.Action5 + "\r\n";
                     ActionListMessage += "\r\n";
-                    var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientsite.Id);
-                    if (sopfiletype.Count() != 0)
-                    {
-                        // ActionListMessage += "SOP's Site:https://cws-ir.com/StaffDocs/" + sopfiletype.Select(x => x.FileName).ToList();
-                        //ActionListMessage += "SOP's Site:" + $" < a href='https://cws-ir.com/StaffDocs/{sopfiletype.Select(x => x.FileName).ToList()}'>Click here</a><br/>";
-                        foreach (var item in sopfiletype)
-                        {
-                            ActionListMessage += "SOP's Site:" + $"<a href=\"https://cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
-                        }
-                        ActionListMessage += "\r\n";
-                        ActionListMessage += "\r\n";
+                    var unifiedDocs = _guardLogDataProvider.GetUnifiedSiteDocuments(clientsite.Id);
 
+                    // SOP's Site (General SOPs)
+                    var siteSops = unifiedDocs.Where(x => x.Category == "General SOP").ToList();
+                    if (siteSops.Any())
+                    {
+                        foreach (var item in siteSops)
+                        {
+                            ActionListMessage += "SOP's Site:" + $"<a href=\"https://cws-ir.com/{item.FilePath.Replace("\\", "/")}\">Click here</a><br/>";
+                        }
+                        ActionListMessage += "\r\n\r\n";
                     }
                     else
                     {
-                        ActionListMessage += "SOP's Site:";
-                        ActionListMessage += "\r\n";
-                        ActionListMessage += "\r\n";
+                        ActionListMessage += "SOP's Site:\r\n\r\n";
                     }
-                    var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientsite.Id);
-                    if (sopAlarmfileType.Count() != 0)
-                    {
-                        //ActionListMessage += "SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList();
-                        //ActionListMessage += "SOP's Alarm:" + $" < a href='https://kpi.cws-ir.com/StaffDocs/{sopfiletype.Select(x => x.FileName).ToList()}'>Click here</a><br/>";
-                        foreach (var item in sopAlarmfileType)
-                        {
-                            ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://kpi.cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
-                        }
-                        ActionListMessage += "\r\n";
-                        ActionListMessage += "\r\n";
 
+                    // SOP's Alarm (Primary SOP + Legacy Alarm SOPs)
+                    var alarmSops = unifiedDocs.Where(x => x.Category == "Primary SOP" || x.Category == "Alarm SOP").ToList();
+                    if (alarmSops.Any())
+                    {
+                        foreach (var item in alarmSops)
+                        {
+                            ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://kpi.cws-ir.com/{item.FilePath.Replace("\\", "/")}\">Click here</a><br/>";
+                        }
+                        ActionListMessage += "\r\n\r\n";
                     }
                     else
                     {
-                        ActionListMessage += "SOP's Alarm:";
-                        ActionListMessage += "\r\n";
-                        ActionListMessage += "\r\n";
+                        ActionListMessage += "SOP's Alarm:\r\n\r\n";
                     }
                 }
 

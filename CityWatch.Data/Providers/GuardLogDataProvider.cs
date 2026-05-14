@@ -435,6 +435,7 @@ namespace CityWatch.Data.Providers
         public void DeleteKeyVehicleLogPax(int id);
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
         string GetTagScanGpsFromLogBook(int RecordId);
+        List<UnifiedSiteDocument> GetUnifiedSiteDocuments(int clientSiteId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -8525,6 +8526,43 @@ namespace CityWatch.Data.Providers
         public string GetTagScanGpsFromLogBook(int RecordId)
         {
             return _context.GuardLogs.Where(x => x.TagScanHitLogRefId != null && x.TagScanHitLogRefId == RecordId)?.Select(x => x.GpsCoordinates)?.FirstOrDefault() ?? "";
+        }
+
+        public List<UnifiedSiteDocument> GetUnifiedSiteDocuments(int clientSiteId)
+        {
+            var unifiedDocs = new List<UnifiedSiteDocument>();
+
+            // 1. Get from RCActionList (Primary SOP)
+            var rcActionList = _context.RCActionList.FirstOrDefault(x => x.ClientSiteID == clientSiteId);
+            if (rcActionList != null && !string.IsNullOrEmpty(rcActionList.Imagepath))
+            {
+                unifiedDocs.Add(new UnifiedSiteDocument
+                {
+                    FileName = rcActionList.Imagepath,
+                    SourceTable = "RCActionList",
+                    Category = "Primary SOP",
+                    FilePath = Path.Combine("RCImage", rcActionList.Imagepath)
+                });
+            }
+
+            // 2. Get from StaffDocuments (Legacy Type 4 and 6)
+            var portalDocs = _context.StaffDocuments
+                .Where(x => x.ClientSite == clientSiteId && (x.DocumentType == 4 || x.DocumentType == 6))
+                .ToList();
+
+            foreach (var doc in portalDocs)
+            {
+                unifiedDocs.Add(new UnifiedSiteDocument
+                {
+                    FileName = doc.FileName,
+                    SourceTable = "StaffDocuments",
+                    Category = doc.DocumentType == 4 ? "General SOP" : "Alarm SOP",
+                    LastUpdated = doc.LastUpdated,
+                    FilePath = Path.Combine("StaffDocs", doc.FileName)
+                });
+            }
+
+            return unifiedDocs;
         }
     }
 

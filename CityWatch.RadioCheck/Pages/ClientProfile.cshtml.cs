@@ -2166,22 +2166,31 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 rtn.Landline = LandLine.LandLine;
                 var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
                 rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
+
+                // Unified SOP Approach
+                rtn.UnifiedDocuments = _guardLogDataProvider.GetUnifiedSiteDocuments(clientSiteId);
+                foreach (var doc in rtn.UnifiedDocuments)
+                {
+                    doc.Base64Data = ConvertFileToBase64(doc.FilePath);
+                }
+
                 if (rtn.Imagepath != null)
                 {
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
                 }
-                var sopAlarmfileType= _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
-                if (sopAlarmfileType.Count() != 0)
-                {
-                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x=>x.FileName).ToList();
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
-                }
-                    var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
-                if (sopfiletype.Count() != 0)
-                {
-                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
 
+                // Compatibility mapping for legacy properties
+                var alarmDocs = rtn.UnifiedDocuments.Where(x => x.Category == "Alarm SOP" || x.Category == "Primary SOP").ToList();
+                if (alarmDocs.Any())
+                {
+                    rtn.SOPAlarmFileNme = alarmDocs.Select(x => x.FileName).ToList();
+                    rtn.SOPAlarmFilePath = alarmDocs.Select(x => x.FilePath).ToList();
+                }
+
+                var generalDoc = rtn.UnifiedDocuments.FirstOrDefault(x => x.Category == "General SOP");
+                if (generalDoc != null)
+                {
+                    rtn.SOPFileNme = generalDoc.FileName;
                 }
                 else
                 {
@@ -2195,21 +2204,29 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 //if null assign the value of the SOPFileNme
                 rtn = new RCActionList();
 
-                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
-                if (sopAlarmfileType.Count() != 0)
+                // Unified SOP Approach
+                rtn.UnifiedDocuments = _guardLogDataProvider.GetUnifiedSiteDocuments(clientSiteId);
+                foreach (var doc in rtn.UnifiedDocuments)
                 {
-                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
+                    doc.Base64Data = ConvertFileToBase64(doc.FilePath);
+                }
+
+                // Compatibility mapping for legacy properties
+                var alarmDocs = rtn.UnifiedDocuments.Where(x => x.Category == "Alarm SOP" || x.Category == "Primary SOP").ToList();
+                if (alarmDocs.Any())
+                {
+                    rtn.SOPAlarmFileNme = alarmDocs.Select(x => x.FileName).ToList();
+                    rtn.SOPAlarmFilePath = alarmDocs.Select(x => x.FilePath).ToList();
                 }
 
                 rtn.Landline = LandLine.LandLine;
                 var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
                 rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
 
-                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
-                if (sopfiletype.Count() != 0)
+                var generalDoc = rtn.UnifiedDocuments.FirstOrDefault(x => x.Category == "General SOP");
+                if (generalDoc != null)
                 {
-                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
+                    rtn.SOPFileNme = generalDoc.FileName;
                 }
                 else
                 {
@@ -2529,7 +2546,16 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             if (!string.IsNullOrEmpty(imageName))
             {
-                var fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                string fileToConvert;
+                if (imageName.Contains("\\") || imageName.Contains("/"))
+                {
+                    fileToConvert = Path.Combine(_webHostEnvironment.WebRootPath, imageName);
+                }
+                else
+                {
+                    fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                }
+
                 if (System.IO.File.Exists(fileToConvert))
                 {
                     byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);
