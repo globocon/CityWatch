@@ -2187,65 +2187,45 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
                                     @{
-                                        var filename = string.Empty;
-                                        var filebase64 = string.Empty;
-                                        string[] myArray = null;
-
-                                        if (Model.rclistKP.Imagepath != null && Model.rclistKP.Imagepath != "")
+                                        if (Model.rclistKP.UnifiedDocuments != null && Model.rclistKP.UnifiedDocuments.Any())
                                         {
-                                            try
+                                            foreach (var doc in Model.rclistKP.UnifiedDocuments)
                                             {
-                                                myArray = Model.rclistKP.Imagepath.ToString().Split(":-:");
-                                                if (myArray.Length > 1)
-                                                {
-                                                    filebase64 = myArray[1];
-                                                    filename = myArray[0];
-                                                }
-                                                else
-                                                {
-                                                    filename = myArray[0];
-                                                }
+                                                <tr>
+                                                    <td class="align-middle">@doc.FileName</td>
+                                                    <td class="align-middle">@(doc.LastUpdated?.ToString("dd MMM yyyy @ HH:mm") ?? "")</td>
+                                                    <td class="text-center">
+                                                        <label class="btn btn-success mb-0">
+                                                            <i class="fa fa-upload mr-2"></i>Replace
+                                                            <input type="file" class="upload_unified_sop" data-id="@doc.Id" data-site="@Model.ClientSiteId" accept=".pdf,.docx,.xlsx,.mp4" hidden>
+                                                        </label>
+                                                        @if (!string.IsNullOrEmpty(doc.Base64Data))
+                                                        {
+                                                            <a href="@doc.Base64Data" download="@doc.FileName" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <a href="https://kpi.cws-ir.com/@doc.FilePath" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+                                                        }
+                                                        <button class="btn btn-outline-danger delete_unified_sop" type="button" data-id="@doc.Id"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                                    </td>
+                                                </tr>
                                             }
-                                            catch (Exception ex)
-                                            {
-                                                filename = Model.rclistKP.Imagepath;
-                                            }
-                                        }
-
-                                        <td class="align-middle" id="summary_imageRC">@filename</td>
-
-                                        if (Model.rclistKP.DateandTimeUpdated != null && Model.rclistKP.DateandTimeUpdated != "")
-                                        {
-                                            <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
                                         }
                                         else
                                         {
-                                            <td class="align-middle" id="summary_image_updatedRC"></td>
+                                            <tr>
+                                                <td class="align-middle" colspan="2">No SOPs found for this site.</td>
+                                                <td class="text-center">
+                                                     <label class="btn btn-success mb-0">
+                                                        <i class="fa fa-plus mr-2"></i>Add SOP
+                                                        <input type="file" class="upload_unified_sop" data-id="0" data-site="@Model.ClientSiteId" accept=".pdf,.docx,.xlsx,.mp4" hidden>
+                                                    </label>
+                                                </td>
+                                            </tr>
                                         }
                                     }
-                                    <td class="text-center">
-                                        <label class="btn btn-success mb-0">
-
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
-
-                                        </label>
-                                        @{
-                                            if (!string.IsNullOrEmpty(filebase64))
-                                            {
-                                                <a href="@filebase64" download="@filename" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                                            }
-                                            else
-                                            {
-                                                <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                                            }
-                                        }
-
-                                        <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
-                                    </td>
-                                </tr>
                             </tbody>
                         </table><br />
 

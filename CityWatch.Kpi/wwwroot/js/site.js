@@ -1848,19 +1848,23 @@ $(function () {
         }
     });
 
-    /*Rc Action List Image Upload start*/
-    $('#div_site_settings').on('change', '#upload_summary_imageRcList', function () {
+    /* Unified SOP Handlers start */
+    $('#div_site_settings').on('change', '.upload_unified_sop', function () {
+        const fileInput = $(this);
+        const file = fileInput.prop("files")[0];
+        const docId = fileInput.data("id");
+        const clientSiteId = fileInput.data("site");
 
-        const file = $('#upload_summary_imageRcList').prop("files")[0];
         if (file) {
-            const id = $("#RCList_Id").val();
             const formData = new FormData();
-            formData.append("SummaryImage", file);
-            formData.append("id", id);
+            formData.append("file", file);
+            formData.append("doc-id", docId);
+            formData.append("ClientSiteID", clientSiteId);
+            formData.append("type", 6); // Default to Alarm SOP category for RC uploads
 
             $.ajax({
                 type: 'POST',
-                url: '/Admin/Settings?handler=UploadRCImage',
+                url: '/Admin/Settings?handler=UploadStaffDocUsingType',
                 data: formData,
                 cache: false,
                 contentType: false,
@@ -1868,125 +1872,48 @@ $(function () {
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (data) {
                 if (data.success) {
-                    setSummaryImageRCList(data);
+                    // Reload the partial view to show the new list
+                    loadClientSiteKpiSettings(clientSiteId);
+                } else {
+                    showModal(data.message || 'Upload failed');
                 }
             }).always(function () {
-                $('#upload_summary_imageRcList').val('');
+                fileInput.val('');
             });
         }
     });
 
-    $('#div_site_settings').on('change', '#upload_summary_imageRcList1', function () {
+    $('#div_site_settings').on('click', '.delete_unified_sop', function () {
+        const btn = $(this);
+        const idToDelete = btn.data("id");
+        const clientSiteId = $('#ClientSiteId').val();
 
-        const ClientSiteID = $('#ClientSiteId').val();
-        const file = $('#upload_summary_imageRcList1').prop("files")[0];
-        const type = 6;
-        let DocumentID = $('#DocumentID').val();
-        if (DocumentID == '') {
-            DocumentID = 0;
-        }
-        const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
-            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
-            return false;
-        }
-
-        const fileForm = new FormData();
-        fileForm.append('file', file);
-        fileForm.append('type', type);
-        fileForm.append('ClientSiteID', ClientSiteID);
-        fileForm.append('doc-id', DocumentID);
-
-
-        $.ajax({
-            url: '/Admin/Settings?handler=UploadStaffDocUsingType',
-            type: 'POST',
-            data: fileForm,
-            processData: false,
-            contentType: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-        }).done(function (data) {
-            if (data.success) {
-
-                setSummaryImageRCList(data);
-            }
-        }).fail(function () {
-            //showStatusNotification(false, 'Something went wrong');
-        });
-    });
-
-    function setSummaryImageRCList(summaryImage) {
-        if (summaryImage) {
-            var filename = summaryImage.fileName;
-            var filebase64 = "";
-
-            if (summaryImage.imagepath) {
-                var myArray = summaryImage.imagepath.split(":-:");
-                if (myArray.length > 1) {
-                    filebase64 = myArray[1];
-                    filename = myArray[0];
-                }
-            }
-
-            $('#summary_imageRC').html(filename);
-            $('#RCImagepath').val(filename);
-            $('#summary_image_updatedRC').html(summaryImage.lastUpdated);
-            $('#RCImageDateandTime').val(summaryImage.lastUpdated);
-
-            if (filebase64 != "") {
-                $('#download_summary_imageRCList').attr('href', filebase64);
-                $('#download_summary_imageRCList').attr('download', filename);
-            } else {
-                $('#download_summary_imageRCList').removeAttr('href');
-            }
-
-            $('#download_summary_imageRCList').show();
-            $('#delete_summary_imageRC').show();
-        }
-    }
-
-    $('#div_site_settings').on('click', '#delete_summary_image1', function () {
-        const idToDelete = $('#DocumentID').val();
-        if (confirm('Are you sure want to delete this file?')) {
+        if (confirm('Are you sure want to delete this SOP?')) {
             $.ajax({
                 url: '/Admin/Settings?handler=DeleteStaffDoc',
                 type: 'POST',
                 data: { id: idToDelete },
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function () {
-                clearSummaryImageRC();
-            });
-        }
-    });
-
-    $('#div_site_settings').on('click', '#delete_summary_imageRC', function () {
-        if (confirm('Are you sure want to delete this file?')) {
-            var check = $('#RCImagepath').val();
-            $.ajax({
-                url: '/Admin/Settings?handler=DeleteRCImage&imageName=' + $('#RCImagepath').val(),
-                type: 'POST',
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (data) {
                 if (data.status) {
-                    clearSummaryImageRC();
+                    loadClientSiteKpiSettings(clientSiteId);
+                } else {
+                    showModal(data.message || 'Delete failed');
                 }
-            }).fail(function () {
-                console.log('error')
             });
         }
     });
-    function clearSummaryImageRC() {
-        $('#RCImagepath').val('');
-        $('#RCImageDateandTime').val('');
-        $('#summary_imageRC').html('');
-        $('#summary_image_updatedRC').html('');
-        $("#download_summary_imageRCList").removeAttr("href");
-        $('#download_summary_imageRCList').show();
-        $('#delete_summary_imageRC').hide();
-        $('#DocumentID').val('');
 
+    function loadClientSiteKpiSettings(clientSiteId) {
+         $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteKpiSettings&clientSiteId=' + clientSiteId,
+            type: 'GET',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            $('#div_site_settings').html(data);
+        });
     }
-    /*Rc Action List Image Upload stop*/
+    /* Unified SOP Handlers stop */
 
     //RC Action List Save start
 
