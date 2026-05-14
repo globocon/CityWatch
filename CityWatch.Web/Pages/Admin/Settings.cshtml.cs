@@ -577,13 +577,50 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());
         }
-        public JsonResult OnGetStaffDocsUsingType(int type, string query,string companyProfile)
+        public JsonResult OnGetStaffDocsUsingType(int type, string query, string companyProfile)
         {
-            if(companyProfile!=null)
+            var docs = _configDataProvider.GetStaffDocumentsUsingType(type, query);
+
+            if (companyProfile != null)
             {
-                return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query).Where(x=>x.SubDomainId == Convert.ToInt32(companyProfile)));
+                docs = docs.Where(x => x.SubDomainId == Convert.ToInt32(companyProfile)).ToList();
             }
-            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
+
+            // Standardize Portal View: Include RCActionList (Primary SOPs) in the grid for Alarm SOPs
+            if (type == 6)
+            {
+                var rcActions = _context.RCActionList.Where(x => !string.IsNullOrEmpty(x.Imagepath)).ToList();
+                foreach (var rc in rcActions)
+                {
+                    // Avoid duplicates if a file name happens to exist in both
+                    if (docs.Any(d => d.FileName == rc.Imagepath && d.ClientSite == rc.ClientSiteID)) continue;
+
+                    var clientSite = _context.ClientSites.Include(x => x.ClientType).FirstOrDefault(x => x.Id == rc.ClientSiteID);
+
+                    // Apply basic search filtering to RC records as well
+                    if (!string.IsNullOrEmpty(query))
+                    {
+                        bool matches = (clientSite?.Name?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                                       (rc.Imagepath?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false);
+                        if (!matches) continue;
+                    }
+
+                    docs.Add(new StaffDocument
+                    {
+                        Id = rc.Id + 1000000, // ID offset to prevent collisions with StaffDocuments table
+                        FileName = rc.Imagepath,
+                        LastUpdated = DateTime.TryParse(rc.DateandTimeUpdated, out var dt) ? dt : DateTime.Now,
+                        DocumentType = 6,
+                        ClientSite = rc.ClientSiteID,
+                        FilePath = "/RCImage/",
+                        ClientSiteName = clientSite?.Name ?? "RC Site",
+                        ClientTypeName = clientSite?.ClientType?.Name ?? "Primary SOP",
+                        SubDomainId = 0
+                    });
+                }
+            }
+
+            return new JsonResult(docs);
         }
 
         [DisableRequestSizeLimit]
@@ -692,25 +729,44 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
-                var document = _configDataProvider.GetStaffDocuments().SingleOrDefault(x => x.Id == id);
-                if (document != null)
+                // Unified Approach: Handle RCActionList (Primary SOP) deletions
+                if (id >= 1000000)
                 {
-                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs", document.FileName);
-                    if (System.IO.File.Exists(fileToDelete))
-                        System.IO.File.Delete(fileToDelete);
+                    var rcId = id - 1000000;
+                    var rc = _context.RCActionList.FirstOrDefault(x => x.Id == rcId);
+                    if (rc != null)
+                    {
+                        if (!string.IsNullOrEmpty(rc.Imagepath))
+                        {
+                            var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage", rc.Imagepath);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
+                        }
 
-                    _configDataProvider.DeleteStaffDocument(id);
+                        rc.Imagepath = null;
+                        rc.DateandTimeUpdated = DateTime.Now.ToString("dd MMM yyyy @ HH:mm");
+                        _context.SaveChanges();
+                    }
                 }
+                else
+                {
+                    var document = _configDataProvider.GetStaffDocuments().SingleOrDefault(x => x.Id == id);
+                    if (document != null)
+                    {
+                        var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs", document.FileName);
+                        if (System.IO.File.Exists(fileToDelete))
+                            System.IO.File.Delete(fileToDelete);
 
-
+                        _configDataProvider.DeleteStaffDocument(id);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 status = false;
-                message = "Error " + ex.Message;
+                message = ex.Message;
             }
-
-            return new JsonResult(new { status = status, message = message });
+            return new JsonResult(new { success = status, message });
         }
 
         public JsonResult OnGetUsers(string searchTerm)
@@ -2044,12 +2100,16 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDocUsingTypeSix()
         {
             var success = false;
             var message = "Uploaded successfully";
             var files = Request.Form.Files;
+
+            // Unified Approach: Identify if this is a replacement for an RCActionList record
+            var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+            string targetFolder = (documentId >= 1000000) ? "RCImage" : "StaffDocs";
+
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -2061,16 +2121,11 @@ namespace CityWatch.Web.Pages.Admin
                         if (".pdf,.docx,.xlsx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
 
-                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
-                        if (!Directory.Exists(staffDocsFolder))
-                            Directory.CreateDirectory(staffDocsFolder);
+                        var targetDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, targetFolder);
+                        if (!Directory.Exists(targetDocsFolder))
+                            Directory.CreateDirectory(targetDocsFolder);
 
-
-
-                        // Generate URL to the StaffDocs folder
-
-
-                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        using (var stream = System.IO.File.Create(Path.Combine(targetDocsFolder, file.FileName)))
                         {
                             file.CopyTo(stream);
                         }
@@ -2083,28 +2138,40 @@ namespace CityWatch.Web.Pages.Admin
                 }
             }
 
-
-
-
             var SOP = Request.Form["sop"];
             var ClientSite = int.Parse(Request.Form["site"]);
             var fileName = Request.Form["filename"];
             if (ClientSite != 0)
             {
-                var staffDocsUrl = $"{Request.Scheme}://{Request.Host}/StaffDocs/";
-                var documentId = Convert.ToInt32(Request.Form["doc-id"]);
-                var type = 6;
-
-                _configDataProvider.SaveStaffDocument(new StaffDocument()
+                if (documentId >= 1000000)
                 {
-                    Id = documentId,
-                    FileName = fileName,
-                    LastUpdated = DateTime.Now,
-                    DocumentType = type,
-                    SOP = SOP,
-                    ClientSite = ClientSite,
-                    FilePath = staffDocsUrl
-                });
+                    // Update Primary SOP in RCActionList
+                    var rcId = documentId - 1000000;
+                    var rc = _context.RCActionList.FirstOrDefault(x => x.Id == rcId);
+                    if (rc != null)
+                    {
+                        rc.Imagepath = fileName;
+                        rc.DateandTimeUpdated = DateTime.Now.ToString("dd MMM yyyy @ HH:mm");
+                        _context.SaveChanges();
+                    }
+                }
+                else
+                {
+                    // Standard StaffDocument Save
+                    var staffDocsUrl = $"{Request.Scheme}://{Request.Host}/StaffDocs/";
+                    var type = 6;
+
+                    _configDataProvider.SaveStaffDocument(new StaffDocument()
+                    {
+                        Id = documentId,
+                        FileName = fileName,
+                        LastUpdated = DateTime.Now,
+                        DocumentType = type,
+                        SOP = SOP,
+                        ClientSite = ClientSite,
+                        FilePath = staffDocsUrl
+                    });
+                }
 
                 success = true;
             }
@@ -2113,10 +2180,9 @@ namespace CityWatch.Web.Pages.Admin
                 throw new ArgumentException("Select the site and SOP");
             }
 
-
             return new JsonResult(new { success, message });
         }
-
+    
 
         #endregion
 
