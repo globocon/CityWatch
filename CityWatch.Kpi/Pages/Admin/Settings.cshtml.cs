@@ -1071,14 +1071,26 @@ namespace CityWatch.Kpi.Pages.Admin
 
             if (!string.IsNullOrEmpty(imageName))
             {
+                // Unified Path Handling: Strip domain if it's a full URL
+                if (imageName.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var uri = new Uri(imageName);
+                        imageName = uri.AbsolutePath.TrimStart('/');
+                    }
+                    catch { }
+                }
+
                 string fileToConvert;
-                // If it contains a slash, it's already a relative path from wwwroot
+                // If it contains a slash, it's already a relative path from wwwroot (e.g. StaffDocs/file.pdf)
                 if (imageName.Contains("\\") || imageName.Contains("/"))
                 {
-                    fileToConvert = Path.Combine(_webHostEnvironment.WebRootPath, imageName);
+                    fileToConvert = Path.Combine(_webHostEnvironment.WebRootPath, imageName.Replace("/", "\\"));
                 }
                 else
                 {
+                    // Default for KPI specific images
                     fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
                 }
 

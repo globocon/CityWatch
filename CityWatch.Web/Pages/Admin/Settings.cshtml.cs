@@ -611,12 +611,22 @@ namespace CityWatch.Web.Pages.Admin
                         FileName = rc.Imagepath,
                         LastUpdated = DateTime.TryParse(rc.DateandTimeUpdated, out var dt) ? dt : DateTime.Now,
                         DocumentType = 6,
+                        SOP = "Primary SOP",
                         ClientSite = rc.ClientSiteID,
-                        FilePath = "/RCImage/",
+                        FilePath = "https://kpi.cws-ir.com/RCImage/", // Point to KPI domain for RC files
                         ClientSiteName = clientSite?.Name ?? "RC Site",
                         ClientTypeName = clientSite?.ClientType?.Name ?? "Primary SOP",
                         SubDomainId = 0
                     });
+                }
+            }
+
+            // Ensure StaffDocs links are also standardized
+            foreach (var doc in docs.Where(x => x.Id < 1000000))
+            {
+                if (string.IsNullOrEmpty(doc.FilePath) || !doc.FilePath.StartsWith("http"))
+                {
+                    doc.FilePath = $"{Request.Scheme}://{Request.Host}/StaffDocs/";
                 }
             }
 
