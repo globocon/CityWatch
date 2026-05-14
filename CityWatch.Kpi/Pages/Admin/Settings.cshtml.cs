@@ -280,13 +280,14 @@ namespace CityWatch.Kpi.Pages.Admin
             }
 
             // Standardize RCActionList loading and Base64 conversion
-            clientSiteKpiSetting.rclistKP = _guardLogDataProvider.GetActionlist(siteId);
-            if (clientSiteKpiSetting.rclistKP != null)
+            var rcAction = _guardLogDataProvider.GetActionlist(siteId);
+            if (rcAction != null)
             {
-                if (!string.IsNullOrEmpty(clientSiteKpiSetting.rclistKP.Imagepath))
+                if (!string.IsNullOrEmpty(rcAction.Imagepath))
                 {
-                    clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
+                    rcAction.Imagepath = rcAction.Imagepath + ":-:" + ConvertFileToBase64(rcAction.Imagepath);
                 }
+                clientSiteKpiSetting.RCActionList = new List<RCActionList> { rcAction };
             }
 
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
