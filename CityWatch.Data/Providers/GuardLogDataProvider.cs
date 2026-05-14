@@ -8553,6 +8553,8 @@ namespace CityWatch.Data.Providers
 
             foreach (var doc in portalDocs)
             {
+                if (string.IsNullOrEmpty(doc.FileName)) continue;
+
                 unifiedDocs.Add(new UnifiedSiteDocument
                 {
                     FileName = doc.FileName,

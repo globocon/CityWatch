@@ -281,20 +281,22 @@ namespace CityWatch.Kpi.Pages.Admin
 
             // Standardize RCActionList loading and Base64 conversion with Unified SOPs
             var rcAction = _guardLogDataProvider.GetActionlist(siteId);
-            if (rcAction != null)
+            if (rcAction == null)
             {
-                rcAction.UnifiedDocuments = _guardLogDataProvider.GetUnifiedSiteDocuments(siteId);
-                foreach (var doc in rcAction.UnifiedDocuments)
-                {
-                    doc.Base64Data = ConvertFileToBase64(doc.FilePath);
-                }
-
-                if (!string.IsNullOrEmpty(rcAction.Imagepath))
-                {
-                    rcAction.Imagepath = rcAction.Imagepath + ":-:" + ConvertFileToBase64(rcAction.Imagepath);
-                }
-                clientSiteKpiSetting.RCActionList = new List<RCActionList> { rcAction };
+                rcAction = new RCActionList { ClientSiteID = siteId };
             }
+
+            rcAction.UnifiedDocuments = _guardLogDataProvider.GetUnifiedSiteDocuments(siteId);
+            foreach (var doc in rcAction.UnifiedDocuments)
+            {
+                doc.Base64Data = ConvertFileToBase64(doc.FilePath);
+            }
+
+            if (!string.IsNullOrEmpty(rcAction.Imagepath))
+            {
+                rcAction.Imagepath = rcAction.Imagepath + ":-:" + ConvertFileToBase64(rcAction.Imagepath);
+            }
+            clientSiteKpiSetting.RCActionList = new List<RCActionList> { rcAction };
 
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
