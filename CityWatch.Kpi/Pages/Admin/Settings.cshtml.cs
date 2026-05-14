@@ -636,10 +636,8 @@ namespace CityWatch.Kpi.Pages.Admin
                     fileName = file.FileName;
                     var Id = Convert.ToInt32(Request.Form["id"]); // Changed from scheduleId to id to match RCActionList ID
 
-                    // Use shared KPI storage path if configured, otherwise default to local RCImage folder
-                    string summaryImageDir = !string.IsNullOrEmpty(_settings.RCActionListKpiImageFolder) ?
-                        _settings.RCActionListKpiImageFolder :
-                        Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                    // Always use local RCImage folder
+                    string summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
 
                     if (!Directory.Exists(summaryImageDir))
                         Directory.CreateDirectory(summaryImageDir);
@@ -1041,10 +1039,8 @@ namespace CityWatch.Kpi.Pages.Admin
 
                 if (!string.IsNullOrEmpty(imageName))
                 {
-                    // Use shared KPI storage path if configured
-                    string summaryImageDir = !string.IsNullOrEmpty(_settings.RCActionListKpiImageFolder) ?
-                        _settings.RCActionListKpiImageFolder :
-                        Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                    // Always use local RCImage folder
+                    string summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
 
                     var fileToDelete = Path.Combine(summaryImageDir, imageName);
                     if (System.IO.File.Exists(fileToDelete))
@@ -1068,10 +1064,8 @@ namespace CityWatch.Kpi.Pages.Admin
 
             if (!string.IsNullOrEmpty(imageName))
             {
-                // Use shared KPI storage path if configured
-                string summaryImageDir = !string.IsNullOrEmpty(_settings.RCActionListKpiImageFolder) ?
-                    _settings.RCActionListKpiImageFolder :
-                    Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                // Always use local RCImage folder
+                string summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
 
                 var fileToConvert = Path.Combine(summaryImageDir, imageName);
                 if (System.IO.File.Exists(fileToConvert))
