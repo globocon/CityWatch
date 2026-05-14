@@ -4,6 +4,7 @@ namespace CityWatch.Data.Models
 {
     public class UnifiedSiteDocument
     {
+        public int Id { get; set; }
         public string FileName { get; set; }
         public string SourceTable { get; set; }
         public string Category { get; set; }

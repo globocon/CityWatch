@@ -8541,6 +8541,7 @@ namespace CityWatch.Data.Providers
                     FileName = rcActionList.Imagepath,
                     SourceTable = "RCActionList",
                     Category = "Primary SOP",
+                    Id = rcActionList.Id + 1000000, // Unified ID Offset
                     FilePath = Path.Combine("RCImage", rcActionList.Imagepath)
                 });
             }
@@ -8558,6 +8559,7 @@ namespace CityWatch.Data.Providers
                     SourceTable = "StaffDocuments",
                     Category = doc.DocumentType == 4 ? "General SOP" : "Alarm SOP",
                     LastUpdated = doc.LastUpdated,
+                    Id = doc.Id,
                     FilePath = Path.Combine("StaffDocs", doc.FileName)
                 });
             }
