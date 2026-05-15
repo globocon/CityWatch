@@ -112,11 +112,11 @@ namespace CityWatch.Data.Providers
             if (clientSiteSmartWand == null)
                 throw new ArgumentNullException();
 
-            if (clientSiteSmartWand.Id <= 0)            
-                throw new Exception("Invalid Smart Wand.") ;
-            
+            if (clientSiteSmartWand.Id <= 0)
+                throw new Exception("Invalid Smart Wand.");
+
             _dbContext.SaveChanges();
-            return true;                       
+            return true;
         }
 
         public bool DeRegisterDeviceWithSmartWand(int SmartWandId)
@@ -284,6 +284,15 @@ namespace CityWatch.Data.Providers
                     throw new ArgumentException($"Tag with UID: {clientSiteSmartWandTag.UId} already exists.");
                 }
                 _dbContext.ClientSiteSmartWandTags.Add(clientSiteSmartWandTag);
+
+                // When new tag is added Update count of WandPointsPerPatrol in clientSiteKpiSetting - 15-05-2026
+                var clientSiteKpiSetting = _dbContext.ClientSiteKpiSettings.Where(x => x.ClientSiteId == clientSiteSmartWandTag.ClientSiteId).FirstOrDefault();
+                if (clientSiteKpiSetting != null)
+                {
+                    var WandPointsPerPatrol = _dbContext.ClientSiteSmartWandTags.Where(x => x.ClientSiteId == clientSiteSmartWandTag.ClientSiteId
+                    && x.IsDeleted == false).Count();
+                    clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
+                }
             }
             else
             {
@@ -312,8 +321,17 @@ namespace CityWatch.Data.Providers
         {
             var deleteClientSiteSmartWandTags = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == id);
             if (deleteClientSiteSmartWandTags != null)
+            {
                 deleteClientSiteSmartWandTags.IsDeleted = true;
-            //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
+                // When new tag is added Update count of WandPointsPerPatrol in clientSiteKpiSetting - 15-05-2026
+                var clientSiteKpiSetting = _dbContext.ClientSiteKpiSettings.Where(x => x.ClientSiteId == deleteClientSiteSmartWandTags.ClientSiteId).FirstOrDefault();
+                if (clientSiteKpiSetting != null)
+                {
+                    var WandPointsPerPatrol = _dbContext.ClientSiteSmartWandTags.Where(x => x.ClientSiteId == deleteClientSiteSmartWandTags.ClientSiteId
+                    && x.IsDeleted == false).Count();
+                    clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
+                }
+            }
 
             _dbContext.SaveChanges();
         }
@@ -435,7 +453,7 @@ namespace CityWatch.Data.Providers
             return matchingLogs;
         }
 
-        public ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId,string tagUid)
+        public ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid)
         {
             return _dbContext.ClientSiteSmartWandTagsHitLogs
                 .Where(x => x.TagUId == tagUid && x.LoggedInClientSiteId == siteId)
@@ -461,17 +479,17 @@ namespace CityWatch.Data.Providers
             if (siteEquipmentsDetails == null)
                 throw new ArgumentNullException();
 
-          
+
             if (siteEquipmentsDetails.Id == 0)
             {
-               
 
-                
+
+
                 _dbContext.SiteEquipmentsDetails.Add(siteEquipmentsDetails);
             }
             else
             {
-               
+
                 var clientSiteEquipmentTagToUpdate = _dbContext.SiteEquipmentsDetails.SingleOrDefault(x => x.Id == siteEquipmentsDetails.Id);
                 if (clientSiteEquipmentTagToUpdate != null)
                 {
@@ -511,12 +529,12 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteSmartWandTags> GetAllClientSitesSmartwandTags()
         {
-                       var smartwandtags = _dbContext.ClientSiteSmartWandTags
-                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
-                .Include(x => x.SmartWandTagsType)
-                .Include(x => x.ClientSite.ClientType)
-                .Include(x => x.ClientSite)
-                .ToList();
+            var smartwandtags = _dbContext.ClientSiteSmartWandTags
+     .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false)
+     .Include(x => x.SmartWandTagsType)
+     .Include(x => x.ClientSite.ClientType)
+     .Include(x => x.ClientSite)
+     .ToList();
             foreach (var item in smartwandtags)
             {
                 item.TagsType = item.SmartWandTagsType.value;
@@ -543,7 +561,7 @@ namespace CityWatch.Data.Providers
         }
 
         public List<IncidentReportPosition> GetPatrolCarsForSite(int[] clientsiteid)
-        {            
+        {
             var PatrolCarIds = _dbContext.ClientSiteSmartWands
                .Where(x => clientsiteid.Contains(x.ClientSiteId) && x.ClientSite.IsActive == true && x.IsDeleted == false && x.PatrolCarId != null)
                .Include(x => x.ClientSite)

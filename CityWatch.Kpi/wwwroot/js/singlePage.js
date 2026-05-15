@@ -2136,6 +2136,11 @@ $(function () {
                 headers: { 'RequestVerificationToken': token },
             }).done(function (result) {
                 if (result.success) {
+                    //Use .one() instead of .on() here so the event runs only once after this reload.
+                    gritdWandTags.one('dataBound', function () {
+                        var rowCount = gritdWandTags.getAll().length;
+                        $('#WandPointsPerPatrol').val(rowCount);
+                    });
                     gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
                 } else {
                     gritdWandTags.edit(id);
@@ -2162,6 +2167,11 @@ $(function () {
                     type: 'POST',
                     headers: { 'RequestVerificationToken': token },
                 }).done(function () {
+                    //Use .one() instead of .on() here so the event runs only once after this reload.
+                    gritdWandTags.one('dataBound', function () {
+                        var rowCount = gritdWandTags.getAll().length;
+                        $('#WandPointsPerPatrol').val(rowCount);
+                    });
                     gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
                 }).fail(function () {
                     console.log('error');

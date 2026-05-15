@@ -2765,11 +2765,8 @@ $(function () {
         //and the value is set to the hidden field "DropboxImagesDir" before saving. (Refer singlePage.js function  $('#save_site_dropboxsettings').on('click', function ())
         var _dropboxImagesDir = $('#DropboxImagesDir_DropboxSettings').val();
         $('#DropboxImagesDir').val(_dropboxImagesDir);
-
-        //Changed because the $('#WandPointsPerPatrol') is Disabled form fields are not included in form submission or .serialize() in HTML/jQuery.
-        $('#WandPointsPerPatrol').prop('disabled', false);
+                
         var formData = $('#frm_site_settings').serialize();
-        $('#WandPointsPerPatrol').prop('disabled', true);
 
         $.ajax({
             url: '/admin/settings?handler=ClientSiteKpiSettings',

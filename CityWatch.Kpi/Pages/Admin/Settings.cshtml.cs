@@ -292,6 +292,9 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 clientSiteId = clientSiteKpiSetting.ClientSiteId;
 
+                var WandPointsPerPatrol = _clientSiteWandDataProvider.GetClientSiteSmartWandTags(clientSiteId).Count();
+                clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
+
                 // Default TuneDowngradeBuffer = 1
                 if (clientSiteKpiSetting.TuneDowngradeBuffer.GetValueOrDefault() == 0)
                 {
