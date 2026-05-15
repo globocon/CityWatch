@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -145,17 +145,32 @@ namespace CityWatch.RadioCheck.Services
                         ActionListMessage += "\r\n";
                     }
                     var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientsite.Id);
-                    if (sopAlarmfileType.Count() != 0)
+                    var alarmLinks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    if (sopAlarmfileType.Any())
                     {
-                        //ActionListMessage += "SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList();
-                        //ActionListMessage += "SOP's Alarm:" + $" < a href='https://kpi.cws-ir.com/StaffDocs/{sopfiletype.Select(x => x.FileName).ToList()}'>Click here</a><br/>";
                         foreach (var item in sopAlarmfileType)
                         {
-                            ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://kpi.cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
+                            if (alarmLinks.Add(item.FileName)) // Use FileName as key to avoid duplicate links for the same file
+                            {
+                                ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
+                            }
                         }
-                        ActionListMessage += "\r\n";
-                        ActionListMessage += "\r\n";
+                    }
 
+                    var actionListDoc = _guardLogDataProvider.GetActionlist(clientsite.Id);
+                    if (actionListDoc != null && !string.IsNullOrEmpty(actionListDoc.Imagepath))
+                    {
+                        if (alarmLinks.Add(actionListDoc.Imagepath))
+                        {
+                            ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://kpi.cws-ir.com/RCImage/{actionListDoc.Imagepath}\">Click here</a><br/>";
+                        }
+                    }
+
+                    if (alarmLinks.Count > 0)
+                    {
+                        ActionListMessage += "\r\n";
+                        ActionListMessage += "\r\n";
                     }
                     else
                     {

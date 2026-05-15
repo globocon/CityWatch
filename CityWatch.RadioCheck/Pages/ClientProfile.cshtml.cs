@@ -2159,63 +2159,60 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public JsonResult OnPostActionList(int clientSiteId)
         {
             var rtn = _guardLogDataProvider.GetActionlist(clientSiteId);
+            bool isNew = false;
 
-            if (rtn != null)
+            if (rtn == null)
             {
-                var LandLine = _configDataProvider.GetClientSiteLandline(clientSiteId);
-                rtn.Landline = LandLine.LandLine;
-                var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
-                rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
-                if (rtn.Imagepath != null)
-                {
-                    rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
-                }
-                var sopAlarmfileType= _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
-                if (sopAlarmfileType.Count() != 0)
-                {
-                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x=>x.FileName).ToList();
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
-                }
-                    var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
-                if (sopfiletype.Count() != 0)
-                {
-                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
+                rtn = new RCActionList();
+                isNew = true;
+            }
 
-                }
-                else
+            var LandLine = _configDataProvider.GetClientSiteLandline(clientSiteId);
+            rtn.Landline = LandLine.LandLine;
+            var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
+            rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
+
+            string originalImagePath = rtn.Imagepath;
+            if (!isNew && rtn.Imagepath != null)
+            {
+                rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
+            }
+
+            var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
+            var alarmFileNames = new List<string>();
+            var alarmFilePaths = new List<string>();
+
+            if (sopAlarmfileType.Any())
+            {
+                alarmFileNames.AddRange(sopAlarmfileType.Select(x => x.FileName));
+                alarmFilePaths.AddRange(sopAlarmfileType.Select(x => x.FilePath));
+            }
+
+            if (!string.IsNullOrEmpty(originalImagePath))
+            {
+                if (!alarmFileNames.Contains(originalImagePath, StringComparer.OrdinalIgnoreCase))
                 {
-                    rtn.SOPFileNme = null;
+                    alarmFileNames.Add(originalImagePath);
+                    alarmFilePaths.Add("https://kpi.cws-ir.com/RCImage/");
                 }
+            }
+
+            rtn.SOPAlarmFileNme = alarmFileNames.Count > 0 ? alarmFileNames : null;
+            rtn.SOPAlarmFilePath = alarmFilePaths.Count > 0 ? alarmFilePaths : null;
+
+            var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
+            if (sopfiletype.Any())
+            {
+                rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
             }
             else
             {
-                var LandLine = _configDataProvider.GetClientSiteLandline(clientSiteId);
-               
-                //if null assign the value of the SOPFileNme
-                rtn = new RCActionList();
-
-                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
-                if (sopAlarmfileType.Count() != 0)
-                {
-                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
-                }
-
-                rtn.Landline = LandLine.LandLine;
-                var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
-                rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
-
-                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
-                if (sopfiletype.Count() != 0)
-                {
-                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
-                }
-                else
-                {
-                    rtn.SOPFileNme = null;
-                }
+                rtn.SOPFileNme = null;
             }
+
+            rtn.ClientSiteStatus = LandLine.Status;
+            rtn.ExpiredDate = LandLine.StatusDate;
+            
             return new JsonResult(rtn);
         }
         public JsonResult OnPostGetClientType(int clientSiteId)
@@ -2742,7 +2739,48 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
         public JsonResult OnGetStaffDocsUsingTypeNew(int type, int ClientSiteId)
         {
-            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingTypeNew(type, Convert.ToInt32(ClientSiteId)));
+            var docs = _configDataProvider.GetStaffDocumentsUsingTypeNew(type, Convert.ToInt32(ClientSiteId));
+
+            // Build combined list: StaffDocuments + RCActionList image
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var result = new List<object>();
+
+            // Add StaffDocuments first (use cws-ir.com domain for these)
+            foreach (var doc in docs)
+            {
+                if (seen.Add(doc.FileName))
+                {
+                    result.Add(new
+                    {
+                        id = doc.Id,
+                        fileName = doc.FileName,
+                        filePath = "https://cws-ir.com/StaffDocs/",
+                        formattedLastUpdated = doc.FormattedLastUpdated
+                    });
+                }
+            }
+
+            // Add RCActionList image if type 6 (Alarm SOP), avoid duplicates
+            if (type == 6)
+            {
+                var actionListDoc = _guardLogDataProvider.GetActionlist(ClientSiteId);
+                if (actionListDoc != null && !string.IsNullOrEmpty(actionListDoc.Imagepath))
+                {
+                    var imageName = actionListDoc.Imagepath.Split(":-:")[0];
+                    if (seen.Add(imageName))
+                    {
+                        result.Add(new
+                        {
+                            id = 0,
+                            fileName = imageName,
+                            filePath = "https://kpi.cws-ir.com/RCImage/",
+                            formattedLastUpdated = DateTime.Now.ToString("dd MMM yyyy @ HH:mm")
+                        });
+                    }
+                }
+            }
+
+            return new JsonResult(result);
         }
         public JsonResult OnGetGuardDetails(int GuardID)
         {
