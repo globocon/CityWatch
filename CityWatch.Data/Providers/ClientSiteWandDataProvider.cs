@@ -28,6 +28,7 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag);
         void DeleteClientSiteSmartWandTags(int id);
         List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags();
+        List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags(int clientSiteId);
         List<SmartWandTagsType> GetSmartWandTagsType();
         void SaveSmartWandTagLog(ClientSiteSmartWandTagsHitLog log);
 
@@ -232,6 +233,21 @@ namespace CityWatch.Data.Providers
             }
             return smartwandtags;
         }
+
+        public List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags(int clientSiteId)
+        {
+            var smartwandtags = _dbContext.ClientSiteSmartWandTags
+                .Where(x => x.ClientSite.IsActive == true && x.IsDeleted == false && x.ClientSiteId == clientSiteId)
+                .Include(x => x.SmartWandTagsType)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+            foreach (var item in smartwandtags)
+            {
+                item.TagsType = item.SmartWandTagsType.value;
+            }
+            return smartwandtags;
+        }
+
         public List<SmartWandTagsType> GetSmartWandTagsType()
         {
             var smartwandtags = _configDataProvider.GetSmartWandTagsType();

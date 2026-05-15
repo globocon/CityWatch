@@ -264,6 +264,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+            var WandPointsPerPatrol = _clientSiteWandDataProvider.GetClientSiteSmartWandTags(siteId).Count();
             var _clientSiteMobileAppSettings = _configDataProvider.GetCrowdSettingForSite(siteId);
             if(_clientSiteMobileAppSettings == null)
             {
@@ -276,6 +277,7 @@ namespace CityWatch.Kpi.Pages.Admin
             }
             else
             {
+                clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
                 clientSiteKpiSetting.clientSiteMobileAppSettings = _clientSiteMobileAppSettings;
             }
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);

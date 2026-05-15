@@ -2766,10 +2766,15 @@ $(function () {
         var _dropboxImagesDir = $('#DropboxImagesDir_DropboxSettings').val();
         $('#DropboxImagesDir').val(_dropboxImagesDir);
 
+        //Changed because the $('#WandPointsPerPatrol') is Disabled form fields are not included in form submission or .serialize() in HTML/jQuery.
+        $('#WandPointsPerPatrol').prop('disabled', false);
+        var formData = $('#frm_site_settings').serialize();
+        $('#WandPointsPerPatrol').prop('disabled', true);
+
         $.ajax({
             url: '/admin/settings?handler=ClientSiteKpiSettings',
             type: 'POST',
-            data: $('#frm_site_settings').serialize(),
+            data: formData,
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
