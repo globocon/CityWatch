@@ -3027,28 +3027,47 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public JsonResult OnGetStaffDocsUsingTypeNew(int type, int ClientSiteId)
         {
             var docs = _configDataProvider.GetStaffDocumentsUsingTypeNew(type, Convert.ToInt32(ClientSiteId));
-            
+
+            // Build combined list: StaffDocuments + RCActionList image
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var result = new List<object>();
+
+            // Add StaffDocuments first (use cws-ir.com domain for these)
+            foreach (var doc in docs)
+            {
+                if (seen.Add(doc.FileName))
+                {
+                    result.Add(new
+                    {
+                        id = doc.Id,
+                        fileName = doc.FileName,
+                        filePath = "https://cws-ir.com/StaffDocs/",
+                        formattedLastUpdated = doc.FormattedLastUpdated
+                    });
+                }
+            }
+
+            // Add RCActionList image if type 6 (Alarm SOP), avoid duplicates
             if (type == 6)
             {
                 var actionListDoc = _guardLogDataProvider.GetActionlist(ClientSiteId);
                 if (actionListDoc != null && !string.IsNullOrEmpty(actionListDoc.Imagepath))
                 {
                     var imageName = actionListDoc.Imagepath.Split(":-:")[0];
-                    if (!docs.Any(x => x.FileName.Equals(imageName, StringComparison.OrdinalIgnoreCase)))
+                    if (seen.Add(imageName))
                     {
-                        docs.Add(new StaffDocument
+                        result.Add(new
                         {
-                            Id = 0, // Fake ID
-                            FileName = imageName,
-                            FilePath = "https://kpi.cws-ir.com/RCImage/",
-                            DocumentType = 6,
-                            LastUpdated = DateTime.Now
+                            id = 0,
+                            fileName = imageName,
+                            filePath = "https://kpi.cws-ir.com/RCImage/",
+                            formattedLastUpdated = DateTime.Now.ToString("dd MMM yyyy @ HH:mm")
                         });
                     }
                 }
             }
 
-            return new JsonResult(docs);
+            return new JsonResult(result);
         }
         public JsonResult OnGetGuardDetails(int GuardID)
         {
