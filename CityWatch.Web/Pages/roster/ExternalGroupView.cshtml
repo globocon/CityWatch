@@ -205,8 +205,8 @@
                                     }
                                     
                                     // License number
-                                    var license = shift.reliefGuardName ? (shift.reliefGuardLicense || "N/A") : (shift.guardLicense || "N/A");
-                                    html += '<div class="shift-license" style="margin-top: 1px;">' + license + '</div>';
+                                    var license = shift.reliefGuardName ? "" : (shift.guardLicense || "N/A");
+                                    if (license) html += '<div class="shift-license" style="margin-top: 1px;">' + license + '</div>';
                                     
                                     html += '<div class="shift-time-row">';
                                     html += '<span>' + shift.shiftStart + ' - ' + shift.shiftEnd + '</span>';
