@@ -100,7 +100,7 @@
     </ul>
 
     <div class="tab-content" id="rosterTabContent">
-        <div class="tab-pane fade show active" id="projects" role="tabpanel" aria-labelledby="projects-tab">
+        <div class="tab-pane fade @(Model.ActiveTab == "projects" || string.IsNullOrEmpty(Model.ActiveTab) ? "show active" : "")" id="projects" role="tabpanel" aria-labelledby="projects-tab">
             <div class="row">
                 <div class="col-md-12">
             <!-- Row 1: Project Name (Wide but constrained) -->
@@ -251,7 +251,7 @@
         </div>
     </div>
 
-    <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
+    <div class="tab-pane fade @(Model.ActiveTab == "groups" ? "show active" : "")" id="groups" role="tabpanel" aria-labelledby="groups-tab">
         <div class="row">
             <div class="col-md-12">
                 <!-- Row 1: Group Name -->
@@ -392,7 +392,7 @@
     </div>
 
     <!-- Settings Tab -->
-    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+    <div class="tab-pane fade @(Model.ActiveTab == "settings" ? "show active" : "")" id="settings" role="tabpanel" aria-labelledby="settings-tab">
         <div class="card shadow-sm border-0 mt-3" style="border-radius: 12px; overflow: hidden;">
             <div class="card-header bg-white border-bottom-0 pb-0 pt-3">
                 <ul class="nav nav-pills custom-sub-tabs" id="settingsSubTabs" role="tablist">
