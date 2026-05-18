@@ -163,6 +163,7 @@ namespace CityWatch.Data
         public DbSet<RadioCheckStatus> RadioCheckStatus { get; set; }
         public DbSet<BroadcastBannerLiveEvents> BroadcastBannerLiveEvents { get; set; }
         public DbSet<BroadcastBannerCalendarEvents> BroadcastBannerCalendarEvents { get; set; }
+        public DbSet<GuardReminderEmailLog> GuardReminderEmailLogs { get; set; }
 
         public DbSet<RadioCheckLogbookSiteDetails> RadioCheckLogbookSiteDetails { get; set; }
         public DbSet<DosAndDontsField> DosAndDontsField { get; set; }

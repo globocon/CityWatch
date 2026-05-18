@@ -96,6 +96,7 @@ namespace CityWatch.Data.Providers
         public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
 
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId);
+        void SaveGuardReminderEmailLog(GuardReminderEmailLog log);
 
 
 
@@ -1514,6 +1515,12 @@ namespace CityWatch.Data.Providers
                                      u.FromDate.Date <= end.Date && 
                                      u.ToDate.Date >= start.Date);
             return conflict != null;
+        }
+
+        public void SaveGuardReminderEmailLog(GuardReminderEmailLog log)
+        {
+            _context.GuardReminderEmailLogs.Add(log);
+            _context.SaveChanges();
         }
     }
 }

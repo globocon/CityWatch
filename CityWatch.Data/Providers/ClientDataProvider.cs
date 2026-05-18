@@ -3174,11 +3174,28 @@ namespace CityWatch.Data.Providers
 
         public string GetKeyVehiclogWithProviders(string providerName)
         {
+            if (string.IsNullOrWhiteSpace(providerName)) return string.Empty;
 
-            return _context.KeyVehicleLogs.Where(z => z.CompanyName == providerName && z.PersonType == 195).FirstOrDefault().Email;
+            // 1. Get emails from Registry (Visitor Personal Details)
+            var registryEmails = _context.KeyVehicleLogVisitorPersonalDetails
+                .Where(z => z.CompanyName == providerName && z.PersonType == 195 && !string.IsNullOrEmpty(z.Email))
+                .Select(z => z.Email.Trim())
+                .ToList();
 
+            // 2. Get emails from Activity Logs
+            var logEmails = _context.KeyVehicleLogs
+                .Where(z => z.CompanyName == providerName && z.PersonType == 195 && !string.IsNullOrEmpty(z.Email))
+                .Select(z => z.Email.Trim())
+                .ToList();
 
+            // 3. Combine and Deduplicate (case-insensitive)
+            var allEmails = registryEmails.Concat(logEmails)
+                .Where(e => !string.IsNullOrWhiteSpace(e))
+                .GroupBy(e => e.ToLower())
+                .Select(g => g.First())
+                .ToList();
 
+            return string.Join(",", allEmails);
         }
         //p1-191 hr files task 8-end
         public List<ClientSite> GetClientSitesWithTypeId(int[] typeId)
