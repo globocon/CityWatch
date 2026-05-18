@@ -833,11 +833,30 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true });
         }
 
-        public JsonResult OnGetSearchGuards(string search)
+        public JsonResult OnGetSearchGuards(string search, int? siteId)
         {
             var providerList = _viewDataService.ProviderList;
-            var guards = _context.Guards
-                .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search) || (x.SecurityNo != null && x.SecurityNo.Contains(search))))
+            var query = _context.Guards.Where(x => x.IsActive);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || (x.SecurityNo != null && x.SecurityNo.Contains(search)));
+            }
+
+            if (siteId.HasValue && siteId.Value > 0)
+            {
+                var siteGuardIds = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted)
+                    .SelectMany(x => new[] { x.GuardId, x.ReliefGuardId })
+                    .Where(id => id != null)
+                    .Select(id => id.Value)
+                    .Distinct()
+                    .ToList();
+
+                query = query.Where(x => siteGuardIds.Contains(x.Id));
+            }
+
+            var guards = query
                 .Select(x => new {
                     id = x.Id,
                     text = x.Name + (string.IsNullOrEmpty(x.SecurityNo) ? "" : " - " + x.SecurityNo),

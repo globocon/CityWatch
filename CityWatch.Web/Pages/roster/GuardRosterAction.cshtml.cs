@@ -145,8 +145,12 @@ namespace CityWatch.Web.Pages.roster
                 .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate == startDate);
             var status = statusObj?.Status ?? (schedules.Any(s => s.ClientSiteId == siteId) ? "Live" : "");
 
+            var rosterGroupId = await _context.RosterGroupSites
+                .Where(x => x.ClientSiteId == siteId)
+                .Select(x => x.RosterGroupId)
+                .FirstOrDefaultAsync();
 
-            return new JsonResult(new { results, holidays, siteState = site?.State, status });
+            return new JsonResult(new { results, holidays, siteState = site?.State, status, rosterGroupId });
         }
 
         public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
