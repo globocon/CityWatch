@@ -337,10 +337,41 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = rosterData, projectStatus = rosterData.FirstOrDefault()?.status ?? "Live" });
         }
 
-        public JsonResult OnGetSearchProviders(string search)
+        public JsonResult OnGetSearchProviders(string search, int? siteId)
         {
-            var providers = _viewDataService.ProviderList
-                .Where(x => !string.IsNullOrEmpty(x.Text) && x.Text != "Select" && (string.IsNullOrEmpty(search) || x.Text.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            var providerNames = new List<string>();
+
+            if (siteId.HasValue && siteId.Value > 0)
+            {
+                var mainProviders = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && !string.IsNullOrEmpty(x.ProviderName))
+                    .Select(x => x.ProviderName)
+                    .Distinct()
+                    .ToList();
+
+                var reliefProviders = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && !string.IsNullOrEmpty(x.ReliefProviderName))
+                    .Select(x => x.ReliefProviderName)
+                    .Distinct()
+                    .ToList();
+
+                providerNames = mainProviders.Union(reliefProviders).Distinct().ToList();
+            }
+
+            var query = _viewDataService.ProviderList
+                .Where(x => !string.IsNullOrEmpty(x.Text) && x.Text != "Select");
+
+            if (providerNames.Any())
+            {
+                query = query.Where(x => providerNames.Contains(x.Text, StringComparer.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Text.Contains(search, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var providers = query
                 .Select(x => new { id = x.Value, text = x.Text })
                 .ToList();
 

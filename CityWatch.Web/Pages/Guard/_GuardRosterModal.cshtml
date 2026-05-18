@@ -880,7 +880,7 @@
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
-            minimumInputLength: 1
+            minimumInputLength: 0
         }).on('select2:select', function (e) {
             var data = e.params.data;
             var pId = data.providerId || data.provider;
@@ -903,7 +903,7 @@
                 url: '/roster/Booking?handler=SearchProviders',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) { return { search: params.term }; },
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
@@ -928,7 +928,7 @@
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
-            minimumInputLength: 1
+            minimumInputLength: 0
         });
 
         $('#geModalReliefProviderId').select2({
@@ -940,7 +940,7 @@
                 url: '/roster/Booking?handler=SearchProviders',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) { return { search: params.term }; },
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
