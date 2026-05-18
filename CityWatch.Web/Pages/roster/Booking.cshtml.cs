@@ -856,15 +856,24 @@ namespace CityWatch.Web.Pages.roster
 
             if (siteId.HasValue && siteId.Value > 0)
             {
-                var siteGuardIds = _context.RosterSchedules
-                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted)
-                    .SelectMany(x => new[] { x.GuardId, x.ReliefGuardId })
-                    .Where(id => id != null)
-                    .Select(id => id.Value)
+                var mainGuardIds = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.GuardId != null)
+                    .Select(x => x.GuardId.Value)
                     .Distinct()
                     .ToList();
 
-                query = query.Where(x => siteGuardIds.Contains(x.Id));
+                var reliefGuardIds = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.ReliefGuardId != null)
+                    .Select(x => x.ReliefGuardId.Value)
+                    .Distinct()
+                    .ToList();
+
+                var siteGuardIds = mainGuardIds.Union(reliefGuardIds).Distinct().ToList();
+
+                if (siteGuardIds.Any())
+                {
+                    query = query.Where(x => siteGuardIds.Contains(x.Id));
+                }
             }
 
             var guards = query
@@ -894,6 +903,26 @@ namespace CityWatch.Web.Pages.roster
                 .ToList();
 
             return new JsonResult(new { results = guards });
+        }
+
+        public JsonResult OnGetSearchCallsigns(string search, int? siteId)
+        {
+            var query = _context.IncidentReportFields
+                .Where(x => x.TypeId == ReportFieldType.CallSign);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search));
+            }
+
+            var results = query
+                .Select(x => new {
+                    id = x.Id,
+                    text = x.Name
+                })
+                .ToList();
+
+            return new JsonResult(new { results = results });
         }
 
         public async Task<IActionResult> OnPostDeleteGroup(int groupId)
