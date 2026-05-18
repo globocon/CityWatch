@@ -93,11 +93,22 @@ namespace CityWatch.Web.Pages.roster
             SelectedBinderId = binderId;
             ActiveTab = tab ?? "projects";
             
-            RestrictedSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
-            RosterAccessRole = HttpContext.Session.GetString("BookingAccessRole") ?? "GSS";
+            // Clear session restrictions if Administrator is loading the page directly without siteId
+            var qSiteId = Request.Query["siteId"];
+            if (User.IsInRole("Administrator") && string.IsNullOrEmpty(qSiteId))
+            {
+                HttpContext.Session.Remove("RestrictedSiteId");
+                HttpContext.Session.Remove("BookingAccessRole");
+                RestrictedSiteId = null;
+                RosterAccessRole = "GSS";
+            }
+            else
+            {
+                RestrictedSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
+                RosterAccessRole = HttpContext.Session.GetString("BookingAccessRole") ?? "GSS";
+            }
             
             // If siteId is passed, check if it's an ROEditor access and set session
-            var qSiteId = Request.Query["siteId"];
             if (!string.IsNullOrEmpty(qSiteId) && int.TryParse(qSiteId, out int sid))
             {
                 // Verify if the user has ROEditor access for this site/global

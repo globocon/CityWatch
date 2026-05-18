@@ -1109,8 +1109,8 @@
         $('#btnToggleRosterEditMode').removeClass('btn-primary').addClass('btn-outline-dark');
         $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
 
-        // Only show Edit button if caller is Logbook and user has permission, or if accessed from Roster Hub
-        if (isROEditor && (fromLogbook === true || window.location.pathname.toLowerCase().indexOf('/roosterhub') > -1)) {
+        // Only show Edit button if user has permission
+        if (isROEditor) {
             $('#btnToggleRosterEditMode').removeClass('d-none');
         } else {
             $('#btnToggleRosterEditMode').addClass('d-none');
