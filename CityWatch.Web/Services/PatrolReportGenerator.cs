@@ -250,7 +250,7 @@ namespace CityWatch.Web.Services
             using (var writer = new iText.Kernel.Pdf.PdfWriter(destination))
             using (var pdf = new iText.Kernel.Pdf.PdfDocument(writer))
             {
-                pdf.SetDefaultPageSize(iText.Kernel.Geom.PageSize.A4); // portrait orientation
+                pdf.SetDefaultPageSize(iText.Kernel.Geom.PageSize.A4.Rotate()); // Landscape A4 gives plenty of horizontal space for wide columns
                 using (var document = new iText.Layout.Document(pdf))
                 {
                     document.SetMargins(15f, 15f, 15f, 15f);
@@ -263,11 +263,12 @@ namespace CityWatch.Web.Services
                         .SetMarginBottom(10f);
                     document.Add(title);
 
-                    // Clean user columns to exclude internals like PSPF, Hash, File Name, File Size
+                    // All 21 columns matching the Excel spreadsheet
                     var allowedColumns = new List<string> {
                         "Day", "Date", "Control Room Job No.", "Site", "Address", "Desp. Time",
                         "Arrival", "Depart.", "CWS SNo.", "Total mins on Site", "Resp. Time",
-                        "Alarm", "Patrol Att.", "Colour Code", "Action Taken", "Notified By", "Bill To:"
+                        "Alarm", "Patrol Att.", "Colour Code", "Action Taken", "Notified By", "Bill To:",
+                        "File Name", "PSPF", "File Size(KB)", "Hash String"
                     };
 
                     var columnsToInclude = new List<int>();
@@ -282,15 +283,19 @@ namespace CityWatch.Web.Services
                     int colCount = columnsToInclude.Count;
                     if (colCount == 0) return;
 
-                    // Compute relative column widths
+                    // Compute relative column widths to fit all 21 columns beautifully
                     float[] colWidths = new float[colCount];
                     for (int i = 0; i < colCount; i++)
                     {
                         string colName = table.Columns[columnsToInclude[i]].ColumnName;
-                        if (colName == "Address") colWidths[i] = 16f;
-                        else if (colName == "Action Taken") colWidths[i] = 18f;
-                        else if (colName == "Site") colWidths[i] = 11f;
-                        else colWidths[i] = 6f; // default width
+                        if (colName == "Address") colWidths[i] = 14f;
+                        else if (colName == "Action Taken") colWidths[i] = 15f;
+                        else if (colName == "Hash String") colWidths[i] = 16f;
+                        else if (colName == "File Name") colWidths[i] = 11f;
+                        else if (colName == "Site") colWidths[i] = 9f;
+                        else if (colName == "Control Room Job No.") colWidths[i] = 8f;
+                        else if (colName == "Total mins on Site") colWidths[i] = 6f;
+                        else colWidths[i] = 4.5f; // default width for short fields like Day, Date, Time, etc.
                     }
 
                     var pdfTable = new iText.Layout.Element.Table(iText.Layout.Properties.UnitValue.CreatePercentArray(colWidths)).UseAllAvailableWidth();
@@ -299,7 +304,7 @@ namespace CityWatch.Web.Services
                     foreach (int colIdx in columnsToInclude)
                     {
                         var cell = new iText.Layout.Element.Cell()
-                            .Add(new iText.Layout.Element.Paragraph(table.Columns[colIdx].ColumnName).SetFontSize(5.5f).SetBold())
+                            .Add(new iText.Layout.Element.Paragraph(table.Columns[colIdx].ColumnName).SetFontSize(4.2f).SetBold())
                             .SetBackgroundColor(iText.Kernel.Colors.ColorConstants.LIGHT_GRAY)
                             .SetPadding(2f)
                             .SetBorder(new iText.Layout.Borders.SolidBorder(iText.Kernel.Colors.ColorConstants.GRAY, 0.5f));
@@ -313,7 +318,7 @@ namespace CityWatch.Web.Services
                         {
                             string cellValue = Convert.ToString(row[colIdx]) ?? string.Empty;
                             var cell = new iText.Layout.Element.Cell()
-                                .Add(new iText.Layout.Element.Paragraph(cellValue).SetFontSize(5f))
+                                .Add(new iText.Layout.Element.Paragraph(cellValue).SetFontSize(3.8f))
                                 .SetPadding(2f)
                                 .SetBorder(new iText.Layout.Borders.SolidBorder(iText.Kernel.Colors.ColorConstants.LIGHT_GRAY, 0.5f));
                             pdfTable.AddCell(cell);
