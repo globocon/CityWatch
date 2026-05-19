@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -406,8 +406,10 @@ namespace CityWatch.Web.Pages.Reports
             if (!Directory.Exists(excelFileDir))
                 Directory.CreateDirectory(excelFileDir);
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
+            var pdfFileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.pdf";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
-            return new JsonResult(new { results, fileName });
+            PatrolReportGenerator.CreatePdfFile(dataTable, Path.Combine(excelFileDir, pdfFileName));
+            return new JsonResult(new { results, fileName, pdfFileName });
         }
 
 
@@ -1477,9 +1479,11 @@ namespace CityWatch.Web.Pages.Reports
             if (!Directory.Exists(excelFileDir))
                 Directory.CreateDirectory(excelFileDir);
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
+            var pdfFileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.pdf";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
+            PatrolReportGenerator.CreatePdfFile(dataTable, Path.Combine(excelFileDir, pdfFileName));
 
-            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart });
+            return new JsonResult(new { results, fileName, pdfFileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart });
         }
 
         public IActionResult OnPostGenerateReportGraphFourthTab()

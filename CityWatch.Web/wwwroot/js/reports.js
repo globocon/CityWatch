@@ -975,6 +975,7 @@ $(function () {
         }).done(function (response) {
             patrolReport.clear().rows.add(response.results).draw();
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+            $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
         }).fail(function () {
         }).always(function () {
             $('#loader-p').hide();
@@ -1039,6 +1040,7 @@ $(function () {
         }).done(function (response) {
             patrolReport.clear().rows.add(response.results).draw();
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+            $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
             /// Show Grpah data start
             console.log('graph started ');
             if (window.myChart1 != undefined)
@@ -7800,47 +7802,34 @@ $('.wandstrikemultiselect').multiselect({
 });
 //p3-41-end
 
-$('#convert-to-pdf').click(function () {
+$('#convert-to-pdf').click(function (e) {
+    if (window.patrolReportMode === 'report_only') {
+        var href = $(this).attr('href');
+        if (href === '#' || !href) {
+            alert('Please generate the report first.');
+            e.preventDefault();
+            return false;
+        }
+        // Allow standard browser navigation to download the server-generated PDF file!
+        return true;
+    }
+
+    e.preventDefault();
     var currentDate = new Date();
     var formattedDate = formatDate(currentDate);
     $('#loader-p').show();
     setTimeout(function () {
-        if (window.patrolReportMode === 'report_only') {
-            // Temporarily show all entries to capture the full table without paging in the PDF
-            var oldPageLength = window.patrolReport.page.len();
-            window.patrolReport.page.len(-1).draw();
-
-            // Apply PDF portrait scaling class
-            $('body').addClass('pdf-export-active');
-
-            var element = $('#monthly_patrol_data_wrapper');
-            html2pdf(element[0], {
-                margin: [0.3, 0.3, 0.3, 0.3],
-                filename: '' + formattedDate + ' - - Patrol Grid Report.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-            }).then(function () {
-                // Remove PDF scaling class
-                $('body').removeClass('pdf-export-active');
-                // Restore original page length
-                window.patrolReport.page.len(oldPageLength).draw();
-                $('#loader-p').hide();
-            });
-        } else {
-            var element = $('#content-to-pdf');
-            html2pdf(element[0], {
-                margin: [0, 0, 0, 0],
-                filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-            }).then(function () {
-                $('#loader-p').hide();
-            });
-        }
+        var element = $('#content-to-pdf');
+        html2pdf(element[0], {
+            margin: [0, 0, 0, 0],
+            filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        }).then(function () {
+            $('#loader-p').hide();
+        });
     }, 1000); // Simulated delay of 1 second
-
 });
 
 function formatDate(dateStr) {
