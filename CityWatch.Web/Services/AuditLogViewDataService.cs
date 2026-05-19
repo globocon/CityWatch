@@ -20,6 +20,7 @@ namespace CityWatch.Web.Services
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest);
+        List<WandStrikeAuditLogExcelViewModel> GetWandStrikeAuditLogIncludingSmartWandStrikeAndAllTags(WandStrikeAuditLogRequest wsRequest);
     }
 
     public class AuditLogViewDataService : IAuditLogViewDataService
@@ -148,7 +149,75 @@ namespace CityWatch.Web.Services
             return dailyGuardLogGroups.ToList();
         }
 
+
+
         public List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest)
+        {
+            var filterLogs = GetWandStrikeAuditLogDataIncludingSmartWandStrike(wsRequest);
+            var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
+            {
+                clientSiteSmartWandTagsHitLog = z
+            }).ToList();
+
+            return filteredLogs;
+        }
+        public List<WandStrikeAuditLogExcelViewModel> GetWandStrikeAuditLogIncludingSmartWandStrikeAndAllTags(WandStrikeAuditLogRequest wsRequest)
+        {
+            var filterLogs = GetWandStrikeAuditLogDataIncludingSmartWandStrike(wsRequest);
+
+            // First convert logs to ViewModel
+            List<ClientSiteSmartWandTagsHitLogViewModel> logViewModels = filterLogs
+                .Select(z => new ClientSiteSmartWandTagsHitLogViewModel(z))
+                .ToList();
+
+            List<ClientSiteSmartWandTags> smartwandtags = _clientSiteWandDataProvider.GetAllSmartwandTags();
+            smartwandtags = smartwandtags.Where(x => wsRequest.ClientSiteIds.Contains(x.ClientSiteId)).ToList();
+
+            // Existing ClientSiteId + TagUid combinations
+            var existingKeys = logViewModels
+                .Select(x => $"{x.LoggedInClientSiteId}_{x.TagUId}")
+                .ToHashSet();
+
+            // Missing tags
+            var missingTags = smartwandtags
+                .Where(tag => !existingKeys.Contains($"{tag.ClientSiteId}_{tag.UId}"))
+                .ToList();
+
+            // Convert missing tags into ViewModel
+            var missingLogViewModels = missingTags
+                .Select(tag => new ClientSiteSmartWandTagsHitLogViewModel
+                {
+                    LoggedInClientSiteId = tag.ClientSiteId,
+                    TagUId = tag.UId,
+                    TagsTypeId = tag.TagsTypeId,
+                    LabelDescription = tag.LabelDescription,
+
+                    LoggedInClientSite = tag.ClientSite,
+                    SmartWandTagsType = tag.SmartWandTagsType,
+
+                    // Optional defaults
+                    HitUtcDateTime = null,
+                    HitLocalDateTime = null,
+                    LoggedInGuard = null,
+                    LoggedInUser = null
+                })
+                .ToList();
+
+            // Add missing tags
+            logViewModels.AddRange(missingLogViewModels);
+
+            // Final conversion
+            List<WandStrikeAuditLogExcelViewModel> filteredLogs = logViewModels
+                .Select(z => new WandStrikeAuditLogExcelViewModel
+                {
+                    clientSiteSmartWandTagsHitLog = z
+                })
+                .ToList();
+
+            return filteredLogs;
+        }
+
+        public List<ClientSiteSmartWandTagsHitLog> GetWandStrikeAuditLogDataIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest)
         {
 
             List<ClientSiteSmartWandTagsHitLog> strikeLogs = new List<ClientSiteSmartWandTagsHitLog>();
@@ -212,13 +281,7 @@ namespace CityWatch.Web.Services
                 }
             }
 
-            var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
-            {
-                clientSiteSmartWandTagsHitLog = z
-            })
-                .ToList();
-
-            return filteredLogs;
+            return filterLogs;
 
         }
     }

@@ -8636,6 +8636,7 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
+                clientSiteControl.html('');
                 data.map(function (site) {
                     clientSiteControl.append($('<option></option>').val(site.value).text(site.text));
                 });
@@ -8727,7 +8728,7 @@ $(function () {
         else {
             $('#WandStrikeAuditLogRequest_PatrolCarId').val('');
         }
-
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(false);
 
         $('#loader').show();
 
@@ -8841,6 +8842,7 @@ $(function () {
     ];
 
     $('#btnDownloadWandstrikeAuditReportDateTime').on('click', function () {
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(false);
         generateDataForExportToExcel('DATETIME');
     });
 
@@ -8878,6 +8880,7 @@ $(function () {
                 get: x => x.endUser ?? ''
             }
         ];
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(false);
         generateDataForExportToExcel('SITE');
     });
 
@@ -8905,6 +8908,7 @@ $(function () {
                 get: x => x.clientSiteSmartWandTagsHitLog?.gpScoordinates ?? ''
             }
         ];
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(true);
         generateDataForExportToExcel('MONTOSUN');
     });
 

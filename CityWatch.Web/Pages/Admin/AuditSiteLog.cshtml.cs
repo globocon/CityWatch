@@ -726,8 +726,17 @@ namespace CityWatch.Web.Pages.Admin
         {
             // if(!string.IsNullOrEmpty(wandStrikeAuditLogRequest.TagLabel)) { wandStrikeAuditLogRequest.TagLabel = Uri.UnescapeDataString(wandStrikeAuditLogRequest.TagLabel); }            
 
-            var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest).OrderBy(x => x.DateTimeSort).ToList();
-            return new JsonResult(new { wandStrikeAuditLogViewModel });
+            if(!wandStrikeAuditLogRequest.IncludeAllTagsInStrike)
+            {
+                var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest).OrderBy(x => x.DateTimeSort).ToList();
+                return new JsonResult(new { wandStrikeAuditLogViewModel });
+            }
+            else
+            {
+                var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrikeAndAllTags(wandStrikeAuditLogRequest).OrderBy(x => x.DateTimeSort).ToList();
+                return new JsonResult(new { wandStrikeAuditLogViewModel });                
+            }
+            
         }
 
         public JsonResult OnPostDownloadWandStrikeLogZip(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)
