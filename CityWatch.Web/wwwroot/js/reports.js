@@ -1142,7 +1142,7 @@ $(function () {
             $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
             //calculate month difference-end
             $('#loader-p').show();
-            $.ajax({
+            var ajax1 = $.ajax({
                 url: '/Reports/PatrolData?handler=GenerateReportGraphFirstTab',
                 type: 'POST',
                 dataType: 'json',
@@ -1179,10 +1179,6 @@ $(function () {
                 $('#count_hr_numberofYearofOnboarding').html(response.yearOfOnBoardingcount);
                 $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
                 $('#count_hr_GuardLanguages').html(response.languageReportCount);
-                //if (response.yearOfOnBoardingcount != 0) {
-                //    drawPieChartUsingChartJsChartYearOfOnBoarding(response.yearOfOnBoarding);
-                //}
-
 
                 $('#count_hr_activeGuardVsInactiveGuard').html(response.activeAndInActiveCount);
                 if (response.activeAndInActiveCount != 0) {
@@ -1199,7 +1195,6 @@ $(function () {
                     drawBarChartUsingChartJsGenderGuard(response.yearOfOnBoradingBarChart);
                 }
                 $('#count_hr_GuardLanguages').html(response.languageReportCount);
-                //p3-36-hrcharts partial-start
                 if (response.languageReportCount != 0) {
                     drawPieChartUsingChartJsGuardLanguages(response.languageReport);
                 }
@@ -1207,137 +1202,112 @@ $(function () {
                 if (response.attributionReportCount != 0) {
                     drawBarChartUsingChartJsGuardAttributionPerAnnum(response.attributionReport);
                 }
-                //p3-36-hrcharts partial-end
-                $.ajax({
-                    url: '/Reports/PatrolData?handler=GenerateReportGraphSecondTab',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: $('#frm_patrol_report_request').serialize(),
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                }).done(function (response) {
+            });
 
-                    console.log('graph response2 successs rc charts ');
-                    /* expanding grapph - start*/
+            var ajax2 = $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphSecondTab',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
 
+                console.log('graph response2 successs rc charts ');
+                $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
+                if (response.rcChartTypesForWeekNewCount != 0) {
+                    drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+                }
 
-                    $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
-                    if (response.rcChartTypesForWeekNewCount != 0) {
-                        drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
-                    }
+                $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
+                if (response.rcChartTypesForMonthNewCount != 0) {
+                    drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
+                }
 
+                $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
+                if (response.rcChartTypesForYearNewCount != 0) {
+                    drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
+                }
 
-                    $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
-                    if (response.rcChartTypesForMonthNewCount != 0) {
-                        drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
-                    }
+                $('#count_by_numberoftimesrcpushedbycro').html(response.rcChartTypesCROCountnew);
+                if (response.rcChartTypesCROCountnew != 0) {
+                    drawPieChartUsingChartJsChartRCButton(response.chartData.rcChartTypesCRONew);
+                }
 
-                    $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
-                    if (response.rcChartTypesForYearNewCount != 0) {
-                        drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
-                    }
+                $('#count_by_numberofguardswnenttoprealarm').html(response.rcChartTypesGuardsPrealarmCountnew);
+                if (response.rcChartTypesGuardsPrealarmCountnew != 0) {
+                    drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(response.chartData.rcChartTypesGuardsPrealarmNew);
+                }
+                $('#count_by_numberofguardswnentfromprealarmorangetored').html(response.rcChartTypesGuardsFromPrealarmCountnew);
+                if (response.rcChartTypesGuardsFromPrealarmCountnew != 0) {
+                    drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
+                }
+            });
 
-                    $('#count_by_numberoftimesrcpushedbycro').html(response.rcChartTypesCROCountnew);
-                    if (response.rcChartTypesCROCountnew != 0) {
-                        drawPieChartUsingChartJsChartRCButton(response.chartData.rcChartTypesCRONew);
-                    }
+            var ajax4 = $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphFourthTab',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                console.log('graph response3 successs wand strikes charts ');
+                $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
+                if (response.chartData.dailySiteControllerWandStrikeData != 0) {
 
-                    $('#count_by_numberofguardswnenttoprealarm').html(response.rcChartTypesGuardsPrealarmCountnew);
-                    if (response.rcChartTypesGuardsPrealarmCountnew != 0) {
-                        drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(response.chartData.rcChartTypesGuardsPrealarmNew);
-                    }
-                    $('#count_by_numberofguardswnentfromprealarmorangetored').html(response.rcChartTypesGuardsFromPrealarmCountnew);
-                    if (response.rcChartTypesGuardsFromPrealarmCountnew != 0) {
-                        drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
-                    }
+                    drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
+                }
+                $('#btncount_individualwands').html(response.chartData.individualFQWandStrikeData.length);
+                if (response.chartData.individualFQWandStrikeData != 0) {
 
+                    drawPieChartUsingChartJsIndividualWandStrikeData(response.chartData.individualFQWandStrikeData);
+                }
+            });
 
-                    $.ajax({
-                        url: '/Reports/PatrolData?handler=GenerateReportGraphFourthTab',
-                        type: 'POST',
-                        dataType: 'json',
-                        data: $('#frm_patrol_report_request').serialize(),
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    }).done(function (response) {
-                        console.log('graph response3 successs wand strikes charts ');
-                        $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
-                        if (response.chartData.dailySiteControllerWandStrikeData != 0) {
+            $('#WandStrikeAuditLogRequest_TagId').val($('#patroldatawandstrikeTagId').val());
+            $('#WandStrikeAuditLogRequest_TagTypeId').val($('#patroldatawandstrikeTagTypeId').val());
+            $('#WandStrikeAuditLogRequest_TagLabel').val($('#patroldatawandstrikeTagLabel').val());
+            var tag = $('#patroldatawandstrikeTagId').val();
+            var selectedLabel = $('#patroldatawandstrikeTagLabel').find("option:selected");
+            var selectedLabelText = selectedLabel.text();
 
-                            drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
-                            // drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+            $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+            var ajax5 = $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphFifthTab',
+                type: 'POST',
+                dataType: 'json',
+                data:
+                    $.extend(
+                        $('#frm_patrol_report_request').serializeArray().reduce(function (obj, item) {
+                            obj[item.name] = item.value;
+                            return obj;
+                        }, {}),
+                        {
+                            TagId: tag,
+                            TagTypeId: $('#patroldatawandstrikeTagTypeId').val(),
+                            TagLabel: $('#patroldatawandstrikeTagLabel').val(),
+                            GuardName: $('#patroldatawandstrikeGuardName').val(),
+                            LicenseNo: $('#patroldatawandstrikeLicenseNo').val(),
+                            SmartWandId: $('#patroldatawandstrikeSmartWandId').val()
                         }
-                        $('#btncount_individualwands').html(response.chartData.individualFQWandStrikeData.length);
-                        if (response.chartData.individualFQWandStrikeData != 0) {
+                    ),
 
-                            drawPieChartUsingChartJsIndividualWandStrikeData(response.chartData.individualFQWandStrikeData);
-                        }
-                        $('#WandStrikeAuditLogRequest_TagId').val($('#patroldatawandstrikeTagId').val());
-                        $('#WandStrikeAuditLogRequest_TagTypeId').val($('#patroldatawandstrikeTagTypeId').val());
-                        $('#WandStrikeAuditLogRequest_TagLabel').val($('#patroldatawandstrikeTagLabel').val());
-                        var tag = $('#patroldatawandstrikeTagId').val();
-                        var selectedLabel = $('#patroldatawandstrikeTagLabel').find("option:selected");
-                        var selectedLabelText = selectedLabel.text();
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                console.log('graph response4 successs wand strikes downselect charts ');
+                $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.dailySiteControllerWandStrikeDataForDownselect.length);
+                if (response.chartData.dailySiteControllerWandStrikeDataForDownselect != 0) {
 
-                        $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
-                        $.ajax({
-                            url: '/Reports/PatrolData?handler=GenerateReportGraphFifthTab',
-                            type: 'POST',
-                            dataType: 'json',
-                            data:
-                                $.extend(
-                                    $('#frm_patrol_report_request').serializeArray().reduce(function (obj, item) {
-                                        obj[item.name] = item.value;
-                                        return obj;
-                                    }, {}),
-                                    {
-                                        TagId: tag,
-                                        TagTypeId: $('#patroldatawandstrikeTagTypeId').val(),
-                                        TagLabel: $('#patroldatawandstrikeTagLabel').val(),
-                                        GuardName: $('#patroldatawandstrikeGuardName').val(),
-                                        LicenseNo: $('#patroldatawandstrikeLicenseNo').val(),
-                                        SmartWandId: $('#patroldatawandstrikeSmartWandId').val()
-                                    }
-                                ),
+                    drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(response.chartData.dailySiteControllerWandStrikeDataForDownselect);
+                }
+                $('#btncount_individualwandsbydownselect').html(response.chartData.individualFQWandStrikeDataForDownselect.length);
+                if (response.chartData.individualFQWandStrikeDataForDownselect != 0) {
 
-                            //{
-                            //    $('#frm_patrol_report_request').serialize(),
-                            //    TagId: $('#patroldatawandstrikeTagId').val(),
-                            //    TagTypeId: $('#patroldatawandstrikeTagTypeId').val(),
-                            //    TagLabel: $('#patroldatawandstrikeTagLabel').val(),
-                            //    GuardName: $('#patroldatawandstrikeGuardName').val(),
-                            //    LicenseNo: $('#patroldatawandstrikeLicenseNo').val()
-                            //    },
-                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                        }).done(function (response) {
-                            console.log('graph response4 successs wand strikes downselect charts ');
-                            $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.dailySiteControllerWandStrikeDataForDownselect.length);
-                            if (response.chartData.dailySiteControllerWandStrikeDataForDownselect != 0) {
+                    drawPieChartUsingChartJsIndividualWandStrikeDataForDownselect(response.chartData.individualFQWandStrikeDataForDownselect);
+                }
+            });
 
-                                drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(response.chartData.dailySiteControllerWandStrikeDataForDownselect);
-                                // drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
-                            }
-                            $('#btncount_individualwandsbydownselect').html(response.chartData.individualFQWandStrikeDataForDownselect.length);
-                            if (response.chartData.individualFQWandStrikeDataForDownselect != 0) {
-
-                                drawPieChartUsingChartJsIndividualWandStrikeDataForDownselect(response.chartData.individualFQWandStrikeDataForDownselect);
-                            }
-                        }).fail(function () {
-                        }).always(function () {
-                            $('#loader-p').hide();
-                        });
-                    }).fail(function () {
-                    }).always(function () {
-                        //$('#loader-p').hide();
-                    });
-                }).fail(function () {
-                }).always(function () {
-                    //$('#loader-p').hide();
-                   
-                });
-
-
-            }).fail(function () {
-            }).always(function () {
-                //$('#loader-p').hide();
+            $.when(ajax1, ajax2, ajax4, ajax5).always(function () {
+                $('#loader-p').hide();
             });
             ///show graph data end 
         }).fail(function () {
