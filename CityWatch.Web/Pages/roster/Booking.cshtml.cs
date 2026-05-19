@@ -93,11 +93,22 @@ namespace CityWatch.Web.Pages.roster
             SelectedBinderId = binderId;
             ActiveTab = tab ?? "projects";
             
-            RestrictedSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
-            RosterAccessRole = HttpContext.Session.GetString("BookingAccessRole") ?? "GSS";
+            // Clear session restrictions if Administrator is loading the page directly without siteId
+            var qSiteId = Request.Query["siteId"];
+            if (User.IsInRole("Administrator") && string.IsNullOrEmpty(qSiteId))
+            {
+                HttpContext.Session.Remove("RestrictedSiteId");
+                HttpContext.Session.Remove("BookingAccessRole");
+                RestrictedSiteId = null;
+                RosterAccessRole = "GSS";
+            }
+            else
+            {
+                RestrictedSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
+                RosterAccessRole = HttpContext.Session.GetString("BookingAccessRole") ?? "GSS";
+            }
             
             // If siteId is passed, check if it's an ROEditor access and set session
-            var qSiteId = Request.Query["siteId"];
             if (!string.IsNullOrEmpty(qSiteId) && int.TryParse(qSiteId, out int sid))
             {
                 // Verify if the user has ROEditor access for this site/global
@@ -326,10 +337,41 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = rosterData, projectStatus = rosterData.FirstOrDefault()?.status ?? "Live" });
         }
 
-        public JsonResult OnGetSearchProviders(string search)
+        public JsonResult OnGetSearchProviders(string search, int? siteId)
         {
-            var providers = _viewDataService.ProviderList
-                .Where(x => !string.IsNullOrEmpty(x.Text) && x.Text != "Select" && (string.IsNullOrEmpty(search) || x.Text.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            var providerNames = new List<string>();
+
+            if (siteId.HasValue && siteId.Value > 0)
+            {
+                var mainProviders = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && !string.IsNullOrEmpty(x.ProviderName))
+                    .Select(x => x.ProviderName)
+                    .Distinct()
+                    .ToList();
+
+                var reliefProviders = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && !string.IsNullOrEmpty(x.ReliefProviderName))
+                    .Select(x => x.ReliefProviderName)
+                    .Distinct()
+                    .ToList();
+
+                providerNames = mainProviders.Union(reliefProviders).Distinct().ToList();
+            }
+
+            var query = _viewDataService.ProviderList
+                .Where(x => !string.IsNullOrEmpty(x.Text) && x.Text != "Select");
+
+            if (providerNames.Any())
+            {
+                query = query.Where(x => providerNames.Contains(x.Text, StringComparer.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Text.Contains(search, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var providers = query
                 .Select(x => new { id = x.Value, text = x.Text })
                 .ToList();
 
@@ -833,11 +875,39 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true });
         }
 
-        public JsonResult OnGetSearchGuards(string search)
+        public JsonResult OnGetSearchGuards(string search, int? siteId)
         {
             var providerList = _viewDataService.ProviderList;
-            var guards = _context.Guards
-                .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search) || (x.SecurityNo != null && x.SecurityNo.Contains(search))))
+            var query = _context.Guards.Where(x => x.IsActive);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || (x.SecurityNo != null && x.SecurityNo.Contains(search)));
+            }
+
+            if (siteId.HasValue && siteId.Value > 0)
+            {
+                var mainGuardIds = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.GuardId != null)
+                    .Select(x => x.GuardId.Value)
+                    .Distinct()
+                    .ToList();
+
+                var reliefGuardIds = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.ReliefGuardId != null)
+                    .Select(x => x.ReliefGuardId.Value)
+                    .Distinct()
+                    .ToList();
+
+                var siteGuardIds = mainGuardIds.Union(reliefGuardIds).Distinct().ToList();
+
+                if (siteGuardIds.Any())
+                {
+                    query = query.Where(x => siteGuardIds.Contains(x.Id));
+                }
+            }
+
+            var guards = query
                 .Select(x => new {
                     id = x.Id,
                     text = x.Name + (string.IsNullOrEmpty(x.SecurityNo) ? "" : " - " + x.SecurityNo),
@@ -864,6 +934,26 @@ namespace CityWatch.Web.Pages.roster
                 .ToList();
 
             return new JsonResult(new { results = guards });
+        }
+
+        public JsonResult OnGetSearchCallsigns(string search, int? siteId)
+        {
+            var query = _context.IncidentReportFields
+                .Where(x => x.TypeId == ReportFieldType.CallSign);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search));
+            }
+
+            var results = query
+                .Select(x => new {
+                    id = x.Id,
+                    text = x.Name
+                })
+                .ToList();
+
+            return new JsonResult(new { results = results });
         }
 
         public async Task<IActionResult> OnPostDeleteGroup(int groupId)

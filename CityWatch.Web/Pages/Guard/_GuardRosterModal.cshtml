@@ -82,7 +82,24 @@
     .total-label { font-size: 9px; text-transform: uppercase; color: #888; display: block; margin-bottom: 2px; font-weight: 600; }
     .total-value { font-size: 12px; }
 
+    /* Drag and Drop & Add Button styling matched to Booking module */
+    .guard-shift-card[draggable="true"] {
+        cursor: grab;
+    }
+    .guard-shift-card.dragging {
+        opacity: 0.4;
+        cursor: grabbing;
+    }
+    .guard-roster-cell.drag-over {
+        background-color: rgba(0, 123, 255, 0.15) !important;
+        border: 2px dashed #007bff !important;
+    }
+    .btn-add-guard-roster {
+        transition: all 0.2s ease;
+    }
+
     /* Shift Card Styles matched to Booking module */
+
     .guard-shift-card {
         position: relative;
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); /* Default fallback */
@@ -691,6 +708,7 @@
 <script>
     var guardRosterStartDate = null;
     var currentGuardSiteId = null;
+    var currentRosterGroupId = null;
     var loggedGuardId = null;
     var isAdminRoster = false;
     var isAdminFinancialsOn = false;
@@ -705,12 +723,124 @@
     const phIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg>`;
 
     $(document).ready(function() {
+        // Pause auto-refresh timer when Roster modal is shown and resume when hidden
+        $('#guardRosterModal').on('show.bs.modal', function () {
+            if (window.isPaused !== undefined) {
+                window.isPaused = true;
+            }
+        });
+
+        $('#guardRosterModal').on('hidden.bs.modal', function () {
+            if (window.isPaused !== undefined) {
+                window.isPaused = false;
+            }
+        });
+
         $('#btnToggleRosterEditMode').on('click', function() {
             isEditMode = !isEditMode;
             $(this).toggleClass('btn-outline-dark btn-primary');
             $(this).find('i').toggleClass('fa-pencil-square-o fa-check');
             $(this).html(isEditMode ? '<i class="fa fa-check mr-2"></i>Exit Edit Mode' : '<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
             loadGuardRoster();
+        });
+
+        // Drag and Drop Event Listeners for Guard Roster
+        $(document).on('dragstart', '.guard-shift-card', function (e) {
+            var card = $(this);
+            if (!isEditMode) { e.preventDefault(); return; }
+            card.addClass('dragging');
+            
+            var shiftData = {
+                guardId: card.data('guard-id'),
+                providerName: card.data('provider-name'),
+                payRateId: card.data('payrate-id'),
+                callsignId: card.data('callsign-id'),
+                startTime: card.data('shift-start'),
+                endTime: card.data('shift-end'),
+                groupId: card.data('group-id'),
+                buyRate: card.data('buy-rate'),
+                type: card.data('type')
+            };
+            e.originalEvent.dataTransfer.setData('application/json', JSON.stringify(shiftData));
+            e.originalEvent.dataTransfer.effectAllowed = 'copy';
+        });
+
+        $(document).on('dragend', '.guard-shift-card', function (e) {
+            $(this).removeClass('dragging');
+            $('.guard-roster-cell').removeClass('drag-over');
+        });
+
+        $(document).on('dragover', '.guard-roster-cell', function (e) {
+            if (isEditMode && $(this).data('site-id')) {
+                e.preventDefault();
+                e.originalEvent.dataTransfer.dropEffect = 'copy';
+                $(this).addClass('drag-over');
+            }
+        });
+
+        $(document).on('dragleave', '.guard-roster-cell', function (e) {
+            $(this).removeClass('drag-over');
+        });
+
+        $(document).on('drop', '.guard-roster-cell', function (e) {
+            e.preventDefault();
+            $(this).removeClass('drag-over');
+            if (!isEditMode) return;
+
+            var siteId = $(this).data('site-id');
+            var cellDate = $(this).data('date');
+            if (!siteId || !cellDate) return;
+            
+            var dataStr = e.originalEvent.dataTransfer.getData('application/json');
+            if (!dataStr) return;
+            
+            var shiftData = JSON.parse(dataStr);
+            var startDateTime = cellDate + 'T' + shiftData.startTime;
+            var endDateTime = cellDate + 'T' + shiftData.endTime;
+
+            if (shiftData.endTime < shiftData.startTime) {
+                var startD = new Date(cellDate + 'T00:00:00');
+                var endD = new Date(startD);
+                endD.setDate(endD.getDate() + 1);
+                var endStr = endD.getFullYear() + '-' + String(endD.getMonth() + 1).padStart(2, '0') + '-' + String(endD.getDate()).padStart(2, '0');
+                endDateTime = endStr + 'T' + shiftData.endTime;
+            }
+
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '/roster/Booking?handler=AddShift',
+                type: 'POST',
+                headers: { "RequestVerificationToken": token },
+                data: {
+                    groupId: shiftData.groupId,
+                    siteId: siteId,
+                    start: startDateTime,
+                    end: endDateTime,
+                    guardId: shiftData.guardId,
+                    providerName: shiftData.providerName,
+                    payRateId: shiftData.payRateId,
+                    payRate: shiftData.buyRate,
+                    callsignId: shiftData.callsignId,
+                    shiftType: shiftData.type || 'Regular',
+                    shiftId: null
+                },
+                success: function (res) {
+                    if (res.success) {
+                        loadGuardRoster();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        });
+
+        // Click Event for "+" Add Shift in Guard Roster Cell
+        $(document).on('click', '.btn-add-guard-roster', function (e) {
+            e.preventDefault();
+            var date = $(this).data('date');
+            var siteId = $(this).data('site-id');
+            openNewShiftModalForSite(date, siteId);
         });
 
         $('#btnPrevWeekGuard').on('click', function() {
@@ -741,11 +871,16 @@
                 url: '/roster/Booking?handler=SearchGuards',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) { return { search: params.term }; },
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        siteId: $('#geModalSiteId').val()
+                    };
+                },
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
-            minimumInputLength: 1
+            minimumInputLength: 0
         }).on('select2:select', function (e) {
             var data = e.params.data;
             var pId = data.providerId || data.provider;
@@ -768,7 +903,7 @@
                 url: '/roster/Booking?handler=SearchProviders',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) { return { search: params.term }; },
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
@@ -784,11 +919,16 @@
                 url: '/roster/Booking?handler=SearchGuards',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) { return { search: params.term }; },
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        siteId: $('#geModalSiteId').val()
+                    };
+                },
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
-            minimumInputLength: 1
+            minimumInputLength: 0
         });
 
         $('#geModalReliefProviderId').select2({
@@ -800,7 +940,7 @@
                 url: '/roster/Booking?handler=SearchProviders',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) { return { search: params.term }; },
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
                 processResults: function (data) { return { results: data.results }; },
                 cache: true
             },
@@ -965,8 +1105,8 @@
         $('#btnToggleRosterEditMode').removeClass('btn-primary').addClass('btn-outline-dark');
         $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
 
-        // Only show Edit button if caller is Logbook and user has permission
-        if (isROEditor && fromLogbook === true) {
+        // Only show Edit button if user has permission
+        if (isROEditor) {
             $('#btnToggleRosterEditMode').removeClass('d-none');
         } else {
             $('#btnToggleRosterEditMode').addClass('d-none');
@@ -1236,6 +1376,7 @@
                 }
 
                  lastGuardRosterData = res;
+                 currentRosterGroupId = res.rosterGroupId || null;
 
                 // Update Filter Dropdown (Add unique guards found in data)
                 var filterSelect = $('#adminGuardFilter');
@@ -1331,14 +1472,14 @@
                             today.setHours(0,0,0,0);
                             var isFutureOrToday = shiftDate >= today;
 
-                            rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" ' +
+                            rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + isEditMode + '" ' +
                                 'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '" ' +
                                 'data-guard-name="' + (s.guardName || '') + '" data-shift-start="' + s.shiftStart + '" data-shift-end="' + s.shiftEnd + '" ' +
                                 'data-provider-name="' + (s.providerName || '') + '" data-relief-provider-name="' + (s.reliefProviderName || '') + '" ' +
                                 'data-relief-reason="' + (s.reliefReason || '') + '" data-relief-reason-other="' + (s.reliefReasonOther || '') + '" ' +
-                                'data-adhoc-text="' + (s.adhocOffsiteText || '') + '" data-callsign-id="' + (s.callsignId || '') + '" ' +
+                                'data-adhoc-text="' + (s.adhocOffsiteText || '') + '" data-callsign-id="' + (s.callsignId || '') + '" data-callsign-name="' + (s.callsignName || '') + '" ' +
                                 'data-payrate-id="' + (s.payRateId || '') + '" data-payrate-group-id="' + (s.payRateGroupId || '') + '" ' +
-                                'data-buy-rate="' + s.buyRate + '">' +
+                                'data-buy-rate="' + s.buyRate + '" data-group-id="' + s.groupId + '">' +
                                 (isEditMode ? '<span class="btn-delete-shift" onclick="deleteGuardRosterShift(event, ' + s.id + ')"><i class="fa fa-times"></i></span>' : '') +
                                 (isEditMode ? '<span class="btn-edit-shift" onclick="openEditShiftModal(' + s.id + ', ' + s.groupId + ', ' + row.siteId + ')"><i class="fa fa-pencil"></i></span>' : '') +
                                 (belongsToLoggedGuard && !isEditMode ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
@@ -1348,7 +1489,7 @@
                                 '</div>' +
                                 (s.status === 3 ? '<div class="cancelled-overlay"></div>' : '') + 
                                 (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
-                                '<div class="guard-shift-license">LIC: ' + (s.reliefGuardId ? (s.reliefGuardLicense || "N/A") : s.guardLicense) + '</div>' +
+                                (s.reliefGuardId ? '' : '<div class="guard-shift-license">LIC: ' + s.guardLicense + '</div>') +
                                 '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
                                 (isAdminSupplierOn ? 
                                     '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + (s.reliefGuardId ? s.reliefProviderName : s.guardProvider) + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
@@ -1361,6 +1502,9 @@
                             
                             rowHtml += '</div>';
                         });
+                        if (isEditMode) {
+                             rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard-roster btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-date="' + dStr + '" data-site-id="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
+                        }
                         rowHtml += '</td>';
                     });
 
@@ -1446,8 +1590,66 @@
     }
 
     function openAddShiftModal(date, siteId) {
-        // Redirect to Booking page for this site and date
-        window.location.href = '/roster/Booking?startDate=' + date + '&groupId=' + siteId;
+        openNewShiftModalForSite(date, siteId);
+    }
+
+    function openNewShiftModalForSite(cellDate, siteId) {
+        $('#geModalShiftId').val('');
+        $('#geModalGroupId').val(currentRosterGroupId || 0);
+        $('#geModalSiteId').val(siteId);
+        $('#guardAddShiftModal').data('date', cellDate);
+        
+        // Clear other fields
+        $('#geModalGuardId').empty().trigger('change');
+        $('#geModalProviderId').empty().val(null).trigger('change');
+        $('#geModalReliefGuardId').empty().val(null).trigger('change');
+        $('#geModalReliefProviderId').empty().val(null).trigger('change');
+        $('#geModalReliefReason').val('').trigger('change');
+        $('#geModalReliefReasonOther').val('');
+        $('#geModalCallsignId').empty().val(null).trigger('change');
+        
+        // Populate default Times
+        $('#geModalShiftStart').val('08:00');
+        $('#geModalShiftEnd').val('16:00');
+        $('#geModalShiftType').val('Regular').trigger('change');
+        $('#geModalAdhocOffsiteText').val('');
+        
+        // Auto-select Pay Rate Group (Payment Profile) if default exists
+        $.ajax({
+            url: '/roster/Booking?handler=SiteDefaultAssignment',
+            data: { siteId: siteId },
+            success: function (res) {
+                if (res.success) {
+                    var newOption = new Option(res.groupName, res.groupId, true, true);
+                    $('#geModalPayRateGroupId').empty().append(newOption).trigger('change');
+                    
+                    // Fetch and select the first rate profile for this payment profile group
+                    $.ajax({
+                        url: '/roster/Booking?handler=SearchPayRates',
+                        dataType: 'json',
+                        data: { search: '', groupId: res.groupId },
+                        success: function(data) {
+                            if (data.results && data.results.length > 0) {
+                                var rate = data.results[0];
+                                var rateOption = new Option(rate.text, rate.id, true, true);
+                                $('#geModalPositionId').empty().append(rateOption).trigger('change');
+                                $('#geModalPayRate').val(rate.guardPayRate || 0);
+                            } else {
+                                $('#geModalPositionId').empty().trigger('change');
+                                $('#geModalPayRate').val('');
+                            }
+                        }
+                    });
+                } else {
+                    $('#geModalPayRateGroupId').empty().trigger('change');
+                    $('#geModalPositionId').empty().trigger('change');
+                    $('#geModalPayRate').val('');
+                }
+            }
+        });
+
+        // Open the modal
+        $('#guardAddShiftModal').modal('show');
     }
 
     function openEditShiftModal(shiftId, groupId, siteId) {
@@ -1495,7 +1697,13 @@
         $('#geModalReliefReason').val(rReason || "").trigger('change');
 
         // Populate Callsign & Adhoc
-        $('#geModalCallsignId').val(card.data('callsign-id') || "").trigger('change');
+        var cId = card.data('callsign-id');
+        var cName = card.data('callsign-name');
+        if (cId) {
+            $('#geModalCallsignId').empty().append(new Option(cName, cId, true, true)).trigger('change');
+        } else {
+            $('#geModalCallsignId').empty().val(null).trigger('change');
+        }
         $('#geModalAdhocOffsiteText').val(card.data('adhoc-text') || "");
 
         // Populate Times
@@ -1590,6 +1798,9 @@
         var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
         var cellDate = card.closest('.guard-roster-cell').data('date');
         
+        if (!cellDate) {
+            cellDate = $('#guardAddShiftModal').data('date');
+        }
         if (!cellDate) {
             cellDate = new Date().toISOString().split('T')[0];
         }
