@@ -1,4 +1,5 @@
-﻿$(function () {
+$(function () {
+    window.patrolReportMode = 'both';
 
     /** Patrol Data Report ***/
     function loadDefaultDates() {
@@ -915,6 +916,71 @@
         }).always(function () {
             $('#loader-p').hide();
         });
+    });
+    $('#btnPatrolReportSumbitReport').on('click', function () {
+        window.patrolReportMode = 'report_only';
+
+        $('#count_by_numberofduressperweek').html(0);
+        $('#count_by_numberofduresspermonth').html(0);
+        $('#count_by_numberofduressperyear').html(0);
+        $('#count_by_numberoftimesrcpushedbycro').html(0);
+        $('#count_by_numberofguardswnenttoprealarm').html(0);
+        $('#count_by_numberofguardswnentfromprealarmorangetored').html(0);
+        $('#count_by_site').html(0);
+        $('#count_by_area_ward').html(0);
+        $('#count_color_code').html(0);
+        $('#count_by_ir').html(0);
+        $('#count_by_ir3').html(0);
+        $('#count_by_site3').html(0);
+        $('#count_by_site1').html(0);
+        $('#count_by_area_ward1').html(0);
+        $('#count_by_area_ward3').html(0);
+        $('#count_color_code1').html(0);
+        $('#count_color_code3').html(0);
+        $('#count_hr_numberofYearofOnboarding').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+        $('#count_hr_activeGuardVsInactiveGuard').html(0);
+        $('#count_hr_GenderGuard').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+        $('#count_hr_GuardLanguages').html(0);
+        $('#count_hr_AttributionPerAnnum').html(0);
+        
+        $('#btnExportExcel').attr('href', '#');
+        const fromDate = $('#date_from').val();
+        const toDate = $('#date_to').val();
+        if (fromDate === '' || toDate === '') {
+            alert('From date and to date is required');
+            return false;
+        }
+        //calculate month difference-start
+        var date1 = new Date($('#ReportRequest_FromDate').val());
+        var date2 = new Date($('#ReportRequest_ToDate').val());
+
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 12) {
+            alert('Date Range is  greater than 12 months');
+            return false;
+        }
+        $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+        $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
+        
+        $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GenerateReport',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            patrolReport.clear().rows.add(response.results).draw();
+            $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+        }).fail(function () {
+        }).always(function () {
+            $('#loader-p').hide();
+        });
+    });
+    $('#btnPatrolReportSumbit').on('click', function () {
+        window.patrolReportMode = 'both';
     });
     $('#btnPatrolReportSumbit').on('click', function () {
 
@@ -7738,16 +7804,29 @@ $('#convert-to-pdf').click(function () {
     var formattedDate = formatDate(currentDate);
     $('#loader-p').show();
     setTimeout(function () {
-        var element = $('#content-to-pdf');
-        html2pdf(element[0], {
-            margin: [0, 0, 0, 0],
-            filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-        }).then(function () {
-            $('#loader-p').hide();
-        });
+        if (window.patrolReportMode === 'report_only') {
+            var element = $('#monthly_patrol_data_wrapper');
+            html2pdf(element[0], {
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: '' + formattedDate + ' - - Patrol Grid Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 1.5, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).then(function () {
+                $('#loader-p').hide();
+            });
+        } else {
+            var element = $('#content-to-pdf');
+            html2pdf(element[0], {
+                margin: [0, 0, 0, 0],
+                filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).then(function () {
+                $('#loader-p').hide();
+            });
+        }
     }, 1000); // Simulated delay of 1 second
 
 });
