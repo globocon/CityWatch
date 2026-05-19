@@ -7805,6 +7805,10 @@ $('#convert-to-pdf').click(function () {
     $('#loader-p').show();
     setTimeout(function () {
         if (window.patrolReportMode === 'report_only') {
+            // Temporarily show all entries to capture the full table without paging in the PDF
+            var oldPageLength = patrolReport.page.len();
+            patrolReport.page.len(-1).draw();
+
             var element = $('#monthly_patrol_data_wrapper');
             html2pdf(element[0], {
                 margin: [0.5, 0.5, 0.5, 0.5],
@@ -7813,6 +7817,8 @@ $('#convert-to-pdf').click(function () {
                 html2canvas: { scale: 1.5, useCORS: true },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
             }).then(function () {
+                // Restore original page length
+                patrolReport.page.len(oldPageLength).draw();
                 $('#loader-p').hide();
             });
         } else {
