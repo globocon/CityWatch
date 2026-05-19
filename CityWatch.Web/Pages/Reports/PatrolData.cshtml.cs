@@ -47,6 +47,7 @@ namespace CityWatch.Web.Pages.Reports
 {
     public class PatrolDataModel : PageModel
     {
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, CityWatch.Data.Models.PatrolDataReport> _reportCache = new();
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
         private readonly IPatrolDataReportService _irChartDataService;
@@ -141,6 +142,7 @@ namespace CityWatch.Web.Pages.Reports
         public IActionResult OnPostGenerateReport()
         {
             var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+            _reportCache[HttpContext.Session.Id] = patrolDataReport;
             var results = patrolDataReport.Results;
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
@@ -415,7 +417,10 @@ namespace CityWatch.Web.Pages.Reports
 
         public IActionResult OnPostGenerateReportGraphFirstTab()
         {
-            var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+            if (!_reportCache.TryRemove(HttpContext.Session.Id, out var patrolDataReport))
+            {
+                patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+            }
             var results = patrolDataReport.Results;
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
