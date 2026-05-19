@@ -7810,14 +7810,19 @@ $('#convert-to-pdf').click(function () {
             var oldPageLength = window.patrolReport.page.len();
             window.patrolReport.page.len(-1).draw();
 
+            // Apply PDF portrait scaling class
+            $('body').addClass('pdf-export-active');
+
             var element = $('#monthly_patrol_data_wrapper');
             html2pdf(element[0], {
-                margin: [0.5, 0.5, 0.5, 0.5],
+                margin: [0.3, 0.3, 0.3, 0.3],
                 filename: '' + formattedDate + ' - - Patrol Grid Report.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 1.5, useCORS: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             }).then(function () {
+                // Remove PDF scaling class
+                $('body').removeClass('pdf-export-active');
                 // Restore original page length
                 window.patrolReport.page.len(oldPageLength).draw();
                 $('#loader-p').hide();
