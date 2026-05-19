@@ -61,6 +61,7 @@ $(function () {
             $('td', row).eq(13).addClass('action-taken');
         }
     });
+    window.patrolReport = patrolReport;
     let keyVehicleDocketLogReport = $('#monthly_kvl_docket_data').DataTable({
         paging: false,
         ordering: false,
@@ -7806,8 +7807,8 @@ $('#convert-to-pdf').click(function () {
     setTimeout(function () {
         if (window.patrolReportMode === 'report_only') {
             // Temporarily show all entries to capture the full table without paging in the PDF
-            var oldPageLength = patrolReport.page.len();
-            patrolReport.page.len(-1).draw();
+            var oldPageLength = window.patrolReport.page.len();
+            window.patrolReport.page.len(-1).draw();
 
             var element = $('#monthly_patrol_data_wrapper');
             html2pdf(element[0], {
@@ -7818,7 +7819,7 @@ $('#convert-to-pdf').click(function () {
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
             }).then(function () {
                 // Restore original page length
-                patrolReport.page.len(oldPageLength).draw();
+                window.patrolReport.page.len(oldPageLength).draw();
                 $('#loader-p').hide();
             });
         } else {
