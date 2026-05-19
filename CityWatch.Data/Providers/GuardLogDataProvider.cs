@@ -434,6 +434,7 @@ namespace CityWatch.Data.Providers
 
         public void DeleteKeyVehicleLogPax(int id);
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
+        public void DeleteOnBoardUsersCourseByAdmin(int Id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -8519,6 +8520,20 @@ namespace CityWatch.Data.Providers
                 Console.WriteLine($"Error fetching site tag status: {ex.Message}");
                 return new List<SiteTagStatusPendingNew>();
             }
+        }
+        public void DeleteOnBoardUsersCourseByAdmin(int Id)
+        {
+
+            var guardtraining = _context.OnBoardUsersTrainingAndAssessment.SingleOrDefault(x => x.Id == Id);
+            if (guardtraining == null)
+                throw new InvalidOperationException();
+
+            _context.Remove(guardtraining);
+            _context.SaveChanges();
+
+
+
+
         }
     }
 

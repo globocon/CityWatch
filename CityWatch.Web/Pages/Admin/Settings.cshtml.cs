@@ -56,6 +56,7 @@ using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using CityWatch.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
+using CityWatch.Web.API;
 
 
 
@@ -4134,16 +4135,111 @@ namespace CityWatch.Web.Pages.Admin
                 string searchTerm = "onboarding";
 
                 var users = _userDataProvider.GetUsers()
-                 .Where(x => string.IsNullOrEmpty(searchTerm) || x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                 .Select(x => new { x.Id, x.UserName, x.IsDeleted, x.LastLoginDate, x.LastLoginIPAdress, x.FormattedLastLoginDate });
+                    .Where(x => string.IsNullOrEmpty(searchTerm) ||
+                                x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.UserName,
+                        x.IsDeleted,
+                        x.LastLoginDate,
+                        x.LastLoginIPAdress,
+                        x.FormattedLastLoginDate
+                    });
+
                 var results = new List<object>();
+
                 foreach (var user in users)
                 {
-                    var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
-                    var allUserAccess = _userDataProvider.GetUserClientSiteAccess(null);
+                    var thirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(user.Id);
+
+                    var allUserAccess = _userDataProvider.GetUserClientSiteAccess(user.Id);
+
                     var currUserAccess = allUserAccess.Where(x => x.UserId == user.Id);
-                    int[] clientsites = currUserAccess.Select(y => y.ClientSiteId).ToArray();
-                    var criticalDocs = _configDataProvider.GetCriticalDocsUsingClientSiteIds(clientsites);
+
+                    int[] clientsites = currUserAccess
+                        .Select(y => y.ClientSiteId)
+                        .ToArray();
+
+                    var firstClientSiteId = clientsites.FirstOrDefault();
+
+                    CriticalDocuments documentDto = null;
+
+                    if (firstClientSiteId != 0)
+                    {
+                        var criticalDocs = _configDataProvider
+                            .GetCriticalDocsByClientSiteId(firstClientSiteId)?
+                            .Select(z => CriticalDocumentViewModel.FromDataModel(z))
+                            .FirstOrDefault();
+
+                        if (criticalDocs != null)
+                        {
+                            var document = _configDataProvider.GetCriticalDocById(criticalDocs.Id);
+
+                            if (document != null)
+                            {
+                                documentDto = new CriticalDocuments
+                                {
+                                    Id = document.Id,
+                                    ClientTypeId = document.ClientTypeId,
+                                    HRGroupID = document.HRGroupID,
+                                    GroupName = document.GroupName,
+                                    IsCriticalDocumentDownselect = document.IsCriticalDocumentDownselect,
+
+                                    CriticalDocumentsClientSites = document.CriticalDocumentsClientSites?
+                                        .Select(cs => new CriticalDocumentsClientSites
+                                        {
+                                            Id = cs.Id,
+                                            ClientSiteId = cs.ClientSiteId,
+                                            ClientSite = cs.ClientSite == null ? null : new ClientSite
+                                            {
+                                                Id = cs.ClientSite.Id,
+                                                Name = cs.ClientSite.Name
+                                            }
+                                        }).ToList(),
+
+                                    CriticalDocumentDescriptions = document.CriticalDocumentDescriptions?
+                                        .Select(desc => new CriticalDocumentDescriptions
+                                        {
+                                            Id = desc.Id,
+                                            DescriptionID = desc.DescriptionID,
+
+                                            HRSettings = desc.HRSettings == null ? null : new HrSettings
+                                            {
+                                                Id = desc.HRSettings.Id,
+                                                Description = desc.HRSettings.Description,
+
+                                                ReferenceNoNumbers = desc.HRSettings.ReferenceNoNumbers == null
+                                                    ? null
+                                                    : new ReferenceNoNumbers
+                                                    {
+                                                        Id = desc.HRSettings.ReferenceNoNumbers.Id,
+                                                        Name = desc.HRSettings.ReferenceNoNumbers.Name
+                                                    },
+
+                                                ReferenceNoAlphabets = desc.HRSettings.ReferenceNoAlphabets == null
+                                                    ? null
+                                                    : new ReferenceNoAlphabets
+                                                    {
+                                                        Id = desc.HRSettings.ReferenceNoAlphabets.Id,
+                                                        Name = desc.HRSettings.ReferenceNoAlphabets.Name
+                                                    },
+
+                                                HRGroups = desc.HRSettings.HRGroups == null
+                                                    ? null
+                                                    : new HRGroups
+                                                    {
+                                                        Id = desc.HRSettings.HRGroups.Id,
+                                                        Name = desc.HRSettings.HRGroups.Name,
+                                                        IsDeleted = desc.HRSettings.HRGroups.IsDeleted
+                                                    }
+                                            }
+                                        }).ToList()
+                                };
+                            }
+                        }
+                    }
+
                     results.Add(new
                     {
                         user.Id,
@@ -4152,18 +4248,28 @@ namespace CityWatch.Web.Pages.Admin
                         user.LastLoginDate,
                         user.LastLoginIPAdress,
                         user.FormattedLastLoginDate,
-                        ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
-                        ClientSiteCsv = GetFormattedClientSites(currUserAccess),
-                        ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null
-                        ,
-                        CriticalDocs = criticalDocs
+
+                        //ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
+                        //ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+
+                        //ThirdParty = (thirdPartyID != null && thirdPartyID.ThirdPartyID != 0)
+                        //    ? thirdPartyID.ThirdPartyID
+                        //    : null,
+
+                        CriticalDocs = documentDto
                     });
                 }
+
                 return new JsonResult(results);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return new JsonResult(ex);
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
         private string GetFormattedClientTypes(IEnumerable<UserClientSiteAccess> userClientSiteAccess)
@@ -4191,7 +4297,7 @@ namespace CityWatch.Web.Pages.Admin
             
             return new JsonResult(_viewDataService.GetHRGroups());
         }
-        public JsonResult OnPostSaveCriticalDocumentsForOnboardingUsers(int userId,string docIds,int hrId)
+        public JsonResult OnPostSaveCriticalDocumentsForOnboardingUsers(int criticalDocId,int userId,string docIds,int hrId)
         {
             CriticalDocumentViewModel CriticalDocModel = new CriticalDocumentViewModel();
             var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
@@ -4200,6 +4306,7 @@ namespace CityWatch.Web.Pages.Admin
             CriticalDocModel.HRGroupID = hrId;
             CriticalDocModel.ClientTypeId = currUserAccess.FirstOrDefault().ClientSite.TypeId;
             CriticalDocModel.DescriptionIds = docIds.Split(",").Select(int.Parse).ToArray();
+            CriticalDocModel.Id = criticalDocId;
             var results = new List<ValidationResult>();
             if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
                 return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
@@ -4219,6 +4326,138 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteCriticalDocumentsForOnboardingUsers(int criticalDocId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _configDataProvider.DeleteCriticalDoc(criticalDocId);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+        public JsonResult OnPostSaveOnboardUsersTrainingAndAssessmentTab(int HRSettingsId, int UserId, int TrainingCourseStatusId)
+        {
+
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                var courseList = _configDataProvider.GetCourseDocuments().Where(x => x.HRSettingsId == HRSettingsId).ToList();
+                foreach (var item in courseList)
+                {
+                    int TrainingCourseId = item.Id;
+
+                    string description = _configDataProvider.GetCourseDocuments().Where(x => x.Id == TrainingCourseId).FirstOrDefault().FileName;
+                    int hrsettingid = _configDataProvider.GetCourseDocuments().Where(x => x.Id == TrainingCourseId).FirstOrDefault().HRSettingsId;
+                    int hrgroupid = _configDataProvider.GetHrSettingById(hrsettingid).HRGroupId;
+                    var result = _guardDataProvider.GetOnBoardUsersTrainingAndAssessment(UserId).Where(x => x.TrainingCourseId == TrainingCourseId).ToList();
+                    int id = 0;
+                    if (result.Count > 0)
+                    {
+                        id = result.FirstOrDefault().Id;
+                    }
+                    _configDataProvider.SaveOnboardUsersTrainingAndAssessmentTab(new OnBoardUsersTrainingAndAssessment()
+                    {
+                        Id = id,
+                        UserId = UserId,
+                        TrainingCourseId = TrainingCourseId,
+                        TrainingCourseStatusId = TrainingCourseStatusId,
+                        Description = description,
+                        HRGroupId = hrgroupid
+                        //,
+                        //IsCompleted = false
+
+                    });
+                }
+
+                success = true;
+
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteOnboardUsersCourseByAdmin(int Id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                //int id = _guardLogDataProvider.SaveTestQuestions(testquestions);
+                if (Id != 0)
+                {
+
+                    _guardLogDataProvider.DeleteOnBoardUsersCourseByAdmin(Id);
+                }
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetOnboardTrainingCourses(int userId)
+        {
+            try
+            {
+                
+               
+                 
+                    var trainingCourses = _guardDataProvider.GetOnBoardUsersTrainingAndAssessment(userId).ToList();
+
+
+                    
+                
+                return new JsonResult(trainingCourses);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(ex);
+            }
+        }
+        public JsonResult OnGetOnBoardingUserClientSiteAccsess(int userId)
+        {
+            try
+            {
+
+
+                var results = new List<object>();
+                var ThirdPartyID = _userDataProvider.GetUserClientSiteAccessThirdParty(userId);
+                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+                var currUserAccess = allUserAccess.Where(x => x.UserId == userId);
+               
+
+                results.Add(new
+                {
+                    
+                    ClientTypeCsv = GetFormattedClientTypes(currUserAccess),
+                    ClientSiteCsv = GetFormattedClientSites(currUserAccess),
+                    ThirdParty = (ThirdPartyID != null && ThirdPartyID.ThirdPartyID != 0) ? ThirdPartyID.ThirdPartyID : null
+
+                });
+
+
+
+                return new JsonResult(results);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(ex);
+            }
         }
     }
     public class helpDocttype

@@ -250,6 +250,7 @@ namespace CityWatch.Data.Providers
         void SaveAllowance(Allowance allowance);
         void DeleteAllowance(int id);
         List<object> GetCriticalDocsUsingClientSiteIds(int[] clientSiteIds);
+        void SaveOnboardUsersTrainingAndAssessmentTab(OnBoardUsersTrainingAndAssessment trainingAssessment);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -2899,6 +2900,29 @@ namespace CityWatch.Data.Providers
             return results;
 
 
+        }
+        public void SaveOnboardUsersTrainingAndAssessmentTab(OnBoardUsersTrainingAndAssessment trainingAssessment)
+        {
+            if (trainingAssessment.Id == 0)
+            {
+                _context.OnBoardUsersTrainingAndAssessment.Add(trainingAssessment);
+            }
+            else
+            {
+                var documentToUpdate = _context.OnBoardUsersTrainingAndAssessment.SingleOrDefault(x => x.Id == trainingAssessment.Id && x.TrainingCourseStatusId != 4);
+                if (documentToUpdate != null)
+                {
+                    documentToUpdate.UserId = trainingAssessment.UserId;
+                    documentToUpdate.TrainingCourseId = trainingAssessment.TrainingCourseId;
+                    documentToUpdate.Description = trainingAssessment.Description;
+                    documentToUpdate.HRGroupId = trainingAssessment.HRGroupId;
+                    documentToUpdate.TrainingCourseStatusId = trainingAssessment.TrainingCourseStatusId;
+                    documentToUpdate.Attempts = trainingAssessment.Attempts;
+                    //documentToUpdate.IsCompleted = trainingAssessment.IsCompleted;
+
+                }
+            }
+            _context.SaveChanges();
         }
 
     }

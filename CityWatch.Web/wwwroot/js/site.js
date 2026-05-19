@@ -2404,6 +2404,7 @@ $(function () {
         }).done(function () {
             gridUsers.reload();
             gridClientSiteAccess.reload();
+            onboardClientSiteAccessTables[userId].reload();
         }).fail(function () {
             console.log('error')
         });
@@ -2592,6 +2593,7 @@ $(function () {
                     $('#user-modal').modal('hide');
                     gridUsers.reload();
                     gridClientSiteAccess.reload();
+                    onboardClientSiteAccessTables[userId].reload();
                     showStatusNotification(true, 'Saved successfully');
                 }
             }).fail(function () {
@@ -6241,7 +6243,8 @@ function userButtonRendererForOnboarding(value, record) {
 
     return userButtonHtml;
 }
-
+var onboardTrainingCourseTables = {};
+var onboardClientSiteAccessTables = {};
 let gridHrSettingswithOnboardingHRWelcomePack
 gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingHRWWelcomePack').grid({
     dataSource: '/Admin/Settings?handler=OnBoardingUsers',
@@ -6267,7 +6270,8 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
 
                 let row = $(this);
                 let d = records[index];
-                var clientAccessId = 'user_client_access_onboard_' + d.Id;
+                var clientAccessId = 'user_client_access_onboard_' + d.id;
+                var onboardTrainingCourses = 'tbl_onboard_trainingAndAssessment_by_Admin_' + d.id;
                 let childRow =
                     '<tr class="child-row">' +
                     '<td colspan="4">' +
@@ -6281,6 +6285,7 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                     '<div class="row mt-3">' +
                     '<div class="col-md-6">' +
                     '<div class="form-group">' +
+                    '<input type="hidden" id="criticalDocId_'+ d.id +'" />' +
                     '<label class="form-label">HR Group</label>' +
                     '<select class="form-control " ' +
                     'id="HRGroupDoc_' + d.id + '" ' +
@@ -6310,23 +6315,25 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                     '<div class="row mt-3">' +
                     '<div class="col-md-12">' +
                     '<div class="col-md-2 offset-md-10 text-right">' +
-                    '<button class="btn btn-success" id="btnAddOnboardCourse_' + d.id +'"><i class="fa fa-plus mr-2"></i>Add Course</button>' +
+                    '<button class="btn btn-success mb-2" id="btnAddOnboardCourse_' + d.id +'" data-toggle="modal" data-target="#selectCoursesForOnboardUsersByAdmin"><i class="fa fa-plus mr-2"></i>Add Course</button>' +
                     '</div>' +
                     '</div>' +
                     '<div class="form-row col-md-12">' +
                     '<div class="col-md-12">' +
-                    '<table id="tbl_onboard_trainingAndAssessment_by_Admin" class="table table-bordered table-sm" width="100%">' +
+                    '<table id="tbl_onboard_trainingAndAssessment_by_Admin_' + d.id +'" class="table table-bordered table-sm" width="100%">' +
                     '<thead>' +
-                    '<tr>' +
-                    '<th>Course Id</th>' +
-                    '<th>HR Group</th>' +
-                    '<th>Description</th>' +
-                    '<th>RPL</th>' +
+                    //'<tr>' +
+                    //'<th>Course Id</th>' +
+                    //'<th>HR Group</th>' +
+                    //'<th>Description</th>' +
+                    //'<th>RPL</th>' +
 
-                    '<th class="text-center">Course</th>' +
-                    '<th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>' +
-                    '</tr>' +
+                    //'<th class="text-center">Course</th>' +
+                    //'<th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>' +
+                    //'</tr>' +
                     '</thead>' +
+                    '<tbody>' +
+                    '</tbody>' +
                     '</table>' +
                     '</div>' +
                     '</div>' +
@@ -6340,9 +6347,9 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                 row.children('td:eq(0)')
                     .attr('rowspan', '2')
                     .css('vertical-align', 'top');
-                $('#' + clientAccessId).grid({
+                onboardClientSiteAccessTables[d.id] = $('#' + clientAccessId).grid({
 
-                    dataSource: [d],
+                    dataSource: '/Admin/Settings?handler=OnBoardingUserClientSiteAccsess&userId=' + d.id,
 
                     uiLibrary: 'bootstrap4',
                     iconsLibrary: 'fontawesome',
@@ -6365,7 +6372,7 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
 
                         { title: '3rd Party', width: 50, renderer: domainSettingsForOnboardingUsers, cssClass: 'text-center' },
 
-                        { width: 100, tmpl: '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal" data-id="{id}"><i class="fa fa-pencil mr-2"></i>Edit</button>', align: 'center' }
+                        { width: 100, tmpl: '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal" data-id="'+ d.id +'"><i class="fa fa-pencil mr-2"></i>Edit</button>', align: 'center' }
 
 
                         
@@ -6377,11 +6384,13 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                         $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
                     }
                 });
-               
-                $.each(d.criticalDocs, function (indexnew, item) {
-                    $('#selectedDescDoc_' + d.id).append('<option value="' + item.id + '">' + item.description + '</option>');
+                if (d.criticalDocs != null) { 
+                $('#criticalDocId_' + d.id).val(d.criticalDocs.id)
+                $.each(d.criticalDocs.criticalDocumentDescriptions, function (indexnew, item) {
+                    $('#selectedDescDoc_' + d.id).append('<option value="' + item.hrSettings.id + '">'  + item.hrSettings.referenceNoNumbers.name + item.hrSettings.referenceNoAlphabets.name + '&nbsp;&nbsp;&nbsp;' + item.hrSettings.description + '</option>');
                     $('#selectedDescCountDoc_' + d.id).text($('#selectedDescDoc_' + d.id + ' option').length);
                 });
+                }
                 // HR Group Dropdown Id
                 let hrGroupDropdown = $('#HRGroupDoc_' + d.id);
 
@@ -6447,6 +6456,7 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                         type: 'POST',
                         data:
                         {
+                            criticalDocId: $('#criticalDocId_' + d.id).val(),
                             userId: d.id,
                             docIds: docIds,
                             hrId: $('#HRGroupDoc_' + d.id).val()
@@ -6462,9 +6472,281 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                     
 
                 });
+                
+                $('#removeSelectedSitesDocForOnboarding_' + d.id).on('click', function () {
+                    $('#selectedDescDoc_' + d.id +' option:selected').remove();
+                    var optionsNew = $('#selectedDescDoc_' + d.id + ' option');
+                    var docIds = optionsNew.map(function () {
+                        return $(this).val();
+                    }).get().join(',');
+                    $.ajax({
+                        url: '/Admin/Settings?handler=SaveCriticalDocumentsForOnboardingUsers',
+                        type: 'POST',
+                        data:
+                        {
+                            criticalDocId: $('#criticalDocId_' + d.id).val(),
+                            userId: d.id,
+                            docIds: docIds,
+                            hrId: $('#HRGroupDoc_' + d.id).val()
+
+                        },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (data) {
+                        if (data.success) {
+
+                            gridCriticalDocument.reload();
+                        }
+                    });
+                    
+                    //$('#selectedDescDoc_' + d.id).append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+                    //$('#selectedDescCountDoc_' + d.id).text($('#selectedDescDoc_' + d.id + ' option').length);
+                    //updateSelectedSitesCount();
+                });
+                $('#btnAddOnboardCourse_' + d.id).on('click', function () {
+                    $('#trainingUserId').val(d.id);
+                    //$('#selectCoursesForOnboardUsersByAdmin').modal('show');
+                    loadTrainingCoursesForOnboardUsers();
+                });
+                /*let onboardTrainingCourseTables[d.id];*/
+        onboardTrainingCourseTables[d.id] =$('#' + onboardTrainingCourses).DataTable({
+                    autoWidth: false,
+                    ordering: false,
+                    searching: false,
+                    paging: false,
+                    info: false,
+                    //data: d.trainingCourses || [],
+                    ajax: {
+                        url: '/Admin/Settings?handler=OnboardTrainingCourses',
+                        
+                        data: function (data) {
+
+                            data.userId = d.id;
+                        },
+                        dataSrc: ''
+                    },
+                    
+                    columns: [
+                        {
+                            data: 'id',
+                            visible: false
+                        },
+                        {
+                            data: 'userId',
+                            visible: false
+                        },
+
+                        {
+                            title: 'HR Group',
+                            data: 'hrGroupText',
+                            width: '20%'
+                        },
+                        {
+                            title: 'Description',
+                            data: 'description',
+                            width: '65%'
+                        },
+                        {
+                            title: '<i class="fa fa-cogs"></i>',
+                            data: null,
+                            className: 'text-center',
+                            width: '15%',
+                            render: function (data, type, row) {
+                                return `
+                    <button 
+                        class="btn btn-outline-danger " name="btn_delete_OnboardUsersTrainingAndAssessmentByAdmin"
+                        data-id="${row.id}"
+                        data-userid="${row.userId}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `;
+                            }
+                        }
+                    ],
+                    drawCallback: function () {
+
+                        var api = this.api();
+                        var rows = api.rows({ page: 'current' }).nodes();
+
+                        var last = null;
+
+                        api.column(2, { page: 'current' }).data().each(function (group, i) {
+
+                            if (last !== group) {
+
+                                $(rows).eq(i).before(
+                                    '<tr class="group">' +
+                                    '<td colspan="3" style="background-color:#CCCCCC;">' +
+                                    
+                                    '</td>' +
+                                    '</tr>'
+                                );
+
+                                last = group;
+                            }
+                        });
+                    }
+                });
+              
+                $('#' + onboardTrainingCourses + ' tbody').on('click', 'button[name=btn_delete_OnboardUsersTrainingAndAssessmentByAdmin]', function () {
+                    var data = onboardTrainingCourseTables[d.id].row($(this).parents('tr')).data();
+                    var GuardId = $('#Guard_Id').val();
+               
+
+                    const token = $('input[name="__RequestVerificationToken"]').val();
+                    if (confirm('Are you sure want to delete this Course?')) {
+                        $.ajax({
+                            url: '/Admin/Settings?handler=DeleteOnboardUsersCourseByAdmin',
+                            data: {
+                                'Id': data.id
+                            },
+                            // data: { id: record },
+                            type: 'POST',
+                            headers: { 'RequestVerificationToken': token },
+                        }).done(function (result) {
+                            if (result.success == true) {
+                                onboardTrainingCourseTables[d.id].clear().draw();
+                                onboardTrainingCourseTables[d.id].ajax.reload();
+                               
+
+                            }
+                            $('#loader').hide();
+
+
+                            //$.each(item1 in result)
+                            //{
+                            //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+                            //}
+                        }).fail(function () {
+                            console.log('error');
+                        })
+                    }
+
+                });
+
             });
         
     }
+});
+//$('#selectCoursesForOnboardUsersByAdmin').on('shown.bs.modal', function (event) {
+   
+//});
+function loadTrainingCoursesForOnboardUsers() {
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingCourses',
+        type: 'GET',
+        success: function (data) {
+            let courseList = $('#courseListForOnboardUsers');
+            courseList.empty(); // Clear existing content
+
+            data.forEach(group => {
+                let groupItem = `
+                        <li class="list-group-item list-group-item-success" 
+                            id="attach_${group.groupId}" 
+                            data-index="${group.groupId}" 
+                            style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                        </li>`;
+
+                courseList.append(groupItem);
+
+                group.courses.forEach(course => {
+                    let courseItem = course.description
+                        ? `<li class="list-group-item" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                                    ${course.description}
+                                    
+                                    <i class="fa fa-check ml-2 text-success btn-select-course-for-onboarding-user-status" 
+                                       title="Select" 
+                                       style="cursor: pointer;float:right"></i>
+                               </li>`
+                        : `<li class="list-group-item list-group-item-success" 
+                                    id="attach_${course.id}" 
+                                    data-index="${course.id}" 
+                                    style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                               </li>`;
+
+                    courseList.append(courseItem);
+                    //if (course.courseStatus == 'Yellow') { 
+                    //let courseItem = course.description
+                    //    ? `<li class="list-group-item" 
+                    //                id="attach_${course.id}" 
+                    //                data-index="${course.id}" 
+                    //                style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                    //                //<i class="fa fa-circle text-warning mr-2" style="float:center"></i>
+                    //                ${course.description}
+
+                    //                <i class="fa fa-check ml-2 text-muted " 
+                    //                   title="Select" 
+                    //                   style="float:right" ></i>
+                    //           </li>`
+                    //    : `<li class="list-group-item list-group-item-success" 
+                    //                id="attach_${course.id}" 
+                    //                data-index="${course.id}" 
+                    //                style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                    //           </li>`;
+
+                    //    courseList.append(courseItem);
+                    //}
+                    //if (course.courseStatus == 'Green') {
+                    //let courseItem = course.description
+                    //    ? `<li class="list-group-item" 
+                    //            id="attach_${course.id}" 
+                    //            data-index="${course.id}" 
+                    //            style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                    //            //<i class="fa fa-circle text-success mr-2" style="float:center"></i>
+                    //            ${course.description}
+
+                    //            <i class="fa fa-check ml-2 text-success btn-select-course-status" 
+                    //               title="Select" 
+                    //               style="cursor: pointer;float:right"></i>
+                    //       </li>`
+                    //    : `<li class="list-group-item list-group-item-success" 
+                    //            id="attach_${course.id}" 
+                    //            data-index="${course.id}" 
+                    //            style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
+                    //       </li>`;
+
+                    //courseList.append(courseItem);
+                    //}
+                });
+            });
+        },
+        error: function () {
+            alert('Failed to load training courses.');
+        }
+    });
+}
+$('#courseListForOnboardUsers').on('click', '.btn-select-course-for-onboarding-user-status', function (event) {
+
+    var target = event.target;
+    var parentId = target.parentNode.innerText.trim();
+
+    const courseStatus = 1;
+    //var courseId = target.parentNode.dataset.index;
+    var hrSettingsId = target.parentNode.dataset.index;
+    var userId = $('#trainingUserId').val();
+
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveOnboardUsersTrainingAndAssessmentTab',
+        type: 'POST',
+        data: {
+            HRSettingsId: hrSettingsId,
+            UserId: userId,
+            TrainingCourseStatusId: courseStatus
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            // alert('saved successfully');
+            $('#selectCoursesForOnboardUsersByAdmin').modal('hide');
+            onboardTrainingCourseTables[userId].clear().draw();
+            onboardTrainingCourseTables[userId].ajax.reload();
+           
+        }
+    });
+
 });
 function domainSettingsForOnboardingUsers(value, record) {
 
