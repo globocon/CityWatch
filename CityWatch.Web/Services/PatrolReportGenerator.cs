@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System;
@@ -8,6 +8,10 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using iText.Kernel.Colors;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout.Properties;
 
 namespace CityWatch.Web.Services
 {
@@ -239,6 +243,91 @@ namespace CityWatch.Web.Services
             styleSheet.Append(cellformats);
 
             return styleSheet;
+        }
+
+        public static void CreatePdfFile(DataTable table, string destination)
+        {
+            using (var writer = new iText.Kernel.Pdf.PdfWriter(destination))
+            using (var pdf = new iText.Kernel.Pdf.PdfDocument(writer))
+            {
+                pdf.SetDefaultPageSize(iText.Kernel.Geom.PageSize.A4.Rotate()); // Landscape A4 gives plenty of horizontal space for wide columns
+                using (var document = new iText.Layout.Document(pdf))
+                {
+                    document.SetMargins(15f, 15f, 15f, 15f);
+
+                    // Add title
+                    var title = new iText.Layout.Element.Paragraph("IR Statistics Report")
+                        .SetFontSize(14f)
+                        .SetBold()
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                        .SetMarginBottom(10f);
+                    document.Add(title);
+
+                    // All 21 columns matching the Excel spreadsheet
+                    var allowedColumns = new List<string> {
+                        "Day", "Date", "Control Room Job No.", "Site", "Address", "Desp. Time",
+                        "Arrival", "Depart.", "CWS SNo.", "Total mins on Site", "Resp. Time",
+                        "Alarm", "Patrol Att.", "Colour Code", "Action Taken", "Notified By", "Bill To:",
+                        "File Name", "PSPF", "File Size(KB)", "Hash String"
+                    };
+
+                    var columnsToInclude = new List<int>();
+                    for (int i = 0; i < table.Columns.Count; i++)
+                    {
+                        if (allowedColumns.Contains(table.Columns[i].ColumnName))
+                        {
+                            columnsToInclude.Add(i);
+                        }
+                    }
+
+                    int colCount = columnsToInclude.Count;
+                    if (colCount == 0) return;
+
+                    // Compute relative column widths to fit all 21 columns beautifully
+                    float[] colWidths = new float[colCount];
+                    for (int i = 0; i < colCount; i++)
+                    {
+                        string colName = table.Columns[columnsToInclude[i]].ColumnName;
+                        if (colName == "Address") colWidths[i] = 14f;
+                        else if (colName == "Action Taken") colWidths[i] = 15f;
+                        else if (colName == "Hash String") colWidths[i] = 16f;
+                        else if (colName == "File Name") colWidths[i] = 11f;
+                        else if (colName == "Site") colWidths[i] = 9f;
+                        else if (colName == "Control Room Job No.") colWidths[i] = 8f;
+                        else if (colName == "Total mins on Site") colWidths[i] = 6f;
+                        else colWidths[i] = 4.5f; // default width for short fields like Day, Date, Time, etc.
+                    }
+
+                    var pdfTable = new iText.Layout.Element.Table(iText.Layout.Properties.UnitValue.CreatePercentArray(colWidths)).UseAllAvailableWidth();
+
+                    // Add Headers
+                    foreach (int colIdx in columnsToInclude)
+                    {
+                        var cell = new iText.Layout.Element.Cell()
+                            .Add(new iText.Layout.Element.Paragraph(table.Columns[colIdx].ColumnName).SetFontSize(4.2f).SetBold())
+                            .SetBackgroundColor(iText.Kernel.Colors.ColorConstants.LIGHT_GRAY)
+                            .SetPadding(2f)
+                            .SetBorder(new iText.Layout.Borders.SolidBorder(iText.Kernel.Colors.ColorConstants.GRAY, 0.5f));
+                        pdfTable.AddHeaderCell(cell);
+                    }
+
+                    // Add Data Rows
+                    foreach (System.Data.DataRow row in table.Rows)
+                    {
+                        foreach (int colIdx in columnsToInclude)
+                        {
+                            string cellValue = Convert.ToString(row[colIdx]) ?? string.Empty;
+                            var cell = new iText.Layout.Element.Cell()
+                                .Add(new iText.Layout.Element.Paragraph(cellValue).SetFontSize(3.8f))
+                                .SetPadding(2f)
+                                .SetBorder(new iText.Layout.Borders.SolidBorder(iText.Kernel.Colors.ColorConstants.LIGHT_GRAY, 0.5f));
+                            pdfTable.AddCell(cell);
+                        }
+                    }
+
+                    document.Add(pdfTable);
+                }
+            }
         }
     }
 }

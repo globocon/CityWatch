@@ -96,6 +96,7 @@ namespace CityWatch.Data.Providers
         public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
 
         List<GuardTrainingAndAssessment> GetGuardTrainingAndAssessment(int guardId);
+        void SaveGuardReminderEmailLog(GuardReminderEmailLog log);
 
 
 
@@ -314,6 +315,9 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsMobileAppPlusTags = guard.IsMobileAppPlusTags;
                 updateGuard.IsPCARAccess = guard.IsPCARAccess;
                 updateGuard.IsAdminRosterAccess = guard.IsAdminRosterAccess;
+                updateGuard.IsAdminRosterBaseAccess = guard.IsAdminRosterBaseAccess;
+                updateGuard.IsAdminRosterGSAccess = guard.IsAdminRosterGSAccess;
+                updateGuard.IsROEditorAccess = guard.IsROEditorAccess;
 
             }
 
@@ -381,6 +385,10 @@ namespace CityWatch.Data.Providers
                 guard.IsMobileAppAccess = true;
                 guard.IsMobileAppPlusTags = false;
                 guard.IsPCARAccess = false;
+                guard.IsAdminRosterAccess = false;
+                guard.IsAdminRosterBaseAccess = false;
+                guard.IsAdminRosterGSAccess = false;
+                guard.IsROEditorAccess = false;
 
                 //P1-273 access levels-end
                 _context.Guards.Add(guard);
@@ -1509,6 +1517,7 @@ namespace CityWatch.Data.Providers
                                      u.ToDate.Date >= start.Date);
             return conflict != null;
         }
+
         public List<OnBoardUsersTrainingAndAssessment> GetOnBoardUsersTrainingAndAssessment(int userId)
         {
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
@@ -1553,7 +1562,14 @@ namespace CityWatch.Data.Providers
 
             return result;
 
+}
 
+
+
+        public void SaveGuardReminderEmailLog(GuardReminderEmailLog log)
+        {
+            _context.GuardReminderEmailLogs.Add(log);
+            _context.SaveChanges();
 
         }
     }

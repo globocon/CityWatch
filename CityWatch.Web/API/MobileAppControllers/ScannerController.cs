@@ -66,19 +66,24 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetScannerTagInfoData")]
-        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId, int TagsTypeId, int? SmartWandId = null)
+        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId, int TagsTypeId, int? SmartWandId = null, string gpsCoordinates = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
             bool TagFound = false;
             string TagInfoLabel = string.Empty;
             int ScannedFromLinkedSite = siteId;
-            int rowIdInServer = 0;
+            int rowIdInServer = 0;            
+            if (!string.IsNullOrEmpty(gpsCoordinates))
+            {
+                gpsCoordinates = Uri.UnescapeDataString(gpsCoordinates.Trim());
+            }
+            
 
             try
             {
                 var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
-                    Guid.NewGuid(), DateTime.UtcNow, (ScanningType)TagsTypeId, SmartWandId);
+                    Guid.NewGuid(), DateTime.UtcNow, (ScanningType)TagsTypeId, gpsCoordinates, SmartWandId);
                 IsSuccess = IsSuccessR;
                 message = messageR;
                 TagFound = TagFoundR;
@@ -108,7 +113,7 @@ namespace CityWatch.Web.API
                         //Save tag hit 
                         var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
                             offlineRecord.TagUId, offlineRecord.LoggedInGuardId, offlineRecord.LoggedInUserId, true, offlineRecord.UniqueRecordId,
-                            offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.SmartWandId);
+                            offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.GPScoordinates, offlineRecord.SmartWandId);
 
                         int postToClientSiteId = ScanFromLinkedSiteId > 0 ? ScanFromLinkedSiteId : offlineRecord.LoggedInClientSiteId;
 

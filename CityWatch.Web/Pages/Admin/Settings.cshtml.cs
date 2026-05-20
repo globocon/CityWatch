@@ -588,6 +588,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
         }
 
+        [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDoc()
         {
             var success = false;
@@ -600,7 +601,8 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+                        if (".pdf,.docx,.xlsx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
 
                         var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
@@ -631,6 +633,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+        [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDocUsingType()
         {
             var success = false;
@@ -643,7 +646,8 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+                        if (".pdf,.docx,.xlsx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
 
                         var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
@@ -1976,6 +1980,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
 
+        [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDocUsingTypeFour()
         {
             var success = false;
@@ -1988,7 +1993,8 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+                        if (".pdf,.docx,.xlsx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
 
                         var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
@@ -2040,6 +2046,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+        [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDocUsingTypeSix()
         {
             var success = false;
@@ -2052,7 +2059,8 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
-                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+                        if (".pdf,.docx,.xlsx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
 
                         var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");

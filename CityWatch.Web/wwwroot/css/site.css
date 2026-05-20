@@ -133,7 +133,7 @@ a.cws-footer-link :visited {
     right: 0;
     bottom: 0;
     width: 100%;
-    background: rgba(0,0,0,0.5) url(../images/loading.gif) no-repeat center center;
+    background: rgba(0,0,0,0.5);
     z-index: 1000;
 }
 
@@ -819,4 +819,42 @@ p.center-or-justify:only-child {
 .text-orange {
     color: #ff8c00;
 }
+
+/* PDF Export custom scaling styles to fit wide DataTables on Portrait A4 */
+.pdf-export-active #monthly_patrol_data_wrapper .dataTables_scrollBody,
+.pdf-export-active #monthly_patrol_data_wrapper .dataTables_scrollHead,
+.pdf-export-active #monthly_patrol_data_wrapper .dataTables_scroll {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+.pdf-export-active #monthly_patrol_data {
+    table-layout: auto !important;
+    width: 100% !important;
+}
+
+.pdf-export-active #monthly_patrol_data th,
+.pdf-export-active #monthly_patrol_data td {
+    white-space: normal !important;
+    word-break: break-word !important;
+    font-size: 5px !important;
+    padding: 1px !important;
+    line-height: 1.1 !important;
+}
+
+.pdf-export-active #monthly_patrol_data th {
+    font-size: 5.3px !important;
+    font-weight: bold !important;
+}
+
+.pdf-export-active .action-taken {
+    min-width: 70px !important;
+    white-space: normal !important;
+}
+
+.pdf-export-active .alarm {
+    min-width: 30px !important;
+    white-space: normal !important;
+}
+
 

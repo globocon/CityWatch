@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
@@ -61,14 +61,41 @@ namespace CityWatch.Web.Helpers
             }
         }
 
-        public static bool IsAdminPowerUser { get; set; }
-        public static bool IsAdminGlobal { get; set; }
+        public static bool IsAdminPowerUser
+        {
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminPowerUser") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminPowerUser", value ? "true" : "false");
+        }
 
-        public static bool IsAdminThirdParty { get; set; }
+        public static bool IsAdminGlobal
+        {
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminGlobal") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminGlobal", value ? "true" : "false");
+        }
 
-        public static bool IsAdminInvestigator { get; set; }
-        public static bool IsAdminAuditor { get; set; }
-        public static bool DoseGuardHaveRcClientSitesControl { get; set; }
+        public static bool IsAdminThirdParty
+        {
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminThirdParty") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminThirdParty", value ? "true" : "false");
+        }
+
+        public static bool IsAdminInvestigator
+        {
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminInvestigator") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminInvestigator", value ? "true" : "false");
+        }
+
+        public static bool IsAdminAuditor
+        {
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminAuditor") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminAuditor", value ? "true" : "false");
+        }
+
+        public static bool DoseGuardHaveRcClientSitesControl
+        {
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("DoseGuardHaveRcClientSitesControl") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("DoseGuardHaveRcClientSitesControl", value ? "true" : "false");
+        }
 
     }
 }

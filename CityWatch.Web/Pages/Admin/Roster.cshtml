@@ -14,31 +14,22 @@
 
  
 
-        <!-- BOOKING -->
         <div class="col-sm-3">
             <h3>BOOKING</h3>
-
-        @if (AuthUserHelper.IsAdminUserLoggedIn
-            || AuthUserHelper.IsAdminGlobal
-            || AuthUserHelper.IsAdminPowerUser
-            || AuthUserHelper.IsAdminAuditor
-            || AuthUserHelper.IsAdminThirdParty
-            || AuthUserHelper.IsAdminInvestigator)
-        {
-                <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser)
+                {
                     <a href="/roster/Booking" id="AnBooking">
                         <img src="~/images/CalendarWithHand.png" class="center" />
                     </a>
-                </div>
-        }
-        else
-        {
-                <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                }
+                else
+                {
                     <a href="javascript:void(0);" id="AnBookingAuth" data-toggle="modal" data-target="#mdlAuthBookingAccess">
                         <img src="~/images/CalendarWithHand.png" class="center" />
                     </a>
-                </div>
-        }
+                }
+            </div>
             <div class="font-weight-bold text-muted" style="margin-top: -15px; font-size: 0.85rem;">(Admin Only)</div>
         </div>
 
@@ -172,19 +163,23 @@
                         <h6 class="font-weight-bold">System Administrator Access</h6>
                         <p class="small mb-0">You have elevated privileges. Please search by Guard or Site.</p>
                     </div>
+                    <input type="hidden" id="GuardDownloadSop_SecurityNo" value="ADMIN" />
+                    <input type="hidden" id="GuardDownloadSop_PIN" value="ADMIN" />
                 }
-                <div class="form-row">
-                    <div class="form-group col-md-12">
-                        <label>Security License No.</label>
-                        <input class="form-control" id="GuardDownloadSop_SecurityNo" placeholder="Enter License No">
-                    </div>
-                    @if (!(AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser))
-                    {
+                else
+                {
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Security License No.</label>
+                            <input class="form-control" id="GuardDownloadSop_SecurityNo" placeholder="Enter License No">
+                        </div>
                         <div class="form-group col-md-12">
                             <label>HR PIN</label>
                             <input type="password" class="form-control" id="GuardDownloadSop_PIN" placeholder="Enter PIN">
                         </div>
-                    }
+                    </div>
+                }
+                <div class="form-row">
                     <div class="form-group col-md-12 text-right">
                         <button type="button" class="btn btn-primary" id="btnTimesheetConfirm" title="Authenticate guard">
                             <i class="fa fa-key mr-2"></i>Verify Individual

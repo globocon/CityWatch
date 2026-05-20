@@ -60,6 +60,19 @@ namespace CityWatch.Web.Models
 
         public string GuardLicenceNoId { get; set; }               
         public string GuardName { get; set; }
-                
+        public string PatrolCarId { get; set; }
+
+        public int[] PatrolCarIds
+        {
+            get
+            {
+                return PatrolCarId?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            }
+        }
+
+        public bool IspatrolCarToggleOn { get; set; }
+
+        public bool IncludeAllTagsInStrike { get; set; } = false;
+
     }
 }

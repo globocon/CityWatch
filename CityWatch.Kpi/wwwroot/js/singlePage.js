@@ -10,6 +10,16 @@ $(function () {
     let gritdSmartWands;
     let gridSiteDropboxSettings;
 
+    let smartWandPatrolCarGroupListForDDL = [];
+    $('#smartwandPatrolCarGroupsDDL option').each(function () {
+        var ddlvalue = Number($(this).val());// $(this).val();
+        var ddltext = $(this).text();
+
+        if (ddlvalue) {
+            smartWandPatrolCarGroupListForDDL.push({ value: ddlvalue, text: ddltext });
+        }
+    });
+        
     var clientSiteId = getUrlVars()["clientSiteId"];
     $("#gl_client_site_id").val(window.sharedVariable);
     $("#ClientSiteKey_ClientSiteId").val(window.sharedVariable);
@@ -23,17 +33,24 @@ $(function () {
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { width: 150, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
-            { width: 200, field: 'phoneNumber', title: 'Number', editor: true },
-            { width: 150, field: 'simProvider', title: 'SIM Provider', editor: true },
-            { width: 210, field: 'imei', title: 'IMEI', editor: true },
-            /*{ width: 250, renderer: renderderegisterDevice, title: 'Registered Device', align: 'left', editor: false },*/
+            { width: 100, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
+            { width: 190, field: 'phoneNumber', title: 'Number', editor: true },
+            { width: 110, field: 'simProvider', title: 'SIM Provider', editor: true },
+            { width: 170, field: 'imei', title: 'IMEI', editor: true },
             {
                 title: 'Registered Device',
-                width: 210,
+                width: 200,
                 align: 'left',
                 editor: false,
                 tmpl: '<span class="action-placeholder"></span>'
+            },
+            {
+                width: 150,
+                field: 'patrolCarName',
+                title: 'Patrol Car',
+                type: 'dropdown',
+                editor: { dataSource: smartWandPatrolCarGroupListForDDL, valueField: 'value' },
+                editField: 'patrolCarId'
             }
         ],
         rowDataBound: function (e, $row, id, record) {
@@ -51,11 +68,11 @@ $(function () {
             $lastTh.html('<i class="fa fa-cogs" aria-hidden="true"></i>');
 
             // Set fixed width (for header)
-            $lastTh.css('width', '150px');
+            $lastTh.css('width', '120px');
 
             // Also set width for body cells
             $grid.find('tbody tr').each(function () {
-                $(this).find('td:last').css('width', '150px');
+                $(this).find('td:last').css('width', '120px');
             });
         }
     });
@@ -65,6 +82,7 @@ $(function () {
 
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
+           
 
             $.ajax({
                 url: '/admin/settings?handler=SmartWandPhoneNumber',
@@ -75,6 +93,10 @@ $(function () {
                     alert('Number already in use at site ' + response.clientSite.name + ' please deregister this number before trying to allocate it to a different site');
                 }
                 else {
+                    // FIX: Convert -1 back to null
+                    var pid = (data.patrolCarId ?? '').toString().toLowerCase();
+                    if (pid === '-1') { data.patrolCarId = null; }
+
                     $.ajax({
                         url: '/admin/settings?handler=SmartWandSettings',
                         data: { record: data },
@@ -89,10 +111,7 @@ $(function () {
                             isSmartWandAdding = false;
                     });
                 }
-
             });
-
-
         });
 
         gritdSmartWands.on('rowRemoving', function (e, id, record) {
@@ -163,7 +182,7 @@ $(function () {
             alert('Unsaved changes in the grid. Refresh the page');
         } else {
             isSmartWandAdding = true;
-            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', patrolCarId: '-1', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
 

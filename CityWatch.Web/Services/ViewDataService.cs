@@ -23,6 +23,7 @@ using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Options;
 using Microsoft.Office.Interop;
 using Microsoft.Office.Interop.Access;
+using NuGet.Packaging;
 using Org.BouncyCastle.Asn1.Pkcs;
 using SMSGlobal.api;
 using System;
@@ -202,6 +203,7 @@ namespace CityWatch.Web.Services
         List<object> GetGuardRcClientSiteAccess(int guardId);
         List<ClientSiteSmartWandTags> GetClientSiteTagIds(int[] clientSiteIds);
         List<SelectListItem> GetClientSiteSmartWandIds(int[] clientSiteIds);
+        List<SelectListItem> GetPatrolCarAssociatedSmartWands(int[] patrolCarIds);
         List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds);
         Task<DataTable> KVDocketToDataTable(List<KeyVehicleLogDocketViewModel> dailyPatrolData);
 
@@ -238,6 +240,8 @@ namespace CityWatch.Web.Services
 
         public Task<ClientSiteMobileCrowdControl> GetCrowdControlCount(MobileCrowdControlGuard JoinGaurd);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPax(int logBookId, KvlStatusFilter kvlStatusFilter);
+        List<SelectListItem> GetClientSitePatrolCarIds(int[] clientSiteIds);
+        public List<SelectListItem> GetAllPatrolCars();
     }
 
 
@@ -2900,6 +2904,13 @@ namespace CityWatch.Web.Services
             return siteSmartWands;
         }
 
+        public List<SelectListItem> GetPatrolCarAssociatedSmartWands(int[] patrolCarIds)
+        {
+            var siteSmartWands = new List<SelectListItem>();
+            siteSmartWands.AddRange(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.PatrolCarId.HasValue && patrolCarIds.Contains(z.PatrolCarId.Value)).Select(z => new SelectListItem($"{z.SmartWandId} - [ {z.PhoneNumber} ]", z.SmartWandId)));
+            return siteSmartWands;
+        }
+
         public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogsWithDockets(DateTime LogFromDate, DateTime LogToDate, int[] ClientSiteIds)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
@@ -3570,6 +3581,7 @@ namespace CityWatch.Web.Services
         }
 
         //p7-137--pax-end
+
         public List<object> GetAllUsersClientSiteAccessForOnboardingUsers(string searchterm)
         {
             var results = new List<object>();
@@ -3601,6 +3613,21 @@ namespace CityWatch.Web.Services
             }
 
             return filteredResults;
+}
+
+        public List<SelectListItem> GetClientSitePatrolCarIds(int[] clientSiteIds)
+        {
+            var sitePatrolCars = new List<SelectListItem>();
+            sitePatrolCars.AddRange(_clientSiteWandDataProvider.GetPatrolCarsForSite(clientSiteIds).Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+            return sitePatrolCars;
+        }
+
+        public List<SelectListItem> GetAllPatrolCars()
+        {
+            var sitePatrolCars = new List<SelectListItem>();
+            sitePatrolCars.AddRange(_clientSiteWandDataProvider.GetPatrolCars().OrderBy(x=> x.Name).Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+            return sitePatrolCars;
+
         }
     }
 

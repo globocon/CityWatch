@@ -3108,7 +3108,7 @@ $(function () {
         columns: [
             { field: 'fileName', title: 'File Name', width: 200 },
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
-            { width: 200, renderer: staffDocsButtonRenderer },
+            { width: 250, renderer: staffDocsButtonRenderer },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3118,11 +3118,14 @@ $(function () {
 
     var editManagerstaffDocsButtonRendererCompanySop;
     editManagerstaffDocsButtonRendererCompanySop = function (value, record, $cell, $displayEl, id, $grid) {
+        var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         var data = $grid.data(),
             $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_company_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-                '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+                '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
                 '</form></label>').attr('data-key', id),
             $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $play = $(playBtn).attr('data-key', id),
             $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
             $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
             $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
@@ -3151,7 +3154,7 @@ $(function () {
             $update.hide();
             $cancel.hide();
         });
-        $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+        $displayEl.empty().append($replace).append($downlaod).append($play).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeCompanySop = $('#staff_document_files_type_CompanySop').grid({
         //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
@@ -3173,7 +3176,7 @@ $(function () {
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
             // { width: 200, renderer: staffDocsButtonRendererCompanySop },
-            { width: 270, renderer: editManagerstaffDocsButtonRendererCompanySop },
+            { width: 350, renderer: editManagerstaffDocsButtonRendererCompanySop },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3214,11 +3217,14 @@ $(function () {
     /*StaffDocs start */
     var editManagerstaffDocsButtonRendererTraining;
     editManagerstaffDocsButtonRendererTraining = function (value, record, $cell, $displayEl, id, $grid) {
+        var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         var data = $grid.data(),
             $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_training" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-                '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+                '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
                 '</form></label>').attr('data-key', id),
             $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $play = $(playBtn).attr('data-key', id),
             $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
             $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
             $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
@@ -3247,7 +3253,7 @@ $(function () {
             $update.hide();
             $cancel.hide();
         });
-        $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+        $displayEl.empty().append($replace).append($downlaod).append($play).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeTraining = $('#staff_document_files_type_Training').grid({
         //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
@@ -3270,7 +3276,7 @@ $(function () {
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
             //{ width: 200, renderer: staffDocsButtonRendererTraining },
-            { width: 270, align: 'center', renderer: editManagerstaffDocsButtonRendererTraining }
+            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererTraining }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3311,11 +3317,14 @@ $(function () {
     //Staff forms start
     var editManagerstaffDocsButtonRendererFroms;
     editManagerstaffDocsButtonRendererFroms = function (value, record, $cell, $displayEl, id, $grid) {
+        var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         var data = $grid.data(),
             $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_templates_forms" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
-                '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+                '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
                 '</form></label>').attr('data-key', id),
             $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $play = $(playBtn).attr('data-key', id),
             $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
             $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_templates_forms" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
             $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
@@ -3344,7 +3353,7 @@ $(function () {
             $update.hide();
             $cancel.hide();
         });
-        $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+        $displayEl.empty().append($replace).append($downlaod).append($play).append($edit).append($delete).append($update).append($cancel);
     }
     gridStaffDocsTypeTemplatesAndForms = $('#staff_document_files_type_TemplatesAndForms').grid({
         dataSource: {
@@ -3362,7 +3371,7 @@ $(function () {
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editField: 'documentModuleName', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
 
-            { width: 270, align: 'center', renderer: editManagerstaffDocsButtonRendererFroms }
+            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererFroms }
             //{ width: 200, renderer: staffDocsButtonRendererTemplatesAndForms },
         ],
         initialized: function (e) {
@@ -3402,40 +3411,58 @@ $(function () {
 
 
     function staffDocsButtonRenderer(value, record) {
+        var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads" method="post">' +
             '<i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_staff_file" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '<input type="file" name="upload_staff_file" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
             '</form></label>' +
             '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
+            playBtn +
             '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
     }
 
     function staffDocsButtonRendererCompanySop(value, record) {
+        let playBtn = '';
+        if (record.fileName.toLowerCase().endsWith('.mp4')) {
+            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
+        }
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads_company_sop" method="post">' +
             '<i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
             '</form></label>' +
             '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
+            playBtn +
             '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
     }
     function staffDocsButtonRendererTraining(value, record) {
+        let playBtn = '';
+        if (record.fileName.toLowerCase().endsWith('.mp4')) {
+            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
+        }
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads_training" method="post">' +
             '<i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
             '</form></label>' +
             '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
+            playBtn +
             '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
     }
     function staffDocsButtonRendererTemplatesAndForms(value, record) {
+        let playBtn = '';
+        if (record.fileName.toLowerCase().endsWith('.mp4')) {
+            playBtn = '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>';
+        }
         return '<label class="btn btn-success mb-0">' +
             '<form id="form_file_downloads_templates_forms" method="post">' +
             '<i class="fa fa-upload mr-2"></i>Replace' +
-            '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx, .mp4" hidden data-doc-id="' + record.id + '">' +
             '</form></label>' +
             '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
+            playBtn +
             '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_templates_forms" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
     }
 
@@ -3510,8 +3537,9 @@ $(function () {
     function uploadStafDoc(uploadCtrl, edit = false) {
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
-            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+        // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+        if (!fileExtn || '.pdf,.docx,.xlsx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx, .xlsx or .mp4 file');
             return false;
         }
 
@@ -3520,19 +3548,32 @@ $(function () {
         if (edit)
             fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
 
+        showStatusNotification(true, 'Uploading file...', true);
         $.ajax({
             url: '/Admin/Settings?handler=UploadStaffDoc',
             type: 'POST',
             data: fileForm,
             processData: false,
             contentType: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                        updateUploadProgress(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            }
         }).done(function (data) {
             if (data.success)
                 gridStaffDocs.reload();
             showStatusNotification(data.success, data.message);
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            uploadCtrl.val(''); // Clear input to allow re-upload of same file
         });
     }
 
@@ -3542,8 +3583,9 @@ $(function () {
         var check2 = $('#clientSitessiteSOP').val();
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
-            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+        // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+        if (!fileExtn || '.pdf,.docx,.xlsx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx, .xlsx or .mp4 file');
             return false;
         }
 
@@ -3565,22 +3607,35 @@ $(function () {
         if (edit)
             fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
 
+        showStatusNotification(true, 'Uploading file...', true);
         $.ajax({
             url: '/Admin/Settings?handler=UploadStaffDocUsingType',
             type: 'POST',
             data: fileForm,
             processData: false,
             contentType: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                        updateUploadProgress(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            }
         }).done(function (data) {
             if (data.success) {
                 gridStaffDocsTypeCompanySop.reload();
                 gridStaffDocsTypeTraining.reload();
                 gridStaffDocsTypeTemplatesAndForms.reload();
-                showStatusNotification(data.success, data.message);
             }
+            showStatusNotification(data.success, data.message);
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            uploadCtrl.val(''); // Clear input to allow re-upload of same file
         });
     }
 
@@ -3610,8 +3665,8 @@ $(function () {
 
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
-            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+        if (!fileExtn || '.pdf,.docx,.xlsx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx, .xlsx or .mp4 file');
             return false;
         }
 
@@ -3623,22 +3678,35 @@ $(function () {
         if (edit)
             fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
 
+        showStatusNotification(true, 'Uploading file...', true);
         $.ajax({
             url: '/Admin/Settings?handler=UploadStaffDocUsingTypeFour',
             type: 'POST',
             data: fileForm,
             processData: false,
             contentType: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                        updateUploadProgress(percentComplete);
+                    }
+                }, false);
+                return xhr;
+            }
         }).done(function (data) {
             if (data.success) {
                 gridStaffDocsTypeCompanySop.reload();
                 gridStaffDocsTypeTraining.reload();
                 gridStaffDocsTypeTemplatesAndForms.reload();
-                showStatusNotification(data.success, data.message);
             }
+            showStatusNotification(data.success, data.message);
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            uploadCtrl.val(''); // Clear input to allow re-upload of same file
         });
     }
     /****** Downloads *******/
@@ -3745,14 +3813,47 @@ $(function () {
     });
 
 
-    const showStatusNotification = function (success, message) {
+    const showStatusNotification = function (success, message, isProgress = false) {
         if (success) {
             $('.toast .toast-header strong').removeClass('text-danger').addClass('text-success').html('Success');
+            $('#loader').hide();
+            $('#loader-percent, #loader-text').hide();
         } else {
             $('.toast .toast-header strong').removeClass('text-success').addClass('text-danger').html('Error');
+            $('#loader').hide();
+            $('#loader-percent, #loader-text').hide();
         }
+        
         $('.toast .toast-body').html(message);
-        $('.toast').toast('show');
+        
+        if (isProgress) {
+            $('#toastProgressContainer').show();
+            $('.toast').toast({ autohide: false });
+            $('.toast').toast('show');
+            
+            // Show full-screen loader during progress
+            $('#loader').show();
+            $('#loader-percent').text('0%').show();
+            $('#loader-text').text(message).show();
+        } else {
+            $('#toastProgressContainer').hide();
+            $('.toast').toast({ autohide: true, delay: 5000 });
+            $('.toast').toast('show');
+            
+            // Safety timeout to ensure it hides even if the toast was already visible
+            setTimeout(function() {
+                $('.toast').toast('hide');
+            }, 5000);
+        }
+    }
+
+    const updateUploadProgress = function (percent) {
+        $('#toastProgressContainer').show();
+        $('#uploadProgressBar').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
+        
+        // Also update full-screen loader
+        $('#loader').show();
+        $('#loader-percent').text(percent + '%').show();
     }
 
     const showModal = function (message) {
@@ -5257,7 +5358,7 @@ $(function () {
             { field: 'fileName', title: 'File Name', width: 300 },
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
             { width: 55, field: 'sop', title: 'SOP' },
-            { width: 140, renderer: schButtonRenderer },
+            { width: 220, renderer: schButtonRenderer },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -5288,7 +5389,12 @@ $(function () {
     //}
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
+        let playBtn = '';
+        if (record.fileName.toLowerCase().endsWith('.mp4')) {
+            playBtn = '<button type="button" class="btn btn-outline-success m-1" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')"><i class="fa fa-play"></i></button>';
+        }
         buttonHtml = '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';
+        buttonHtml += playBtn;
         buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil"></i></button>';
         buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
@@ -5439,9 +5545,9 @@ $(function () {
             const file = fileInput.files[0]; // Get the first file object
             const fileExtn = file.name.split('.').pop().toLowerCase(); // Get file extension
             fileName = file.name;
-            // Validate file extension
-            if (!fileExtn || ['pdf', 'docx', 'xlsx'].indexOf(fileExtn) < 0) {
-                showModal('Unsupported file type. Please upload a .pdf, .docx, or .xlsx file');
+            // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+            if (!fileExtn || ['pdf', 'docx', 'xlsx', 'mp4'].indexOf(fileExtn) < 0) {
+                showModal('Unsupported file type. Please upload a .pdf, .docx, .xlsx or .mp4 file');
                 return false;
             }
             // Prepare the form data
@@ -5676,9 +5782,9 @@ $('#btnSaveSiteSOPAlarm').on('click', function () {
         const file = fileInput.files[0]; // Get the first file object
         const fileExtn = file.name.split('.').pop().toLowerCase(); // Get file extension
         fileName = file.name;
-        // Validate file extension
-        if (!fileExtn || ['pdf', 'docx', 'xlsx'].indexOf(fileExtn) < 0) {
-            showModal('Unsupported file type. Please upload a .pdf, .docx, or .xlsx file');
+        // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
+        if (!fileExtn || ['pdf', 'docx', 'xlsx', 'mp4'].indexOf(fileExtn) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx, .xlsx or .mp4 file');
             return false;
         }
         // Prepare the form data
@@ -5752,7 +5858,7 @@ gridSchedulesAlarm = $('#staff_document_siteSOPAlarm').grid({
         { field: 'fileName', title: 'File Name', width: 300 },
         { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
         { width: 55, field: 'sop', title: 'SOP' },
-        { width: 140, renderer: schButtonRenderer1 },
+        { width: 220, renderer: schButtonRenderer1 },
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -5760,7 +5866,13 @@ gridSchedulesAlarm = $('#staff_document_siteSOPAlarm').grid({
 });
 function schButtonRenderer1(value, record) {
     let buttonHtml = '';
-    buttonHtml = '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';
+    let playBtn = '';
+    var fileUrl = record.filePath + record.fileName;
+    if (record.fileName.toLowerCase().endsWith('.mp4')) {
+        playBtn = '<button type="button" class="btn btn-outline-success m-1" onclick="openVideoPlayer(\'' + fileUrl + '\')"><i class="fa fa-play"></i></button>';
+    }
+    buttonHtml = '<a href="' + fileUrl + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';
+    buttonHtml += playBtn;
     buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#schedule-modalAlarm" data-sch-id="' + record.id + '" ';
     buttonHtml += 'data-action="editScheduleAlarm"><i class="fa fa-pencil"></i></button>';
     buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-scheduleAlarm d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
@@ -9359,3 +9471,19 @@ function deleteAppVersion(recordId, versionId) {
 }
 
 /* ######## Mobile Upgrade Page End ######### */
+
+// 07-05-2026 - Video player functions for SOP and Training browser playback
+function openVideoPlayer(url) {
+    var video = document.getElementById('videoPlayer');
+    video.src = url;
+    video.load();
+    $('#videoPlayerModal').modal('show');
+    video.play();
+}
+
+function closeVideoPlayer() {
+    var video = document.getElementById('videoPlayer');
+    video.pause();
+    video.src = "";
+    $('#videoPlayerModal').modal('hide');
+}

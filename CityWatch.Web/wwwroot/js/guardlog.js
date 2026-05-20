@@ -1,7 +1,7 @@
 
 var FileuploadFileChanged = null;
 $(function () {
- //p4-147-lb shade-start
+    //p4-147-lb shade-start
     if ($('#ClientSiteID').val() == 629) {
         var targetDiv = document.querySelector(' body');
 
@@ -390,17 +390,6 @@ $(function () {
 
                                 $('#GuardLogin_IsPosition').prop('checked', true);
                                 getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
-                                /*smart_Wand_Or_Position.html('');
-                                smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
-                                data.map(function (result) {
-            
-                                    smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
-            
-            
-            
-            
-                                });
-                                smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
                             }
                         }
 
@@ -409,19 +398,11 @@ $(function () {
                     }).always(function () {
 
                     });
-
                     /* new Code for select deafult postion if manning deatils exist end*/
-
                 }
-
-
-
             }
-
-
         });
     }
-
 
 
     function getSmartWandOrOfficerPositionOnSiteChange(isPosition, clientSiteName, smartWandOrPositionId) {
@@ -451,21 +432,12 @@ $(function () {
                     }
                 });
 
-
-
-
                 if (smartWandOrPositionId) {
                     smart_Wand_Or_Position.val(smartWandOrPositionId);
                 } else {
                     smart_Wand_Or_Position.val('');
                 }
-
-
-
-
             }
-
-
         });
     }
 
@@ -541,7 +513,6 @@ $(function () {
         if ($(this).val() === '')
             return;
 
-
         $('#loader').show();
         //checkGuardLoginExpiry();
         $.ajax({
@@ -555,11 +526,6 @@ $(function () {
                 else if (!result.guard.isActive) {
                     showGuardSearchResult('A guard with given security license number is disabled. Please contact admin to activate', true);
                 }
-                // els if (result.guard.lastLogin.loginDate)
-                //else if (result.guardLockStatusBasedOnRedDoc) {
-                //  showGuardSearchResult('A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate.', true);
-                //}
-
                 else {
                     $('#GuardLogin_IsNewGuard').prop('checked', false);
 
@@ -647,16 +613,12 @@ $(function () {
                     else {
                         //$('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
                     }
-
                 }
 
                 //HRList Status
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);
                 $('#client_status_2').css('color', result.hR3);
-
-
-
             },
             complete: function () {
                 $('#loader').hide();
@@ -670,62 +632,13 @@ $(function () {
     });
 
     $('#GuardLogin_ClientSiteName').on('change', function () {
-
-        //getSmartWandOrOfficerPositionOnSiteChange(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
         var clientSiteName = $(this).val();
         $('#GuardLogin_IsPosition').prop('checked', false);
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
-        //isPosition = $('#GuardLogin_IsPosition').is(':checked');
-
 
         getsmartwandcount(isPosition, clientSiteName);
-        /* new Code for select deafult postion if manning deatils exist Start11/09/2024*/
-        //$.ajax({
-        //    url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
-        //    type: 'GET',
-        //    dataType: 'json',
 
-        //}).done(function (result) {
-        //    if (result.success) {
-        //        if (result.positionIdDefault != '') {
-
-        //            $('#GuardLogin_IsPosition').prop('checked', true);
-        //            getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
-        //            /*smart_Wand_Or_Position.html('');
-        //            smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
-        //            data.map(function (result) {
-
-        //                smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
-
-
-
-
-        //            });
-        //            smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
-        //        }
-
-        //    }
-        //        /*p1-292 login isseue-start*/
-        //    //if there is no contrcatedmanning details for the site then automatically load the smartwand assigned to the site or load the position if no smartwand assinged
-        //    else {
-        //        $('#GuardLogin_IsPosition').prop('checked', false);
-        //        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
-
-
-        //        getsmartwandcount(isPosition, clientSiteName);
-
-
-        //    }
-
-        //    /*p1-292 login isseue-end*/
-        //}).fail(function () {
-
-        //}).always(function () {
-
-        //});
-
-        /* new Code for select deafult postion if manning deatils exist end*/
         /*p1-292 login isseue-start*/
         function getsmartwandcount(isPosition, clientSiteName) {
             const url = isPosition ?
@@ -751,50 +664,9 @@ $(function () {
 
         }
         /*p1-292 login isseue-end*/
-
-        ////To Get the Critical Documents start
-        //var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
-        //$.ajax({
-        //    url: '/Guard/Login?handler=CriticalDocumentsList&ClientSiteName=' + ClientSiteName,
-        //    type: 'GET',
-        //    dataType: 'json',
-        //}).done(function (result) {
-        //    var ss = 'kk';
-        //    console.log(result);
-        //    if (result.length == 0) {
-        //        $('#client_status_0').css('color', 'red');
-        //        $('#client_status_1').css('color', 'red');
-        //    }
-        //    else if (result[0].hrSettings) {
-        //        var HRGroupID = result[0].hrSettings.hrGroupId;
-        //        if (HRGroupID == 1) {
-        //            $('#client_status_0').css('color', 'green');
-        //            $('#client_status_1').css('color', 'red');
-        //            $('#client_status_2').css('color', 'red');
-        //        }
-        //        else if (HRGroupID == 2) {
-        //            $('#client_status_1').css('color', 'green');
-        //            $('#client_status_2').css('color', 'red');
-        //            $('#client_status_0').css('color', 'red');
-        //        }
-        //        else {
-        //            $('#client_status_2').css('color', 'green');
-        //            $('#client_status_0').css('color', 'red');
-        //            $('#client_status_1').css('color', 'red');
-        //        }
-        //    }
-
-        //}).always(function () {
-        //    $('#loader').hide();
-        //});
-        ////To Get the Critical Documents stop
     });
 
-
-
-
     //P4#70-Disable the guard login if guard didnt login for 120 days -added by manju -start
-
 
     function checkGuardLoginExpiry() {
         var guardId = $('#GuardLogin_Guard_SecurityNo').val();
@@ -819,8 +691,6 @@ $(function () {
             return res;
         });
     }
-
-
 
     //P4#70-Disable the guard login if guard didnt login for 120 days -added by manju -end
 
@@ -869,21 +739,6 @@ $(function () {
         submitGuardLogin();
     });
 
-    //Pr-7-Task-120 Warning-Position Checkbox-Below lines are added-Manju -start-25-04-2024
-
-    /* let isPositionModal;
-     isPositionModal = new ConfirmationModal('PositionModal', {
-         message: 'Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?',
-         onYes: function () {
-             const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
- 
-             if (!validateSmartWand) {
-                 submitGuardLogin();
-             }
-         }
-     });*/
-
-
     function confirmDialog(message, onConfirm) {
         var fClose = function () {
             modal.modal("hide");
@@ -906,10 +761,6 @@ $(function () {
     }
 
     $('#btnGuardLogin').on('click', function () {
-
-
-
-
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
         if (isPosition) {
             $('#loader').show();
@@ -1005,29 +856,6 @@ $(function () {
                 submitGuardLogin();
             }
         }
-
-
-        /*const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
-
-        if (!validateSmartWand) {
-            submitGuardLogin();
-        } else {
-            $('#loader').show();
-            $.ajax({
-                url: '/Guard/Login?handler=CheckIsWandAvailable',
-                type: 'GET',
-                data: {
-                    clientSiteName: $('#GuardLogin_ClientSiteName').val(),
-                    smartWandNo: $('#GuardLogin_SmartWandOrPosition').val(),
-                    guardId: $('#GuardLogin_Guard_Id').val()
-                }
-            }).done(function (result) {
-                if (result) $('#alert-wand-in-use-modal').modal('show');
-                else submitGuardLogin();
-            }).always(function () {
-                $('#loader').hide();
-            });
-        }*/
     });
 
 
@@ -1091,10 +919,6 @@ $(function () {
 
 
                     var message = result.strResult;
-                    //alert(result.strResult);
-                    //new MessageModal({
-                    //    message: result.strResult
-                    //}).showWarning();
                     if (!result.hrdocLockforThisGurad) {
                         $.ajax({
                             url: '/Guard/Login?handler=LoginGuard',
@@ -1647,37 +1471,6 @@ $(function () {
         }).always(function () {
 
         });
-
-        //$("#kvl-attachment-list").empty();
-        //for (var attachIndex = 0; attachIndex < result.attachments.length; attachIndex++) {
-        //    const file = result.attachments[attachIndex];
-        //    const attachment_id = 'attach_' + attachIndex;
-        //    const li = document.createElement('li');
-        //    li.id = attachment_id;
-        //    li.className = 'list-group-item';
-        //    li.dataset.index = attachIndex;
-        //    let liText = document.createTextNode(file);
-        //    const icon = document.createElement("i");
-        //    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
-        //    icon.title = 'Delete';
-        //    icon.style = 'cursor:pointer';
-        //    li.appendChild(liText);
-        //    li.appendChild(icon);
-        //    const anchorTag = document.createElement("a");
-        //    anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/" + file;
-        //    anchorTag.target = "_blank";
-        //    const icon2 = document.createElement("i");
-        //    icon2.className = 'fa fa-download ml-2 text-primary';
-        //    icon2.title = 'Download';
-        //    icon2.style = 'cursor:pointer';
-        //    anchorTag.appendChild(icon2);
-        //    li.appendChild(anchorTag);
-        //    document.getElementById('kvl-attachment-list').append(li);
-
-
-
-        //}
-
     }
     $('#dgl-attachment-list').on('click', '.btn-delete-dgl-attachment', function (event) {
         if (confirm('Are you sure want to remove this attachment?')) {
@@ -1821,11 +1614,6 @@ $(function () {
 
     //p6-102 Add Photo -end
 
-    //if ($('#vklClientType').val() != null && $('#vklClientType').val() != '' && $('#vklClientType').val() != undefined) {
-
-    //    $('#vklClientType').change();
-    //}
-
     if ($('#fusionClientType').val() != null && $('#fusionClientType').val() != '' && $('#fusionClientType').val() != undefined) {
 
         $('#fusionClientType').change();
@@ -1875,30 +1663,7 @@ $(function () {
                 }
             }
         });
-        //gridGuardLog.on('rowSelect', function (e, $row, id, record) {
-        //    /*timer pause while editing*/
-        //    if (isPaused == true) {
-        //        isPaused = false;
 
-        //    }
-        //    else {
-        //        isPaused = true;
-
-        //    }
-
-
-        //});
-        //gridGuardLog.on('rowUnselect', function (e, $row, id, record) {
-        //    /*timer pause while editing*/
-        //    if ($(this).closest("tr").hasClass("active")) {
-        //        isPaused = true;
-        //    }
-        //    else { 
-        //        isPaused = false;
-        //    }
-
-
-        //});
         gridGuardLog.on('rowDataChanged', function (e, id, record) {
             /*timer pause while editing*/
             isPaused = true;
@@ -2319,17 +2084,6 @@ $(function () {
         });
     }
 
-    //function displayCustomFieldsValidationSummary(errors) {
-    //    const summaryDiv = document.getElementById('custom-field-validation');
-    //    summaryDiv.className = "validation-summary-errors";
-    //    summaryDiv.querySelector('ul').innerHTML = '';
-    //    errors.forEach(function (item) {
-    //        const li = document.createElement('li');
-    //        li.appendChild(document.createTextNode(item));
-    //        summaryDiv.querySelector('ul').appendChild(li);
-    //    });
-    //}
-
     //*************** Admin Site Log  *************** //
 
     //Daily Log
@@ -2456,7 +2210,7 @@ $(function () {
             { field: 'tagType', title: 'Type', width: 100 },
             {
                 field: 'labelDescription', title: 'Label', width: 440,
-              
+
             },
             { field: 'roundNumber', title: 'Pending FQ', width: 60 },
             { field: 'todayScanCount', title: 'Scans', width: 60 },
@@ -2479,10 +2233,10 @@ $(function () {
         const clientSiteControl = $('#fqClientSiteId');
         var selectedOption = $(this).find("option:selected");
         var selectedText = selectedOption.text();
-       
+
         //gridsiteLog.clear();
 
-     
+
 
         clientSiteControl.html('');
         $.ajax({
@@ -2498,7 +2252,7 @@ $(function () {
                 //data.map(function (site) {
                 //    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
                 //});
-              //  clientSiteControl.multiselect('rebuild');
+                //  clientSiteControl.multiselect('rebuild');
             }
         });
 
@@ -2515,11 +2269,11 @@ $(function () {
             clientSiteId: $('#fqClientSiteId').val(),
             startDate: $('#fqFromDate').val(),
             endDate: $('#fqToDate').val(),
-          
+
         });
     });
     $('#btnDownloadFQZip').on('click', function () {
-      
+
         logBookTypeForAuditZip = 3;
         if ($('#fqClientSiteId').val() === '') {
             alert('Please select a client site');
@@ -2621,7 +2375,7 @@ $(function () {
             }
         });
     }
-    
+
     function downloadKeyVehicleLogZipFile() {
         $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
         $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
@@ -4664,94 +4418,6 @@ $(function () {
             gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
-    /*  code added to 1000 pages in Excel */
-    //let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
-    //    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
-    //    paging: true,
-    //    ordering: true,
-    //    order: [[1, "asc"]],
-    //    info: false,
-    //    searching: true,
-    //    autoWidth: false,
-    //    ajax: {
-    //        url: '/Admin/GuardSettings?handler=ClientSiteKeys',
-    //        data: function (d) {
-    //            d.clientSiteId = $('#ClientSiteKey_ClientSiteId').val();
-    //        },
-    //        dataSrc: ''
-    //    },
-    //    columns: [
-    //        { data: 'id', visible: false },
-    //        { data: 'keyNo', width: '4%' },
-    //        { data: 'description', width: '12%', orderable: false },
-    //        {
-    //            targets: -1,
-    //            orderable: false,
-    //            width: '4%',
-    //            data: null,
-    //            defaultContent: '<button  class="btn btn-outline-primary mr-2" id="btn_edit_cs_key"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-    //                '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
-    //            className: "text-center"
-    //        },
-    //    ],
-    //});
-
-    //$('#cs_client_site_keys tbody').on('click', '#btn_delete_cs_key', function () {
-    //    var data = gridClientSiteKeys.row($(this).parents('tr')).data();
-    //    if (confirm('Are you sure want to delete this key?')) {
-    //        $.ajax({
-    //            type: 'POST',
-    //            url: '/Admin/GuardSettings?handler=DeleteClientSiteKey',
-    //            data: { 'id': data.id },
-    //            dataType: 'json',
-    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //        }).done(function () {
-    //            gridClientSiteKeys.ajax.reload();
-    //        });
-    //    }
-    //});
-
-    //$('#cs_client_site_keys tbody').on('click', '#btn_edit_cs_key', function () {
-    //    var data = gridClientSiteKeys.row($(this).parents('tr')).data();
-    //    loadClientSiteKeyModal(data);
-    //});
-
-    //$('#add_client_site_key').on('click', function () {
-    //    resetClientSiteKeyModal();
-    //    $('#client-site-key-modal').modal('show');
-    //});
-
-    //$('#btn_save_cs_key').on('click', function () {
-    //    $.ajax({
-    //        url: '/Admin/GuardSettings?handler=ClientSiteKey',
-    //        data: $('#frm_add_key').serialize(),
-    //        type: 'POST',
-    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //    }).done(function (result) {
-    //        if (result.success) {
-    //            $('#client-site-key-modal').modal('hide');
-    //            gridClientSiteKeys.ajax.reload();
-    //        } else {
-    //            displaySiteKeyValidationSummary(result.message);
-    //        }
-    //    });
-    //});
-
-    //function loadClientSiteKeyModal(data) {
-    //    $('#ClientSiteKey_Id').val(data.id);
-    //    $('#ClientSiteKey_KeyNo').val(data.keyNo);
-    //    $('#ClientSiteKey_Description').val(data.description);
-    //    $('#csKeyValidationSummary').html('');
-    //    $('#client-site-key-modal').modal('show');
-    //}
-
-    //function resetClientSiteKeyModal() {
-    //    $('#ClientSiteKey_Id').val('');
-    //    $('#ClientSiteKey_KeyNo').val('');
-    //    $('#ClientSiteKey_Description').val('');
-    //    $('#csKeyValidationSummary').html('');
-    //    $('#client-site-key-modal').modal('hide');
-    //}
 
     function displaySiteKeyValidationSummary(errors) {
         $('#csKeyValidationSummary').removeClass('validation-summary-valid').addClass('validation-summary-errors');
@@ -4771,306 +4437,6 @@ $(function () {
             });
         }
     }
-
-    //$('#btnSaveGuardSiteSettings').on('click', function () {
-    //    var isUpdateDailyLog = false;
-
-    //    const token = $('input[name="__RequestVerificationToken"]').val();
-    //    if ($('#enableLogDump').is(":checked")) {
-    //        isUpdateDailyLog = true;
-    //    }
-    //    $.ajax({
-    //        url: '/Admin/GuardSettings?handler=SaveSiteEmail',
-    //        type: 'POST',
-    //        data: {
-    //            siteId: $('#gl_client_site_id').val(),
-    //            siteEmail: $('#gs_site_email').val(),
-    //            enableLogDump: isUpdateDailyLog,
-    //            landLine: $('#gs_land_line').val(),
-    //            guardEmailTo: $('#gs_email_recipients').val(),
-    //            duressEmail: $('#gs_duress_email').val(),
-    //            duressSms: $('#gs_duress_sms').val()
-    //        },
-    //        headers: { 'RequestVerificationToken': token }
-    //    }).done(function () {
-    //        alert("Saved successfully");
-    //    }).fail(function () {
-    //        console.log("error");
-    //    });
-    //});
-
-    //$('#btnSaveCustomFields').on('click', function () {
-    //    $('#custom-field-validation ul').html('');
-    //    $.ajax({
-    //        url: '/Admin/GuardSettings?handler=CustomFields',
-    //        type: 'POST',
-    //        DataType: 'json',
-    //        data: $('#frm_custom_field').serialize(),
-    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //    }).done(function (result) {
-    //        if (!result.status)
-    //            displayCustomFieldsValidationSummary(result.message[0].split(','));
-    //        else {
-    //            loadCustomFields();
-    //            gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    //        }
-    //    }).fail(function () {
-    //        console.log("error");
-    //    });
-    //});
-
-    //function loadCustomFields() {
-    //    $.ajax({
-    //        url: '/Admin/GuardSettings?handler=CustomFields',
-    //        type: 'GET',
-    //        dataType: 'json'
-    //    }).done(function (data) {
-    //        const ulFields = $('#ClientSiteCustomField_Name').siblings('ul.es-list');
-    //        $('#ClientSiteCustomField_Name').val('');
-    //        ulFields.html('');
-    //        data.fieldNames.map(function (result) {
-    //            ulFields.append('<li class="es-visible" value="' + result + '">' + result + '</li>');
-    //        });
-
-    //        const ulSlots = $('#ClientSiteCustomField_TimeSlot').siblings('ul.es-list');
-    //        $('#ClientSiteCustomField_TimeSlot').val('');
-    //        ulSlots.html('');
-    //        data.slots.map(function (result) {
-    //            ulSlots.append('<li class="es-visible" value="' + result + '">' + result + '</li>');
-    //        });
-    //    });
-    //}
-
-    //let gridSiteCustomFields;
-
-    //function renderSiteCustomFieldsManagement(value, record, $cell, $displayEl) {
-    //    let $deleteBtn = $('<button class="btn btn-outline-danger mr-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>');
-    //    let $editBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>');
-    //    let $updateBtn = $('<button class="btn btn-outline-success mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide();
-    //    let $cancelBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-times-circle mr-2"></i>Cancel</button>').hide();
-
-
-    //    $deleteBtn.on('click', function (e) {
-    //        gridSiteCustomFields.removeRow($(this).data('id'));
-    //    });
-
-    //    $editBtn.on('click', function (e) {
-    //        gridSiteCustomFields.edit($(this).data('id'));
-    //        $editBtn.hide();
-    //        $deleteBtn.hide();
-    //        $updateBtn.show();
-    //        $cancelBtn.show();
-    //    });
-
-    //    $updateBtn.on('click', function (e) {
-    //        gridSiteCustomFields.update($(this).data('id'));
-    //        $editBtn.show();
-    //        $deleteBtn.show();
-    //        $updateBtn.hide();
-    //        $cancelBtn.hide();
-    //    });
-
-    //    $cancelBtn.on('click', function (e) {
-    //        gridSiteCustomFields.cancel($(this).data('id'));
-    //        $editBtn.show();
-    //        $deleteBtn.show();
-    //        $updateBtn.hide();
-    //        $cancelBtn.hide();
-    //    });
-
-    //    $displayEl.empty().append($editBtn)
-    //        .append($deleteBtn)
-    //        .append($updateBtn)
-    //        .append($cancelBtn);
-    //}
-
-    //gridSiteCustomFields = $('#cs-custom-fields').grid({
-    //    dataSource: '/Admin/GuardSettings?handler=ClientSiteCustomFields',
-    //    data: { clientSiteId: $('#gl_client_site_id').val() },
-    //    uiLibrary: 'bootstrap4',
-    //    iconsLibrary: 'fontawesome',
-    //    primaryKey: 'id',
-    //    inlineEditing: { mode: 'command', managementColumn: false },
-    //    columns: [
-    //        { field: 'timeSlot', title: 'Time Slot', editor: true },
-    //        { field: 'name', title: 'Field Name', editor: true },
-    //        { renderer: renderSiteCustomFieldsManagement }
-    //    ],
-    //    initialized: function (e) {
-    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    //    }
-    //});
-
-    //if (gridSiteCustomFields) {
-    //    gridSiteCustomFields.on('rowDataChanged', function (e, id, record) {
-    //        const data = $.extend(true, {}, record);
-    //        const token = $('input[name="__RequestVerificationToken"]').val();
-    //        $.ajax({
-    //            url: '/Admin/GuardSettings?handler=CustomFields',
-    //            data: { clientSiteCustomField: record },
-    //            type: 'POST',
-    //            headers: { 'RequestVerificationToken': token },
-    //        }).done(function (result) {
-    //            if (result.status) gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    //            else alert(result.message);
-    //        }).fail(function () {
-    //            console.log('error');
-    //        }).always(function () {
-
-    //        });
-    //    });
-
-    //    gridSiteCustomFields.on('rowRemoving', function (e, id, record) {
-    //        if (confirm('Are you sure want to delete this entry?')) {
-    //            const token = $('input[name="__RequestVerificationToken"]').val();
-    //            $.ajax({
-    //                url: '/Admin/GuardSettings?handler=DeleteClientSiteCustomField',
-    //                data: { id: record },
-    //                type: 'POST',
-    //                headers: { 'RequestVerificationToken': token },
-    //            }).done(function (result) {
-    //                if (!result.success) alert(result.message);
-    //                else {
-    //                    loadCustomFields();
-    //                    gridSiteCustomFields.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    //                }
-    //            }).fail(function () {
-    //                console.log('error');
-    //            });
-    //        }
-    //    });
-    //}
-
-    //let gridSitePocs;
-    //gridSitePocs = $('#cs-pocs').grid({
-    //    dataSource: '/Admin/GuardSettings?handler=SitePocs',
-    //    uiLibrary: 'bootstrap4',
-    //    iconsLibrary: 'fontawesome',
-    //    primaryKey: 'id',
-    //    inlineEditing: { mode: 'command' },
-    //    columns: [
-    //        { width: 120, field: 'name', title: 'Name', editor: true }
-    //    ],
-    //    initialized: function (e) {
-    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    //    }
-    //});
-
-    //if (gridSitePocs) {
-    //    gridSitePocs.on('rowDataChanged', function (e, id, record) {
-    //        const data = $.extend(true, {}, record);
-    //        $.ajax({
-    //            url: '/Admin/GuardSettings?handler=SitePoc',
-    //            data: { record: data },
-    //            type: 'POST',
-    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //        }).done(function (result) {
-    //            if (result.success) gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    //            else alert(result.message);
-    //        }).fail(function () {
-    //            alert('error');
-    //        }).always(function () {
-    //            if (isSitePocAdding)
-    //                isSitePocAdding = false;
-    //        });
-    //    });
-
-    //    gridSitePocs.on('rowRemoving', function (e, id, record) {
-    //        if (confirm('Are you sure want to delete this site POC details?')) {
-    //            $.ajax({
-    //                url: '/Admin/GuardSettings?handler=DeleteSitePoc',
-    //                data: { id: record },
-    //                type: 'POST',
-    //                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //            }).done(function (result) {
-    //                if (result.success) gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    //                else alert(result.message);
-    //            }).fail(function () {
-    //                aler('error');
-    //            }).always(function () {
-    //                if (isSitePocAdding)
-    //                    isSitePocAdding = false;
-    //            });
-    //        }
-    //    });
-    //}
-
-    //let isSitePocAdding = false;
-    //$('#add_site_poc').on('click', function () {
-
-    //    if (isSitePocAdding) {
-    //        alert('Unsaved changes in the grid. Refresh the page');
-    //    } else {
-    //        isSitePocAdding = true;
-    //        gridSitePocs.addRow({ 'id': -1, 'name': '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
-    //    }
-    //});
-
-    //let gridSiteLocations;
-    //gridSiteLocations = $('#cs-locations').grid({
-    //    dataSource: '/Admin/GuardSettings?handler=SiteLocations',
-    //    uiLibrary: 'bootstrap4',
-    //    iconsLibrary: 'fontawesome',
-    //    primaryKey: 'id',
-    //    inlineEditing: { mode: 'command' },
-    //    columns: [
-    //        { width: 120, field: 'name', title: 'Name', editor: true }
-    //    ],
-    //    initialized: function (e) {
-    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    //    }
-    //});
-
-    //if (gridSiteLocations) {
-    //    gridSiteLocations.on('rowDataChanged', function (e, id, record) {
-    //        const data = $.extend(true, {}, record);
-    //        $.ajax({
-    //            url: '/Admin/GuardSettings?handler=SiteLocation',
-    //            data: { record: data },
-    //            type: 'POST',
-    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //        }).done(function (result) {
-    //            if (result.success) gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    //            else alert(result.message);
-    //        }).fail(function () {
-    //            alert('error');
-    //        }).always(function () {
-    //            if (isSiteLocationAdding)
-    //                isSiteLocationAdding = false;
-    //        });
-    //    });
-
-    //    gridSiteLocations.on('rowRemoving', function (e, id, record) {
-    //        if (confirm('Are you sure want to delete this site location details?')) {
-    //            $.ajax({
-    //                url: '/Admin/GuardSettings?handler=DeleteSiteLocation',
-    //                data: { id: record },
-    //                type: 'POST',
-    //                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //            }).done(function (result) {
-    //                if (result.success) gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    //                else alert(result.message);
-    //            }).fail(function () {
-    //                aler('error');
-    //            }).always(function () {
-    //                if (isSiteLocationAdding)
-    //                    isSiteLocationAdding = false;
-    //            });
-    //        }
-    //    });
-    //}
-
-    //let isSiteLocationAdding = false;
-    //$('#add_site_location').on('click', function () {
-
-    //    if (isSiteLocationAdding) {
-    //        alert('Unsaved changes in the grid. Refresh the page');
-    //    } else {
-    //        isSiteLocationAdding = true;
-    //        gridSiteLocations.addRow({ 'id': -1, 'name': '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
-    //    }
-    //});
-
     /****** Guards *******/
 
     function renderGuardActiveCell(value, type, data) {
@@ -5289,16 +4655,8 @@ $(function () {
         else {
             return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
         }
-
-
     }
 
-    //$('#btn_refresh_guard_top').on('click', function () {
-    //    if (guardSettings) {   
-    //        guardSettings.clear().draw();
-    //        guardSettings.ajax.reload();            
-    //    }        
-    //});
 
     $('#chkbxfilterGuardActive').on('click', function () {
         var thisCheck = $(this);
@@ -5495,25 +4853,6 @@ $(function () {
 
     // Extend the Select2 search functionality to filter the loaded data
 
-    //$('#guard_settings tbody').on('click', 'td.dt-control', function () {
-    //    var tr = $(this).closest('tr');
-    //    var row = guardSettings.row(tr);
-
-    //    $.ajax({
-    //        type: 'GET',
-    //        url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliance',
-    //        data: { guardId: row.data().id },
-    //    }).done(function (response) {
-    //        if (row.child.isShown()) {
-    //            row.child.hide();
-    //            tr.removeClass('shown');
-    //        } else {
-    //            row.child(format_guards_child_row(response), 'bg-light').show();
-    //            tr.addClass('shown');
-    //        }
-    //    });
-    //});
-
     $('#cbIsActive').on('change', function () {
         $('#Guard_Terminated').prop('disabled', $(this).is(':checked'));
     });
@@ -5634,6 +4973,15 @@ $(function () {
         if (data.isAdminRosterAccess) {
             selectedValues.push(18);
         }
+        if (data.isAdminRosterBaseAccess) {
+            selectedValues.push(19);
+        }
+        if (data.isAdminRosterGSAccess) {
+            selectedValues.push(20);
+        }
+        if (data.isROEditorAccess) {
+            selectedValues.push(21);
+        }
         selectedValues.forEach(function (value) {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
@@ -5642,7 +4990,19 @@ $(function () {
         gridGuardLicensesAndLicence.ajax.reload();
         gridGuardTrainingAndAssessmentByAdmin.clear().draw();
         gridGuardTrainingAndAssessmentByAdmin.ajax.reload();
-        $("#Guard_Access").multiselect();
+        $("#Guard_Access").multiselect({
+            onChange: function (option, checked) {
+                var value = $(option).val();
+                var rosterIds = ['18', '19', '20'];
+                if (checked && rosterIds.includes(value)) {
+                    rosterIds.forEach(function (id) {
+                        if (id !== value) {
+                            $("#Guard_Access").multiselect('deselect', id);
+                        }
+                    });
+                }
+            }
+        });
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
 
@@ -5696,66 +5056,6 @@ $(function () {
     });
     // Download Timesheet start
 
-    //    $('#btnDownloadTimesheet').on('click', function () {
-    //    $.ajax({
-    //        type: 'GET',
-    //        url: '/Admin/Settings?handler=DownloadTimesheet',
-    //        data: {
-    //            startdate: $('#startDate').val(),
-    //            endDate: $('#endDate').val(),
-    //            frequency: $('#frequency').val(),
-    //            guradid: $('#Guard_Id').val(),
-    //        },
-    //        xhrFields: {
-    //            responseType: 'blob' // For handling binary data
-    //        },
-    //        success: function (data, textStatus, request) {
-    //            var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
-    //            var fileName = '';
-    //            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-    //            var matches = filenameRegex.exec(contentDispositionHeader);
-    //            var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
-    //            // Create a Blob with the PDF data and initiate the download
-    //            var blob = new Blob([data], { type: 'application/pdf' });
-    //            // // Create a temporary anchor element to trigger the download
-    //            //var url = window.URL.createObjectURL(blob);
-    //            // // Open the PDF in a new tab
-    //            //var newTab = window.open(url, '_blank');
-
-    //            const URL = window.URL || window.webkitURL;
-    //            const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
-    //            const bloburl = URL.createObjectURL(blob);
-    //            const objectUrl = URL.createObjectURL(blob) + displayNameHash;
-    //            const windowUrl = window.location.origin; // + window.location.pathname;
-    //            const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
-    //            var newTab = window.open(`${viewerUrl}${objectUrl}`);
-    //            if (!newTab) {
-    //                // If the new tab was blocked, fallback to downloading the file
-    //                var a = document.createElement('a');
-    //                a.href = bloburl;
-    //                a.download = downloadedFileName;
-    //                a.click();
-    //            }
-
-    //            URL.revokeObjectURL(bloburl);
-    //            URL.revokeObjectURL(objectUrl);
-
-    //            //if (!newTab) {
-    //            //    // If the new tab was blocked, fallback to downloading the file
-    //            //    var a = document.createElement('a');
-    //            //    a.href = url;
-    //            //    a.download = downloadedFileName;
-    //            //    a.click();
-    //            //}
-    //            //window.URL.revokeObjectURL(url);
-    //        },
-    //        error: function () {
-    //            alert('Error while downloading the PDF.');
-    //        }
-    //    }).done(function (result) {
-
-    //    });
-    //});
     $('#btnDownloadTimesheet').on('click', function (e) {
         var startDate = $('#startDate').val();
         var endDate = $('#endDate').val();
@@ -5910,10 +5210,6 @@ $(function () {
                             data: 'siteName', width: "16%",
 
                         },
-
-
-
-
                     ]
                 });
             },
@@ -6429,7 +5725,19 @@ $(function () {
         $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
         $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", false);
         // Initialize the multiselect dropdown
-        $("#Guard_Access").multiselect();
+        $("#Guard_Access").multiselect({
+            onChange: function (option, checked) {
+                var value = $(option).val();
+                var rosterIds = ['18', '19', '20'];
+                if (checked && rosterIds.includes(value)) {
+                    rosterIds.forEach(function (id) {
+                        if (id !== value) {
+                            $("#Guard_Access").multiselect('deselect', id);
+                        }
+                    });
+                }
+            }
+        });
         $("#Guard_Access").val(value);
         $("#Guard_Access").multiselect("refresh");
         $("#Guard_Lote").multiselect();
@@ -6746,8 +6054,8 @@ $(function () {
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
-         $('#IsPendingOn').val(false);
-        $('#chb_IsPending').prop('checked', false); 
+        $('#IsPendingOn').val(false);
+        $('#chb_IsPending').prop('checked', false);
         $('#complianceValidationDiv').hide();
         clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
@@ -6999,7 +6307,7 @@ $(function () {
         }, 150);
 
         function applyVisibility(dt, keepValue) {
-             if (dt == 1) { // DOI Only
+            if (dt == 1) { // DOI Only
                 $('#LicanseTypeFilter').prop('checked', true).trigger('change', [keepValue]);
                 $('#doiToggleContainer').css('visibility', 'hidden');
                 $('#doiNoteContainer').css('visibility', 'hidden');
@@ -7099,7 +6407,7 @@ $(function () {
             $('#GuardComplianceAndLicense_ExpiryDate1').val(data.expiryDate.split('T')[0]);
         }
         $('#IsPendingOn').val(data.isPending);
-        $('#chb_IsPending').prop('checked', data.isPending); 
+        $('#chb_IsPending').prop('checked', data.isPending);
         $('#GuardComplianceandlicense_Id').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
         $('#HRGroup').val(data.hrGroup).trigger('change');
@@ -7339,7 +6647,7 @@ $(function () {
     $('#chb_IsPending').on('change', function () {
 
         const isChecked = $(this).is(':checked');
-       
+
         $('#IsPendingOn').val(isChecked);
 
     });
@@ -8020,12 +7328,6 @@ $(function () {
             displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', 'Please enter the security license No ');
         }
         else {
-
-
-
-            /* $('#txt_securityLicenseNoIR').val('');*/
-
-
             $.ajax({
                 url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
                 type: 'POST',
@@ -8043,21 +7345,13 @@ $(function () {
                     window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
                 }
                 else {
-
-                    // $('#txt_securityLicenseNo').val('');
-                    /*$('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginC4iSettingsPatrol').modal('show');
                     if (result.successCode === 0) {
                         displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
                     }
                 }
             });
-
-
             clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-
-
-
         }
     });
     /* p1 - 203 Admin User Profile - end*/
@@ -8067,12 +7361,6 @@ $(function () {
             displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', 'Please enter the security license No ');
         }
         else {
-
-
-
-            /* $('#txt_securityLicenseNoIR').val('');*/
-
-
             $.ajax({
                 url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
                 type: 'POST',
@@ -8090,21 +7378,13 @@ $(function () {
                     window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
                 }
                 else {
-
-                    // $('#txt_securityLicenseNo').val('');
-                    /*$('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginAuditSite').modal('show');
                     if (result.successCode === 0) {
                         displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', result.successMessage);
                     }
                 }
             });
-
-
             clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-
-
-
         }
     });
     /*for pushing notifications from the control room - start*/
@@ -8167,9 +7447,7 @@ $(function () {
             }
         }
         if (IsAcknowledgeMessage == true) {
-
             Notifications = controlRoomMessage + '</br>' + '     -  ' + 'ACKNOWLEDGED';
-
         }
         // Task p6#73_TimeZone issue -- added by Binoy - Start
         var tmdata = {
@@ -8204,14 +7482,8 @@ $(function () {
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
             }
-            //$('#selectRadioStatus').val('');
-            //$('#btnRefreshActivityStatus').trigger('click');
         });
-
-
     });
-
-
 
     function showDuressCountdownPopup() {
         if ($("#duress_status").text() === "Active") return;
@@ -8250,60 +7522,7 @@ $(function () {
         cancelDuressCountdown();
     });
 
-    //var tId = 0;
-    //$("#duress_btn").mousedown(function () {
-    //    if ($("#duress_status").text() !== "Active") {
-    //        /*timer pause while editing*/
-    //        isPaused = true;
-    //        tId = setTimeout(GFG_Fun, 2500);
-
-    //    }
-    //    return false;
-    //});
-    //$("#duress_btn").mouseup(function () {
-    //    clearTimeout(tId);
-    //});
-
-
-
-
-    /*for touch devices Start */
-    //var touchTimer = 0;
-    //$('#duress_btn').on('touchstart', function (e) {
-    //    // Prevent the default behavior
-    //    e.preventDefault();
-
-    //    if ($("#duress_status").text() !== "Active") {
-    //        console.log('click');
-    //        /*timer pause while editing*/
-    //        isPaused = true;
-    //        touchTimer = setTimeout(GFG_Fun, 2500);
-    //        console.log(isPaused);
-    //        console.log(touchTimer);
-    //        gridGuardLog.clear();
-    //        gridGuardLog.reload();
-    //    }
-    //    return false;
-    //});
-
-    //$('#duress_btn').on('touchend', function () {
-    //console.log('stoped');
-    //// If there is any movement or the touch ends, clear the timer
-    ////clearTimeout(touchTimer);
-    ////isPaused = false;
-    ////});
-
-    //$('#duress_btn').on('pointerup', function (event) {
-    //    // Your logic
-    //    console.log('stoped2');
-    //    clearTimeout(touchTimer);
-    //    isPaused = false;
-    //});
-
-    /*for touch devices end */
-
     /* Get Client Site duress Gps Rading Start*/
-
 
     function GFG_Fun() {
         if ($("#duress_status").text() !== "Active") {
@@ -8346,15 +7565,8 @@ $(function () {
                 gridGuardLog.reload();
                 console.log(result.message);
             });
-
         }
-
     }
-
-
-
-
-
 
     // Task p6#73_TimeZone issue -- added by Binoy - Start
     function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
@@ -8385,8 +7597,6 @@ $(function () {
     }
 
     // Task p6#73_TimeZone issue -- added by Binoy - End
-
-
     function initialize() {
         var geocoder = new google.maps.Geocoder();
         if (navigator.geolocation) {
@@ -8403,8 +7613,6 @@ $(function () {
 
     }
 
-
-
     function getDurressLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function (position) {
@@ -8414,7 +7622,6 @@ $(function () {
             });
         }
     }
-
 
     function reverseGeocode(latitude, longitude) {
         var latlng = new google.maps.LatLng(latitude, longitude);
@@ -8467,15 +7674,6 @@ $(function () {
         $('#generate_logbook_AlldocketList').show();
         $('#generate_kvl_docket').hide();
         $('#print-manual-docket-modal').modal('show')
-        //$('#printDocketForKvlId').val(data.detail.id);
-        //if (data.detail.personOfInterest != null) {
-        //    $('#titlePOIWarningPrint').attr('hidden', false);
-        //    $('#imagesirenprint').attr('hidden', false);
-        //}
-        //else {
-        //    $('#titlePOIWarningPrint').attr('hidden', true);
-        //    $('#imagesirenprint').attr('hidden', true);
-        //}
     });
 
     $('#generate_logbook_AlldocketList').on('click', function () {
@@ -8491,18 +7689,6 @@ $(function () {
         $('#generate_log_AlldocketList').attr('disabled', true);
 
         var ids = [];
-        //$.ajax({
-        //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
-        //    data: { truckRego: null, poi: 'POI' },
-        //    type: 'GET',
-        //    dataType: 'json',
-        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        //}).done(function (result) { 
-        //    var ids = [];
-        //    result.forEach(function (item) {
-        //        ids.push(item.detail.id);
-
-        //    });
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
             data: {
@@ -8538,13 +7724,6 @@ $(function () {
         });
     });
 
-
-
-
-
-
-
-    /*});*/
     //To Generate All PO List stop
 
     $('#btncalendarEventModal').on('click', function () {
@@ -8563,48 +7742,6 @@ $(function () {
         ],
 
     });
-    //let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
-    //    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
-    //    ordering: true,
-    //    info: false,
-    //    searching: true,
-    //    autoWidth: false,
-    //    fixedHeader: false,
-    //    "scrollY": "300px", // Set the desired height for the scrollable area
-    //    "paging": false,
-    //    "footer": true,
-    //    ajax: {
-    //        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
-    //        datatype: 'json',
-
-    //        dataSrc: ''
-    //    },
-    //    columns: [
-    //        { data: 'id', visible: false, title: 'id' },
-    //        {
-    //            data: 'textMessage',
-    //            width: '20%',
-    //           // title: 'Events'
-    //        },
-    //        {
-    //            data: 'formattedStartDate',
-    //            width: '20%',
-    //          //  title: 'Start'
-
-    //        },
-    //        {
-    //            data: 'formattedExpiryDate',
-    //            width: '9%',
-    //           // title: 'Expiry',
-
-    //        },
-
-
-
-
-    //    ],
-
-    //});
 
     //calculate month difference-start
 
@@ -8682,46 +7819,6 @@ $(function () {
         }
     });
 
-    //let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
-    //    autoWidth: false,
-    //    ordering: false,
-    //    searching: false,
-    //    paging: false,
-    //    info: false,
-    //    ajax: {
-    //        url: '/Admin/GuardSettings?handler=LastTimeLogin',
-    //        data: function (d) {
-    //            d.guardId = $('#txtGuardId').val();
-
-    //        },
-    //        dataSrc: ''
-    //    },
-    //    columns: [
-
-    //        {
-    //            data: 'eventDateTime',
-    //            width: "10%",
-    //            render: function (data, type, row) {
-    //                // Convert the date string to a JavaScript Date object
-    //                var date = new Date(data);
-
-    //                // Format the date to display only the date part without the time
-    //                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    //                var additionalData = row.eventDateTimeZoneShort;
-    //                if (additionalData != null) {
-    //                    return formattedDate + ' (' + additionalData + ')';
-    //                }
-    //                else {
-    //                    return formattedDate
-    //                }
-
-    //            }
-    //        }
-
-    //    ],
-
-
-    //});
     /*to view thw audit log report-end*/
 
     //for toggle areas - start
@@ -8966,7 +8063,7 @@ $(function () {
             $('#IsDateFilterEnabledHidden').val(false)
             $('#ComplianceDate').text('Expiry Date (DOE)');
             if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-           
+
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
                 return new Date().toJSON().split('T')[0];
             });
@@ -8991,7 +8088,6 @@ $(function () {
             $(this).html('<i class="fa fa-eye" aria-hidden="true"></i>'); // Change icon to an open eye
         }
     });
-
 
 
     //Start fusion report in auditlog08072024
@@ -9031,37 +8127,9 @@ $(function () {
         pager: { limit: 100, sizes: [10, 50, 100, 500, 1000, 'All'] }
     });
 
-
-    //$('#fusionClientSiteId').select2({
-    //    placeholder: 'Select',
-    //    theme: 'bootstrap4'
-    //});
-
     $('#fusionClientSiteId').on('change', function () {
         gridsitefusionLog.clear();
     });
-
-    //$('#fusionClientType').on('change', function () {
-    //    gridsitefusionLog.clear();
-    //    const clientTypeId = $(this).val();
-    //    const clientSiteControl = $('#fusionClientSiteId');
-    //    clientSiteControl.html('');
-    //    $.ajax({
-    //        url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
-    //        type: 'GET',
-    //        dataType: 'json',
-    //        success: function (data) {
-    //            $('#fusionClientSiteId').append(new Option('Select', '', true, true));
-    //            data.map(function (site) {
-    //                $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
-    //            });
-
-
-    //        }
-    //    });
-
-
-    //});
 
 
     $('#fusionClientSiteId').multiselect({
@@ -9092,9 +8160,6 @@ $(function () {
         });
     });
 
-
-
-
     $('#expand_fusion_audits').on('click', function () {
         gridsitefusionLog.expandAll();
     });
@@ -9102,30 +8167,6 @@ $(function () {
     $('#collapse_fusion_audits').on('click', function () {
         gridsitefusionLog.collapseAll();
     });
-
-
-
-    //function renderDateTimefusion(value, record) {
-    //    // p6#73 timezone bug - Modified by binoy 29-01-2024
-    //    if (record.eventDateTime != null && record.eventDateTime != '') {
-    //        const date = new Date(record.eventDateTime);
-    //        var DateTime = luxon.DateTime;
-    //        var dt1 = DateTime.fromJSDate(date);
-    //        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
-    //        return dt;
-    //    }
-    //    else if (value !== '') {
-    //        const date = new Date(value);
-    //        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    //        let day = date.getDate();
-
-    //        if (day < 10) {
-    //            day = '0' + day;
-    //        }
-
-    //        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
-    //    }
-    //}
 
     function renderDateTimefusion(value, record) {
         if (record.eventDateTime != null && record.eventDateTime != '') {
@@ -9595,6 +8636,7 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (data) {
+                clientSiteControl.html('');
                 data.map(function (site) {
                     clientSiteControl.append($('<option></option>').val(site.value).text(site.text));
                 });
@@ -9613,7 +8655,8 @@ $(function () {
         const clientSiteWandStrikeTagTypeId = $('#wandstrikeTagTypeId');
         const clientSiteWandStrikeTagLabel = $('#wandstrikeTagLabel');
         const clientSiteWandStrikeSmartWandId = $('#wandstrikeSmartWandId');
-
+        const clientSiteWandStrikePatrolCarId = $('#wandstrikePatrolCarId');
+        var isChecked = $('#patrolCarToggle').is(':checked');
 
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=ClientSiteWandAndTags&clientSiteIds=' + $(this).val().join(';'),
@@ -9623,7 +8666,8 @@ $(function () {
             clientSiteWandStrikeTagId.html('');
             clientSiteWandStrikeTagTypeId.html('');
             clientSiteWandStrikeTagLabel.html('');
-            clientSiteWandStrikeSmartWandId.html('');
+
+            /*clientSiteWandStrikePatrolCarId.html('');*/
             data.tagIds.map(function (result) {
                 clientSiteWandStrikeTagId.append($('<option></option>').val(result.value).text(result.text));
             });
@@ -9633,13 +8677,21 @@ $(function () {
             data.tagLabels.map(function (result) {
                 clientSiteWandStrikeTagLabel.append($('<option></option>').val(result.value).text(result.text));
             });
-            data.smartWandIds.map(function (result) {
-                clientSiteWandStrikeSmartWandId.append($('<option></option>').val(result.value).text(result.text));
-            });
+            if (!isChecked || (clientSiteWandStrikePatrolCarId.val().length === 0)) {
+                clientSiteWandStrikeSmartWandId.html('');
+                data.smartWandIds.map(function (result) {
+                    clientSiteWandStrikeSmartWandId.append($('<option></option>').val(result.value).text(result.text));
+                });
+                clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+            }
+            //data.patrolCarIds.map(function (result) {
+            //    clientSiteWandStrikePatrolCarId.append($('<option></option>').val(result.value).text(result.text));
+            //});
             clientSiteWandStrikeTagId.multiselect('rebuild');
             clientSiteWandStrikeTagTypeId.multiselect('rebuild');
             clientSiteWandStrikeTagLabel.multiselect('rebuild');
-            clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+
+            //clientSiteWandStrikePatrolCarId.multiselect('rebuild');
         });
     });
 
@@ -9668,6 +8720,15 @@ $(function () {
         $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
 
         $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+        var isChecked = $('#patrolCarToggle').is(':checked');
+        $('#WandStrikeAuditLogRequest_IspatrolCarToggleOn').val(isChecked);
+        if (isChecked) {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val($('#wandstrikePatrolCarId').val());
+        }
+        else {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val('');
+        }
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(false);
 
         $('#loader').show();
 
@@ -9689,8 +8750,65 @@ $(function () {
             });
     });
 
+    $('#wandstrikePatrolCarId').on('change', function () {
+
+        const clientSiteWandStrikeSmartWandId = $('#wandstrikeSmartWandId');
+
+        $('#WandStrikeAuditLogRequest_ClientSiteId').val($('#wandstrikeClientSiteId').val());
+        $('#WandStrikeAuditLogRequest_LogFromDate').val($('#wandstrikeAudtitFromDate').val());
+        $('#WandStrikeAuditLogRequest_LogToDate').val($('#wandstrikeAudtitToDate').val());
+
+        $('#WandStrikeAuditLogRequest_TagId').val($('#wandstrikeTagId').val());
+        $('#WandStrikeAuditLogRequest_TagTypeId').val($('#wandstrikeTagTypeId').val());
+        //$('#WandStrikeAuditLogRequest_TagLabel').val(encodeURIComponent($('#wandstrikeTagLabel').val()));
+        $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
+
+        $('#WandStrikeAuditLogRequest_SmartWandId').val(clientSiteWandStrikeSmartWandId.val());
+        var isChecked = $('#patrolCarToggle').is(':checked');
+        $('#WandStrikeAuditLogRequest_IspatrolCarToggleOn').val(isChecked);
+        if (isChecked) {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val($('#wandstrikePatrolCarId').val());
+        }
+        else {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val('');
+        }
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=PatrolCarAssociatedSmartWands',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_wandstrike_auditlog_request').serialize(),
+            /*headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },*/
+        })
+            .done(function (data) {
+
+                clientSiteWandStrikeSmartWandId.html('');
+                data.smartWandIds.map(function (result) {
+                    clientSiteWandStrikeSmartWandId.append($('<option></option>').val(result.value).text(result.text));
+                });
+                clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+            });
+    });
+
+    // on toggle change
+    $('#patrolCarToggle').on('change', function () {
+        togglePatrolCar();
+    });
+
+    function togglePatrolCar() {
+
+        var isChecked = $('#patrolCarToggle').is(':checked');
+        if (isChecked)
+            $('#wandstrikePatrolCarId').multiselect('enable');
+        else
+            $('#wandstrikePatrolCarId').multiselect('disable');
+    }
+
     let columnConfig;
-    columnConfig = [        
+    columnConfig = [
         {
             header: "Strike DateTime",
             get: x => convertWandStrikeDateTimeString(
@@ -9724,6 +8842,7 @@ $(function () {
     ];
 
     $('#btnDownloadWandstrikeAuditReportDateTime').on('click', function () {
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(false);
         generateDataForExportToExcel('DATETIME');
     });
 
@@ -9761,10 +8880,38 @@ $(function () {
                 get: x => x.endUser ?? ''
             }
         ];
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(false);
         generateDataForExportToExcel('SITE');
     });
 
-    
+    $('#btnDownloadWandstrikeAuditReportMonSun').on('click', function () {
+        //Change Column export order
+        columnConfig = [
+            {
+                header: "ClientSite",
+                get: x => x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? ''
+            },
+            {
+                header: "Scan",
+                get: x => x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
+            },
+            {
+                header: "TagID",
+                get: x => x.clientSiteSmartWandTagsHitLog?.tagUId ?? ''
+            },
+            {
+                header: "StrikeDateTime",
+                get: x => x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime ?? ''
+            },
+            {
+                header: "GPS",
+                get: x => x.clientSiteSmartWandTagsHitLog?.gpScoordinates ?? ''
+            }
+        ];
+        $('#WandStrikeAuditLogRequest_IncludeAllTagsInStrike').val(true);
+        generateDataForExportToExcel('MONTOSUN');
+    });
+
     function generateDataForExportToExcel(exporttype) {
 
         if ($('#wandstrikeClientSiteId').val().length === 0) {
@@ -9790,6 +8937,15 @@ $(function () {
         $('#WandStrikeAuditLogRequest_TagLabel').val($('#wandstrikeTagLabel').val());
 
         $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+        
+        var isChecked = $('#patrolCarToggle').is(':checked');
+        $('#WandStrikeAuditLogRequest_IspatrolCarToggleOn').val(isChecked);
+        if (isChecked) {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val($('#wandstrikePatrolCarId').val());
+        }
+        else {
+            $('#WandStrikeAuditLogRequest_PatrolCarId').val('');
+        }
 
         $('#loader').show();
 
@@ -9807,6 +8963,10 @@ $(function () {
                     // Sorting and filtering as per site.
                     wandStrikeLogExcel.search(searchtext).order([6, 'asc'], [1, 'asc']).draw();
                 }
+                else if (exporttype === 'MONTOSUN') {
+                    // Sorting and filtering as per site.
+                    wandStrikeLogExcel.search(searchtext).order([6, 'asc'], [7, 'desc'], [1, 'desc']).draw();
+                }
                 else {
                     // Already sorted by api call applying filter.
                     wandStrikeLogExcel.search(searchtext).draw();
@@ -9823,18 +8983,13 @@ $(function () {
                     return obj;
                 });
 
-                //// Optional: Flatten or clean up data if needed
-                //var cleanedData = exportData.map(x => ({
-                //    "Strike DateTime": convertWandStrikeDateTimeString(x.clientSiteSmartWandTagsHitLog?.hitLocalDateTime),
-                //    "SmartWand": x.clientSiteSmartWandTagsHitLog?.smartWandNameId ?? '',
-                //    "Tag ID": x.clientSiteSmartWandTagsHitLog?.tagUId ?? '',
-                //    "Tag Type": x.smartWandType ?? '',
-                //    "End User": x.endUser ?? '',
-                //    "Client Site": x.clientSiteSmartWandTagsHitLog?.loggedInClientSite?.name ?? '',
-                //    "Scan": x.clientSiteSmartWandTagsHitLog?.labelDescription ?? ''
-                //}));
+                if (exporttype === 'MONTOSUN') {
+                    await exportStyledExcel(cleanedData);
+                }
+                else {
+                    await exportToExcel(cleanedData);
+                }
 
-                await exportToExcel(cleanedData);
                 $('#loader').hide();
             })
             .fail(function (xhr, status, error) {
@@ -9845,9 +9000,6 @@ $(function () {
             });
     };
 
-
-    
-
     async function exportToExcel(cleanedData) {
 
         const workbook = new ExcelJS.Workbook();
@@ -9855,12 +9007,7 @@ $(function () {
 
         if (!cleanedData || cleanedData.length === 0) return;
 
-        //// Define columns from keys
-        //const columns = Object.keys(cleanedData[0]).map(key => ({
-        //    header: key,
-        //    key: key
-        //}));
-                
+
         const columns = columnConfig.map(col => ({
             header: col.header,
             key: col.header
@@ -9916,6 +9063,255 @@ $(function () {
         saveAs(new Blob([buffer]), fileName);
     }
 
+    async function exportStyledExcel(data) {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Patrol Report');
+
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        // ---------- STYLES ----------
+        const headerFill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4F81BD' } // blue
+        };
+
+        const subHeaderFill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD9E1F2' } // light blue
+        };
+
+        const borderStyle = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+        };
+
+        const centerAlign = { vertical: 'middle', horizontal: 'center' };
+
+        // ---------- HEADERS ----------
+        worksheet.getCell(2, 1).value = "Client Site";
+        worksheet.getCell(2, 2).value = "Scan";
+        worksheet.getCell(2, 3).value = "Tag ID";
+
+        worksheet.getCell(2, 1).fill = headerFill;
+        worksheet.getCell(2, 2).fill = headerFill;
+        worksheet.getCell(2, 3).fill = headerFill;
+
+        worksheet.getCell(2, 1).alignment = centerAlign;
+        worksheet.getCell(2, 2).alignment = centerAlign;
+        worksheet.getCell(2, 3).alignment = centerAlign;
+
+        let col = 4;
+
+        // Day headers
+        days.forEach(day => {
+            worksheet.mergeCells(2, col, 2, col + 1);
+            const cell = worksheet.getCell(2, col);
+            cell.value = day;
+            cell.fill = headerFill;
+            cell.alignment = centerAlign;
+            cell.border = borderStyle;
+            col += 2;
+        });
+
+        // Sub headers
+        col = 4;
+        days.forEach(() => {
+            let dtCell = worksheet.getCell(3, col);
+            let gpsCell = worksheet.getCell(3, col + 1);
+
+            dtCell.value = "Date/Time";
+            gpsCell.value = "GPS";
+
+            dtCell.fill = subHeaderFill;
+            gpsCell.fill = subHeaderFill;
+
+            dtCell.alignment = centerAlign;
+            gpsCell.alignment = centerAlign;
+
+            dtCell.border = borderStyle;
+            gpsCell.border = borderStyle;
+
+            col += 2;
+        });
+
+        // ---------- DATA TRANSFORM ----------
+        const grouped = transformData(data);
+
+        let rowIndex = 4;
+
+        grouped.forEach(site => {
+
+            const startRow = rowIndex;
+
+            const scans = Object.values(site.scans);
+
+            scans.forEach(scanItem => {
+
+                let colIndex = 4;
+
+                // Scan column
+                worksheet.getCell(rowIndex, 2).value = scanItem.scan;
+                worksheet.getCell(rowIndex, 2).border = borderStyle;
+                worksheet.getCell(rowIndex, 2).alignment = { wrapText: true, vertical: 'top' };
+
+                // Tag ID column
+                worksheet.getCell(rowIndex, 3).value = scanItem.tagId;
+                worksheet.getCell(rowIndex, 3).border = borderStyle;
+                worksheet.getCell(rowIndex, 3).alignment = { wrapText: true, vertical: 'top' };
+
+                days.forEach(day => {
+
+                    const entries = scanItem.days[day] || [];
+
+                    let dtCell = worksheet.getCell(rowIndex, colIndex);
+                    let gpsCell = worksheet.getCell(rowIndex, colIndex + 1);
+
+                    if (entries.length > 0) {
+                        dtCell.value = entries.map(e => patrolCarExcelExportDateFormat(e.dateTime)).join('\n');
+
+                        //gpsCell.value = entries.map(e => ({
+                        //    text: "GPS",
+                        //    hyperlink: `https://maps.google.com/?q=${-37.81805, 145.1849757}`
+                        //}));
+                        if (entries[0].gps != '') {
+                            gpsCell.value = {
+                                text: `View In Map`,
+                                hyperlink: `https://maps.google.com/?q=${entries[0].gps}`
+                            };
+                            gpsCell.alignment = { wrapText: true, horizontal: 'center' };
+                        }
+                    }
+
+                    dtCell.alignment = { wrapText: true, vertical: 'top' };
+                    gpsCell.alignment = { wrapText: true, vertical: 'top' };
+
+                    dtCell.border = borderStyle;
+                    gpsCell.border = borderStyle;
+
+                    colIndex += 2;
+                });
+
+                worksheet.getRow(rowIndex).height = 15;
+
+                rowIndex++;
+            });
+
+            const endRow = rowIndex - 1;
+
+            // Merge Client Site column
+            worksheet.mergeCells(startRow, 1, endRow, 1);
+
+            const mergedCell = worksheet.getCell(startRow, 1);
+            mergedCell.value = site.clientSite;
+            mergedCell.alignment = { vertical: 'top', horizontal: 'left' };
+            mergedCell.border = borderStyle;
+
+            // Apply border to merged range
+            for (let r = startRow; r <= endRow; r++) {
+                worksheet.getCell(r, 1).border = borderStyle;
+            }
+
+            // Add grey separator row
+            const separatorRow = worksheet.getRow(rowIndex);
+
+            separatorRow.height = 15;
+
+            for (let c = 1; c <= (3 + days.length * 2); c++) {
+                let cell = worksheet.getCell(rowIndex, c);
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFD9D9D9' } // grey
+                };
+            }
+
+            rowIndex++;
+        });
+
+        // ---------- COLUMN WIDTH ----------
+        worksheet.columns.forEach((col, i) => {
+            if (i === 0) col.width = 60; // Client Site Column
+            else if (i === 1) col.width = 45; // Scan Column
+            else if (i === 2) col.width = 16; // Tag ID Column
+            else if (i === 3 || i === 5 || i === 7 || i === 9 || i === 11 || i === 13 || i === 15) col.width = 18; // Date Columns
+            else if (i === 4 || i === 6 || i === 8 || i === 10 || i === 12 || i === 14 || i === 16) col.width = 12.6; // GPS  Columns
+            else col.width = 22;
+        });
+
+        // ---------- FREEZE HEADER ----------
+        worksheet.views = [
+            { state: 'frozen', ySplit: 3 }
+        ];
+
+        // ---------- EXPORT ----------        
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        const fromDate = $('#wandstrikeAudtitFromDate').val();
+        const toDate = $('#wandstrikeAudtitToDate').val();
+
+        const fileName = `Wand Strike Data Logs Mon-Sun - ${fromDate} to ${toDate}.xlsx`;
+
+        saveAs(new Blob([buffer]), fileName);
+    }
+
+    function transformData(data) {
+        const result = {};
+
+        data.forEach(item => {
+            const date = new Date(item.StrikeDateTime);
+            const day = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+            //const key = `${item.ClientSite}||${item.Scan}`;
+
+            const site = item.ClientSite;
+            const scan = item.Scan;
+            const tagid = item.TagID;
+
+            if (!result[site]) {
+                result[site] = {
+                    clientSite: site,
+                    scans: {}
+                };
+            }
+
+            if (!result[site].scans[scan]) {
+                result[site].scans[scan] = {
+                    scan: scan,
+                    tagId: tagid,
+                    days: {}
+                };
+            }
+
+            if (!result[site].scans[scan].days[day]) {
+                result[site].scans[scan].days[day] = [];
+            }
+
+            result[site].scans[scan].days[day].push({
+                dateTime: date,
+                gps: item.GPS
+            });
+
+        });
+
+        return Object.values(result);
+    }
+
+    function patrolCarExcelExportDateFormat(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        else {
+            const date = new Date(value);
+            var DateTime = luxon.DateTime;
+            var dt1 = DateTime.fromJSDate(date);
+            var dt = dt1.toFormat('dd/MM/yyyy @ HH:mm');
+            return dt;
+        }
+    }
 
     $('#btnDownloadWandstrikeAuditZip').on('click', function () {
         if ($('#wandstrikeClientSiteId').val().length === 0) {
@@ -9938,12 +9334,6 @@ $(function () {
             url: '/Admin/AuditSiteLog?handler=DownloadWandStrikeLogZip',
             type: 'POST',
             dataType: 'json',
-            //data: {
-            //    clientSiteId: $('#fusionClientSiteId').val().join(';'),
-            //    logFromDate: $('#fusionAudtitFromDate').val(),
-            //    logToDate: $('#fusionAudtitToDate').val(),
-            //    keywordDownSelect: $('#FusionKeydownselect').val()
-            //},
             data: $('#form_wandstrike_auditlog_request').serialize(),
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         })
@@ -9981,6 +9371,7 @@ $(function () {
     }
 
     // WandStrike -- End
+
     //p9-Issue 1-start
     $('#Rooster_ClientType').on('change', function () {
         populateClientSitesForRooster();
@@ -10066,8 +9457,6 @@ let gridGuardLicensesAndLicence = $('#tbl_guard_licensesAndCompliance').DataTabl
                             '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>';
                     }
                 }
-
-
             },
             defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
                 '<button class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
@@ -10092,22 +9481,6 @@ let gridGuardLicensesAndLicence = $('#tbl_guard_licensesAndCompliance').DataTabl
             var ExpiryDate = new Date(row.expiryDate);
             var timeDifference = ExpiryDate - currentDate;
             var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-            //var statusColor = 'green';
-
-
-            //if (row.dateType == true) {
-            //    statusColor = 'green';
-            //}
-            //else if (row.expiryDate != null) {
-            //    if (daysDifference <= 45) {
-            //        statusColor = 'yellow';
-            //    }
-
-            //    if (ExpiryDate < currentDate && row.dateType != true) {
-            //        statusColor = 'red';
-            //    }
-            //}
-
 
             return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + row.statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
         }
@@ -10150,49 +9523,33 @@ $('#btnTimesheetConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
 
     var guardLicNo = $('#GuardDownloadSop_SecurityNo').val();
-    var pinField = $('#GuardDownloadSop_PIN');
-    var guardPin = pinField.length > 0 ? pinField.val() : "ADMIN";
+    var pin = $('#GuardDownloadSop_PIN').val();
 
-    if (!guardLicNo) {
-        $('#AuthGuardForSopDwnldValidationSummary1').html('Please enter License Number.');
+    if (!guardLicNo || !pin) {
+        $('#AuthGuardForSopDwnldValidationSummary1').html('Please enter both license number and PIN.');
         return;
     }
 
     $('#loader').show();
 
-    // 1. Get Guard ID from License No
     $.ajax({
-        url: '/RoosterHub?handler=GuardID&LicenseNo=' + guardLicNo,
-        type: 'GET',
-        dataType: 'json'
-    }).done(function (guardId) {
-        if (!guardId || guardId <= 0) {
-            $('#AuthGuardForSopDwnldValidationSummary1').html('Invalid License Number.');
-            $('#loader').hide();
-            return;
-        }
-
-        // 2. Verify PIN if not Admin
-        if (guardPin !== "ADMIN") {
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
-                type: 'POST',
-                data: { guardId: guardId, key: guardPin },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (result) {
-                if (result.accessPermission) {
-                    proceedToTimesheetModal(guardLicNo, guardId);
-                } else {
-                    $('#AuthGuardForSopDwnldValidationSummary1').html(result.successMessage || 'Incorrect PIN.');
-                    $('#loader').hide();
-                }
-            });
+        url: '/RoosterHub?handler=VerifyGuardRosterAuth',
+        type: 'POST',
+        data: {
+            licenseNo: guardLicNo,
+            pin: pin
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+            proceedToTimesheetModal(guardLicNo, result.guardId || 0);
         } else {
-            // Admin Bypass
-            proceedToTimesheetModal(guardLicNo, guardId);
+            $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
         }
-    }).fail(function () {
-        $('#AuthGuardForSopDwnldValidationSummary1').html('Error verifying guard details.');
+    }).fail(function (xhr, status, error) {
+        console.error('AJAX error:', status, error);
+        $('#AuthGuardForSopDwnldValidationSummary1').html('An error occurred during verification.');
+    }).always(function () {
         $('#loader').hide();
     });
 
@@ -10244,17 +9601,6 @@ $('#btnBookingAuthConfirm').on('click', function () {
     });
 });
 
-$(document).on('show.bs.modal', '#mdlAuthBookingAccess', function () {
-    $('#BookingAuth_SecurityNo').val('');
-    $('#BookingAuth_PIN').val('');
-    $('#bookingAuthValidationSummary').html('');
-});
-
-$(document).on('hidden.bs.modal', '#mdlAuthBookingAccess', function () {
-    $('#BookingAuth_SecurityNo').val('');
-    $('#BookingAuth_PIN').val('');
-    $('#bookingAuthValidationSummary').html('');
-});
 
 $('#btnTimesheetSiteConfirm').on('click', function () {
     $('#AuthGuardForSopDwnldValidationSummary1').html('');
@@ -10341,12 +9687,6 @@ $('#btnGuardRosterUpdate').on('click', function () {
 
             }
         });
-
-
-
-
-
-
     }
 });
 
@@ -10387,9 +9727,6 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
         return; // Exit the function if validation fails
     }
 
-
-
-
     var $btn = $('#btnDownloadTimesheetFrequencyRoster');
     var originalText = $btn.text();
     $btn.text('Downloading...').prop('disabled', true);
@@ -10409,11 +9746,6 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
         if (response.statusCode === -1) {
 
         } else {
-
-
-
-
-
             var newTab = window.open(response.fileName, '_blank');
             if (!newTab) {
 
@@ -10422,10 +9754,10 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
                 a.download = "TimeSheet_Report";
                 a.click();
             }
-
         }
     });
 });
+
 $('#btnDownloadTimesheetRoster').on('click', function (e) {
     var startDate1 = $('#startDateRoster').val();
     var endDate1 = $('#endDateRoster').val();
@@ -10435,9 +9767,6 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
         alert("Please select both start date and end date.");
         return; // Exit the function if validation fails
     }
-
-
-
 
     var $btn = $('#btnDownloadTimesheetRoster');
     var originalText = $btn.text();
@@ -10460,11 +9789,6 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
         if (response.statusCode === -1) {
 
         } else {
-
-
-
-
-
             var newTab = window.open(response.fileName, '_blank');
             if (!newTab) {
 
@@ -10473,16 +9797,8 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
                 a.download = "TimeSheet_Report";
                 a.click();
             }
-
         }
     });
-
-
-
-
-
-
-
 });
 
 $('#btnDownloadTimesheetFrequencyBulk').on('click', function (e) {
@@ -10593,9 +9909,6 @@ if (typeof gridGuardLog !== 'undefined') {
     window.gridGuardLog = gridGuardLog;
 }
 
-
-
-
 $(function () {
     // Roster Dashboard Site Selector logic
     $('#RosterSelector_ClientType').on('change', function () {
@@ -10647,7 +9960,8 @@ $(function () {
                 $('#mdlAuthGuardForRosterSelector').modal('hide');
                 // Open the roster modal for the selected site
                 if (typeof openGuardRosterPortal === 'function') {
-                    openGuardRosterPortal(siteId, result.isAdminRoster, result.guardId);
+                    var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
+                    openGuardRosterPortal(siteId, result.isAdminRoster, result.guardId, result.isROEditor, fromLogbook);
                 } else {
                     alert('Roster component not loaded correctly.');
                 }

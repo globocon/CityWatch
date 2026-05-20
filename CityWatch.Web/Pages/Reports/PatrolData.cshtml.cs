@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -47,6 +47,7 @@ namespace CityWatch.Web.Pages.Reports
 {
     public class PatrolDataModel : PageModel
     {
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, CityWatch.Data.Models.PatrolDataReport> _reportCache = new();
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
         private readonly IPatrolDataReportService _irChartDataService;
@@ -141,6 +142,7 @@ namespace CityWatch.Web.Pages.Reports
         public IActionResult OnPostGenerateReport()
         {
             var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+            _reportCache[HttpContext.Session.Id] = patrolDataReport;
             var results = patrolDataReport.Results;
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
@@ -406,14 +408,19 @@ namespace CityWatch.Web.Pages.Reports
             if (!Directory.Exists(excelFileDir))
                 Directory.CreateDirectory(excelFileDir);
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
+            var pdfFileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.pdf";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
-            return new JsonResult(new { results, fileName });
+            PatrolReportGenerator.CreatePdfFile(dataTable, Path.Combine(excelFileDir, pdfFileName));
+            return new JsonResult(new { results, fileName, pdfFileName });
         }
 
 
         public IActionResult OnPostGenerateReportGraphFirstTab()
         {
-            var patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+            if (!_reportCache.TryRemove(HttpContext.Session.Id, out var patrolDataReport))
+            {
+                patrolDataReport = _irChartDataService.GetDailyPatrolDataNew(ReportRequest);
+            }
             var results = patrolDataReport.Results;
 
             //var reportFileName = results.FirstOrDefault().fileNametodownload;
@@ -1477,9 +1484,11 @@ namespace CityWatch.Web.Pages.Reports
             if (!Directory.Exists(excelFileDir))
                 Directory.CreateDirectory(excelFileDir);
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
+            var pdfFileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.pdf";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
+            PatrolReportGenerator.CreatePdfFile(dataTable, Path.Combine(excelFileDir, pdfFileName));
 
-            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart });
+            return new JsonResult(new { results, fileName, pdfFileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart });
         }
 
         public IActionResult OnPostGenerateReportGraphFourthTab()

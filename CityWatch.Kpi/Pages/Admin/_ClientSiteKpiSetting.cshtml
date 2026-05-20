@@ -1,4 +1,4 @@
-﻿@using CityWatch.Kpi.Services
+@using CityWatch.Kpi.Services
 @using CityWatch.Data.Helpers
 @using CityWatch.Data.Models
 @using CityWatch.Data.Providers;
@@ -420,6 +420,14 @@
                 <div class="tab-pane" id="KpiLBsmartWandsTab" role="tabpanel" aria-labelledby="KpiLBsmartWandsTab">
                     <div class="row m-0">
                         <div class="col-md-12 text-right pt-3">
+                             @* This is required to add Wand Tags to Smart Wands Gijgo grid. *@
+                            <select id="smartwandPatrolCarGroupsDDL" hidden>
+                                <option value="-1">&nbsp;</option>
+                                @foreach (var patrolcarGroup in ViewDataService.GetAllPatrolCars())
+                                {
+                                    <option value="@patrolcarGroup.Value">@patrolcarGroup.Text</option>
+                                }
+                            </select>
                             <button class="btn btn-success mb-3" id="add_smart_wand"><i class="fa fa-plus mr-2"></i>Add Smart Wand</button>
                         </div>
                     </div>
@@ -2170,58 +2178,75 @@
                         <input type="hidden" name="RCActionList.ClientSiteID" asp-for="@Model.ClientSiteId" />
 
                         <h6>Site Alarm SOP's:</h6>
-                        <table class="table table-bordered tbl-settings" id="tbl_summaryImage1">
-                            @*  <thead>
-                            <tr>
+                        <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
+                            <thead>
+                                <tr>
+                                    <th style="width:370px">File Name</th>
+                                    <th style="width:370px">Date & Time Uploaded</th>
+                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    @{
+                                        var filename = string.Empty;
+                                        var filebase64 = string.Empty;
+                                        string[] myArray = null;
 
-                            <th style="width:370px">File Name</th>
-                            <th style="width:370px">Date & Time Uploaded</th>
-                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                            </tr>
-                            </thead> *@
-                            @*   <tbody>
-                            <tr>
-                            @{
-                            if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
-                            {
-                            <td class="align-middle" id="summary_imageRC">@Model.rclistKP.Imagepath</td>
-                            }
-                            else
-                            {
-                            <td class="align-middle" id="summary_imageRC"></td>
-                            }
+                                        if (Model.rclistKP.Imagepath != null && Model.rclistKP.Imagepath != "")
+                                        {
+                                            try
+                                            {
+                                                myArray = Model.rclistKP.Imagepath.ToString().Split(":-:");
+                                                if (myArray.Length > 1)
+                                                {
+                                                    filebase64 = myArray[1];
+                                                    filename = myArray[0];
+                                                }
+                                                else
+                                                {
+                                                    filename = myArray[0];
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                filename = Model.rclistKP.Imagepath;
+                                            }
+                                        }
 
-                            if (Model.rclistKP.DateandTimeUpdated != null || Model.rclistKP.DateandTimeUpdated != "")
-                            {
-                            <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
-                            }
-                            else
-                            {
-                            <td class="align-middle" id="summary_image_updatedRC"></td>
-                            }
-                            }
-                            <td class="text-center">
-                            <label class="btn btn-success mb-0">
+                                        <td class="align-middle" id="summary_imageRC">@filename</td>
 
-                            <i class="fa fa-upload mr-2"></i>Replace
-                            <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
+                                        if (Model.rclistKP.DateandTimeUpdated != null && Model.rclistKP.DateandTimeUpdated != "")
+                                        {
+                                            <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="align-middle" id="summary_image_updatedRC"></td>
+                                        }
+                                    }
+                                    <td class="text-center">
+                                        <label class="btn btn-success mb-0">
 
-                            </label>
-                            @{
-                            if (Model.rclistKP.Imagepath != string.Empty)
-                            {
-                            <a href="/RCImage/@Model.rclistKP.Imagepath" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                            }
-                            else
-                            {
-                            <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                            }
-                            }
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
 
-                            <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
-                            </td>
-                            </tr>
-                            </tbody> *@
+                                        </label>
+                                        @{
+                                            if (!string.IsNullOrEmpty(filebase64))
+                                            {
+                                                <a href="@filebase64" download="@filename" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                            }
+                                            else
+                                            {
+                                                <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                            }
+                                        }
+
+                                        <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                    </td>
+                                </tr>
+                            </tbody>
                         </table><br />
 
 

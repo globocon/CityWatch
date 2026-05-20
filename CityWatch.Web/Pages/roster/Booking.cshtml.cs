@@ -57,6 +57,8 @@ namespace CityWatch.Web.Pages.roster
         public List<IncidentReportField> CallsignList { get; set; }
         public bool IsLocked { get; set; }
         public string ActiveTab { get; set; }
+        public string RosterAccessRole { get; set; }
+        public int? RestrictedSiteId { get; set; }
         public List<PublicHolidayDayInfo> WeeklyHolidays { get; set; }
 
         public class PublicHolidayDayInfo
@@ -90,6 +92,33 @@ namespace CityWatch.Web.Pages.roster
             SelectedGroupId = groupId;
             SelectedBinderId = binderId;
             ActiveTab = tab ?? "projects";
+            
+            // Clear session restrictions if Administrator is loading the page directly without siteId
+            var qSiteId = Request.Query["siteId"];
+            if (User.IsInRole("Administrator") && string.IsNullOrEmpty(qSiteId))
+            {
+                HttpContext.Session.Remove("RestrictedSiteId");
+                HttpContext.Session.Remove("BookingAccessRole");
+                RestrictedSiteId = null;
+                RosterAccessRole = "GSS";
+            }
+            else
+            {
+                RestrictedSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
+                RosterAccessRole = HttpContext.Session.GetString("BookingAccessRole") ?? "GSS";
+            }
+            
+            // If siteId is passed, check if it's an ROEditor access and set session
+            if (!string.IsNullOrEmpty(qSiteId) && int.TryParse(qSiteId, out int sid))
+            {
+                // Verify if the user has ROEditor access for this site/global
+                // For now, if they are coming from the Logbook (which we assume is trusted here), 
+                // we set the restriction.
+                HttpContext.Session.SetInt32("RestrictedSiteId", sid);
+                HttpContext.Session.SetString("BookingAccessRole", "ROEditor");
+                RestrictedSiteId = sid;
+                RosterAccessRole = "ROEditor";
+            }
 
             PayRatesList = _context.PayRates
                 .Where(x => !x.IsDeleted)
@@ -226,8 +255,18 @@ namespace CityWatch.Web.Pages.roster
 
             var endDate = startDate.AddDays(6).AddDays(1).AddSeconds(-1);
 
-            var groupSites = await _context.RosterGroupSites
-                .Where(x => x.RosterGroupId == groupId)
+            var groupSitesQuery = _context.RosterGroupSites
+                .Where(x => x.RosterGroupId == groupId);
+
+            // Filter by Restricted Site if ROEditor
+            var rSiteId = HttpContext.Session.GetInt32("RestrictedSiteId");
+            var role = HttpContext.Session.GetString("BookingAccessRole");
+            if (role == "ROEditor" && rSiteId.HasValue)
+            {
+                groupSitesQuery = groupSitesQuery.Where(x => x.ClientSiteId == rSiteId.Value);
+            }
+
+            var groupSites = await groupSitesQuery
                 .Include(x => x.ClientSite)
                 .ThenInclude(x => x.ClientType)
                 .ToListAsync();
@@ -298,10 +337,41 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { results = rosterData, projectStatus = rosterData.FirstOrDefault()?.status ?? "Live" });
         }
 
-        public JsonResult OnGetSearchProviders(string search)
+        public JsonResult OnGetSearchProviders(string search, int? siteId)
         {
-            var providers = _viewDataService.ProviderList
-                .Where(x => !string.IsNullOrEmpty(x.Text) && x.Text != "Select" && (string.IsNullOrEmpty(search) || x.Text.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            var providerNames = new List<string>();
+
+            if (siteId.HasValue && siteId.Value > 0)
+            {
+                var mainProviders = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && !string.IsNullOrEmpty(x.ProviderName))
+                    .Select(x => x.ProviderName)
+                    .Distinct()
+                    .ToList();
+
+                var reliefProviders = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && !string.IsNullOrEmpty(x.ReliefProviderName))
+                    .Select(x => x.ReliefProviderName)
+                    .Distinct()
+                    .ToList();
+
+                providerNames = mainProviders.Union(reliefProviders).Distinct().ToList();
+            }
+
+            var query = _viewDataService.ProviderList
+                .Where(x => !string.IsNullOrEmpty(x.Text) && x.Text != "Select");
+
+            if (providerNames.Any())
+            {
+                query = query.Where(x => providerNames.Contains(x.Text, StringComparer.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Text.Contains(search, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var providers = query
                 .Select(x => new { id = x.Value, text = x.Text })
                 .ToList();
 
@@ -356,8 +426,17 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, bool ignoreUnavailability = false)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, decimal? payRate = null, bool ignoreUnavailability = false)
         {
+            if (payRateId.HasValue && payRate.HasValue)
+            {
+                var pr = await _context.PayRates.FindAsync(payRateId.Value);
+                if (pr != null && pr.GuardPayRate != payRate.Value)
+                {
+                    pr.GuardPayRate = payRate.Value;
+                    // No need for separate save here, it will be saved with the shift
+                }
+            }
             // Lock Check
             var today = DateTime.Today;
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
@@ -386,7 +465,9 @@ namespace CityWatch.Web.Pages.roster
             }
 
             // Validation 3: Conflict Detection (If Guard is selected)
-            if (guardId.HasValue)
+            // If a relief guard or relief provider is assigned, the main guard is not actually working this shift.
+            // Therefore, we skip the conflict and unavailability checks for the main guard for this specific shift instance.
+            if (guardId.HasValue && !reliefGuardId.HasValue && string.IsNullOrEmpty(reliefProviderName))
             {
                 var conflict = await _context.RosterSchedules
                     .Where(x => ((x.GuardId == guardId && x.ReliefGuardId == null) || x.ReliefGuardId == guardId) &&
@@ -794,11 +875,39 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true });
         }
 
-        public JsonResult OnGetSearchGuards(string search)
+        public JsonResult OnGetSearchGuards(string search, int? siteId)
         {
             var providerList = _viewDataService.ProviderList;
-            var guards = _context.Guards
-                .Where(x => x.IsActive && (string.IsNullOrEmpty(search) || x.Name.Contains(search) || (x.SecurityNo != null && x.SecurityNo.Contains(search))))
+            var query = _context.Guards.Where(x => x.IsActive);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || (x.SecurityNo != null && x.SecurityNo.Contains(search)));
+            }
+
+            if (siteId.HasValue && siteId.Value > 0)
+            {
+                var mainGuardIds = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.GuardId != null)
+                    .Select(x => x.GuardId.Value)
+                    .Distinct()
+                    .ToList();
+
+                var reliefGuardIds = _context.RosterSchedules
+                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.ReliefGuardId != null)
+                    .Select(x => x.ReliefGuardId.Value)
+                    .Distinct()
+                    .ToList();
+
+                var siteGuardIds = mainGuardIds.Union(reliefGuardIds).Distinct().ToList();
+
+                if (siteGuardIds.Any())
+                {
+                    query = query.Where(x => siteGuardIds.Contains(x.Id));
+                }
+            }
+
+            var guards = query
                 .Select(x => new {
                     id = x.Id,
                     text = x.Name + (string.IsNullOrEmpty(x.SecurityNo) ? "" : " - " + x.SecurityNo),
@@ -825,6 +934,26 @@ namespace CityWatch.Web.Pages.roster
                 .ToList();
 
             return new JsonResult(new { results = guards });
+        }
+
+        public JsonResult OnGetSearchCallsigns(string search, int? siteId)
+        {
+            var query = _context.IncidentReportFields
+                .Where(x => x.TypeId == ReportFieldType.CallSign);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search));
+            }
+
+            var results = query
+                .Select(x => new {
+                    id = x.Id,
+                    text = x.Name
+                })
+                .ToList();
+
+            return new JsonResult(new { results = results });
         }
 
         public async Task<IActionResult> OnPostDeleteGroup(int groupId)
@@ -1278,6 +1407,31 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
+        public async Task<JsonResult> OnGetGuardDailySchedule(int guardId, DateTime date)
+        {
+            var schedules = await _context.RosterSchedules
+                .Include(x => x.ClientSite)
+                .Include(x => x.Guard)
+                .Include(x => x.ReliefGuard)
+                .Where(x => (x.GuardId == guardId || x.ReliefGuardId == guardId) &&
+                            !x.IsDeleted && x.Status != RosterShiftStatus.Cancelled &&
+                            x.ShiftStart.Date <= date.Date && x.ShiftEnd.Date >= date.Date)
+                .OrderBy(x => x.ShiftStart)
+                .Select(x => new
+                {
+                    projectName = x.ClientSite != null ? x.ClientSite.Name : "Unknown",
+                    date = x.ShiftStart.ToString("dd MMM yyyy"),
+                    startTime = x.ShiftStart.ToString("HH:mm"),
+                    endTime = x.ShiftEnd.ToString("HH:mm"),
+                    isRelief = x.ReliefGuardId == guardId,
+                    reliefName = x.ReliefGuardId != null ? x.ReliefGuard.Name : x.ReliefProviderName,
+                    mainGuardName = x.GuardId != null ? x.Guard.Name : x.ProviderName
+                })
+                .ToListAsync();
+
+            return new JsonResult(new { success = true, data = schedules });
+        }
+
         public JsonResult OnGetSearchSites(string search)
         {
             var results = _viewDataService.GetUserClientSites(string.Empty, search);
@@ -1314,6 +1468,7 @@ namespace CityWatch.Web.Pages.roster
                     x.Id,
                     x.Name,
                     x.CoverFileName,
+                    x.AccessKey,
                     CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
                 })
                 .OrderBy(x => x.Name)

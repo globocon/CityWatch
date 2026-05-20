@@ -8,7 +8,11 @@
 
 @inject IGuardDataProvider guarddataProvider
 @inject IGuardLogDataProvider _guardLogDataProvider
-
+<style>
+    .no-docs {
+        pointer-events: none;
+    }
+</style>
 <div class="modal" tabindex="-1" role="dialog" id="loggedGuardsInfoModal">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
@@ -327,10 +331,10 @@
                                                             @* <a class="btn btn-outline-primary w-100 text-primary" id="download_imageRCList" target="_blank"><i class="fa fa-download mr-1"></i>Download</a> @*Download*@
                                                             <div class="row">
                                                                 <div class="col-md-6">
-                                                                    <a class="btn btn-outline-primary w-150 text-primary" id="download_imageRCList" target="_blank">Alarms</a> @*Alams*@
+                                                                    <a class="btn btn-outline-primary w-150 text-primary no-docs" id="download_imageRCList" target="_blank">Alarms</a> @*Alams*@
                                                                 </div>
                                                                 <div class="col-md-6">
-                                                                    <a class="btn btn-outline-primary w-150 text-primary" id="download_siteRCSOPList" target="_blank">Site</a> @*SOP*@
+                                                                    <a class="btn btn-outline-primary w-150 text-primary no-docs" id="download_siteRCSOPList" target="_blank">Site</a> @*SOP*@
                                                                 </div>
                                                             </div>
                                                         </div>

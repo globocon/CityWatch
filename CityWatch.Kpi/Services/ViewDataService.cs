@@ -63,6 +63,7 @@ namespace CityWatch.Kpi.Services
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         List<SelectListItem> getSmartWandForTourmodel();
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
+        public List<SelectListItem> GetAllPatrolCars();
     }
 
     public class ViewDataService : IViewDataService
@@ -71,16 +72,17 @@ namespace CityWatch.Kpi.Services
         private readonly IKpiDataProvider _kpiDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly CityWatchDbContext _context;
         public ViewDataService(IClientDataProvider clientDataProvider,
-            IKpiDataProvider kpiDataProvider,
-            IConfigDataProvider configDataProvider,
-            IGuardDataProvider guardDataProvider, CityWatchDbContext context)
+            IKpiDataProvider kpiDataProvider, IConfigDataProvider configDataProvider, IGuardDataProvider guardDataProvider, 
+            IClientSiteWandDataProvider clientSiteWandDataProvider, CityWatchDbContext context)
         {
             _clientDataProvider = clientDataProvider;
             _kpiDataProvider = kpiDataProvider;
             _configDataProvider = configDataProvider;
             _guardDataProvider = guardDataProvider;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _context = context;
         }
 
@@ -705,6 +707,13 @@ namespace CityWatch.Kpi.Services
                 Console.WriteLine($"Error fetching site tag status: {ex.Message}");
                 return new List<SiteTagStatusPendingNew>();
             }
+        }
+
+        public List<SelectListItem> GetAllPatrolCars()
+        {
+            var sitePatrolCars = new List<SelectListItem>();
+            sitePatrolCars.AddRange(_clientSiteWandDataProvider.GetPatrolCars().OrderBy(x => x.Name).Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+            return sitePatrolCars;
         }
 
     }

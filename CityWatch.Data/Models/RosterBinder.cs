@@ -19,6 +19,8 @@ namespace CityWatch.Data.Models
         public string CoverFileName { get; set; }
         public DateTime? CoverFileDate { get; set; }
 
+        public Guid AccessKey { get; set; } = Guid.NewGuid();
+
         public virtual ICollection<RosterBinderProject> RosterBinderProjects { get; set; }
     }
 }

@@ -100,7 +100,8 @@ namespace CityWatch.Web.Helpers
                 new FormField("IR-NO-KV", "PlateLoadedNo", typeof(bool)),
                 new FormField("PSPF", "PSPFName", typeof(string)),
                 new FormField("HASH", "HASH", typeof(string)),
-                new FormField("IP", "IP", typeof(string))
+                new FormField("IP", "IP", typeof(string)),
+                new FormField("AiDec", "AiDec", typeof(string))
 
             };
         }
