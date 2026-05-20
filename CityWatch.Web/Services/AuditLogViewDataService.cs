@@ -171,7 +171,7 @@ namespace CityWatch.Web.Services
                 .ToList();
 
             List<ClientSiteSmartWandTags> smartwandtags = _clientSiteWandDataProvider.GetAllSmartwandTags();
-            smartwandtags = smartwandtags.Where(x => wsRequest.ClientSiteIds.Contains(x.ClientSiteId)).ToList();
+            smartwandtags = smartwandtags.Where(x => wsRequest.ClientSiteIds.Contains(x.ClientSiteId) && x.IsDeleted == false).ToList();
 
             // Existing ClientSiteId + TagUid combinations
             var existingKeys = logViewModels
