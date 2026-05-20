@@ -2221,43 +2221,36 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
             if (ClientSiteActionListId != 0)
             {
-                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == ClientSiteActionListId);
-                if (sopfiletype.Count() != 0)
+                var unifiedDocs = _guardLogDataProvider.GetUnifiedSiteDocuments(ClientSiteActionListId);
+
+                // SOP's Site (General SOPs)
+                var siteSops = unifiedDocs.Where(x => x.Category == "General SOP").ToList();
+                if (siteSops.Any())
                 {
-                    //ActionListMessage += "SOP's Site:https://cws-ir.com/StaffDocs/" + sopfiletype.Select(x => x.FileName).ToList() ;
-                    foreach (var item in sopfiletype)
+                    foreach (var item in siteSops)
                     {
-                        ActionListMessage += "SOP's Site:" + $"<a href=\"https://cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
+                        ActionListMessage += "SOP's Site:" + $"<a href=\"https://cws-ir.com/{item.FilePath.Replace("\\", "/")}\">Click here</a><br/>";
                     }
-
-                    ActionListMessage += "\r\n";
-                    ActionListMessage += "\r\n";
-
+                    ActionListMessage += "\r\n\r\n";
                 }
                 else
                 {
-                    ActionListMessage += "SOP's Site:";
-                    ActionListMessage += "\r\n";
-                    ActionListMessage += "\r\n";
+                    ActionListMessage += "SOP's Site:\r\n\r\n";
                 }
-                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == ClientSiteActionListId);
-                if (sopAlarmfileType.Count() != 0)
-                {
-                    //ActionListMessage += "SOP's Alarm: https://cws-ir.com/StaffDocs/" + sopAlarmfileType.Select(x => x.FileName).ToList();
-                    //ActionListMessage += "SOP's Alarm:" + $" < a href='https://kpi.cws-ir.com/StaffDocs/{sopfiletype.Select(x => x.FileName).ToList()}'>Click here</a><br/>";
-                    foreach (var item in sopAlarmfileType)
-                    {
-                        ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://kpi.cws-ir.com/StaffDocs/{item.FileName}\">Click here</a><br/>";
-                    }
-                    ActionListMessage += "\r\n";
-                    ActionListMessage += "\r\n";
 
+                // SOP's Alarm (Primary SOP + Legacy Alarm SOPs)
+                var alarmSops = unifiedDocs.Where(x => x.Category == "Primary SOP" || x.Category == "Alarm SOP").ToList();
+                if (alarmSops.Any())
+                {
+                    foreach (var item in alarmSops)
+                    {
+                        ActionListMessage += "SOP's Alarm:" + $"<a href=\"https://kpi.cws-ir.com/{item.FilePath.Replace("\\", "/")}\">Click here</a><br/>";
+                    }
+                    ActionListMessage += "\r\n\r\n";
                 }
                 else
                 {
-                    ActionListMessage += "SOP's Alarm:";
-                    ActionListMessage += "\r\n";
-                    ActionListMessage += "\r\n";
+                    ActionListMessage += "SOP's Alarm:\r\n\r\n";
                 }
             }
             ActionListMessage += "Message";
@@ -2404,27 +2397,37 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 rtn.Landline = LandLine.LandLine;
                 var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
                 rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
+
+                // Unified SOP Approach
+                rtn.UnifiedDocuments = _guardLogDataProvider.GetUnifiedSiteDocuments(clientSiteId);
+                foreach (var doc in rtn.UnifiedDocuments)
+                {
+                    doc.Base64Data = ConvertFileToBase64(doc.FilePath);
+                }
+
                 if (rtn.Imagepath != null)
                 {
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
                 }
-                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
-                if (sopAlarmfileType.Count() != 0)
-                {
-                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
-                }
-                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
-                if (sopfiletype.Count() != 0)
-                {
-                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
 
+                // Compatibility mapping for legacy properties
+                var alarmDocs = rtn.UnifiedDocuments.Where(x => x.Category == "Alarm SOP" || x.Category == "Primary SOP").ToList();
+                if (alarmDocs.Any())
+                {
+                    rtn.SOPAlarmFileNme = alarmDocs.Select(x => x.FileName).ToList();
+                    rtn.SOPAlarmFilePath = alarmDocs.Select(x => x.FilePath).ToList();
+                }
+
+                var generalDoc = rtn.UnifiedDocuments.FirstOrDefault(x => x.Category == "General SOP");
+                if (generalDoc != null)
+                {
+                    rtn.SOPFileNme = generalDoc.FileName;
                 }
                 else
                 {
                     rtn.SOPFileNme = null;
                 }
+
                 rtn.ClientSiteStatus = LandLine.Status;
                 rtn.ExpiredDate = LandLine.StatusDate;
             }
@@ -2435,26 +2438,35 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 //if null assign the value of the SOPFileNme
                 rtn = new RCActionList();
 
-                var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
-                if (sopAlarmfileType.Count() != 0)
+                // Unified SOP Approach
+                rtn.UnifiedDocuments = _guardLogDataProvider.GetUnifiedSiteDocuments(clientSiteId);
+                foreach (var doc in rtn.UnifiedDocuments)
                 {
-                    rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
-                    rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
+                    doc.Base64Data = ConvertFileToBase64(doc.FilePath);
+                }
+
+                // Compatibility mapping for legacy properties
+                var alarmDocs = rtn.UnifiedDocuments.Where(x => x.Category == "Alarm SOP" || x.Category == "Primary SOP").ToList();
+                if (alarmDocs.Any())
+                {
+                    rtn.SOPAlarmFileNme = alarmDocs.Select(x => x.FileName).ToList();
+                    rtn.SOPAlarmFilePath = alarmDocs.Select(x => x.FilePath).ToList();
                 }
 
                 rtn.Landline = LandLine.LandLine;
                 var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
                 rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
 
-                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
-                if (sopfiletype.Count() != 0)
+                var generalDoc = rtn.UnifiedDocuments.FirstOrDefault(x => x.Category == "General SOP");
+                if (generalDoc != null)
                 {
-                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
+                    rtn.SOPFileNme = generalDoc.FileName;
                 }
                 else
                 {
                     rtn.SOPFileNme = null;
                 }
+
                 rtn.ClientSiteStatus = LandLine.Status;
                 rtn.ExpiredDate = LandLine.StatusDate;
             }
@@ -2771,7 +2783,16 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             if (!string.IsNullOrEmpty(imageName))
             {
-                var fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                string fileToConvert;
+                if (imageName.Contains("\\") || imageName.Contains("/"))
+                {
+                    fileToConvert = Path.Combine(_webHostEnvironment.WebRootPath, imageName);
+                }
+                else
+                {
+                    fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                }
+
                 if (System.IO.File.Exists(fileToConvert))
                 {
                     byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);

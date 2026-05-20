@@ -1,4 +1,4 @@
-﻿namespace CityWatch.Kpi.Helpers
+namespace CityWatch.Kpi.Helpers
 {
     public class Settings
     {
@@ -21,6 +21,7 @@
         public string DropboxAppSecret { get; set; }
 
         public bool GuardListOn { get; set; }
+        public string RCActionListKpiImageFolder { get; set; }
 
     }
 }

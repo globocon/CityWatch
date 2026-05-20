@@ -279,16 +279,24 @@ namespace CityWatch.Kpi.Pages.Admin
                 clientSiteKpiSetting.clientSiteMobileAppSettings = _clientSiteMobileAppSettings;
             }
 
-            // Standardize RCActionList loading and Base64 conversion
+            // Standardize RCActionList loading and Base64 conversion with Unified SOPs
             var rcAction = _guardLogDataProvider.GetActionlist(siteId);
-            if (rcAction != null)
+            if (rcAction == null)
             {
-                if (!string.IsNullOrEmpty(rcAction.Imagepath))
-                {
-                    rcAction.Imagepath = rcAction.Imagepath + ":-:" + ConvertFileToBase64(rcAction.Imagepath);
-                }
-                clientSiteKpiSetting.RCActionList = new List<RCActionList> { rcAction };
+                rcAction = new RCActionList { ClientSiteID = siteId };
             }
+
+            rcAction.UnifiedDocuments = _guardLogDataProvider.GetUnifiedSiteDocuments(siteId);
+            foreach (var doc in rcAction.UnifiedDocuments)
+            {
+                doc.Base64Data = ConvertFileToBase64(doc.FilePath);
+            }
+
+            if (!string.IsNullOrEmpty(rcAction.Imagepath))
+            {
+                rcAction.Imagepath = rcAction.Imagepath + ":-:" + ConvertFileToBase64(rcAction.Imagepath);
+            }
+            clientSiteKpiSetting.RCActionList = new List<RCActionList> { rcAction };
 
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
@@ -1061,14 +1069,33 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public string ConvertFileToBase64(string imageName)
         {
-            var rtnstring = string.Empty;
+            string rtnstring = "";
 
             if (!string.IsNullOrEmpty(imageName))
             {
-                // Always use local RCImage folder
-                string summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                // Unified Path Handling: Strip domain if it's a full URL
+                if (imageName.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var uri = new Uri(imageName);
+                        imageName = uri.AbsolutePath.TrimStart('/');
+                    }
+                    catch { }
+                }
 
-                var fileToConvert = Path.Combine(summaryImageDir, imageName);
+                string fileToConvert;
+                // If it contains a slash, it's already a relative path from wwwroot (e.g. StaffDocs/file.pdf)
+                if (imageName.Contains("\\") || imageName.Contains("/"))
+                {
+                    fileToConvert = Path.Combine(_webHostEnvironment.WebRootPath, imageName.Replace("/", "\\"));
+                }
+                else
+                {
+                    // Default for KPI specific images
+                    fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                }
+
                 if (System.IO.File.Exists(fileToConvert))
                 {
                     byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);

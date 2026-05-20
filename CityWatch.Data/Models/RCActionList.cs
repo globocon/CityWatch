@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -45,6 +45,9 @@ namespace CityWatch.Data.Models
         public int ClientSiteStatus { get; set; }
         [NotMapped]
         public DateTime? ExpiredDate { get; set; }
+
+        [NotMapped]
+        public List<UnifiedSiteDocument> UnifiedDocuments { get; set; } = new List<UnifiedSiteDocument>();
 
         [NotMapped]
         public string FormattedExpiredDate { get { return ExpiredDate.HasValue ? ExpiredDate.Value.ToString("dd MMM yyyy") : string.Empty; } }
