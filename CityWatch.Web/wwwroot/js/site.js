@@ -2713,6 +2713,7 @@ $(function () {
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function () {
                 gridClientSiteAccess.reload();
+                onboardClientSiteAccessTables[userId]
                 showStatusNotification(true, 'Saved successfully');
             }).fail(function () {
                 console.log('error');
@@ -7462,6 +7463,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr3Settings.clear();
         gridHr3Settings.reload();
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -7487,6 +7489,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -7510,6 +7513,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
@@ -7531,6 +7535,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
             type: 'GET',
@@ -7564,6 +7569,8 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
+
         $.ajax({
             url: '/Admin/Settings?handler=TimesheetDetails',
             type: 'GET',
@@ -7597,6 +7604,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 7) {
 
@@ -7619,6 +7627,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 8) {
 
@@ -7643,6 +7652,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
 
     }
     else if ($('#hr_settings_fields_types').val() == 9) {
@@ -7651,6 +7661,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 10) {
         $('#AllowancesDiv').show();
@@ -7672,6 +7683,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 11) {
         $('#AllowancesDiv').hide();
@@ -7694,6 +7706,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.show();
         gridHrSettingswithOnboardingHRWelcomePack.reload();
+        $('#OnboardUsersNotifications').show();
     }
     else {
         gridLicenseTypes.hide();
@@ -7707,6 +7720,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHr2Settings.hide()
         gridHr3Settings.hide()
         gridHrSettingswithOnboardingHRWelcomePack.hide();
+        $('#OnboardUsersNotifications').hide();
     }
 });
 if ($('#report_module_types_irtemplate').val() == 1) {
@@ -8123,6 +8137,7 @@ if ($('#hr_settings_fields_types').val() == '') {
     gridHr2Settings.hide()
     gridHr3Settings.hide()
     gridHrSettingswithOnboardingHRWelcomePack.hide();
+    $('#OnboardUsersNotifications').hide();
 
 }
 

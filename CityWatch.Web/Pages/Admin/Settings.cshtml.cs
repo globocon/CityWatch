@@ -4299,33 +4299,49 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnPostSaveCriticalDocumentsForOnboardingUsers(int criticalDocId,int userId,string docIds,int hrId)
         {
-            CriticalDocumentViewModel CriticalDocModel = new CriticalDocumentViewModel();
-            var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
-            var currUserAccess = allUserAccess.Where(x => x.UserId == userId);
-            CriticalDocModel.ClientSiteIds = currUserAccess.Select(x => x.ClientSiteId).ToArray();
-            CriticalDocModel.HRGroupID = hrId;
-            CriticalDocModel.ClientTypeId = currUserAccess.FirstOrDefault().ClientSite.TypeId;
-            CriticalDocModel.DescriptionIds = docIds.Split(",").Select(int.Parse).ToArray();
-            CriticalDocModel.Id = criticalDocId;
-            var results = new List<ValidationResult>();
-            if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
-                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
-
-            var success = true;
-            var message = "Saved successfully";
-            try
+                var success = true;
+                var message = "Saved successfully";
+            if (!string.IsNullOrEmpty(docIds))
             {
-                var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
-                _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
-               
-            }
-            catch (Exception ex)
-            {
-                success = false;
-                message = ex.Message;
-            }
+                CriticalDocumentViewModel CriticalDocModel = new CriticalDocumentViewModel();
+                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+                var currUserAccess = allUserAccess.Where(x => x.UserId == userId);
+                CriticalDocModel.ClientSiteIds = currUserAccess.Select(x => x.ClientSiteId).ToArray();
+                CriticalDocModel.HRGroupID = hrId;
+                CriticalDocModel.ClientTypeId = currUserAccess.FirstOrDefault().ClientSite.TypeId;
+                CriticalDocModel.DescriptionIds = docIds.Split(",").Select(int.Parse).ToArray();
+                CriticalDocModel.Id = criticalDocId;
+                var results = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
+                    return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
 
-            return new JsonResult(new { success, message });
+            
+                try
+                {
+                    var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
+                    _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+
+                }
+
+                catch (Exception ex)
+                {
+                    success = false;
+                    message = ex.Message;
+                }
+            }
+            else
+            {
+                try
+                {
+                    _configDataProvider.DeleteCriticalDoc(criticalDocId);
+                }
+                catch (Exception ex)
+                {
+                    success = false;
+                    message = "Error " + ex.Message;
+                }
+            }
+                return new JsonResult(new { success, message });
         }
         public JsonResult OnPostDeleteCriticalDocumentsForOnboardingUsers(int criticalDocId)
         {
