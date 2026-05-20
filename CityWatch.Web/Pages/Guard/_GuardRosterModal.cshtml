@@ -81,6 +81,14 @@
     .total-item { padding: 10px 5px; text-align: center; }
     .total-label { font-size: 9px; text-transform: uppercase; color: #888; display: block; margin-bottom: 2px; font-weight: 600; }
     .total-value { font-size: 12px; }
+    .project-total-row {
+        background-color: #ffffff !important;
+        border-top: 1px solid #dee2e6;
+        border-bottom: 2px solid #667eea;
+    }
+    #guard_roster_grid tbody .project-total-row td {
+        background-color: #ffffff !important;
+    }
 
     /* Drag and Drop & Add Button styling matched to Booking module */
     .guard-shift-card[draggable="true"] {
@@ -813,7 +821,7 @@
                 type: 'POST',
                 headers: { "RequestVerificationToken": token },
                 data: {
-                    groupId: shiftData.groupId,
+                    groupId: $(this).data('group-id') || shiftData.groupId,
                     siteId: siteId,
                     start: startDateTime,
                     end: endDateTime,
@@ -840,7 +848,8 @@
             e.preventDefault();
             var date = $(this).data('date');
             var siteId = $(this).data('site-id');
-            openNewShiftModalForSite(date, siteId);
+            var groupId = $(this).data('group-id');
+            openNewShiftModalForSite(date, siteId, groupId);
         });
 
         $('#btnPrevWeekGuard').on('click', function() {
@@ -1344,7 +1353,7 @@
         $.ajax({
             url: '/roster/GuardRosterAction?handler=LoadRosterForSite',
             type: 'GET',
-            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, isEditMode: isEditMode },
             success: function (res) {
                 tbody.empty();
                 thead.find('th:not(:first-child)').remove();
@@ -1401,21 +1410,52 @@
                     filterSelect.append('<option value="' + g.key + '">' + g.name + '</option>');
                 });
                 filterSelect.val(currentSelection || "ALL");
-
-                var filterVal = filterSelect.val();
+                    var filterVal = filterSelect.val();
                 var grandTotalHours = 0;
                 var grandTotalCost = 0;
                 var dailyTotalHours = [0,0,0,0,0,0,0];
                 var dailyTotalCost = [0,0,0,0,0,0,0];
 
                 res.results.forEach(function (row) {
+                    var projectWeeklyHours = 0;
+                    var projectWeeklyCost = 0;
+                    var projectDailyHours = [0,0,0,0,0,0,0];
+                    var projectDailyCost = [0,0,0,0,0,0,0];
+
+                    if (isEditMode) {
+                        var headerRowHtml = '<tr class="bg-light">' +
+                            '<td colspan="8" class="py-2 px-3 font-weight-bold text-dark text-left" style="font-size: 12.5px; border-bottom: 1px solid #dee2e6;">' +
+                                '📁 Project: ' + row.projectName +
+                            '</td>' +
+                        '</tr>';
+                        tbody.append(headerRowHtml);
+                    }
+
+                    var statusStampHtml = '';
+                    var status = row.projectStatus || res.status;
+                    if (isEditMode && status) {
+                        var imgName = '';
+                        switch(status.toUpperCase()) {
+                            case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                            case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                            case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                            case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
+                            case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
+                        }
+                        if (imgName) {
+                            statusStampHtml = '<div class="text-center">' + 
+                                             '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + status + '" />' + 
+                                             '</div>';
+                        }
+                    }
+
                     var rowHtml = '<tr>' +
                         '<td class="align-top px-3 text-left d-flex flex-column" style="min-height: 150px;">' + 
                             '<div>' + 
                                 '<div class="guard-site-name">' + row.siteName + '</div>' + 
                                 '<div class="guard-client-type">' + row.clientTypeName + '</div>' + 
                             '</div>' + 
-                            '<div class="admin-status-grid-display mt-auto pb-2"></div>' + 
+                            '<div class="admin-status-grid-display mt-auto pb-2">' + statusStampHtml + '</div>' + 
                         '</td>';
 
                     row.days.forEach(function (dayShifts, index) {
@@ -1432,11 +1472,11 @@
                         else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
                         
                         var dStr = loopDate.getFullYear() + '-' + String(loopDate.getMonth() + 1).padStart(2, '0') + '-' + String(loopDate.getDate()).padStart(2, '0');
-                        rowHtml += '<td class="guard-roster-cell ' + phClass + ' ' + weekendClass + '" data-date="' + dStr + '" data-site-id="' + row.siteId + '" title="' + phReason + '">';
+                        rowHtml += '<td class="guard-roster-cell ' + phClass + ' ' + weekendClass + '" data-date="' + dStr + '" data-site-id="' + row.siteId + '" data-group-id="' + (row.rosterGroupId || '') + '" title="' + phReason + '">';
                         
                         dayShifts.forEach(function (s) {
                             var guardId = s.reliefGuardId || s.guardId;
-                            var guardName = s.reliefGuardName || s.guardName;
+                            var guardName = s.reliefGuardName || s.reliefProviderName || s.guardName;
                             var key = guardId ? ("G" + guardId) : ("P" + guardName);
                             
                             // Apply Filtering
@@ -1450,6 +1490,11 @@
                             grandTotalHours += duration;
                             dailyTotalCost[index] += cost;
                             grandTotalCost += cost;
+
+                            projectDailyHours[index] += duration;
+                            projectWeeklyHours += duration;
+                            projectDailyCost[index] += cost;
+                            projectWeeklyCost += cost;
 
                             var statusClass = 'status-pushed';
                             if (s.status === 1) statusClass = 'status-accepted';
@@ -1503,19 +1548,52 @@
                             rowHtml += '</div>';
                         });
                         if (isEditMode) {
-                             rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard-roster btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-date="' + dStr + '" data-site-id="' + row.siteId + '"><i class="fa fa-plus"></i></button>';
+                             rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard-roster btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-date="' + dStr + '" data-site-id="' + row.siteId + '" data-group-id="' + (row.rosterGroupId || '') + '"><i class="fa fa-plus"></i></button>';
                         }
                         rowHtml += '</td>';
                     });
 
                     rowHtml += '</tr>';
                     tbody.append(rowHtml);
+
+                    if (isEditMode) {
+                        var projectTotalRowHtml = '<tr class="project-total-row">';
+                        
+                        var weeklyTotalDisplay = "";
+                        if (isAdminFinancialsOn) {
+                            weeklyTotalDisplay = '<span style="font-weight: 800; color: #ff3d00;">$ ' + projectWeeklyCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
+                        } else {
+                            weeklyTotalDisplay = projectWeeklyHours.toFixed(2).replace(/\.00$/, "") + "h";
+                        }
+                        
+                        projectTotalRowHtml += '<td class="p-0 border-right align-middle">' +
+                            '<div class="total-item" style="padding: 5px 8px; text-align: left; padding-left: 15px;">' +
+                                '<span class="total-label" style="font-size: 8.5px; font-weight: 700; color: #555;">Project Total</span>' +
+                                '<span class="total-value font-weight-bold text-primary" style="font-size: 11.5px;">' + weeklyTotalDisplay + '</span>' +
+                            '</div>' +
+                        '</td>';
+                        
+                        for (var i = 0; i < 7; i++) {
+                            var dailyTotalDisplay = "";
+                            if (isAdminFinancialsOn) {
+                                dailyTotalDisplay = '<span style="font-weight: 800; color: #ff3d00;">$ ' + projectDailyCost[i].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
+                            } else {
+                                dailyTotalDisplay = projectDailyHours[i].toFixed(2).replace(/\.00$/, "") + "h";
+                            }
+                            projectTotalRowHtml += '<td class="p-0 align-middle"><div class="total-item" style="padding: 5px 2px;"><span class="total-label" style="font-size: 8px;">Proj. Total</span><span class="total-value font-weight-bold" style="font-size: 10.5px;">' + dailyTotalDisplay + '</span></div></td>';
+                        }
+                        
+                        projectTotalRowHtml += '</tr>';
+                        tbody.append(projectTotalRowHtml);
+                    }
                 });
 
                 // Show Status Stamp in Grid
                 if (res.status) {
                     currentRosterStatus = res.status;
-                    updateGridStatusDisplay(res.status);
+                    if (!isEditMode) {
+                        updateGridStatusDisplay(res.status);
+                    }
                     if (isAdminRoster) {
                         $('#adminRosterStatus').val(res.status);
                     }
@@ -1593,9 +1671,9 @@
         openNewShiftModalForSite(date, siteId);
     }
 
-    function openNewShiftModalForSite(cellDate, siteId) {
+    function openNewShiftModalForSite(cellDate, siteId, groupId) {
         $('#geModalShiftId').val('');
-        $('#geModalGroupId').val(currentRosterGroupId || 0);
+        $('#geModalGroupId').val(groupId || currentRosterGroupId || 0);
         $('#geModalSiteId').val(siteId);
         $('#guardAddShiftModal').data('date', cellDate);
         
