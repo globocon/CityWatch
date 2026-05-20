@@ -132,6 +132,7 @@ namespace CityWatch.Data.Providers
         List<GuardUnavailability> GetGuardUnavailabilities(int guardId);
         void DeleteGuardUnavailability(int id);
         bool IsGuardUnavailable(int guardId, DateTime start, DateTime end, out GuardUnavailability conflict);
+        List<OnBoardUsersTrainingAndAssessment> GetOnBoardUsersTrainingAndAssessment(int userId);
 
     }
 
@@ -1517,10 +1518,59 @@ namespace CityWatch.Data.Providers
             return conflict != null;
         }
 
+        public List<OnBoardUsersTrainingAndAssessment> GetOnBoardUsersTrainingAndAssessment(int userId)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.OnBoardUsersTrainingAndAssessment
+                // .Where(x => x.GuardId == guardId && x.IsCompleted==false)
+                .Where(x => x.UserId == userId && x.TrainingCourseStatusId != 4 && x.TrainingCourses.IsDeleted == false)
+                 .Include(z => z.User)
+                 .Include(z => z.HRGroups)
+                 .Include(z => z.TrainingCourses)
+                 .Include(z => z.TrainingCourseStatus)
+                 .ThenInclude(x => x.TrainingCourseStatusColor)
+                 .OrderBy(x => x.HRGroupId)
+                 .ThenBy(x => x.TrainingCourseId)
+                 .ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+            foreach (var item in result)
+            {
+                item.HrGroupText = item.HRGroups.Name;
+                item.statusColor = item.TrainingCourseStatus.TrainingCourseStatusColor.Name;
+                int hrSettingsId = GetTrainingCoursesWithCourseId(item.TrainingCourseId).FirstOrDefault().HRSettingsId;
+                item.Description = GetTrainingCoursesWithCourseId(item.TrainingCourseId).FirstOrDefault().FileName;
+                var certificatescount = GetCourseCertificateDocsUsingSettingsId(hrSettingsId);
+                if (certificatescount.Count() > 0)
+                {
+                    item.IsRPLEnabled = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().isRPLEnabled;
+                    item.TrainingCertificateId = GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().Id;
+                    var list = GetCourseCertificateRPL().Where(x => x.TrainingCourseCertificateId == item.TrainingCertificateId).ToList();
+                    item.RPLCount = list.Count();
+                }
+                else
+                {
+                    item.IsRPLEnabled = false;
+                    item.TrainingCertificateId = 0;
+                    item.RPLCount = 0;
+                }
+                item.hrSettingsId = hrSettingsId;
+            }
+
+
+
+
+            return result;
+
+}
+
+
+
         public void SaveGuardReminderEmailLog(GuardReminderEmailLog log)
         {
             _context.GuardReminderEmailLogs.Add(log);
             _context.SaveChanges();
+
         }
     }
 }
