@@ -4249,9 +4249,12 @@ namespace CityWatch.Data.Providers
                         else if (colorId == 5)
                         {
 
-                            var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
+                            var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId).ToList();
                             //DuressEnabledUpdate.IsEnabled = false;
-                            _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                            if (DuressEnabledUpdate.Any())
+                            {
+                                _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                            }
                             /* remove Duressbutton Status from RadioCheckPushMessages*/
                             UpdateDuressButtonAcknowledged(clientSiteRadioCheck.ClientSiteId);
 
@@ -4343,11 +4346,15 @@ namespace CityWatch.Data.Providers
 
                                             LogBookEntryFromRcControlRoomMessages(0, clientSiteRadioCheck.GuardId, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
-                                            var DuressEnabledUpdateLinked = _context.ClientSiteDuress.Where(z => z.ClientSiteId == linkedSite.ClientSiteId && z.LinkedDuressParentSiteId == clientSiteRadioCheck.ClientSiteId && z.IsLinkedDuressParentSite == 0);
+                                            var DuressEnabledUpdateLinked = _context.ClientSiteDuress.Where(z => z.ClientSiteId == linkedSite.ClientSiteId && z.LinkedDuressParentSiteId == clientSiteRadioCheck.ClientSiteId && z.IsLinkedDuressParentSite == 0).ToList();
                                             //DuressEnabledUpdate.IsEnabled = false;
-                                            _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdateLinked);
+                                            if (DuressEnabledUpdateLinked.Any())
+                                            {
+                                                _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdateLinked);
+                                            }
                                             /* remove Duressbutton Status from RadioCheckPushMessages*/
                                             UpdateDuressButtonAcknowledged(linkedSite.ClientSiteId);
+                                            _context.BroadcastDuressStatus(linkedSite.ClientSiteId, "Normal");
 
                                             var logBookIdLinked = GetClientSiteLogBookIdGloablmessage(linkedSite.ClientSiteId, LogBookType.DailyGuardLog, logbookdate);
 
@@ -5113,9 +5120,12 @@ namespace CityWatch.Data.Providers
                         else if (colorId == 5)
                         {
 
-                            var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
+                            var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId).ToList();
                             //DuressEnabledUpdate.IsEnabled = false;
-                            _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                            if (DuressEnabledUpdate.Any())
+                            {
+                                _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                            }
                             /* remove Duressbutton Status from RadioCheckPushMessages*/
                             UpdateDuressButtonAcknowledged(clientSiteRadioCheck.ClientSiteId);
 
@@ -5202,11 +5212,15 @@ namespace CityWatch.Data.Providers
 
                                             LogBookEntryFromRcControlRoomMessages(0, clientSiteRadioCheck.GuardId, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, linkedSite.ClientSiteId, tmzdata);
 
-                                            var DuressEnabledUpdateLinked = _context.ClientSiteDuress.Where(z => z.ClientSiteId == linkedSite.ClientSiteId && z.LinkedDuressParentSiteId == clientSiteRadioCheck.ClientSiteId && z.IsLinkedDuressParentSite == 0);
+                                            var DuressEnabledUpdateLinked = _context.ClientSiteDuress.Where(z => z.ClientSiteId == linkedSite.ClientSiteId && z.LinkedDuressParentSiteId == clientSiteRadioCheck.ClientSiteId && z.IsLinkedDuressParentSite == 0).ToList();
                                             //DuressEnabledUpdate.IsEnabled = false;
-                                            _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdateLinked);
+                                            if (DuressEnabledUpdateLinked.Any())
+                                            {
+                                                _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdateLinked);
+                                            }
                                             /* remove Duressbutton Status from RadioCheckPushMessages*/
                                             UpdateDuressButtonAcknowledged(linkedSite.ClientSiteId);
+                                            _context.BroadcastDuressStatus(linkedSite.ClientSiteId, "Normal");
                                             var logBookIdLinked = GetClientSiteLogBookIdGloablmessage(linkedSite.ClientSiteId, LogBookType.DailyGuardLog, logbookdate);
                                             //var logBookIdLinked = GetClientSiteLogBookIdByLogBookMaxID(linkedSite.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
                                             var logbookLinked = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBookIdLinked);
