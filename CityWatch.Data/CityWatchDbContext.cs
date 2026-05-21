@@ -81,6 +81,11 @@ namespace CityWatch.Data
             return result;
         }
 
+        public void BroadcastDuressStatus(int clientSiteId, string status)
+        {
+            _hubContext.Clients.Group(clientSiteId.ToString()).SendAsync("UpdateDuressStatus", status).GetAwaiter().GetResult();
+        }
+
         private List<int> GetGuardLogChangedClientSiteIds()
         {
             var clientSiteIds = new List<int>();
@@ -138,6 +143,29 @@ namespace CityWatch.Data
                 }
 
                 changes.Add((duress.ClientSiteId, status));
+            }
+
+            // Also check for added or modified ClientSiteRadioCheck entries to handle Control Room / Radio Check deactivations
+            var radioCheckEntries = ChangeTracker.Entries()
+                .Where(e => e.Entity is ClientSiteRadioCheck &&
+                            (e.State == EntityState.Added || e.State == EntityState.Modified))
+                .Select(e => e.Entity as ClientSiteRadioCheck)
+                .ToList();
+
+            foreach (var rc in radioCheckEntries)
+            {
+                if (rc != null && rc.RadioCheckStatusId.HasValue)
+                {
+                    var colorId = RadioCheckStatus
+                        .Where(x => x.Id == rc.RadioCheckStatusId.Value)
+                        .Select(x => x.RadioCheckStatusColorId)
+                        .FirstOrDefault();
+
+                    if (colorId == 5)
+                    {
+                        changes.Add((rc.ClientSiteId, "Normal"));
+                    }
+                }
             }
 
             return changes;

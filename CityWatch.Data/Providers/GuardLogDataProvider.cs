@@ -4393,9 +4393,7 @@ namespace CityWatch.Data.Providers
 
                             _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
                             _context.SaveChanges();
-
-                            _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
-                            _context.SaveChanges();
+                            _context.BroadcastDuressStatus(clientSiteRadioCheck.ClientSiteId, "Normal");
 
                         }
                         else if (colorId == 6)
@@ -5249,8 +5247,9 @@ namespace CityWatch.Data.Providers
 
 
 
-                            _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
+                            _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
                             _context.SaveChanges();
+                            _context.BroadcastDuressStatus(clientSiteRadioCheck.ClientSiteId, "Normal");
 
                         }
                         else if (colorId == 6)
