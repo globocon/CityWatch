@@ -6587,7 +6587,8 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                 });
                 
                 $('#removeSelectedSitesDocForOnboarding_' + d.id).on('click', function () {
-                    $('#selectedDescDoc_' + d.id +' option:selected').remove();
+                    $('#selectedDescDoc_' + d.id + ' option:selected').remove();
+                    $('#selectedDescCountDoc_' + d.id).text($('#selectedDescDoc_' + d.id + ' option').length);
                     var optionsNew = $('#selectedDescDoc_' + d.id + ' option');
                     var docIds = optionsNew.map(function () {
                         return $(this).val();
