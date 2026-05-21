@@ -6,7 +6,6 @@ using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Services;
-using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using FortescueWebApp.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -80,7 +79,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
-AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
+CityWatch.Web.Helpers.AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
