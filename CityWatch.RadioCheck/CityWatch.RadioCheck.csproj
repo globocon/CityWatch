@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<AssemblyVersion>2.74.0.0</AssemblyVersion>
@@ -32,9 +32,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\CityWatch.Common\CityWatch.Common.csproj" />
 		<ProjectReference Include="..\CityWatch.Data\CityWatch.Data.csproj" />
-		<ProjectReference Include="..\CityWatch.Web\CityWatch.Web.csproj">
-			<Properties>StaticWebAssetsEnabled=false</Properties>
-		</ProjectReference>
+		<ProjectReference Include="..\CityWatch.Web\CityWatch.Web.csproj" />
 		
 	</ItemGroup>
 	<ItemGroup>

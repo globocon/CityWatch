@@ -20,16 +20,12 @@ namespace CityWatch.Web.Helpers
             get
             {
                 int? userId = null;
-                var userClaims = _httpContextAccessor?.HttpContext?.User?.Claims;
+                var userClaims = _httpContextAccessor.HttpContext.User.Claims;
                 if (userClaims != null)
                 {
-                    var roleClaim = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Role);
-                    if (roleClaim != null && roleClaim.Value == "User")
-                    {
-                        var sidClaim = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Sid);
-                        if (sidClaim != null)
-                            userId = int.Parse(sidClaim.Value);
-                    }
+                    var isUserLoggedIn = userClaims.Single(x => x.Type == ClaimTypes.Role).Value == "User";
+                    if (isUserLoggedIn)
+                        userId = int.Parse(userClaims.Single(x => x.Type == ClaimTypes.Sid).Value);
                 }
                 return userId;
             }
@@ -39,13 +35,14 @@ namespace CityWatch.Web.Helpers
         {
             get
             {
-                var userClaims = _httpContextAccessor?.HttpContext?.User?.Claims;
+                var userClaims = _httpContextAccessor.HttpContext.User.Claims;
                 if (userClaims != null)
                 {
-                    var roleClaim = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Role);
-                    return roleClaim != null && roleClaim.Value == "Administrator";
+                    return userClaims.Single(x => x.Type == ClaimTypes.Role).Value == "Administrator";
                 }
                 return false;
+
+                
             }
         }
 
@@ -54,53 +51,50 @@ namespace CityWatch.Web.Helpers
             get
             {
                 int? userId = null;
-                var userClaims = _httpContextAccessor?.HttpContext?.User?.Claims;
+                var userClaims = _httpContextAccessor.HttpContext.User.Claims;
                 if (userClaims != null)
                 {
-                    var sidClaim = userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Sid);
-                    if (sidClaim != null)
-                    {
-                        userId = int.Parse(sidClaim.Value);
-                    }
+                    userId = int.Parse(userClaims.Single(x => x.Type == ClaimTypes.Sid).Value);
                 }
                 return userId;
+
             }
         }
 
         public static bool IsAdminPowerUser
         {
-            get => _httpContextAccessor?.HttpContext?.Session?.GetString("IsAdminPowerUser") == "true";
-            set => _httpContextAccessor?.HttpContext?.Session?.SetString("IsAdminPowerUser", value ? "true" : "false");
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminPowerUser") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminPowerUser", value ? "true" : "false");
         }
 
         public static bool IsAdminGlobal
         {
-            get => _httpContextAccessor?.HttpContext?.Session?.GetString("IsAdminGlobal") == "true";
-            set => _httpContextAccessor?.HttpContext?.Session?.SetString("IsAdminGlobal", value ? "true" : "false");
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminGlobal") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminGlobal", value ? "true" : "false");
         }
 
         public static bool IsAdminThirdParty
         {
-            get => _httpContextAccessor?.HttpContext?.Session?.GetString("IsAdminThirdParty") == "true";
-            set => _httpContextAccessor?.HttpContext?.Session?.SetString("IsAdminThirdParty", value ? "true" : "false");
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminThirdParty") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminThirdParty", value ? "true" : "false");
         }
 
         public static bool IsAdminInvestigator
         {
-            get => _httpContextAccessor?.HttpContext?.Session?.GetString("IsAdminInvestigator") == "true";
-            set => _httpContextAccessor?.HttpContext?.Session?.SetString("IsAdminInvestigator", value ? "true" : "false");
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminInvestigator") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminInvestigator", value ? "true" : "false");
         }
 
         public static bool IsAdminAuditor
         {
-            get => _httpContextAccessor?.HttpContext?.Session?.GetString("IsAdminAuditor") == "true";
-            set => _httpContextAccessor?.HttpContext?.Session?.SetString("IsAdminAuditor", value ? "true" : "false");
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("IsAdminAuditor") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("IsAdminAuditor", value ? "true" : "false");
         }
 
         public static bool DoseGuardHaveRcClientSitesControl
         {
-            get => _httpContextAccessor?.HttpContext?.Session?.GetString("DoseGuardHaveRcClientSitesControl") == "true";
-            set => _httpContextAccessor?.HttpContext?.Session?.SetString("DoseGuardHaveRcClientSitesControl", value ? "true" : "false");
+            get => _httpContextAccessor.HttpContext?.Session?.GetString("DoseGuardHaveRcClientSitesControl") == "true";
+            set => _httpContextAccessor.HttpContext?.Session?.SetString("DoseGuardHaveRcClientSitesControl", value ? "true" : "false");
         }
 
     }

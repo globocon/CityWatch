@@ -79,7 +79,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
-CityWatch.Web.Helpers.AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
