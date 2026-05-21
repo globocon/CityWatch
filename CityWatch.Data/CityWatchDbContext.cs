@@ -66,7 +66,7 @@ namespace CityWatch.Data
                 // Notify all clients in the affected ClientSite groups
                 foreach (var siteId in clientSiteIds.Distinct())
                 {
-                    _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged");
+                    _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged").GetAwaiter().GetResult();
                 }
             }
 
@@ -74,7 +74,7 @@ namespace CityWatch.Data
             {
                 foreach (var change in duressStatusChanges)
                 {
-                    _hubContext.Clients.Group(change.ClientSiteId.ToString()).SendAsync("UpdateDuressStatus", change.Status);
+                    _hubContext.Clients.Group(change.ClientSiteId.ToString()).SendAsync("UpdateDuressStatus", change.Status).GetAwaiter().GetResult();
                 }
             }
 
