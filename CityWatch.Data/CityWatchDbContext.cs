@@ -30,6 +30,7 @@ namespace CityWatch.Data
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var clientSiteIds = GetGuardLogChangedClientSiteIds();
+            var duressStatusChanges = GetClientSiteDuressChanges();
 
             int result = await base.SaveChangesAsync(cancellationToken);
 
@@ -42,12 +43,21 @@ namespace CityWatch.Data
                 }
             }
 
+            if (duressStatusChanges.Count > 0)
+            {
+                foreach (var change in duressStatusChanges)
+                {
+                    await _hubContext.Clients.Group(change.ClientSiteId.ToString()).SendAsync("UpdateDuressStatus", change.Status);
+                }
+            }
+
             return result;
         }
 
         public override int SaveChanges()
         {
             var clientSiteIds = GetGuardLogChangedClientSiteIds();
+            var duressStatusChanges = GetClientSiteDuressChanges();
 
             int result = base.SaveChanges();
 
@@ -57,6 +67,14 @@ namespace CityWatch.Data
                 foreach (var siteId in clientSiteIds.Distinct())
                 {
                     _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged");
+                }
+            }
+
+            if (duressStatusChanges.Count > 0)
+            {
+                foreach (var change in duressStatusChanges)
+                {
+                    _hubContext.Clients.Group(change.ClientSiteId.ToString()).SendAsync("UpdateDuressStatus", change.Status);
                 }
             }
 
@@ -89,6 +107,40 @@ namespace CityWatch.Data
             }
 
             return clientSiteIds;
+        }
+
+        private List<(int ClientSiteId, string Status)> GetClientSiteDuressChanges()
+        {
+            var changes = new List<(int ClientSiteId, string Status)>();
+
+            var duressEntries = ChangeTracker.Entries()
+                .Where(e => e.Entity is ClientSiteDuress &&
+                            e.State != EntityState.Unchanged &&
+                            e.State != EntityState.Detached)
+                .ToList();
+
+            foreach (var entry in duressEntries)
+            {
+                var duress = (ClientSiteDuress)entry.Entity;
+                string status = "Normal";
+
+                if (entry.State == EntityState.Added)
+                {
+                    status = duress.IsEnabled ? "Active" : "Normal";
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    status = "Normal";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    status = duress.IsEnabled ? "Active" : "Normal";
+                }
+
+                changes.Add((duress.ClientSiteId, status));
+            }
+
+            return changes;
         }
 
 
