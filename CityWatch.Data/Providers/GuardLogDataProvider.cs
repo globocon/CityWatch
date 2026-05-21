@@ -2253,18 +2253,45 @@ namespace CityWatch.Data.Providers
         public void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus)
         {
             var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
+            bool isDuress = false;
+            int clientSiteId = 0;
             if (ClientSiteRadioChecksActivity != null)
             {
-                /*var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
+                clientSiteId = ClientSiteRadioChecksActivity.ClientSiteId;
+                var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId).ToList();
                 /* remove the Pervious Status*/
-                /*if (clientSiteRcStatus != null)
-                  /*  _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);*/
+                if (clientSiteRcStatus != null && clientSiteRcStatus.Count > 0)
+                {
+                    foreach (var rcStatus in clientSiteRcStatus)
+                    {
+                        var colorId = _context.RadioCheckStatus.Where(x => x.Id == rcStatus.RadioCheckStatusId).Select(x => x.RadioCheckStatusColorId).FirstOrDefault();
+                        if (colorId == 4)
+                        {
+                            isDuress = true;
+                        }
+                    }
+
+                    if (isDuress)
+                    {
+                        var duressRows = _context.ClientSiteDuress.Where(z => z.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId).ToList();
+                        if (duressRows.Any())
+                        {
+                            _context.ClientSiteDuress.RemoveRange(duressRows);
+                        }
+                    }
+
+                    _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+                }
 
                 _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
 
             }
             _context.SaveChanges();
 
+            if (isDuress && clientSiteId > 0)
+            {
+                _context.BroadcastDuressStatus(clientSiteId, "Normal");
+            }
         }
 
         //for getting logbookdetails of the guard-start
