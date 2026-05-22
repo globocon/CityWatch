@@ -265,7 +265,7 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
             var _clientSiteMobileAppSettings = _configDataProvider.GetCrowdSettingForSite(siteId);
-            if(_clientSiteMobileAppSettings == null)
+            if (_clientSiteMobileAppSettings == null)
             {
                 _clientSiteMobileAppSettings = new ClientSiteMobileAppSettings() { ClientSiteId = siteId };
             }
@@ -278,6 +278,18 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 clientSiteKpiSetting.clientSiteMobileAppSettings = _clientSiteMobileAppSettings;
             }
+
+            // Standardize RCActionList loading and Base64 conversion
+            var rcAction = _guardLogDataProvider.GetActionlist(siteId);
+            if (rcAction != null)
+            {
+                if (!string.IsNullOrEmpty(rcAction.Imagepath))
+                {
+                    rcAction.Imagepath = rcAction.Imagepath + ":-:" + ConvertFileToBase64(rcAction.Imagepath);
+                }
+                clientSiteKpiSetting.RCActionList = new List<RCActionList> { rcAction };
+            }
+
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
 
@@ -615,15 +627,19 @@ namespace CityWatch.Kpi.Pages.Admin
             var success = true;
             var files = Request.Form.Files;
             var fileName = string.Empty;
+            var Imagepath = string.Empty;
+            var dtm = DateTime.Now;
             try
             {
                 if (files.Count == 1)
                 {
                     var file = files[0];
                     fileName = file.FileName;
-                    var scheduleId = Convert.ToInt32(Request.Form["scheduleId"]);
+                    var Id = Convert.ToInt32(Request.Form["id"]); // Changed from scheduleId to id to match RCActionList ID
 
-                    var summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                    // Always use local RCImage folder
+                    string summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+
                     if (!Directory.Exists(summaryImageDir))
                         Directory.CreateDirectory(summaryImageDir);
 
@@ -631,7 +647,10 @@ namespace CityWatch.Kpi.Pages.Admin
                     {
                         file.CopyTo(stream);
                     }
-                    //_kpiSchedulesDataProvider.SaveKpiSendScheduleSummaryImage(scheduleId, fileName);
+
+                    // Update the database record
+                    _clientDataProvider.SaveUpdateRCListFile(Id, fileName, dtm);
+                    Imagepath = fileName + ":-:" + ConvertFileToBase64(fileName);
                 }
             }
             catch
@@ -639,7 +658,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 success = false;
             }
 
-            return new JsonResult(new { success, fileName, LastUpdated = DateTime.Now });
+            return new JsonResult(new { success, fileName, LastUpdated = dtm, Imagepath = Imagepath });
         }
 
         public JsonResult OnGetKpiSendSchedules(int type, string searchTerm)
@@ -1096,7 +1115,10 @@ namespace CityWatch.Kpi.Pages.Admin
 
                 if (!string.IsNullOrEmpty(imageName))
                 {
-                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage", imageName);
+                    // Always use local RCImage folder
+                    string summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+
+                    var fileToDelete = Path.Combine(summaryImageDir, imageName);
                     if (System.IO.File.Exists(fileToDelete))
                         System.IO.File.Delete(fileToDelete);
 
@@ -1110,6 +1132,26 @@ namespace CityWatch.Kpi.Pages.Admin
             }
 
             return new JsonResult(new { status, message });
+        }
+
+        public string ConvertFileToBase64(string imageName)
+        {
+            var rtnstring = string.Empty;
+
+            if (!string.IsNullOrEmpty(imageName))
+            {
+                // Always use local RCImage folder
+                string summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+
+                var fileToConvert = Path.Combine(summaryImageDir, imageName);
+                if (System.IO.File.Exists(fileToConvert))
+                {
+                    byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);
+                    rtnstring = "data:application/octet-stream;base64," + Convert.ToBase64String(AsBytes);
+                }
+            }
+
+            return rtnstring;
         }
 
         public IActionResult OnGetDownloadPdf(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
@@ -1959,7 +2001,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 });
             }
 
-            // Success — return new or updated route
+            // Success â€” return new or updated route
             return new JsonResult(new
             {
                 success = true,

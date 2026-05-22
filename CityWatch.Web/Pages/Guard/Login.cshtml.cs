@@ -404,50 +404,6 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
                 }
-                if (guard.IsAdminPowerUser)
-                {
-                    AuthUserHelper.IsAdminPowerUser = true;
-                }
-                else
-                {
-                    AuthUserHelper.IsAdminPowerUser = false;
-                }
-                if (guard.IsAdminGlobal)
-                {
-                    AuthUserHelper.IsAdminGlobal = true;
-                }
-
-                else
-                {
-                    AuthUserHelper.IsAdminGlobal = false;
-                }
-
-                if (guard.IsAdminThirdPartyAccess)
-                {
-                    AuthUserHelper.IsAdminThirdParty = true;
-                }
-                else
-                {
-                    AuthUserHelper.IsAdminThirdParty = false;
-                }
-
-
-                if (guard.IsAdminInvestigatorAccess)
-                {
-                    AuthUserHelper.IsAdminInvestigator = true;
-                }
-                else
-                {
-                    AuthUserHelper.IsAdminInvestigator = false;
-                }
-                if (guard.IsAdminAuditorAccess)
-                {
-                    AuthUserHelper.IsAdminAuditor = true;
-                }
-                else
-                {
-                    AuthUserHelper.IsAdminAuditor = false;
-                }
 
             }
             //HRList Status start 
@@ -769,7 +725,7 @@ namespace CityWatch.Web.Pages.Guard
                         else
                         {
                             var incidentreport = _clientDataProvider.GetLastIncidentReportsByGuardId(guard.Id);
-                            strResult = "It’s been a while since you logged in! Your account is now reactivated. You can log in now";
+                            strResult = "Itï¿½s been a while since you logged in! Your account is now reactivated. You can log in now";
                             success = true;
                             if (incidentreport != null)
                             {
@@ -1231,3 +1187,4 @@ namespace CityWatch.Web.Pages.Guard
 
     }
 }
+

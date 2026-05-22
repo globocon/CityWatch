@@ -72,5 +72,7 @@ namespace CityWatch.Web.Models
 
         public bool IspatrolCarToggleOn { get; set; }
 
+        public bool IncludeAllTagsInStrike { get; set; } = false;
+
     }
 }

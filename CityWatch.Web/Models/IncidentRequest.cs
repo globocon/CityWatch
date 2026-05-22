@@ -144,6 +144,8 @@ namespace CityWatch.Web.Models
         public int? FeedbackTemplates { get; set; }
 
         public ReportCreatedLocalTimeZone ReportCreatedLocalTimeZone { get; set; }
+        [Display(Name = "Authentication Declaration:")]
+        public string AiDec { get; set; }
 
     }
 

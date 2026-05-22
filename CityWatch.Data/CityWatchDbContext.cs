@@ -164,6 +164,7 @@ namespace CityWatch.Data
         public DbSet<RadioCheckStatus> RadioCheckStatus { get; set; }
         public DbSet<BroadcastBannerLiveEvents> BroadcastBannerLiveEvents { get; set; }
         public DbSet<BroadcastBannerCalendarEvents> BroadcastBannerCalendarEvents { get; set; }
+        public DbSet<GuardReminderEmailLog> GuardReminderEmailLogs { get; set; }
 
         public DbSet<RadioCheckLogbookSiteDetails> RadioCheckLogbookSiteDetails { get; set; }
         public DbSet<DosAndDontsField> DosAndDontsField { get; set; }
@@ -418,6 +419,7 @@ namespace CityWatch.Data
         public DbSet<PayRateGroupSite> PayRateGroupSites { get; set; }
         public DbSet<RosterRemunerationSummary> RosterRemunerationSummaries { get; set; }
         public DbSet<RosterScheduleAuditLog> RosterScheduleAuditLogs { get; set; }
+        public DbSet<OnBoardUsersTrainingAndAssessment> OnBoardUsersTrainingAndAssessment { get; set; }
     }
 
 

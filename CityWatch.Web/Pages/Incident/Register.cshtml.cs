@@ -230,8 +230,9 @@ namespace CityWatch.Web.Pages.Incident
                                 ReportedBy = IrPreviousObject.ReportedBy,
                                 FeedbackType = IrPreviousObject.FeedbackType,
                                 FeedbackTemplates = IrPreviousObject.FeedbackTemplates,
-                                
-                                
+                                AiDec= IrPreviousObject.AiDec,
+
+
                             };
 
                             ClientSites = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientType);

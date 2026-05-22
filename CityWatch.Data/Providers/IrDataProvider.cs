@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -41,6 +41,8 @@ namespace CityWatch.Data.Providers
         {
             return _dbContext.IncidentReports
                 .Include(n => n.IncidentReportEventTypes)
+                .Include(n => n.ClientSite)
+                .ThenInclude(c => c.ClientType)
                 .Where(x => x.ReportDateTime >= fromReportDate
                             && x.ReportDateTime < toReportDate.AddDays(1) && x.ClientSite.IsActive==true)
                 .ToList();
@@ -163,7 +165,8 @@ namespace CityWatch.Data.Providers
         {
             return _dbContext.IncidentReports
                 .Include(n => n.IncidentReportEventTypes)
-              
+                .Include(n => n.ClientSite)
+                .ThenInclude(c => c.ClientType)
                 .ToList();
         }
         public List<IncidentReportsPlatesLoaded> GetIncidentReportsPlates()

@@ -1,4 +1,4 @@
-﻿/** 
+/** 
  *  Fix for issues while opening one BS modal over another
  *  https://stackoverflow.com/questions/19305821/multiple-modals-overlay * 
  **/
@@ -1880,10 +1880,10 @@ $(function () {
 
         const file = $('#upload_summary_imageRcList').prop("files")[0];
         if (file) {
-            const scheduleId = $("#scheduleId").val();
+            const id = $("#RCList_Id").val();
             const formData = new FormData();
             formData.append("SummaryImage", file);
-            formData.append("ScheduleId", scheduleId);
+            formData.append("id", id);
 
             $.ajax({
                 type: 'POST',
@@ -1944,19 +1944,31 @@ $(function () {
 
     function setSummaryImageRCList(summaryImage) {
         if (summaryImage) {
-            $('#summary_imageRC').html(summaryImage.fileName);
-            var imagePath = $('#summary_imageRC').text().trim();
-            $('#RCImagepath').val(imagePath);
-            $('#summary_image_updatedRC').html(getFormattedDate(summaryImage.lastUpdated, true));
-            var imagePathdate = $('#summary_image_updatedRC').text().trim();
-            $('#RCImageDateandTime').val(imagePathdate);
-            $('#download_summary_imageRCList').attr('href', summaryImage.filepath + summaryImage.fileName);
+            var filename = summaryImage.fileName;
+            var filebase64 = "";
 
-            $("#download_summary_imageRCList").attr("target", "_blank");
+            if (summaryImage.imagepath) {
+                var myArray = summaryImage.imagepath.split(":-:");
+                if (myArray.length > 1) {
+                    filebase64 = myArray[1];
+                    filename = myArray[0];
+                }
+            }
+
+            $('#summary_imageRC').html(filename);
+            $('#RCImagepath').val(filename);
+            $('#summary_image_updatedRC').html(summaryImage.lastUpdated);
+            $('#RCImageDateandTime').val(summaryImage.lastUpdated);
+
+            if (filebase64 != "") {
+                $('#download_summary_imageRCList').attr('href', filebase64);
+                $('#download_summary_imageRCList').attr('download', filename);
+            } else {
+                $('#download_summary_imageRCList').removeAttr('href');
+            }
+
             $('#download_summary_imageRCList').show();
-            $('#delete_summary_image').show();
-            $('#DocumentID').val(summaryImage.documentID)
-
+            $('#delete_summary_imageRC').show();
         }
     }
 
@@ -1997,7 +2009,7 @@ $(function () {
         $('#summary_image_updatedRC').html('');
         $("#download_summary_imageRCList").removeAttr("href");
         $('#download_summary_imageRCList').show();
-        $('#delete_summary_image').hide();
+        $('#delete_summary_imageRC').hide();
         $('#DocumentID').val('');
 
     }

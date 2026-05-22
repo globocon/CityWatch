@@ -131,8 +131,12 @@ namespace CityWatch.Web.Pages
             HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
-            // clear the GuardId for IR when the user Login
+            // clear the GuardId and other Roster restriction session keys when the user Login
             HttpContext.Session.Remove("GuardId");
+            HttpContext.Session.Remove("BookingAccessRole");
+            HttpContext.Session.Remove("RestrictedSiteId");
+            HttpContext.Session.Remove("LogBookId");
+            HttpContext.Session.Remove("GuardLoginId");
         }
 
         public string GetClientDetailsUsingSubDomain(int userid)
