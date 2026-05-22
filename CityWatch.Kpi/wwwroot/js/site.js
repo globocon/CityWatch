@@ -416,13 +416,28 @@ $(function () {
             '<i class="fa fa-circle text-success mx-1"></i>Active'
     }
 
-
+    let sel_schedule_report_type = $('#sel_schedule').val();
     $('#sel_schedule').on('change', function () {
+        sel_schedule_report_type = $('#sel_schedule').val();
+        gridSchedules.setOptions({
+            dataSource: getScheduleDataSource()
+        });
         gridSchedules.reload({ type: $(this).val(), searchTerm: $('#search_kw_client_site').val() });
     });
 
+    function getScheduleDataSource() {
+
+        //let scheduleType = $('#sel_schedule').val();
+
+        if (sel_schedule_report_type === '2') {
+            return '/Admin/Settings?handler=KpiCustomWandSendSchedules';
+        }
+
+        return '/Admin/Settings?handler=KpiSendSchedules';
+    }
+
     gridSchedules = $('#kpi_send_schedules').grid({
-        dataSource: '/Admin/Settings?handler=KpiSendSchedules',
+        dataSource: getScheduleDataSource,
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -477,12 +492,24 @@ $(function () {
     }
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
-        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
-        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
-        buttonHtml += '<button class="btn btn-outline-danger del-schedule mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
-        buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
-        buttonHtml += 'data-action="copySchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
+        if (sel_schedule_report_type === '2') {
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-customwand-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#CustomWand-schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="editCustomWandSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+            buttonHtml += '<button class="btn btn-outline-danger del-customwand-schedule mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+            buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#CustomWand-schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="copyCustomWandSchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>';
+            return buttonHtml;
+        }
+        else {
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+            buttonHtml += '<button class="btn btn-outline-danger del-schedule mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+            buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="copySchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>';
+            return buttonHtml;
+        }
     }
     function schButtonRendererTimesheet(value, record) {
         let buttonHtml = '';
