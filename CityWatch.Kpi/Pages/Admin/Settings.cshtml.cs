@@ -692,7 +692,7 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedules()
                     .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
-                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
                     .OrderBy(x => x.ProjectName)
                     .ThenBy(x => x.ClientTypes));
 
@@ -702,7 +702,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
                 return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedulesUisngGuardId(GuardId)
                    .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
-                   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
                    .OrderBy(x => x.ProjectName)
                    .ThenBy(x => x.ClientTypes));
 

@@ -15,7 +15,7 @@ CREATE TABLE [KpiSendCustomWandSchedules](
 
 CREATE TABLE [KpiSendCustomWandClientSites](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
-	[TimesheetId] [int] NOT NULL,
+	[CustomWandScheduleId] [int] NOT NULL,
 	[ClientSiteId] [int] NOT NULL
 ) ;
 

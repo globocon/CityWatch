@@ -43,17 +43,17 @@ namespace CityWatch.Kpi.Models
 
         public string ProjectName { get; set; }
 
-        public string SummaryNote1 { get; set; }
+        //public string SummaryNote1 { get; set; }
 
-        public string SummaryNote2 { get; set; }
+        //public string SummaryNote2 { get; set; }
 
-        public CoverSheetType CoverSheetType { get; set; }
+        //public CoverSheetType CoverSheetType { get; set; }
 
         public string EmailBcc { get; set; }
 
-        public bool IsHrTimerPaused { get; set; }
-        public bool IsCriticalDocumentDownselect { get; set; }
-        public string CriticalGroupNameID { get; set; }
+        //public bool IsHrTimerPaused { get; set; }
+        //public bool IsCriticalDocumentDownselect { get; set; }
+        //public string CriticalGroupNameID { get; set; }
 
         public static KpiSendCustomWandSchedules ToDataModel(KpiCustomWandScheduleViewModel viewModel)
         {
