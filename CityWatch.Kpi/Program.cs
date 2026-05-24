@@ -47,6 +47,8 @@ builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<ITimesheetGenerator, TimeSheetGenerator>();
 builder.Services.AddScoped<IClientSiteViewDataService, ClientSiteViewDataService>();
 builder.Services.AddScoped<IKeyVehicleGenerator, KeyVehicleGenerator>();
+builder.Services.AddScoped<IWandStrikeReportDataService, WandStrikeReportDataService>();
+builder.Services.AddScoped<ICustomWandExcelReportGenerator, CustomWandExcelReportGenerator>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {

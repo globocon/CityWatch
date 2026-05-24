@@ -444,6 +444,9 @@ $(function () {
     gridSchedules = $('#kpi_send_schedules').grid({
         dataSource: {
             url: '/Admin/Settings',
+            data: {
+                handler: 'KpiSendSchedules'
+            }
         },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',

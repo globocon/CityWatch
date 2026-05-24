@@ -59,7 +59,7 @@ namespace CityWatch.Kpi.API
 
             var sendScheduleJob = new KpiSendScheduleJob()
             {
-                CreatedDate = DateTime.Now                
+                CreatedDate = DateTime.Now
             };
             sendScheduleJob.Id = _kpiSchedulesDataProvider.SaveSendScheduleJob(sendScheduleJob);
 
@@ -74,7 +74,7 @@ namespace CityWatch.Kpi.API
                     schedule.KpiSendScheduleSummaryNotes = _kpiSchedulesDataProvider.GetKpiSendScheduleSummaryNotes(schedule.Id);
                     var result = await _sendScheduleService.ProcessSchedule(schedule, new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), false, true);
                     statusLog.Append(result);
-                }                
+                }
             }
             catch (Exception ex)
             {
@@ -113,7 +113,7 @@ namespace CityWatch.Kpi.API
             {
                 _logger.LogError(ex.StackTrace);
             }
-            
+
             return success;
         }
 
@@ -196,7 +196,59 @@ namespace CityWatch.Kpi.API
 
             return success;
         }
-        
+
+        [Route("[action]", Name = "SendCustomWand")]
+        [HttpGet]
+        public async Task<bool> SendCustomWand()
+        {
+            var prevJob = _kpiSchedulesDataProvider.GetAllKpiSendScheduleJobsCustomWand().FirstOrDefault(z => !z.CompletedDate.HasValue);
+            if (prevJob != null)
+            {
+                _logger.LogWarning($"KpiCustomWandSendJob: Another job ({prevJob.Id}) is in progress.");
+                return false;
+            }
+
+            var pendingSchedules = _kpiSchedulesDataProvider.GetAllCustomWandSchedules().Where(z => z.NextRunOn < DateTime.Now).ToList();
+            if (!pendingSchedules.Any())
+            {
+                _logger.LogInformation("KpiCustomWandSendJob: No schedule to process.");
+                return true;
+            }
+
+            var sendScheduleJob = new KpiSendScheduleJobsCustomWand()
+            {
+                CreatedDate = DateTime.Now
+            };
+            sendScheduleJob.Id = _kpiSchedulesDataProvider.SaveSendScheduleJobCustomWand(sendScheduleJob);
+
+            var success = true;
+            var statusLog = new StringBuilder();
+            statusLog.AppendLine($"KpiCustomWandSendJob: {sendScheduleJob.Id} - Starting. ");
+            //var scheduleResults = new Dictionary<int, string>();
+            try
+            {
+                foreach (var schedule in pendingSchedules)
+                {
+                    DateTime _reportStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    var result = await _sendScheduleService.ProcessCustomWandSchedule(schedule, _reportStartDate, false, true);
+                    statusLog.AppendLine(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                statusLog.AppendLine($"KpiCustomWandSendJob: {sendScheduleJob.Id} Exception - {ex.Message}.");
+            }
+            statusLog.AppendLine($"KpiCustomWandSendJob: {sendScheduleJob.Id} Completed. Status - {success}.");
+            sendScheduleJob.Success = success;
+            sendScheduleJob.CompletedDate = DateTime.Now;
+            sendScheduleJob.StatusMessage = statusLog.ToString();
+            _kpiSchedulesDataProvider.SaveSendScheduleJobCustomWand(sendScheduleJob);
+
+            _logger.LogInformation(statusLog.ToString());
+            return success;
+        }
+
         [Route("[action]", Name = "SendKeyVehicleLogs")]
         [HttpGet]
         public async Task<bool> SendKeyVehicleLogs()
