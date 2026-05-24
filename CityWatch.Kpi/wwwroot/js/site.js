@@ -416,13 +416,38 @@ $(function () {
             '<i class="fa fa-circle text-success mx-1"></i>Active'
     }
 
-
+    let sel_schedule_report_type = $('#sel_schedule').val();
     $('#sel_schedule').on('change', function () {
-        gridSchedules.reload({ type: $(this).val(), searchTerm: $('#search_kw_client_site').val() });
+        sel_schedule_report_type = $(this).val(); // $('#sel_schedule').val();
+        if (sel_schedule_report_type === '2') {
+            $('#add_kpi_schedule').addClass('d-none');
+            $('#add_customwand_schedule').removeClass('d-none');
+        }
+        else {
+            $('#add_kpi_schedule').removeClass('d-none');
+            $('#add_customwand_schedule').addClass('d-none');
+        }
+        gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
     });
 
+    function getScheduleUrl() {
+
+        //let scheduleType = $('#sel_schedule').val();
+
+        if (sel_schedule_report_type === '2') {
+            return 'KpiCustomWandSendSchedules';
+        }
+
+        return 'KpiSendSchedules';
+    }
+
     gridSchedules = $('#kpi_send_schedules').grid({
-        dataSource: '/Admin/Settings?handler=KpiSendSchedules',
+        dataSource: {
+            url: '/Admin/Settings',
+            data: {
+                handler: 'KpiSendSchedules'
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -477,12 +502,23 @@ $(function () {
     }
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
-        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
-        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
-        buttonHtml += '<button class="btn btn-outline-danger del-schedule mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
-        buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
-        buttonHtml += 'data-action="copySchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
+        if (sel_schedule_report_type === '2') {
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#customWands-schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="editScheduleCustomWand"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+            buttonHtml += '<button class="btn btn-outline-danger del-customwand-schedule mr-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+            buttonHtml += '<button class=" btn mr-2" data-toggle="modal" data-target="#customWands-schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="copyCustomWandSchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>';
+            return buttonHtml;
+        }
+        else {
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+            buttonHtml += '<button class="btn btn-outline-danger del-schedule mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+            buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="copySchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>';
+            return buttonHtml;
+        }
     }
     function schButtonRendererTimesheet(value, record) {
         let buttonHtml = '';
@@ -1674,7 +1710,7 @@ $(function () {
                 data: { id: idToDelete },
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function () {
-                gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+                gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
             });
         }
 
@@ -2220,7 +2256,7 @@ $(function () {
             if (data.success) {
                 $('#schedule-modal').modal('hide');
                 alert('Schedule saved successfully');
-                gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+                gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
             } else {
                 $('#sch-modal-validation').html('');
                 data.message.split(',').map(function (item) { $('#sch-modal-validation').append('<li>' + item + '</li>') });
@@ -2322,6 +2358,320 @@ $(function () {
             $('#schRunStatus').html(messageHtml);
         });
     });
+
+
+    //Code to handle Custom Wands schedule start
+    function clearScheduleModalCustomWand() {
+
+        $('#CustomWandscheduleId').val('0');
+        $('#clientTypeNameCustomWand').val('');
+        $('#clientSitesCustomWand').html('<option value="">Select</option>');
+        $('#selectedSitesCustomWand').html('');
+        updateSelectedSitesCustomWandCount();
+        //$('input:hidden[name="clientSiteIds"]').remove();
+        $('#clientTypeNameCustomWand option:eq(0)').attr('selected', true);
+        $('#startDateCustomWand').val('');
+        $('#startDateCustomWand').removeAttr('min');
+        $('#endDateCustomWand').val('');
+        $('#endDateCustomWand').removeAttr('min');
+        $('#CustomWandtime').val('');
+        $('#CustomWandfrequency option').removeAttr('selected');
+        $('#CustomWandfrequency').val('');
+        $('#nextRunOnCustomWand').val('');
+        $('#sch-modal-validation-CustomWand').html('');
+        $('#emailToCustomWand').val('');
+        $('#emailBccCustomWand').val('');
+        $('#projectNameCustomWand').val('');
+        $('#chk_CustomWandReportType_Site').prop('checked', true);
+        $('#chk_CustomWandReportType_MonSun').prop('checked', false);
+        $('#chk_CustomWandReportType_All').prop('checked', false);
+    }
+
+    $('#customWands-schedule-modal').on('shown.bs.modal', function (event) {
+        clearScheduleModalCustomWand();
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editScheduleCustomWand';
+        if (isEdit) {
+            schId = button.data('sch-id');
+            scheduleModalOnEditCustomWand(schId);
+        }
+        else {
+            const isCopy = button.data('action') !== undefined && button.data('action') === 'copyCustomWandSchedule';
+            if (isCopy) {
+                schId = button.data('sch-id');
+                scheduleModalOnCopyCustomWand(schId);
+            } else {
+                scheduleModalOnAddCustomWand();
+            }
+        }
+    });
+
+    $('#clientTypeNameCustomWand').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#clientSitesCustomWand').html('');
+            $('#clientSitesCustomWand').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#clientSitesCustomWand').html('');
+            $('#clientSitesCustomWand').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#clientSitesCustomWand').append('<option value="' + site.value + '">' + site.text + '</option>');
+            });
+        });
+    });
+    $('#clientSitesCustomWand').on('change', function () {
+        const elem = $(this).find(":selected");
+        if (elem.val() !== '') {
+            const existing = $('#selectedSitesCustomWand option[value="' + elem.val() + '"]');
+            if (existing.length === 0) {
+                $('#selectedSitesCustomWand').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+                updateSelectedSitesCustomWandCount();
+            }
+        }
+    });
+
+    function scheduleModalOnAddCustomWand() {
+        const dateToday = new Date().toISOString().split('T')[0];
+        $('#startDateCustomWand').val(dateToday);
+        $('#startDateCustomWand').attr('min', dateToday);
+        const dateEnd = '2100-01-01'
+        $('#endDateCustomWand').val(dateEnd.split('T')[0]);
+
+        //$("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
+    }
+
+    function scheduleModalOnEditCustomWand(scheduleId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=KpiCustomWandSchedule&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+
+            $('#CustomWandscheduleId').val(data.id);
+            $('#startDateCustomWand').val(data.startDate.split('T')[0]);
+            if (data.endDate)
+                $('#endDateCustomWand').val(data.endDate.split('T')[0]);
+            $('#endDateCustomWand').attr('min', new Date().toISOString().split('T')[0]);
+            $('#CustomWandfrequency').val(data.frequency).change();
+            $('#CustomWandfrequency option[value="' + data.frequency + '"]').attr('selected', true);
+            $('#CustomWandtime').val(data.time);
+            $('#nextRunOnCustomWand').val(data.nextRunOn);
+            $('#emailToCustomWand').val(data.emailTo);
+            $('#emailBccCustomWand').val(data.emailBcc)
+
+            $.each(data.kpiSendCustomWandClientSites, function (index, item) {
+                $('#selectedSitesCustomWand').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                updateSelectedSitesCustomWandCount();
+            });
+
+            if (data.customWandReportType === 0) {
+                $('#chk_CustomWandReportType_Site').prop('checked', true);
+                $('#chk_CustomWandReportType_MonSun').prop('checked', false);
+                $('#chk_CustomWandReportType_All').prop('checked', false);
+            }
+            else if (data.customWandReportType === 1) {
+                $('#chk_CustomWandReportType_Site').prop('checked', false);
+                $('#chk_CustomWandReportType_MonSun').prop('checked', true);
+                $('#chk_CustomWandReportType_All').prop('checked', false);
+            }
+            else if (data.customWandReportType === 2) {
+                $('#chk_CustomWandReportType_Site').prop('checked', false);
+                $('#chk_CustomWandReportType_MonSun').prop('checked', false);
+                $('#chk_CustomWandReportType_All').prop('checked', true);
+            }
+            $('#CustomWandReportType').val(data.customWandReportType);
+
+            $('#projectNameCustomWand').val(data.projectName);
+
+
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+    $('#removeSelectedSitesCustomWand').on('click', function () {
+        $('#selectedSitesCustomWand option:selected').remove();
+        updateSelectedSitesCustomWandCount();
+    });
+    function updateSelectedSitesCustomWandCount() {
+        $('#selectedSitesCountCustomWand').text($('#selectedSitesCustomWand option').length);
+    }
+
+    $('#editSelectedSiteCustomWand').on('click', function () {
+        if ($('#editSiteTrigger').length === 1) {
+            $('#editSiteTrigger').remove()
+        }
+
+        const selectedOption = $('#selectedSitesCustomWand option:selected');
+        if (selectedOption.length == 0) {
+            alert('Please select a site to edit');
+        } else if (selectedOption.length > 1) {
+            alert('Select only one site to edit');
+        } else {
+
+            let triggerButton = '<button type="button" id="editSiteTrigger" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
+                //p1-139 change pop up start
+                'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '" data-type-tab="KPI"></button>';
+            //p1-139 change pop up end
+            $(triggerButton).insertAfter($(this));
+            $('#editSiteTrigger').click();
+
+        }
+    });
+
+    function scheduleModalOnCopyCustomWand(scheduleId) {
+        $.ajax({
+            url: '/Admin/Settings?handler=KpiCustomWandSchedule&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            const dateToday = new Date().toISOString().split('T')[0];
+            $('#startDateCustomWand').val(dateToday);
+            $('#startDateCustomWand').attr('min', dateToday);
+            const dateEnd = '2100-01-01'
+            $('#endDateCustomWand').val(dateEnd.split('T')[0]);
+
+            $('#CustomWandscheduleId').val(data.id);
+            // $('#startDateCustomWand').val(data.startDate.split('T')[0]);
+            //if (data.endDate)
+            //    $('#endDateCustomWand').val(data.endDate.split('T')[0]);
+            //$('#endDateCustomWand').attr('min', new Date().toISOString().split('T')[0]);
+            $('#CustomWandfrequency').val(data.frequency).change();
+            $('#CustomWandfrequency option[value="' + data.frequency + '"]').attr('selected', true);
+            $('#CustomWandtime').val(data.time);
+            $('#nextRunOnCustomWand').val(data.nextRunOn);
+            $('#emailToCustomWand').val(data.emailTo);
+            $('#emailBccCustomWand').val(data.emailBcc)
+
+            $.each(data.kpiSendCustomWandClientSites, function (index, item) {
+                $('#selectedSitesCustomWand').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                updateSelectedSitesCustomWandCount();
+            });
+            if (data.customWandReportType === 0) {
+                $('#chk_CustomWandReportType_Site').prop('checked', true);
+                $('#chk_CustomWandReportType_MonSun').prop('checked', false);
+                $('#chk_CustomWandReportType_All').prop('checked', false);
+            }
+            else if (data.customWandReportType === 1) {
+                $('#chk_CustomWandReportType_Site').prop('checked', false);
+                $('#chk_CustomWandReportType_MonSun').prop('checked', true);
+                $('#chk_CustomWandReportType_All').prop('checked', false);
+            }
+            else if (data.customWandReportType === 2) {
+                $('#chk_CustomWandReportType_Site').prop('checked', false);
+                $('#chk_CustomWandReportType_MonSun').prop('checked', false);
+                $('#chk_CustomWandReportType_All').prop('checked', true);
+            }
+            $('#CustomWandReportType').val(data.customWandReportType);
+
+
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+
+
+    $('#btnSaveCustomWandSchedule').on('click', function () {
+        $("input[name=clientSiteIds]").remove();
+        var options = $('#selectedSitesCustomWand option');
+        options.each(function () {
+            const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+            $('#frm_kpi_CustomWandSchedule').append(elem);
+        });
+
+        // Validate report type selection
+        const isSiteChecked = $('#chk_CustomWandReportType_Site').is(':checked');
+        const isMonSunChecked = $('#chk_CustomWandReportType_MonSun').is(':checked');
+        const isAllChecked = $('#chk_CustomWandReportType_All').is(':checked');
+
+        // No checkbox selected
+        if (!isSiteChecked && !isMonSunChecked && !isAllChecked) {
+            alert('Please select Custom Wand Report Type');
+            return;
+        }
+
+        // Set hidden field value
+        if (isSiteChecked) {
+            $('#CustomWandReportType').val(0);
+        }
+        else if (isMonSunChecked) {
+            $('#CustomWandReportType').val(1);
+        }
+        else if (isAllChecked) {
+            $('#CustomWandReportType').val(2);
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveKpiCustomWandSchedule',
+            type: 'POST',
+            data: $('#frm_kpi_CustomWandSchedule').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                $('#customWands-schedule-modal').modal('hide');
+                alert('Schedule saved successfully');
+                gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
+            } else {
+                $('#sch-modal-validation-CustomWand').html('');
+                data.message.split(',').map(function (item) { $('#sch-modal-validation-CustomWand').append('<li>' + item + '</li>') });
+                $('#sch-modal-validation-CustomWand').show().delay(5000).fadeOut();
+            }
+        });
+    });
+
+    $('#kpi_send_schedules').on('click', '.del-customwand-schedule', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this schedule?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteKpiCustomWandSchedule',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
+            });
+        }
+
+    });
+
+    $('#chk_CustomWandReportType_Site').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_CustomWandReportType_MonSun').prop('checked', false);
+            $('#chk_CustomWandReportType_All').prop('checked', false);
+        }
+        //else {
+        //$('#chk_cs_tn_no_load').prop('checked', true);
+        //}
+        $('#chk_CustomWandReportType_Site').val(isChecked);
+    });
+    $('#chk_CustomWandReportType_MonSun').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_CustomWandReportType_Site').prop('checked', false);
+            $('#chk_CustomWandReportType_All').prop('checked', false);
+        }
+        $('#chk_CustomWandReportType_MonSun').val(isChecked);
+    });
+    $('#chk_CustomWandReportType_All').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_CustomWandReportType_MonSun').prop('checked', false);
+            $('#chk_CustomWandReportType_Site').prop('checked', false);
+        }
+        $('#chk_CustomWandReportType_All').val(isChecked);
+    });
+
+    //Code to handle Custom Wands schedule End
+
 
 
     // Import Jobs
@@ -3404,12 +3754,12 @@ $(function () {
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed
         if (event.keyCode === 13) {
-            gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $(this).val() });
+            gridSchedules.reload({ handler: getScheduleUrl(), type: $('#sel_schedule').val(), searchTerm: $(this).val() });
         }
     });
 
     $('#btnSearchClientSite').on('click', function () {
-        gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+        gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
     });
 
 
@@ -4000,6 +4350,10 @@ $('#btnScheduleDownload1').on('click', function () {
         $('#schRunStatus').html(messageHtml);
     });
 });
+
+
+
+
 $('#div_site_settings').on('change', '#dgKPITelamaticsName', function () {
     const NameId = $(this).val();
     $('#KPITelematicsFieldID').val(NameId);

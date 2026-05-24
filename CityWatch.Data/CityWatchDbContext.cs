@@ -111,6 +111,7 @@ namespace CityWatch.Data
         public DbSet<KpiSendScheduleClientSite> KpiSendScheduleClientSites { get; set; }
         public DbSet<KpiSendScheduleJob> KpiSendScheduleJobs { get; set; }
         public DbSet<KpiSendScheduleJobsTimeSheet> KpiSendScheduleJobsTimeSheet { get; set; }
+        public DbSet<KpiSendScheduleJobsCustomWand> KpiSendScheduleJobsCustomWand { get; set; }
         public DbSet<AppConfiguration> Appconfigurations { get; set; }
         public DbSet<ClientSiteLogBook> ClientSiteLogBooks { get; set; }
         public DbSet<GuardLog> GuardLogs { get; set; }
@@ -211,6 +212,8 @@ namespace CityWatch.Data
 
         public DbSet<KpiSendTimesheetSchedules> KpiSendTimesheetSchedules { get; set; }
         public DbSet<KpiSendTimesheetClientSites> KpiSendTimesheetClientSites { get; set; }
+        public DbSet<KpiSendCustomWandSchedules> KpiSendCustomWandSchedules { get; set; }
+        public DbSet<KpiSendCustomWandClientSites> KpiSendCustomWandClientSites { get; set; }
 
         public DbSet<LoginUserHistory> LoginUserHistory { get; set; }
         public DbSet<ANPR> ANPR { get; set; }

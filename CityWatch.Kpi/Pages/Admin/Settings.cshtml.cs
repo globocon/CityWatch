@@ -685,6 +685,30 @@ namespace CityWatch.Kpi.Pages.Admin
             }
         }
 
+        public JsonResult OnGetKpiCustomWandSendSchedules(int type, string searchTerm)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedules()
+                    .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
+                    .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
+
+            }
+            else
+            {
+
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedulesUisngGuardId(GuardId)
+                   .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
+                   .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+
+            }
+        }
+
         public JsonResult OnGetKpiSendSchedule(int id)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -695,6 +719,18 @@ namespace CityWatch.Kpi.Pages.Admin
             else
             {
                 return new JsonResult(_kpiSchedulesDataProvider.GetSendScheduleByIdandGuardId(id, GuardId));
+            }
+        }
+        public JsonResult OnGetKpiCustomWandSchedule(int id)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetCustomWandScheduleById(id));
+            }
+            else
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetCustomWandScheduleByIdandGuardId(id, GuardId));
             }
         }
 
@@ -724,6 +760,32 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+        public JsonResult OnPostSaveKpiCustomWandSchedule(KpiCustomWandScheduleViewModel kpiCustomWandScheduleViewModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(kpiCustomWandScheduleViewModel, new ValidationContext(kpiCustomWandScheduleViewModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var kpiCustomWandSchedule = KpiCustomWandScheduleViewModel.ToDataModel(kpiCustomWandScheduleViewModel);
+                if (kpiCustomWandSchedule.Id == 0)
+                    kpiCustomWandSchedule.NextRunOn = KpiCustomWandScheduleRunOnCalculator.GetNextRunOn(kpiCustomWandSchedule);
+                else
+                    kpiCustomWandSchedule.NextRunOn = KpiCustomWandScheduleRunOnCalculator.GetNextRunOnUpdate(kpiCustomWandSchedule);
+                _kpiSchedulesDataProvider.SaveCustomWandSchedule(kpiCustomWandSchedule, true);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
         public JsonResult OnPostDeleteKpiSendSchedule(int id)
         {
             var status = true;
@@ -731,6 +793,22 @@ namespace CityWatch.Kpi.Pages.Admin
             try
             {
                 _kpiSchedulesDataProvider.DeleteSendSchedule(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+        public JsonResult OnPostDeleteKpiCustomWandSchedule(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _kpiSchedulesDataProvider.DeleteCustomWandSchedule(id);
             }
             catch (Exception ex)
             {
@@ -858,8 +936,6 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status, message });
         }
 
-
-
         public JsonResult OnPostDeleteWorker(string settingsId)
         {
             var status = true;
@@ -891,7 +967,6 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message, clientSiteId });
         }
-
 
         public JsonResult OnPostDeleteWorkerADHOC(string settingsId)
         {

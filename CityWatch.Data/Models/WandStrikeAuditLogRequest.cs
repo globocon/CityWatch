@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace CityWatch.Web.Models
+namespace CityWatch.Data.Models
 {
     public class WandStrikeAuditLogRequest
     {        

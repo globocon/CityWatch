@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="Dropbox.Api" Version="7.0.0" />
     <PackageReference Include="itext7" Version="7.2.0" />
     <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" />

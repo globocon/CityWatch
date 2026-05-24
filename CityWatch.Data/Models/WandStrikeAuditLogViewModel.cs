@@ -1,8 +1,5 @@
-﻿using CityWatch.Data.Models;
-using System.Collections.Generic;
-
-
-namespace CityWatch.Web.Models
+﻿
+namespace CityWatch.Data.Models
 {
     public class WandStrikeAuditLogViewModel
     {             
