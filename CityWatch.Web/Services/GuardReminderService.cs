@@ -135,10 +135,6 @@ namespace CityWatch.Web.Services
 
                             if (toAddresses.Any())
                             {
-                                // Adding user email for testing - to be removed after verification
-                                if (!toAddresses.Any(a => a.Equals("adileepsebastian@gmail.com", StringComparison.OrdinalIgnoreCase)))
-                                    toAddresses.Add("adileepsebastian@gmail.com");
-
                                 string finalTo = string.Join(",", toAddresses);
                                 string status = "Success";
                                 string error = string.Empty;

@@ -2101,7 +2101,6 @@ namespace CityWatch.Web.API
 
             /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
             //message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-            message.Bcc.Add(new MailboxAddress("globoconsoftware", "addileepsebastian@gmail.com"));
             // message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
