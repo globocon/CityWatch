@@ -262,7 +262,7 @@ namespace CityWatch.Kpi.Services
 
             foreach (var item in data)
             {
-                var _StrikeDateTime = item.clientSiteSmartWandTagsHitLog.HitLocalDateTime.HasValue ? item?.clientSiteSmartWandTagsHitLog?.HitLocalDateTime.Value.Date : null;
+                var _StrikeDateTime = item.clientSiteSmartWandTagsHitLog.HitLocalDateTime.HasValue ? item?.clientSiteSmartWandTagsHitLog?.HitLocalDateTime.Value : null;
                 var _ClientSite = item.clientSiteSmartWandTagsHitLog.LoggedInClientSite.Name;
                 var _Scan = item?.clientSiteSmartWandTagsHitLog?.LabelDescription;
                 var _TagID = item?.clientSiteSmartWandTagsHitLog?.TagUId;
@@ -300,7 +300,7 @@ namespace CityWatch.Kpi.Services
 
                     scan.Days[day].Add(new PatrolEntry
                     {
-                        DateTime = _StrikeDateTime.Value,
+                        DateTime = _StrikeDateTime,
                         GPS = item?.clientSiteSmartWandTagsHitLog?.GPScoordinates ?? "",
                     });
                 }
