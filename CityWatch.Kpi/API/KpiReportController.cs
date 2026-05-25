@@ -223,7 +223,7 @@ namespace CityWatch.Kpi.API
 
             var success = true;
             var statusLog = new StringBuilder();
-            statusLog.AppendLine($"KpiCustomWandSendJob: {sendScheduleJob.Id} - Starting. ");
+            statusLog.AppendLine($"KpiCustomWandSendJob: {sendScheduleJob.Id} - Starting.");
             //var scheduleResults = new Dictionary<int, string>();
             try
             {
