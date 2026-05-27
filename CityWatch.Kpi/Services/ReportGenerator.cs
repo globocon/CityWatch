@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -723,8 +723,9 @@ namespace CityWatch.Kpi.Services
             }
             table.AddCell(CreateDataCell(cellValue, cellHasBg, cellColor));
 
-            //Missing Fq column — add blank cell
-            table.AddCell(CreateDataCell(item.WandScanFq.ToString()));
+            // Fq column - Print "N/A" when the value is null (e.g., for non-working days) instead of falling back to blank/0.
+            var fqCellValue = item.WandScanFq.HasValue ? item.WandScanFq.ToString() : "N/A";
+            table.AddCell(CreateDataCell(fqCellValue));
 
 
             //DAILY LOG 2HR TIMER

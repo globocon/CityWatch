@@ -1,4 +1,4 @@
-﻿//p2-140 key photos  -start
+//p2-140 key photos  -start
 var FileuploadFileChanged = null;
 //p2-140 key photos  -end
 
@@ -2104,15 +2104,40 @@ $(function () {
             }
         ],
 
-        dataBound: function (e) {
+        dataBound: function (e, records, totalRecords) {
 
             var $table = $(e.target);
 
             $table.find('tbody tr').each(function (i) {
                 $(this).find('.gj-sno').text(i + 1);
             });
-            var rowCount = $table.find('tbody tr').length;
-            $('#WandPointsPerPatrol').val(rowCount - 1);
+            // Accurately count the number of data records passed to the grid.
+            // Only count active tags that are not flagged as fqBypass
+            var count = 0;
+            if (records) {
+                for (var j = 0; j < records.length; j++) {
+                    if (records[j].fqBypass !== true) {
+                        count++;
+                    }
+                }
+            }
+            
+            var prevCount = parseInt($('#WandPointsPerPatrol').val());
+            $('#WandPointsPerPatrol').val(count);
+            $('#WandPointsPerPatrol').trigger('change'); // Updates daily targets
+            
+            // Silently auto-save KPI settings if the point count has changed
+            if (prevCount !== count && !isNaN(prevCount)) {
+                var _dropboxImagesDir = $('#DropboxImagesDir_DropboxSettings').val();
+                if (_dropboxImagesDir) $('#DropboxImagesDir').val(_dropboxImagesDir);
+                
+                $.ajax({
+                    url: '/admin/settings?handler=ClientSiteKpiSettings',
+                    type: 'POST',
+                    data: $('#frm_site_settings').serialize(),
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                });
+            }
         },
 
         initialized: function (e) {

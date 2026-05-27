@@ -826,7 +826,10 @@
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="form-label" asp-for="@Model.WandPointsPerPatrol" style="white-space: nowrap; overflow: hidden;">Wand Points Per Patrol</label>
-                                            <input class="form-control w-80px  daily-wand-target" asp-for="@Model.WandPointsPerPatrol" disabled>
+                                            <!-- Changed disabled to readonly. This ensures the dynamically calculated 
+                                                 WandPointsPerPatrol is actually submitted to the server upon saving, 
+                                                 while remaining visually uneditable to the user. -->
+                                            <input class="form-control w-80px  daily-wand-target" asp-for="@Model.WandPointsPerPatrol" readonly>
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="form-label" asp-for="@Model.TuneDowngradeBuffer" style="white-space: nowrap; overflow: hidden;">Tune Downgrade Buffer</label>
