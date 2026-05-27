@@ -28,7 +28,7 @@ namespace CityWatch.Kpi.Services
             var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - Wand Strike Data Site Logs-{startdate} to {endDate}-_{new Random().Next()}.xlsx";
             var reportExcel = Path.Combine(filePath, reportFileName);
 
-            using var workbook = new XLWorkbook(reportExcel);
+            using var workbook = new XLWorkbook();
 
             var worksheet = workbook.Worksheets.Add("WandStrikeLogs");
 
@@ -60,7 +60,7 @@ namespace CityWatch.Kpi.Services
                 worksheet.Cell(row, 2).Value =
                     item.clientSiteSmartWandTagsHitLog?.HitLocalDateTime;
 
-                worksheet.Cell(row, 2).Style.DateFormat.Format = "dd/MM/yyyy @ HH:mm";
+                worksheet.Cell(row, 2).Style.DateFormat.Format = "dd/MM/yyyy HH:mm";
 
                 worksheet.Cell(row, 3).Value =
                     item.clientSiteSmartWandTagsHitLog?.LabelDescription ?? "";

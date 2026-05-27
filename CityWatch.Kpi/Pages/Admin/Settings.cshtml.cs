@@ -1,33 +1,34 @@
+using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
+using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
-using CityWatch.Data.Enums;
+using CityWatch.Kpi.Helpers;
 using CityWatch.Kpi.Models;
 using CityWatch.Kpi.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Security.Claims;
 using System.ComponentModel.Design;
-using Microsoft.Data.SqlClient;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Net.NetworkInformation;
-using CityWatch.Common.Helpers;
-using Microsoft.VisualBasic;
-using CityWatch.Data.Helpers;
-using CityWatch.Common.Models;
-using CityWatch.Kpi.Helpers;
-using Microsoft.Extensions.Options;
-using CityWatch.Common.Services;
+using System.Security.Claims;
 using System.Security.Policy;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CityWatch.Kpi.Pages.Admin
@@ -66,7 +67,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public int ClientTypeId { get; set; }
         public int ClientSiteId { get; set; }
         public string ClientSiteName { get; set; }
-        
+
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IImportDataService importDataService,
@@ -105,7 +106,7 @@ namespace CityWatch.Kpi.Pages.Admin
         }
 
         public IActionResult OnGet()
-        {            
+        {
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
@@ -685,30 +686,6 @@ namespace CityWatch.Kpi.Pages.Admin
             }
         }
 
-        public JsonResult OnGetKpiCustomWandSendSchedules(int type, string searchTerm)
-        {
-            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            if (GuardId == 0)
-            {
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedules()
-                    .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
-                    .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                    .OrderBy(x => x.ProjectName)
-                    .ThenBy(x => x.ClientTypes));
-
-            }
-            else
-            {
-
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedulesUisngGuardId(GuardId)
-                   .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
-                   .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                   .OrderBy(x => x.ProjectName)
-                   .ThenBy(x => x.ClientTypes));
-
-            }
-        }
-
         public JsonResult OnGetKpiSendSchedule(int id)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -719,18 +696,6 @@ namespace CityWatch.Kpi.Pages.Admin
             else
             {
                 return new JsonResult(_kpiSchedulesDataProvider.GetSendScheduleByIdandGuardId(id, GuardId));
-            }
-        }
-        public JsonResult OnGetKpiCustomWandSchedule(int id)
-        {
-            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            if (GuardId == 0)
-            {
-                return new JsonResult(_kpiSchedulesDataProvider.GetCustomWandScheduleById(id));
-            }
-            else
-            {
-                return new JsonResult(_kpiSchedulesDataProvider.GetCustomWandScheduleByIdandGuardId(id, GuardId));
             }
         }
 
@@ -759,6 +724,63 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
+        public JsonResult OnPostDeleteKpiSendSchedule(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _kpiSchedulesDataProvider.DeleteSendSchedule(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+
+
+        // Custom Wand Start
+
+        public JsonResult OnGetKpiCustomWandSendSchedules(int type, string searchTerm)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedules()
+                    .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
+                    .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
+
+            }
+            else
+            {
+
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedulesUisngGuardId(GuardId)
+                   .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
+                   .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+
+            }
+        }
+
+        public JsonResult OnGetKpiCustomWandSchedule(int id)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetCustomWandScheduleById(id));
+            }
+            else
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetCustomWandScheduleByIdandGuardId(id, GuardId));
+            }
+        }
 
         public JsonResult OnPostSaveKpiCustomWandSchedule(KpiCustomWandScheduleViewModel kpiCustomWandScheduleViewModel)
         {
@@ -786,22 +808,6 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public JsonResult OnPostDeleteKpiSendSchedule(int id)
-        {
-            var status = true;
-            var message = "Success";
-            try
-            {
-                _kpiSchedulesDataProvider.DeleteSendSchedule(id);
-            }
-            catch (Exception ex)
-            {
-                status = false;
-                message = "Error " + ex.Message;
-            }
-
-            return new JsonResult(new { status, message });
-        }
         public JsonResult OnPostDeleteKpiCustomWandSchedule(int id)
         {
             var status = true;
@@ -818,6 +824,121 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message });
         }
+
+
+
+        public async Task<IActionResult> OnGetDownloadExcelCustomWands(int scheduleId, DateTime reportDate, bool ignoreRecipients)
+        {
+            var schedule = _kpiSchedulesDataProvider.GetCustomWandScheduleById(scheduleId);
+
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+
+            var (task, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, reportDate, ignoreRecipients, false, false, false);
+
+            if (fileNames == null || !fileNames.Any())
+                return NotFound("No files generated.");
+
+            // Single file -> return excel directly
+            if (fileNames.Count == 1)
+            {
+                var filePath = fileNames.First();
+
+                if (!System.IO.File.Exists(filePath))
+                    return NotFound("File not found.");
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+                var downloadFileName = Path.GetFileName(filePath);
+
+                // Delete file after reading
+                try
+                {
+                    System.IO.File.Delete(filePath);
+                }
+                catch
+                {
+                    // Ignore delete failure
+                }
+
+                Response.Headers["Content-Disposition"] = $"attachment; filename={downloadFileName}";
+
+                return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", downloadFileName);
+            }
+
+            // Multiple files -> return zip
+            using var memoryStream = new MemoryStream();
+
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            {
+                foreach (var filePath in fileNames)
+                {
+                    if (!System.IO.File.Exists(filePath))
+                        continue;
+
+                    var entry = archive.CreateEntry(Path.GetFileName(filePath));
+
+                    using var entryStream = entry.Open();
+                    using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+
+                    await fileStream.CopyToAsync(entryStream);
+                }
+            }
+
+            memoryStream.Position = 0;
+
+            // Delete files after zip creation
+            foreach (var filePath in fileNames)
+            {
+                try
+                {
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+                }
+                catch
+                {
+                    // Ignore delete failure
+                }
+            }
+
+            var zipFileName = $"CustomWands_{DateTime.Now:yyyyMMddHHmmss}.zip";
+            Response.Headers["Content-Disposition"] = $"attachment; filename={zipFileName}";
+            return File(memoryStream.ToArray(), "application/zip", zipFileName);
+        }
+
+        public async Task<JsonResult> OnPostRunScheduleCustomWand(int scheduleId, DateTime reportDate, bool ignoreRecipients)
+        {
+            var success = false;
+            string message;
+            try
+            {
+                var schedule = _kpiSchedulesDataProvider.GetCustomWandScheduleById(scheduleId);
+                if (schedule == null)
+                    throw new ArgumentException("Schedule not found");
+
+                var (task, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, reportDate, ignoreRecipients, false, false, true);
+
+                message = task;
+                success = !(message.Contains("Error") || message.Contains("Exception"));
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            if (!success)
+            {
+                _logger.LogError(message);
+            }
+
+            return new JsonResult(new { success });
+        }
+
+
+        // Custom Wand End
+
+
+
         //code added For RcAction List start
         public JsonResult OnPostClientSiteRCActionList(RCActionList rcActionList)
         {
@@ -1173,12 +1294,12 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             var records = _clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).OrderBy(z => z.SmartWandId).ToList();
             var pcar = _clientSiteWandDataProvider.GetPatrolCars();
-            foreach(var r in records)
+            foreach (var r in records)
             {
-                r.PatrolCarId = r.PatrolCarId ?? -1 ;
+                r.PatrolCarId = r.PatrolCarId ?? -1;
                 r.PatrolCarName = pcar?.FirstOrDefault(x => x.Id == r.PatrolCarId)?.Name ?? "";
             }
-            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).OrderBy(z=>z.SmartWandId).ToList());
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).OrderBy(z => z.SmartWandId).ToList());
         }
 
         public JsonResult OnPostDeleteSmartWandSettings(int id)
@@ -1198,7 +1319,7 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public void OnPostSaveSiteEmail(int siteId, string siteEmail,  string landLine, 
+        public void OnPostSaveSiteEmail(int siteId, string siteEmail, string landLine,
              string duressEmail, string duressSms, bool IsDosDontList)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
@@ -2484,7 +2605,7 @@ namespace CityWatch.Kpi.Pages.Admin
                     // Return a custom error message if no record is found
                     return new JsonResult(new { success = false, message = "No client site found with the specified ID." });
                 }
-               
+
             }
             catch (Exception ex)
             {
@@ -2499,7 +2620,7 @@ namespace CityWatch.Kpi.Pages.Admin
         //wand tags-start
         public JsonResult OnGetWandTagsSettings(int clientSiteId)
         {
-            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandTags().Where(z => z.ClientSiteId == clientSiteId).OrderBy(x=> x.LabelDescription).ToList());
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWandTags().Where(z => z.ClientSiteId == clientSiteId).OrderBy(x => x.LabelDescription).ToList());
         }
         public JsonResult OnGetTagType()
         {
@@ -2510,7 +2631,7 @@ namespace CityWatch.Kpi.Pages.Admin
             var success = false;
             var message = string.Empty;
             try
-            {               
+            {
                 _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(record);
                 success = true;
             }
@@ -2519,7 +2640,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 message = ex.Message;
             }
 
-            return new JsonResult(new { success= success, message= message });
+            return new JsonResult(new { success = success, message = message });
         }
         public JsonResult OnPostDeleteSmartWandTagSettings(int id)
         {
@@ -2544,9 +2665,9 @@ namespace CityWatch.Kpi.Pages.Admin
             {
 
                 if (clientSiteId != 0)
-                {                    
-                     _clientDataProvider.SaveClientSitePatrolTourSettings(clientSiteId, PatrolTourMode);
-                    return new JsonResult(new { success = true, message = "Settings saved successfully."});                   
+                {
+                    _clientDataProvider.SaveClientSitePatrolTourSettings(clientSiteId, PatrolTourMode);
+                    return new JsonResult(new { success = true, message = "Settings saved successfully." });
                 }
                 else
                 {
@@ -2592,26 +2713,26 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public JsonResult OnGetKpiKVSchedules()
         {
-            
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules()
-                    .OrderBy(x => x.ProjectName));
 
-           
+            return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules()
+                .OrderBy(x => x.ProjectName));
+
+
         }
 
 
         public JsonResult OnGetPCARProfiles()
         {
-           
+
             return new JsonResult(_kpiSchedulesDataProvider.GetPCARProfilesAll());
-                
+
 
 
         }
 
         public JsonResult OnGetPCARRouteDetails(int id)
         {
-           
+
             return (_configDataProvider.GetPCARRouteDetails(id));
 
         }
@@ -2657,13 +2778,13 @@ namespace CityWatch.Kpi.Pages.Admin
         public JsonResult OnGetKVCompanyDetails(string clientSiteIds, string searchKeyNo)
         {
             var arClientSiteIds = clientSiteIds?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
-            return new JsonResult(_configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds,""));
+            return new JsonResult(_configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds, ""));
 
         }
         public JsonResult OnGetClientSiteLocationsAndCompanyDetails(string clientSiteIds)
         {
             var siteLocations = new List<SelectListItem>();
-         
+
             var arClientSiteIds = clientSiteIds.Split(";").Select(z => int.Parse(z)).ToArray();
 
             siteLocations = _clientViewDataService.GetClientSiteLocationsNew(arClientSiteIds);
@@ -2673,8 +2794,8 @@ namespace CityWatch.Kpi.Pages.Admin
         }
         public JsonResult OnGetKpiKVSchedule(int id)
         {
-           
-            return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules().Where(x=>x.Id==id).FirstOrDefault());
+
+            return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules().Where(x => x.Id == id).FirstOrDefault());
         }
         public JsonResult OnPostDeleteKpiSendScheduleKV(int id)
         {
@@ -2741,7 +2862,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             var kpiSendScheduleNotes = _kpiSchedulesDataProvider.GetSendScheduleById(scheduleId);
             var kpiScheduleNote = kpiSendScheduleNotes.KpiSendScheduleSummaryNotes.SingleOrDefault(z => z.ForMonth == new DateTime(year, month, 1).AddMonths(-1));
-           
+
             return new JsonResult(kpiScheduleNote.Notes);
         }
         public JsonResult OnGetPreviousMonthKPINotesAndHRRecords(int clientSiteId, int month, int year)
@@ -2775,7 +2896,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 {
                     record.EquipmentId = _guardLogDataProvider.GetKPITelemarics(2).SingleOrDefault(x => x.Name == record.Equipment).Id;
                 }
-                if(record.Id <0)
+                if (record.Id < 0)
                 {
                     record.Id = 0;
                 }
@@ -2805,15 +2926,15 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
-        public void OnPostSaveSiteEmailBasedOnLogs(int siteId, 
-            bool enableLBLogDump, bool enableKVLogDump, bool enableSWLogDump, bool uploadFusionLog,string guardEmailTo,
-            bool enableLBWeeklyLogDump,bool enableKVWeeklyLogDump,bool enableSWWeeklyLogDump,bool uploadFusionWeeklyLog,string guardEmailWeeklyLogTo,
-            bool enableLBMonthlyLogDump,bool enableKVMonthlyLogDump,bool enableSWMonthlyLogDump,bool uploadFusionMonthlyLog, string guardEmailMonthlyLogTo)
+        public void OnPostSaveSiteEmailBasedOnLogs(int siteId,
+            bool enableLBLogDump, bool enableKVLogDump, bool enableSWLogDump, bool uploadFusionLog, string guardEmailTo,
+            bool enableLBWeeklyLogDump, bool enableKVWeeklyLogDump, bool enableSWWeeklyLogDump, bool uploadFusionWeeklyLog, string guardEmailWeeklyLogTo,
+            bool enableLBMonthlyLogDump, bool enableKVMonthlyLogDump, bool enableSWMonthlyLogDump, bool uploadFusionMonthlyLog, string guardEmailMonthlyLogTo)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
             if (clientSite != null)
             {
-                
+
                 clientSite.UploadGuardLog = enableLBLogDump;
                 clientSite.UploadKVLog = enableKVLogDump;
                 clientSite.UploadSWLog = enableSWLogDump;
