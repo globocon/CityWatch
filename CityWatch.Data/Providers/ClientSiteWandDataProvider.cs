@@ -418,6 +418,7 @@ namespace CityWatch.Data.Providers
                          (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
                         x.HitUtcDateTime >= fromUtc &&
                         x.HitUtcDateTime <= toUtc)
+                    .AsNoTracking()
                     .Include(x => x.SmartWandTagsType)
                     .Include(x => x.LoggedInClientSite)
                     .Include(x => x.LinkedClientSite)

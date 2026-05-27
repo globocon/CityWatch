@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Helpers;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using DocumentFormat.OpenXml.Bibliography;
@@ -65,74 +65,115 @@ namespace CityWatch.Web.Services
 
         public void Process()
         {
-            /* Select only doc has ExpiryDate  and type is ExpiryDate type*/
-            var guardLicenses = _guardDataProvider.GetAllGuardLicensesAndCompliances().Where(z => z.ExpiryDate.HasValue && z.DateType == false && z.Guard.IsActive==true).ToList();
+            // Fetch all active guards into a dictionary for fast lookup and to avoid DB calls in loop
+            var allGuards = _guardDataProvider.GetGuards().ToDictionary(g => g.Id, g => g);
 
-            var guardDocHaveExpiryToday = guardLicenses.Where(x => x.ExpiryDate == DateTime.Today.AddDays(x.Reminder1) || x.ExpiryDate == DateTime.Today.AddDays(x.Reminder2));
-            if (guardDocHaveExpiryToday.Count() != 0 && guardDocHaveExpiryToday != null)
+            // Select only active guards with documents that have an ExpiryDate and are of ExpiryDate type
+            var guardLicenses = _guardDataProvider.GetAllGuardLicensesAndCompliances()
+                .Where(z => z.ExpiryDate.HasValue && z.DateType == false && z.Guard != null && z.Guard.IsActive == true)
+                .ToList();
+
+            var guardDocHaveExpiryToday = guardLicenses
+                .Where(x => x.ExpiryDate == DateTime.Today.AddDays(x.Reminder1) || x.ExpiryDate == DateTime.Today.AddDays(x.Reminder2))
+                .ToList();
+
+            if (guardDocHaveExpiryToday.Any())
             {
-                var distinctGuardId = guardDocHaveExpiryToday.Select(p => p.GuardId).Distinct().ToList();
+                var distinctGuardIds = guardDocHaveExpiryToday.Select(p => p.GuardId).Distinct().ToList();
 
-                if (distinctGuardId.Count() != 0 && distinctGuardId != null)
+                foreach (var guardId in distinctGuardIds)
                 {
-                    foreach (var guard in distinctGuardId)
+                    try
                     {
+                        if (!allGuards.TryGetValue(guardId, out var guard)) continue;
 
+                        var selectedGuardDocuments = guardDocHaveExpiryToday.Where(x => x.GuardId == guardId).ToList();
+                        if (!selectedGuardDocuments.Any()) continue;
 
-                        var selectedGuardDocuments = guardDocHaveExpiryToday.Where(x => x.GuardId == guard).ToList();
-
-                        if (selectedGuardDocuments.Count != 0 && selectedGuardDocuments != null)
+                        var messageBody = new StringBuilder();
+                        foreach (var doc in selectedGuardDocuments)
                         {
-
-
-                            var messageBody = string.Empty;
-                            foreach (var doc in selectedGuardDocuments)
-                            {
-                                messageBody = messageBody+ $" <tr><td style=\"width:10% ;border: 1px solid #000000;\">Compliance</td><td style=\"width:20% ;border: 1px solid #000000;\">{doc.Guard.Name}</td><td style=\"width:10% ;border: 1px solid #000000;\">{doc.ExpiryDate?.ToString("dd-MMM-yyyy")}</td><td style=\"width:60% ;border: 1px solid #000000;\">{doc.Description}</td>";
-
-                            }
-                            var mailBodyHtml = new StringBuilder();
-                            if (messageBody != string.Empty)
-                            {
-
-                                //     mailBodyHtml.Append("Hi, <br/><br/>Following guard documents are expiring soon. <br/><br/>");
-                                //p5-Issue-16-start
-                                mailBodyHtml.Append("Hi, <br/><br/>The following HR documents are expiring soon. Please log into the C4i System and update your HR documents with a current and version: <br/><br/>");
-                                //p5-Issue-16-end
-                                mailBodyHtml.Append(" <table width=\"100%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge;border-color:#000000;border-width:thin\">");
-                                mailBodyHtml.Append(" <tr><td style=\"width:10% ;border: 1px solid #000000; \"><b>Document Type</b></td><td style=\"width:20% ;border: 1px solid #000000;\"><b>Guard Name</b></td><td style=\"width:10% ;border: 1px solid #000000;\"><b>Expiry Date</b></td><td style=\"width:60% ;border: 1px solid #000000;\"><b>Description</b></td></tr>");
-                                mailBodyHtml.Append("");
-                                mailBodyHtml.Append(messageBody);
-                                mailBodyHtml.Append("");
-                                mailBodyHtml.Append("</table>");
-                            }
-
-
-                            var guardlicenseemail = _guardDataProvider.GetGuards().Where(z => z.Id == guard).FirstOrDefault().Email;
-                            var guardlicenseprovideremail = string.Empty;
-                            if (_guardDataProvider.GetGuards().Where(z => z.Id == guard).Select(x => x.Provider) != null)
-                            {
-                                guardlicenseprovideremail = _clientDataProvider.GetKeyVehiclogWithProviders(_guardDataProvider.GetGuards().Where(z => z.Id == guard).FirstOrDefault().Provider.Trim());
-
-                            }
-                            string toAddress = string.Empty;
-                            toAddress = guardlicenseemail;
-                            if (!string.IsNullOrEmpty(guardlicenseprovideremail))
-                            {
-                                toAddress = toAddress+ ',' +guardlicenseprovideremail;
-
-                            }
-                            
-
-                            SendEmailNew(mailBodyHtml.ToString(), string.Empty, toAddress, string.Empty, string.Empty);
-
+                            messageBody.Append($"<tr><td style=\"width:10%; border: 1px solid #000000;\">Compliance</td>");
+                            messageBody.Append($"<td style=\"width:20%; border: 1px solid #000000;\">{guard.Name}</td>");
+                            messageBody.Append($"<td style=\"width:10%; border: 1px solid #000000;\">{doc.ExpiryDate?.ToString("dd-MMM-yyyy")}</td>");
+                            messageBody.Append($"<td style=\"width:60%; border: 1px solid #000000;\">{doc.Description}</td></tr>");
                         }
 
+                        if (messageBody.Length > 0)
+                        {
+                            var mailBodyHtml = new StringBuilder();
+                            mailBodyHtml.Append("Hi, <br/><br/>The following HR documents are expiring soon. Please log into the C4i System and update your HR documents with a current and version: <br/><br/>");
+                            mailBodyHtml.Append("<table width=\"100%\" cellpadding=\"5\" cellspacing=\"5\" border=\"1\" style=\"border:ridge; border-color:#000000; border-width:thin\">");
+                            mailBodyHtml.Append("<tr><td style=\"width:10%; border: 1px solid #000000;\"><b>Document Type</b></td>");
+                            mailBodyHtml.Append("<td style=\"width:20%; border: 1px solid #000000;\"><b>Guard Name</b></td>");
+                            mailBodyHtml.Append("<td style=\"width:10%; border: 1px solid #000000;\"><b>Expiry Date</b></td>");
+                            mailBodyHtml.Append("<td style=\"width:60%; border: 1px solid #000000;\"><b>Description</b></td></tr>");
+                            mailBodyHtml.Append(messageBody.ToString());
+                            mailBodyHtml.Append("</table>");
 
+                            var toAddresses = new List<string>();
+                            
+                            // Guard Email
+                            if (!string.IsNullOrWhiteSpace(guard.Email))
+                                toAddresses.Add(guard.Email.Trim());
+
+                            // Provider Email(s)
+                            if (!string.IsNullOrWhiteSpace(guard.Provider))
+                            {
+                                var providerEmails = _clientDataProvider.GetKeyVehiclogWithProviders(guard.Provider.Trim());
+                                if (!string.IsNullOrWhiteSpace(providerEmails))
+                                {
+                                    // Add unique provider emails to the list
+                                    foreach (var email in providerEmails.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        var trimmedEmail = email.Trim();
+                                        if (!toAddresses.Any(a => a.Equals(trimmedEmail, StringComparison.OrdinalIgnoreCase)))
+                                            toAddresses.Add(trimmedEmail);
+                                    }
+                                }
+                            }
+
+                            if (toAddresses.Any())
+                            {
+                                string finalTo = string.Join(",", toAddresses);
+                                string status = "Success";
+                                string error = string.Empty;
+
+                                try
+                                {
+                                    SendEmailNew(mailBodyHtml.ToString(), string.Empty, finalTo, string.Empty, string.Empty);
+                                }
+                                catch (Exception ex)
+                                {
+                                    status = "Error";
+                                    error = ex.Message;
+                                    throw; // Re-throw to be caught by the outer loop's catch block
+                                }
+                                finally
+                                {
+                                    // Save log
+                                    var log = new GuardReminderEmailLog
+                                    {
+                                        GuardId = guardId,
+                                        GuardName = guard.Name,
+                                        SentTo = guard.Email,
+                                        CcTo = string.Join(",", toAddresses.Where(a => a != guard.Email)),
+                                        MessageBody = mailBodyHtml.ToString(),
+                                        SentDate = DateTime.Now,
+                                        Status = status,
+                                        ErrorMessage = error
+                                    };
+                                    _guardDataProvider.SaveGuardReminderEmailLog(log);
+                                }
+                            }
+                        }
                     }
-
+                    catch (Exception ex)
+                    {
+                        // Log the error and continue to the next guard so one failure doesn't block the service
+                        // _logger.LogError(ex, $"Error processing guard reminder for ID {guardId}");
+                    }
                 }
-
             }
         }
 

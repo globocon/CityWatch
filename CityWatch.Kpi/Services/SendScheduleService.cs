@@ -1,44 +1,53 @@
-﻿using CityWatch.Data.Helpers;
+﻿using CityWatch.Common.Helpers;
+using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Kpi.API;
 using CityWatch.Kpi.Helpers;
+using CityWatch.Kpi.Models;
+using Dropbox.Api;
 using Dropbox.Api.Common;
 using Dropbox.Api.Files;
-using Dropbox.Api;
+using Dropbox.Api.Users;
 using MailKit.Net.Smtp;
+using MailKit.Search;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
-using CityWatch.Data.Services;
-using CityWatch.Common.Helpers;
-using System.Security.Policy;
-using System.Globalization;
-using Dropbox.Api.Users;
-using CityWatch.Data.Enums;
-using CityWatch.Kpi.Models;
-using Microsoft.AspNetCore.Mvc;
 
 
 namespace CityWatch.Kpi.Services
 {
     public interface ISendScheduleService
     {
+        //Kpi Send
         Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
         byte[] ProcessDownload(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+
+        //Kpi TimeSheet
+        Task<string> ProcessTimeSheetSchedule(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
         byte[] ProcessDownloadTimeSheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
 
-        Task<string> ProcessTimeSheetSchedule(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+        //Kpi KV
         Task<string> ProcessKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
         byte[] ProcessDownloadKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+
+        //Kpi Custom Wand
+        Task<string> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
     }
 
     public class SendScheduleService : ISendScheduleService
@@ -56,6 +65,8 @@ namespace CityWatch.Kpi.Services
         private readonly Settings _settings;
         private readonly ITimesheetGenerator _kpiTimesheetReportGenerator;
         private readonly IKeyVehicleGenerator _kpiKVReportGenerator;
+        public readonly IWandStrikeReportDataService _wandStrikeReportDataService;
+        public readonly ICustomWandExcelReportGenerator _customWandExcelReportGenerator;
 
         public SendScheduleService(IWebHostEnvironment webHostEnvironment,
             IOptions<EmailOptions> emailOptions,
@@ -66,9 +77,12 @@ namespace CityWatch.Kpi.Services
             IPatrolDataReportService patrolDataReportService,
             IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
-            ILogger<SendScheduleService> logger,            
+            ILogger<SendScheduleService> logger,
             IOptions<Settings> settings,
-            ITimesheetGenerator kpiTimesheetReportGenerator, IKeyVehicleGenerator kpiKVReportGenerator)
+            ITimesheetGenerator kpiTimesheetReportGenerator,
+            IKeyVehicleGenerator kpiKVReportGenerator,
+            IWandStrikeReportDataService wandStrikeReportDataService,
+            ICustomWandExcelReportGenerator customWandExcelReportGenerator)
         {
             _webHostEnvironment = webHostEnvironment;
             _emailOptions = emailOptions.Value;
@@ -83,6 +97,8 @@ namespace CityWatch.Kpi.Services
             _settings = settings.Value;
             _kpiTimesheetReportGenerator = kpiTimesheetReportGenerator;
             _kpiKVReportGenerator = kpiKVReportGenerator;
+            _wandStrikeReportDataService = wandStrikeReportDataService;
+            _customWandExcelReportGenerator = customWandExcelReportGenerator;
         }
 
         public async Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
@@ -177,16 +193,16 @@ namespace CityWatch.Kpi.Services
                 var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
 
                 var siteReportFileNames = new List<string>();
-                
-                    string StartDate = reportStartDate.ToString("MM/dd/yyyy");
-                    string EndDate = "";
-                    if (reportEndDate != null)
-                    {
-                        EndDate = reportEndDate.ToString("MM/dd/yyyy");
-                    }
-                    // Create Pdf Report
-                    var fileName = "";
-                    var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheetList(siteIds, reportStartDate, reportEndDate);
+
+                string StartDate = reportStartDate.ToString("MM/dd/yyyy");
+                string EndDate = "";
+                if (reportEndDate != null)
+                {
+                    EndDate = reportEndDate.ToString("MM/dd/yyyy");
+                }
+                // Create Pdf Report
+                var fileName = "";
+                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheetList(siteIds, reportStartDate, reportEndDate);
                 if (clientSiteDetails != null)
                 {
                     int[] guardIds = clientSiteDetails.Select(x => x.GuardId).ToArray();
@@ -197,19 +213,19 @@ namespace CityWatch.Kpi.Services
 
                 else
                 {
-                        int GuardID = 0;
-                        fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardID);
-                    }
-                  
-                    if (string.IsNullOrEmpty(fileName))
-                    {
-                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
-                        //continue;
-                    }
+                    int GuardID = 0;
+                    fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardID);
+                }
 
-                    siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
-                    statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
-                
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
+                    //continue;
+                }
+
+                siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
+
 
 
                 if (siteReportFileNames.Any())
@@ -263,7 +279,7 @@ namespace CityWatch.Kpi.Services
         private bool UploadReport(string reportFileName, KpiSendSchedule schedule, DateTime reportDate)
         {
             var clientSiteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId).ToArray();
-            var ClientSiteKpiSettings  = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
+            var ClientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
 
             var success = false;
             foreach (var settings in ClientSiteKpiSettings)
@@ -395,7 +411,7 @@ namespace CityWatch.Kpi.Services
 
             //To get the Default Email stop end Old Code
 
-           
+
 
             var subject = _emailOptions.Subject;
             var messageHtml = _emailOptions.Message;
@@ -414,7 +430,7 @@ namespace CityWatch.Kpi.Services
             /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 17,01,2024) */
 
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-           // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+            // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             if (!ignoreRecipients)
             {
@@ -519,6 +535,65 @@ namespace CityWatch.Kpi.Services
                 client.Disconnect(true);
             }
         }
+
+        private void SendEmailCustomWand(List<string> fileNames, KpiSendCustomWandSchedules schedule, DateTime reportDate, bool ignoreRecipients)
+        {
+            var fromAddress = _emailOptions.FromAddress.Split('|');
+
+
+            var subject = "Custom Wand Report";
+            var messageHtml = "Dear Citywatch Security Client; <br><br>Please find attached Custom Wand Records.</a>";
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
+            if (!ignoreRecipients)
+            {
+                if (!string.IsNullOrEmpty(schedule.EmailTo))
+                {
+                    foreach (var email in schedule.EmailTo.Split(","))
+                    {
+                        if (CommonHelper.IsValidEmail(email))
+                            message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(schedule.EmailBcc))
+                {
+                    foreach (var email in schedule.EmailBcc.Split(","))
+                    {
+                        if (CommonHelper.IsValidEmail(email))
+                            message.Bcc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                    }
+                }
+            }
+            message.Subject = $"{subject} - {schedule.ProjectName} - {reportDate:MMM yyyy}";
+
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = messageHtml
+            };
+
+            if (fileNames.Any() && fileNames.Count > 0)
+            {
+                foreach (var fileName in fileNames)
+                {
+                    builder.Attachments.Add(fileName);
+                }
+            }
+
+            message.Body = builder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+        }
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
         {
             var emailAddressList = new List<MailboxAddress>();
@@ -565,13 +640,23 @@ namespace CityWatch.Kpi.Services
 
             return string.Join(", ", schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
         }
-        private string CreateSummaryReportTimesheetNew(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate,string FileName)
+        private string GetSchduleIdentifierCustomWand(KpiSendCustomWandSchedules schedule)
+        {
+            if (!string.IsNullOrEmpty(schedule.ProjectName))
+                return schedule.ProjectName;
+
+            if (schedule.KpiSendCustomWandClientSites.Count == 1)
+                return schedule.KpiSendCustomWandClientSites.Single().ClientSite.Name;
+
+            return string.Join(", ", schedule.KpiSendCustomWandClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
+        }
+        private string CreateSummaryReportTimesheetNew(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate, string FileName)
         {
             var summaryFileName = FileName;
             summaryFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", summaryFileName);
             return summaryFileName;
         }
-            private string CreateSummaryReportTimesheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate)
+        private string CreateSummaryReportTimesheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate)
         {
 
             var coverSheetType = CoverSheetType.Monthly;
@@ -599,11 +684,11 @@ namespace CityWatch.Kpi.Services
             else
             {
                 var GuardId = 0;
-                 summaryFileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardId);
+                summaryFileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardId);
                 //fileName = $"{DateTime.Now.ToString("yyyyMMdd")} - Time Sheet -_{new Random().Next()}.pdf";
             }
 
-           
+
             summaryFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", summaryFileName);
             return summaryFileName;
         }
@@ -707,41 +792,41 @@ namespace CityWatch.Kpi.Services
                 var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
 
                 var siteReportFileNames = new List<string>();
-               
-                    string StartDate = reportStartDate.ToString("MM/dd/yyyy");
-                    string EndDate = "";
-                    if (reportEndDate!=null)
-                    {
-                         EndDate = reportEndDate.ToString("MM/dd/yyyy");
-                    }
+
+                string StartDate = reportStartDate.ToString("MM/dd/yyyy");
+                string EndDate = "";
+                if (reportEndDate != null)
+                {
+                    EndDate = reportEndDate.ToString("MM/dd/yyyy");
+                }
                 var fileName = "";
                 // Create Pdf Report
                 //DateTime reportEndDate = DateTime.ParseExact("your_input_here", "MM/dd/yyyy", CultureInfo.InvariantCulture);
                 var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheetList(siteIds, reportStartDate, reportEndDate);
-                    
-                    if (clientSiteDetails != null)
-                    {
-                        int[] guardIds = clientSiteDetails.Select(x => x.GuardId).ToArray();
-                            fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReportList(reportStartDate, reportEndDate, guardIds);
-                        
 
-                    }
-                    else
-                    {
-                        var GuardId = 0;
-                        fileName= _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardId);
-                        //fileName = $"{DateTime.Now.ToString("yyyyMMdd")} - Time Sheet -_{new Random().Next()}.pdf";
-                    }
-                    
-                    if (string.IsNullOrEmpty(fileName))
-                    {
-                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
-                        //continue;
-                    }
+                if (clientSiteDetails != null)
+                {
+                    int[] guardIds = clientSiteDetails.Select(x => x.GuardId).ToArray();
+                    fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReportList(reportStartDate, reportEndDate, guardIds);
 
-                    siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
-                    statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
-                
+
+                }
+                else
+                {
+                    var GuardId = 0;
+                    fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardId);
+                    //fileName = $"{DateTime.Now.ToString("yyyyMMdd")} - Time Sheet -_{new Random().Next()}.pdf";
+                }
+
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
+                    //continue;
+                }
+
+                siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
+
 
                 if (siteReportFileNames.Any())
                 {
@@ -756,13 +841,13 @@ namespace CityWatch.Kpi.Services
                     PdfHelper.CombinePdfReportsTimesheet(reportFileName, siteReportFileNames, summaryFileName);
 
 
-                   
+
 
 
                     if (upload)
                     {
                         schedule.NextRunOn = KpiTimesheetScheduleRunOnCalculator.GetNextRunOn(schedule);
-                       // _kpiSchedulesDataProvider.SaveSendSchedule(schedule);
+                        // _kpiSchedulesDataProvider.SaveSendSchedule(schedule);
 
                         if (!_webHostEnvironment.IsDevelopment())
                             UploadReportTime(reportFileName, schedule, reportStartDate);
@@ -809,7 +894,7 @@ namespace CityWatch.Kpi.Services
                 {
                     EndDate = reportEndDate.ToString("MM/dd/yyyy");
                 }
-               // _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
+                // _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
 
                 // Create Pdf Report
                 var fileName = "";
@@ -938,7 +1023,7 @@ namespace CityWatch.Kpi.Services
 
         public byte[] ProcessDownloadKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
         {
-            
+
             var statusLog = new StringBuilder();
             byte[] fileBytes = null;
             try
@@ -962,7 +1047,7 @@ namespace CityWatch.Kpi.Services
                   .Select(x => x.ClientSiteId)
                   .ToArray();
                 var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientsiteids).ToList();
-                
+
 
                 fileName = _kpiKVReportGenerator.GeneratePdfReport(clientSiteKpiSettings, schedule, reportStartDate, reportEndDate);
                 if (string.IsNullOrEmpty(fileName))
@@ -984,7 +1069,7 @@ namespace CityWatch.Kpi.Services
 
                     // Combine reports to a single pdf                    
                     //var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily KV Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
-                   var reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+                    var reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
                     //PdfHelper.CombinePdfReportsTimesheet(reportFileName, siteReportFileNames, summaryFileName);
 
                     //PdfHelper.CombinePdfReportsTimesheet(reportFileName, siteReportFileNames,null);
@@ -1053,6 +1138,220 @@ namespace CityWatch.Kpi.Services
 
             return success;
         }
+
+
+        //Custom Wand Start
+        public async Task<string> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
+        {
+            var statusLog = new StringBuilder();
+            try
+            {
+                statusLog.AppendLine($"Schedule {schedule.Id} - Starting. ");
+                var siteIds = schedule.KpiSendCustomWandClientSites.Select(z => z.ClientSiteId).ToArray();
+                DateTime reportEndDate = DateTime.Today;
+                string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
+
+                if (schedule.Frequency == SendSchdeuleFrequency.Daily)
+                {
+                    // Send yesterday's scan data in report
+                    reportStartDate = DateTime.Today.AddDays(-1);
+                    reportEndDate = reportStartDate; // DateTime.Today;
+                }
+
+                if (schedule.Frequency == SendSchdeuleFrequency.Weekly)
+                {
+                    //Send Previous week scan data in report
+                    reportStartDate = DateTime.Today.AddDays(-7);
+                    reportEndDate = DateTime.Today.AddDays(-1);
+                }
+                if (schedule.Frequency == SendSchdeuleFrequency.Monthly)
+                {
+                    //Send current month scan data in report
+                    // No need to change report start date 
+                    reportEndDate = reportStartDate.AddMonths(1).AddDays(-1); // Last date of the month
+                }
+
+                var siteReportFileNames = new List<string>();
+
+                string StartDate = reportStartDate.ToString("MM-dd-yyyy");
+                string EndDate = reportEndDate.ToString("MM-dd-yyyy");
+                WandStrikeAuditLogRequest wandStrikeAuditLogRequest = new WandStrikeAuditLogRequest()
+                {
+                    LogFromDate = reportStartDate,
+                    LogToDate = reportEndDate,
+                    IspatrolCarToggleOn = false,
+                    ClientSiteId = schedule.KpiSendCustomWandClientSites != null ? string.Join(",", schedule.KpiSendCustomWandClientSites.Select(x => x.ClientSiteId)) : string.Empty
+                };
+
+
+                //Check and create folder if not exists
+                try
+                {
+                    if (!Directory.Exists(filePath))
+                    {
+                        statusLog.AppendLine($"Root directory {filePath} does not exists.");
+                        Directory.CreateDirectory(filePath);
+                    }
+                }
+                catch (Exception)
+                {
+                    statusLog.AppendLine($"Error creating report root directory {filePath}.");
+                }
+
+
+                //Create Excel Reports
+                if (schedule.CustomWandReportType == CustomWandReportType.MonSun)
+                {
+                    wandStrikeAuditLogRequest.IncludeAllTagsInStrike = true;
+                    var wandStrikeAuditLogViewModel = _wandStrikeReportDataService.GetWandStrikeAuditLogIncludingSmartWandStrikeAndAllTags(wandStrikeAuditLogRequest)
+                                                        .OrderBy(x => x.clientSiteSmartWandTagsHitLog.LoggedInClientSite.Name)
+                                                        .ThenByDescending(x => x.clientSiteSmartWandTagsHitLog.LabelDescription)
+                                                        .ThenByDescending(x => x.clientSiteSmartWandTagsHitLog.HitLocalDateTime)
+                                                        .ToList();
+                    try
+                    {
+                        string MonToSunExcel = _customWandExcelReportGenerator.GenerateMonToSunExcel(wandStrikeAuditLogViewModel, StartDate, EndDate, filePath);
+
+                        if (string.IsNullOrEmpty(MonToSunExcel))
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report.");
+                        }
+                        else
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  MonToSun Wand Excel Report Generated.");
+                            siteReportFileNames.Add(Path.Combine(filePath, MonToSunExcel));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report. Error:- {ex.ToString()}");
+                    }
+                }
+
+                if (schedule.CustomWandReportType == CustomWandReportType.ClientSite)
+                {
+                    wandStrikeAuditLogRequest.IncludeAllTagsInStrike = false;
+                    var wandStrikeAuditLogViewModel = _wandStrikeReportDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest)
+                                                        .OrderBy(x => x.clientSiteSmartWandTagsHitLog.LoggedInClientSite.Name)
+                                                        .ThenBy(x => x.clientSiteSmartWandTagsHitLog.HitLocalDateTime)
+                                                        .ToList();
+
+                    try
+                    {
+                        string SiteExcel = _customWandExcelReportGenerator.GenerateSiteExcel(wandStrikeAuditLogViewModel, StartDate, EndDate, filePath);
+
+                        if (string.IsNullOrEmpty(SiteExcel))
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report.");
+                        }
+                        else
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  Site Wand Excel Report Generated.");
+                            siteReportFileNames.Add(Path.Combine(filePath, SiteExcel));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report. Error:- {ex.ToString()}");
+
+                    }
+                }
+
+                if (schedule.CustomWandReportType == CustomWandReportType.All)
+                {
+                    wandStrikeAuditLogRequest.IncludeAllTagsInStrike = true;
+                    var wandStrikeAuditLogViewModelWithAllTagsInStrike = _wandStrikeReportDataService.GetWandStrikeAuditLogIncludingSmartWandStrikeAndAllTags(wandStrikeAuditLogRequest)
+                                                                            .OrderBy(x => x.clientSiteSmartWandTagsHitLog.LoggedInClientSite.Name)
+                                                                            .ThenByDescending(x => x.clientSiteSmartWandTagsHitLog.LabelDescription)
+                                                                            .ThenByDescending(x => x.clientSiteSmartWandTagsHitLog.HitLocalDateTime)
+                                                                            .ToList();
+
+                    wandStrikeAuditLogRequest.IncludeAllTagsInStrike = false;
+                    var wandStrikeAuditLogViewModelWithOnlyStrikeTags = _wandStrikeReportDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest)
+                                                                            .OrderBy(x => x.clientSiteSmartWandTagsHitLog.LoggedInClientSite.Name)
+                                                                            .ThenBy(x => x.clientSiteSmartWandTagsHitLog.HitLocalDateTime)
+                                                                            .ToList();
+
+                    try
+                    {
+                        string excelBytesIncludingAllTagsInStrike = _customWandExcelReportGenerator.GenerateMonToSunExcel(wandStrikeAuditLogViewModelWithAllTagsInStrike, StartDate, EndDate, filePath);
+
+                        if (string.IsNullOrEmpty(excelBytesIncludingAllTagsInStrike))
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report (CustomWandReportType.All).");
+                        }
+                        else
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  MonToSun Wand Excel Report Generated (CustomWandReportType.All).");
+                            siteReportFileNames.Add(Path.Combine(filePath, excelBytesIncludingAllTagsInStrike));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report (CustomWandReportType.All). Error:- {ex.ToString()}");
+                    }
+
+                    try
+                    {
+                        string excelBytesExcludingAllTagsInStrike = _customWandExcelReportGenerator.GenerateSiteExcel(wandStrikeAuditLogViewModelWithOnlyStrikeTags, StartDate, EndDate, filePath);
+
+                        if (string.IsNullOrEmpty(excelBytesExcludingAllTagsInStrike))
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report (CustomWandReportType.All).");
+                        }
+                        else
+                        {
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  Site Wand Excel Report Generated (CustomWandReportType.All).");
+                            siteReportFileNames.Add(Path.Combine(filePath, excelBytesExcludingAllTagsInStrike));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report (CustomWandReportType.All). Error:- {ex.ToString()}");
+
+                    }
+                }
+
+                statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Completed.");
+
+                if (siteReportFileNames.Any())
+                {
+                    schedule.ProjectName = GetSchduleIdentifierCustomWand(schedule);
+
+                    // Send Email
+                    statusLog.AppendLine($"Sending Mail");
+                    SendEmailCustomWand(siteReportFileNames, schedule, reportStartDate, ignoreRecipients);
+                    statusLog.AppendLine($"Send Mail Success");
+
+                    if (upload)
+                    {
+                        schedule.NextRunOn = KpiCustomWandScheduleRunOnCalculator.GetNextRunOn(schedule);
+                        _kpiSchedulesDataProvider.SaveCustomWandSchedule(schedule);
+
+                        //if (!_webHostEnvironment.IsDevelopment())
+                        //    UploadReportCustomWand(reportFileName, schedule, reportStartDate); // -- refer UploadReportTime
+                    }
+
+                    // Cleanup files
+                    foreach (var fileName1 in siteReportFileNames)
+                    {
+                        statusLog.AppendLine($"Cleanup file {fileName1}");
+                        if (File.Exists(fileName1))
+                            File.Delete(fileName1);
+                    }
+                }
+
+                statusLog.AppendLine($"Schedule {schedule.Id} - Completed.");
+            }
+            catch (Exception ex)
+            {
+                statusLog.AppendLine($"Schedule {schedule.Id} - Exception - {ex.ToString()}");
+            }
+
+            return statusLog.ToString();
+        }
+
+        //Custom Wand End
 
     }
 }

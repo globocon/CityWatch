@@ -19,7 +19,7 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPOI(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest);
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
-        List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest);
+        
     }
 
     public class AuditLogViewDataService : IAuditLogViewDataService
@@ -147,79 +147,6 @@ namespace CityWatch.Web.Services
             var dailyGuardLogGroups = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
             return dailyGuardLogGroups.ToList();
         }
-
-        public List<WandStrikeAuditLogViewModel> GetWandStrikeAuditLogIncludingSmartWandStrike(WandStrikeAuditLogRequest wsRequest)
-        {
-
-            List<ClientSiteSmartWandTagsHitLog> strikeLogs = new List<ClientSiteSmartWandTagsHitLog>();
-            List<ClientSiteSmartWandTagsHitLog> filterLogs = new List<ClientSiteSmartWandTagsHitLog>();
-            List<ClientSiteSmartWand> smartWands = new List<ClientSiteSmartWand>();
-            List<IncidentReportPosition> patrolCars = new List<IncidentReportPosition>();
-            List<ClientSiteSmartWandTags> smartwandtags = new List<ClientSiteSmartWandTags>();
-
-            List<Guard> guards = new List<Guard>();
-            List<ClientSite> clientSites = new List<ClientSite>();
-
-            guards = _guardDataProvider.GetGuards();
-            int? Id = null;
-            clientSites = _guardLogDataProvider.GetClientSites(Id);
-
-            strikeLogs = _clientSiteWandDataProvider.GetClientSiteSmartWandTagsHitLogs(wsRequest.ClientSiteIds, wsRequest.LogFromDate, wsRequest.LogToDate);
-
-            if (!wsRequest.IspatrolCarToggleOn && strikeLogs.Any())
-            {
-                strikeLogs = strikeLogs.Where(x => x.LoggedInClientSite.PatrolTourMode == PatrolTouringMode.STND).ToList();
-            }
-
-            if (strikeLogs.Any())
-            {
-                smartWands = _clientSiteWandDataProvider.GetClientSiteSmartWands();
-                //patrolCars = _clientSiteWandDataProvider.GetPatrolCarsForSite(wsRequest.ClientSiteIds);
-                patrolCars = _clientSiteWandDataProvider.GetPatrolCars();
-                smartwandtags = _clientSiteWandDataProvider.GetAllSmartwandTags();
-
-                foreach (var item in strikeLogs)
-                {
-                    item.LabelDescription = smartwandtags?.FirstOrDefault(z => z.UId == item.TagUId)?.LabelDescription ?? item.LabelDescription;
-                    item.LoggedInUser.Password = null; // Hide user password
-
-                    if (item.SmartWandId.HasValue && item.SmartWandId.Value > 0)
-                    {
-                        var smartWand = smartWands.FirstOrDefault(z => z.Id == item.SmartWandId.Value);
-                        if (smartWand != null)
-                        {
-                            item.SmartWandNameId = smartWand.SmartWandId;
-                            item.PatrolCarId = smartWand.PatrolCarId;
-                            item.PatrolCarName = patrolCars?.FirstOrDefault(z => z.Id == smartWand.PatrolCarId)?.Name;
-                            //item.GPScoordinates = _guardLogDataProvider.GetTagScanGpsFromLogBook(item.Id);                            
-                        }
-                    }
-                }
-
-                filterLogs = strikeLogs.Where(z =>
-                   (string.IsNullOrEmpty(wsRequest.TagId) || wsRequest.TagIds.Contains(z.TagUId)) &&
-                   (string.IsNullOrEmpty(wsRequest.TagTypeId) || wsRequest.TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
-                   (string.IsNullOrEmpty(wsRequest.TagLabel) || wsRequest.TagLabelIds.Contains(z.LabelDescription)) &&
-                   (string.IsNullOrEmpty(wsRequest.SmartWandId) || wsRequest.SmartWandIds.Contains(z.SmartWandNameId)) &&
-                   (string.IsNullOrEmpty(wsRequest.PatrolCarId) || wsRequest.PatrolCarIds.Contains(Convert.ToInt16(z.PatrolCarId))) &&
-                   (string.IsNullOrEmpty(wsRequest.GuardName) || z.LoggedInGuard.Name.Contains(wsRequest.GuardName, StringComparison.OrdinalIgnoreCase)) &&
-                   (string.IsNullOrEmpty(wsRequest.GuardLicenceNoId) || string.Equals(z.LoggedInGuard.SecurityNo, wsRequest.GuardLicenceNoId, StringComparison.OrdinalIgnoreCase))
-               ).ToList();
-
-                if (wsRequest.IspatrolCarToggleOn && wsRequest.PatrolCarIds.Count() > 0)
-                {
-                    filterLogs = filterLogs.Where(x => x.LoggedInClientSite.PatrolTourMode != PatrolTouringMode.STND).ToList();
-                }
-            }
-
-            var filteredLogs = filterLogs.Select(z => new WandStrikeAuditLogViewModel()
-            {
-                clientSiteSmartWandTagsHitLog = z
-            })
-                .ToList();
-
-            return filteredLogs;
-
-        }
+        
     }
 }

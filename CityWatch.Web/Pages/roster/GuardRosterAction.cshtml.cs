@@ -54,7 +54,7 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { startDate = startOfWeek.ToString("yyyy-MM-dd") });
         }
 
-        public async Task<JsonResult> OnGetLoadRosterForSite(int siteId, DateTime startDate, int weeks = 1)
+        public async Task<JsonResult> OnGetLoadRosterForSite(int siteId, DateTime startDate, int weeks = 1, bool isEditMode = false)
         {
             var totalEndDate = startDate.AddDays(weeks * 7).AddSeconds(-1);
 
@@ -71,49 +71,149 @@ namespace CityWatch.Web.Pages.roster
 
             var site = await _context.ClientSites.Include(s => s.ClientType).FirstOrDefaultAsync(x => x.Id == siteId);
 
+            var statusObj = await _context.RosterSiteWeekStatuses
+                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate == startDate);
+            var status = statusObj?.Status ?? (schedules.Any(s => s.ClientSiteId == siteId) ? "Live" : "");
+
+            var rosterGroupId = await _context.RosterGroupSites
+                .Where(x => x.ClientSiteId == siteId)
+                .Select(x => x.RosterGroupId)
+                .FirstOrDefaultAsync();
+
             // Group into the format expected by the "mdel styles" UI
             var results = new List<object>();
 
             if (site != null)
             {
-                var days = new List<List<object>>();
-                for (int i = 0; i < 7; i++)
+                if (isEditMode)
                 {
-                    var loopDate = startDate.AddDays(i).Date;
-                    var dayShifts = schedules
-                        .Where(s => s.ShiftStart.Date == loopDate)
-                        .OrderBy(s => s.ShiftStart)
-                        .Select(s => new
+                    var activeGroupIds = schedules.Select(x => x.RosterGroupId).Distinct().ToList();
+                    var assignedGroupIds = await _context.RosterGroupSites
+                        .Where(x => x.ClientSiteId == siteId)
+                        .Select(x => x.RosterGroupId)
+                        .ToListAsync();
+                    var projectIds = activeGroupIds.Union(assignedGroupIds).Distinct().ToList();
+
+                    var projectList = await _context.RosterGroups
+                        .Where(x => projectIds.Contains(x.Id) && !x.IsDeleted)
+                        .OrderBy(x => x.Name)
+                        .ToListAsync();
+
+                    if (projectList.Any())
+                    {
+                        foreach (var project in projectList)
                         {
-                            s.Id,
-                            shiftStart = s.ShiftStart.ToString("HH:mm"),
-                            shiftEnd = s.ShiftEnd.ToString("HH:mm"),
-                            guardName = s.Guard != null ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
-                            guardId = s.GuardId,
-                            reliefGuardId = s.ReliefGuardId,
-                            reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
-                            reliefProviderName = s.ReliefProviderName,
-                            reliefReason = s.ReliefReason,
-                            guardLicense = s.Guard != null ? (s.Guard.SecurityNo ?? "N/A") : (string.IsNullOrEmpty(s.ProviderName) ? "N/A" : "External"),
-                            reliefGuardLicense = s.ReliefGuard != null ? s.ReliefGuard.SecurityNo : "",
-                            guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.Guard != null ? (s.Guard.Provider ?? "N/A") : "N/A"),
-                            shiftType = s.ShiftType ?? "Regular",
-                            status = (int)s.Status,
-                            callsignName = s.Callsign != null ? s.Callsign.Name : "",
-                            durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
-                            sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
-                            buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
-                        })
-                        .ToList<object>();
-                    days.Add(dayShifts);
+                            var projectSchedules = schedules.Where(s => s.RosterGroupId == project.Id).ToList();
+
+                            var days = new List<List<object>>();
+                            for (int i = 0; i < 7; i++)
+                            {
+                                var loopDate = startDate.AddDays(i).Date;
+                                var dayShifts = projectSchedules
+                                    .Where(s => s.ShiftStart.Date == loopDate)
+                                    .OrderBy(s => s.ShiftStart)
+                                    .Select(s => new
+                                    {
+                                        s.Id,
+                                        groupId = s.RosterGroupId,
+                                        shiftStart = s.ShiftStart.ToString("HH:mm"),
+                                        shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                                        guardName = s.Guard != null ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
+                                        guardId = s.GuardId,
+                                        reliefGuardId = s.ReliefGuardId,
+                                        reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
+                                        reliefProviderName = s.ReliefProviderName,
+                                        reliefReason = s.ReliefReason,
+                                        guardLicense = s.Guard != null ? (s.Guard.SecurityNo ?? "N/A") : (string.IsNullOrEmpty(s.ProviderName) ? "N/A" : "External"),
+                                        reliefGuardLicense = s.ReliefGuard != null ? s.ReliefGuard.SecurityNo : "",
+                                        guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.Guard != null ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                        shiftType = s.ShiftType ?? "Regular",
+                                        status = (int)s.Status,
+                                        providerName = s.ProviderName ?? "",
+                                        reliefReasonOther = s.ReliefReasonOther ?? "",
+                                        adhocOffsiteText = s.AdhocOffsiteText ?? "",
+                                        callsignId = s.CallsignId,
+                                        callsignName = s.Callsign != null ? s.Callsign.Name : "",
+                                        durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                                        sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
+                                        buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                                        payRateId = s.PayRateId,
+                                        payRateGroupId = s.PayRate != null ? s.PayRate.PayRateGroupId : (int?)null
+                                    })
+                                    .ToList<object>();
+                                days.Add(dayShifts);
+                            }
+
+                            results.Add(new
+                            {
+                                siteId = site.Id,
+                                siteName = site.Name,
+                                clientTypeName = site.ClientType?.Name ?? "Security Service",
+                                rosterGroupId = project.Id,
+                                projectName = project.Name,
+                                projectStatus = status,
+                                days = days
+                            });
+                        }
+                    }
+                    else
+                    {
+                        isEditMode = false;
+                    }
                 }
 
-                results.Add(new
+                if (!isEditMode)
                 {
-                    siteName = site.Name,
-                    clientTypeName = site.ClientType?.Name ?? "Security Service",
-                    days = days
-                });
+                    var days = new List<List<object>>();
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var loopDate = startDate.AddDays(i).Date;
+                        var dayShifts = schedules
+                            .Where(s => s.ShiftStart.Date == loopDate)
+                            .OrderBy(s => s.ShiftStart)
+                            .Select(s => new
+                            {
+                                s.Id,
+                                groupId = s.RosterGroupId,
+                                shiftStart = s.ShiftStart.ToString("HH:mm"),
+                                shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                                guardName = s.Guard != null ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
+                                guardId = s.GuardId,
+                                reliefGuardId = s.ReliefGuardId,
+                                reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
+                                reliefProviderName = s.ReliefProviderName,
+                                reliefReason = s.ReliefReason,
+                                guardLicense = s.Guard != null ? (s.Guard.SecurityNo ?? "N/A") : (string.IsNullOrEmpty(s.ProviderName) ? "N/A" : "External"),
+                                reliefGuardLicense = s.ReliefGuard != null ? s.ReliefGuard.SecurityNo : "",
+                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.Guard != null ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                shiftType = s.ShiftType ?? "Regular",
+                                status = (int)s.Status,
+                                providerName = s.ProviderName ?? "",
+                                reliefReasonOther = s.ReliefReasonOther ?? "",
+                                adhocOffsiteText = s.AdhocOffsiteText ?? "",
+                                callsignId = s.CallsignId,
+                                callsignName = s.Callsign != null ? s.Callsign.Name : "",
+                                durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                                sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
+                                buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0,
+                                payRateId = s.PayRateId,
+                                payRateGroupId = s.PayRate != null ? s.PayRate.PayRateGroupId : (int?)null
+                            })
+                            .ToList<object>();
+                        days.Add(dayShifts);
+                    }
+
+                    results.Add(new
+                    {
+                        siteId = site.Id,
+                        siteName = site.Name,
+                        clientTypeName = site.ClientType?.Name ?? "Security Service",
+                        rosterGroupId = rosterGroupId,
+                        projectName = "",
+                        projectStatus = status,
+                        days = days
+                    });
+                }
             }
 
             // Fetch Holidays for the range
@@ -133,12 +233,7 @@ namespace CityWatch.Web.Pages.roster
                 })
                 .ToListAsync();
 
-            var statusObj = await _context.RosterSiteWeekStatuses
-                .FirstOrDefaultAsync(x => x.ClientSiteId == siteId && x.StartDate == startDate);
-            var status = statusObj?.Status ?? (schedules.Any(s => s.ClientSiteId == siteId) ? "Live" : "");
-
-
-            return new JsonResult(new { results, holidays, siteState = site?.State, status });
+            return new JsonResult(new { results, holidays, siteState = site?.State, status, rosterGroupId });
         }
 
         public async Task<IActionResult> OnGetDownloadSiteRosterPdf(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
@@ -272,6 +367,82 @@ namespace CityWatch.Web.Pages.roster
             {
                 return new JsonResult(new { success = false, message = "Error saving summary" });
             }
+        }
+
+        public async Task<IActionResult> OnPostDeleteShift(int id)
+        {
+            var schedule = await _context.RosterSchedules.FindAsync(id);
+            if (schedule == null) return new JsonResult(new { success = false, message = "Shift not found" });
+
+            try
+            {
+                var today = DateTime.Today;
+                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
+                
+                if (weekEndDate < firstDayOfCurrentMonth)
+                {
+                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                }
+
+                int oldStatusVal = (int)schedule.Status;
+                schedule.IsDeleted = true;
+
+                // 1. Save the actual shift deletion first
+                await _context.SaveChangesAsync();
+
+                // 2. Try to log the audit entry
+                try
+                {
+                    var userIdString = AuthUserHelper.LoggedInUserId?.ToString();
+                    int? parsedUserId = null;
+                    if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                    {
+                        parsedUserId = uid;
+                    }
+
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = schedule.Id,
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        Action = "Deleted",
+                        OldStatus = oldStatusVal,
+                        NewStatus = null, // Using null like Booking.cshtml.cs for deleted
+                        Details = "Shift deleted via Logbook portal.",
+                        ActionSource = "Web",
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString()
+                    });
+                    await _context.SaveChangesAsync();
+                }
+                catch { /* Ignore audit failures */ }
+
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = "Error deleting shift: " + ex.Message });
+            }
+        }
+
+        private DayOfWeek GetFirstDayOfWeek()
+        {
+            var timesheet = _clientDataProvider.GetTimesheetDetails();
+            if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
+            {
+                if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
+                {
+                    return parsedDay;
+                }
+            }
+            return DayOfWeek.Monday;
+        }
+
+        private DateTime StartOfWeek(DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
         }
     }
 }

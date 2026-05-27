@@ -1,5 +1,6 @@
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
@@ -27,14 +28,17 @@ namespace CityWatch.Web.Pages.Admin
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
         public readonly IConfigDataProvider _configDataProvider;
         public readonly ISmartWandReportZipGenarator _smartWandReportGenarator;
+        public readonly IWandStrikeReportDataService _wandStrikeReportDataService;
         public string ClientNameTitle { get; set; }
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
             IClientSiteViewDataService clientViewDataService,
-            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider,
-            ISmartWandReportZipGenarator smartWandReportGenarator)
+            ITimesheetReportGenerator TimesheetReportGenerator, 
+            IConfigDataProvider configDataProvider,
+            ISmartWandReportZipGenarator smartWandReportGenarator,
+            IWandStrikeReportDataService wandStrikeReportDataService)
         {
             _viewDataService = viewDataService;
             _guardLogDataProvider = guardLogDataProvider;
@@ -44,6 +48,7 @@ namespace CityWatch.Web.Pages.Admin
             _TimesheetReportGenerator = TimesheetReportGenerator;
             _configDataProvider = configDataProvider;
             _smartWandReportGenarator = smartWandReportGenarator;
+            _wandStrikeReportDataService = wandStrikeReportDataService;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
@@ -726,8 +731,17 @@ namespace CityWatch.Web.Pages.Admin
         {
             // if(!string.IsNullOrEmpty(wandStrikeAuditLogRequest.TagLabel)) { wandStrikeAuditLogRequest.TagLabel = Uri.UnescapeDataString(wandStrikeAuditLogRequest.TagLabel); }            
 
-            var wandStrikeAuditLogViewModel = _auditLogViewDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest).OrderBy(x => x.DateTimeSort).ToList();
-            return new JsonResult(new { wandStrikeAuditLogViewModel });
+            if(!wandStrikeAuditLogRequest.IncludeAllTagsInStrike)
+            {
+                var wandStrikeAuditLogViewModel = _wandStrikeReportDataService.GetWandStrikeAuditLogIncludingSmartWandStrike(wandStrikeAuditLogRequest).OrderBy(x => x.DateTimeSort).ToList();
+                return new JsonResult(new { wandStrikeAuditLogViewModel });
+            }
+            else
+            {
+                var wandStrikeAuditLogViewModel = _wandStrikeReportDataService.GetWandStrikeAuditLogIncludingSmartWandStrikeAndAllTags(wandStrikeAuditLogRequest).OrderBy(x => x.DateTimeSort).ToList();
+                return new JsonResult(new { wandStrikeAuditLogViewModel });                
+            }
+            
         }
 
         public JsonResult OnPostDownloadWandStrikeLogZip(WandStrikeAuditLogRequest wandStrikeAuditLogRequest)

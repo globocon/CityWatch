@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace CityWatch.Web.Models
+namespace CityWatch.Data.Models
 {
     public class WandStrikeAuditLogRequest
     {        
@@ -71,6 +71,8 @@ namespace CityWatch.Web.Models
         }
 
         public bool IspatrolCarToggleOn { get; set; }
+
+        public bool IncludeAllTagsInStrike { get; set; } = false;
 
     }
 }

@@ -11,29 +11,45 @@ namespace CityWatch.Data.Providers
 {
     public interface IKpiSchedulesDataProvider
     {
+        //KpiSendSchedule
         List<KpiSendSchedule> GetAllSendSchedules();
         KpiSendSchedule GetSendScheduleById(int scheduleId);
-        void SaveSendSchedule(KpiSendSchedule sendSchedule, bool updateClientSites = false);
+        List<KpiSendSchedule> GetAllSendSchedulesUisngGuardId(int GuardId);
+        KpiSendSchedule GetSendScheduleByIdandGuardId(int scheduleId, int GuardId);
+       
         void DeleteSendSchedule(int id);
-        void DeleteSendScheduleTimesheet(int id);
+        void SaveSendSchedule(KpiSendSchedule sendSchedule, bool updateClientSites = false);
         List<KpiSendScheduleJob> GetAllKpiSendScheduleJobs();
-        List<KpiSendScheduleJobsTimeSheet> GetAllKpiSendScheduleJobsTimesheet();
-        int SaveSendScheduleJob(KpiSendScheduleJob sendScheduleJob);
-        int SaveSendScheduleJobTimesheet(KpiSendScheduleJobsTimeSheet sendScheduleJob);
         List<KpiSendScheduleSummaryNote> GetKpiSendScheduleSummaryNotes(int scheduleId);
         KpiSendScheduleSummaryNote GetKpiSendScheduleSummaryNote(int id);
         int SaveKpiSendScheduleSummaryNote(KpiSendScheduleSummaryNote summaryNote);
         void SaveKpiSendScheduleSummaryImage(int scheduleId, string fileName);
         KpiSendScheduleSummaryImage GetScheduleSummaryImage(int scheduleId);
         void DeleteSummaryImage(int scheduleId);
-        List<KpiSendSchedule> GetAllSendSchedulesUisngGuardId(int GuardId);
-        List<KpiSendTimesheetSchedules> GetAllTimesheetSchedulesUisngGuardId(int GuardId);
-        KpiSendSchedule GetSendScheduleByIdandGuardId(int scheduleId, int GuardId);
-        void SaveTimesheetSchedule(KpiSendTimesheetSchedules sendSchedule, bool updateClientSites = false);
+        public void RemoveAllKpiSendScheduleJobsOldNotComplete();
+        int SaveSendScheduleJob(KpiSendScheduleJob sendScheduleJob);
+
+        //KpiTimesheetSchedule
         List<KpiSendTimesheetSchedules> GetAllTimesheetSchedules();
         KpiSendTimesheetSchedules GetTimesheetScheduleById(int scheduleId);
+        List<KpiSendTimesheetSchedules> GetAllTimesheetSchedulesUisngGuardId(int GuardId);
         KpiSendTimesheetSchedules GetTimesheetScheduleByIdandGuardId(int scheduleId, int GuardId);
-        public void RemoveAllKpiSendScheduleJobsOldNotComplete();
+        void SaveTimesheetSchedule(KpiSendTimesheetSchedules sendSchedule, bool updateClientSites = false);
+        void DeleteSendScheduleTimesheet(int id);
+        List<KpiSendScheduleJobsTimeSheet> GetAllKpiSendScheduleJobsTimesheet();
+        int SaveSendScheduleJobTimesheet(KpiSendScheduleJobsTimeSheet sendScheduleJob);
+
+        //KpiCustomWandSchedule
+        List<KpiSendCustomWandSchedules> GetAllCustomWandSchedules();
+        KpiSendCustomWandSchedules GetCustomWandScheduleById(int scheduleId);
+        List<KpiSendCustomWandSchedules> GetAllCustomWandSchedulesUisngGuardId(int GuardId);
+        KpiSendCustomWandSchedules GetCustomWandScheduleByIdandGuardId(int scheduleId, int GuardId);
+        void SaveCustomWandSchedule(KpiSendCustomWandSchedules sendSchedule, bool updateClientSites = false);
+        void DeleteCustomWandSchedule(int id);
+        List<KpiSendScheduleJobsCustomWand> GetAllKpiSendScheduleJobsCustomWand();
+        int SaveSendScheduleJobCustomWand(KpiSendScheduleJobsCustomWand sendScheduleJob);
+
+        //KpiKVSchedule
         void SaveKVSchedule(KpiSendKVSchedules sendSchedule, bool updateClientSites = false);
         List<KpiSendKVSchedules> GetAllKVSchedules();
         void DeleteSendScheduleKV(int id);
@@ -42,13 +58,11 @@ namespace CityWatch.Data.Providers
         int SaveSendScheduleJobKV(KpiSendScheduleJobsKV sendScheduleJob);
         List<ClientSiteKpiNote> GetClientSiteKpiNotesAndHRRecords(int id);
 
-        public (bool success, string message, PcarRoute route) SavePcarrouteMaster(
-   int? routeId, string routeName, int smartwandId);
 
+        //PcarRoute
+        public (bool success, string message, PcarRoute route) SavePcarrouteMaster(   int? routeId, string routeName, int smartwandId);
         public bool SavePcarrouteDetails(PcarRouteSaveViewModel model);
-
         public List<PcarRouteGridDto> GetPCARProfilesAll();
-
         public bool DeletePcarrouteProfile(int routeId);
     }
 
@@ -74,6 +88,15 @@ namespace CityWatch.Data.Providers
         {
             return _context.KpiSendTimesheetSchedules
                 .Include(z => z.KpiSendTimesheetClientSites)
+                .ThenInclude(y => y.ClientSite)
+                .ThenInclude(y => y.ClientType)
+                .ToList();
+        }
+
+        public List<KpiSendCustomWandSchedules> GetAllCustomWandSchedules()
+        {
+            return _context.KpiSendCustomWandSchedules
+                .Include(z => z.KpiSendCustomWandClientSites)
                 .ThenInclude(y => y.ClientSite)
                 .ThenInclude(y => y.ClientType)
                 .ToList();
@@ -153,6 +176,44 @@ namespace CityWatch.Data.Providers
 
             return selectedSiteSchedule;
         }
+        public List<KpiSendCustomWandSchedules> GetAllCustomWandSchedulesUisngGuardId(int GuardId)
+        {
+
+            var selectedSiteSchedule = new List<KpiSendCustomWandSchedules>();
+            var distinctClientSiteIds = _context.GuardLogins
+            .Where(z => z.GuardId == GuardId)
+            .Select(z => z.ClientSite.Id)
+            .Distinct()
+            .ToList();
+
+            var list = _context.KpiSendCustomWandSchedules
+               .Include(z => z.KpiSendCustomWandClientSites)
+               .ThenInclude(y => y.ClientSite)
+               .ThenInclude(y => y.ClientType)
+               .ToList();
+
+            foreach (var item in list)
+            {
+                foreach (var item2 in item.KpiSendCustomWandClientSites)
+                {
+
+                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
+                    {
+
+                        selectedSiteSchedule.Add(item);
+                    }
+                    else
+                    {
+                        item.KpiSendCustomWandClientSites.Remove(item2);
+                    }
+                }
+
+
+            }
+
+            return selectedSiteSchedule;
+        }
+
         public KpiSendSchedule GetSendScheduleById(int scheduleId)
         {
 
@@ -169,6 +230,15 @@ namespace CityWatch.Data.Providers
 
             return _context.KpiSendTimesheetSchedules
               .Include(z => z.KpiSendTimesheetClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == scheduleId);
+        }
+        public KpiSendCustomWandSchedules GetCustomWandScheduleById(int scheduleId)
+        {
+
+            return _context.KpiSendCustomWandSchedules
+              .Include(z => z.KpiSendCustomWandClientSites)
               .ThenInclude(y => y.ClientSite)
               .ThenInclude(y => y.ClientType)
               .SingleOrDefault(x => x.Id == scheduleId);
@@ -215,6 +285,29 @@ namespace CityWatch.Data.Providers
                 if (!distinctClientSiteIds.Contains(li.ClientSiteId))
                 {
                     KpiSendSchedule.KpiSendTimesheetClientSites.Remove(li);
+
+                }
+
+            }
+            return KpiSendSchedule;
+        }
+        public KpiSendCustomWandSchedules GetCustomWandScheduleByIdandGuardId(int scheduleId, int GuardId)
+        {
+            var distinctClientSiteIds = _context.GuardLogins
+          .Where(z => z.GuardId == GuardId)
+          .Select(z => z.ClientSite.Id)
+          .Distinct()
+          .ToList();
+            var KpiSendSchedule = _context.KpiSendCustomWandSchedules
+              .Include(z => z.KpiSendCustomWandClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == scheduleId);
+            foreach (var li in KpiSendSchedule.KpiSendCustomWandClientSites)
+            {
+                if (!distinctClientSiteIds.Contains(li.ClientSiteId))
+                {
+                    KpiSendSchedule.KpiSendCustomWandClientSites.Remove(li);
 
                 }
 
@@ -298,6 +391,34 @@ namespace CityWatch.Data.Providers
 
                 if (updateClientSites)
                     schedule.KpiSendTimesheetClientSites = sendSchedule.KpiSendTimesheetClientSites;
+            }
+            _context.SaveChanges();
+        }
+
+        public void SaveCustomWandSchedule(KpiSendCustomWandSchedules sendSchedule, bool updateClientSites = false)
+        {
+            var schedule = _context.KpiSendCustomWandSchedules.Include(z => z.KpiSendCustomWandClientSites).SingleOrDefault(z => z.Id == sendSchedule.Id);
+            if (schedule == null)
+                _context.Add(sendSchedule);
+            else
+            {
+                if (updateClientSites)
+                {
+                    _context.KpiSendCustomWandClientSites.RemoveRange(schedule.KpiSendCustomWandClientSites);
+                    _context.SaveChanges();
+                }
+
+                schedule.StartDate = sendSchedule.StartDate;
+                schedule.EndDate = sendSchedule.EndDate;
+                schedule.Frequency = sendSchedule.Frequency;
+                schedule.CustomWandReportType = sendSchedule.CustomWandReportType;
+                schedule.Time = sendSchedule.Time;
+                schedule.EmailTo = sendSchedule.EmailTo;
+                schedule.NextRunOn = sendSchedule.NextRunOn;
+                schedule.ProjectName = sendSchedule.ProjectName;
+                schedule.EmailBcc = sendSchedule.EmailBcc;
+                if (updateClientSites)
+                    schedule.KpiSendCustomWandClientSites = sendSchedule.KpiSendCustomWandClientSites;
             }
             _context.SaveChanges();
         }
@@ -492,6 +613,15 @@ namespace CityWatch.Data.Providers
             _context.KpiSendTimesheetSchedules.Remove(recordToDelete);
             _context.SaveChanges();
         }
+        public void DeleteCustomWandSchedule(int id)
+        {
+            var recordToDelete = _context.KpiSendCustomWandSchedules.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.KpiSendCustomWandSchedules.Remove(recordToDelete);
+            _context.SaveChanges();
+        }
 
         public List<KpiSendScheduleJob> GetAllKpiSendScheduleJobs()
         {
@@ -520,6 +650,10 @@ namespace CityWatch.Data.Providers
         {
             return _context.KpiSendScheduleJobsTimeSheet.ToList();
         }
+        public List<KpiSendScheduleJobsCustomWand> GetAllKpiSendScheduleJobsCustomWand()
+        {
+            return _context.KpiSendScheduleJobsCustomWand.ToList();
+        }
         public int SaveSendScheduleJob(KpiSendScheduleJob sendScheduleJob)
         {
             var scheduleJob = _context.KpiSendScheduleJobs.SingleOrDefault(z => z.Id == sendScheduleJob.Id);
@@ -539,6 +673,22 @@ namespace CityWatch.Data.Providers
         public int SaveSendScheduleJobTimesheet(KpiSendScheduleJobsTimeSheet sendScheduleJob)
         {
             var scheduleJob = _context.KpiSendScheduleJobsTimeSheet.SingleOrDefault(z => z.Id == sendScheduleJob.Id);
+
+            if (scheduleJob == null)
+                _context.Add(sendScheduleJob);
+            else
+            {
+                scheduleJob.CompletedDate = sendScheduleJob.CompletedDate;
+                scheduleJob.Success = sendScheduleJob.Success;
+                scheduleJob.StatusMessage = sendScheduleJob.StatusMessage;
+            }
+            _context.SaveChanges();
+
+            return sendScheduleJob.Id;
+        }
+        public int SaveSendScheduleJobCustomWand(KpiSendScheduleJobsCustomWand sendScheduleJob)
+        {
+            var scheduleJob = _context.KpiSendScheduleJobsCustomWand.SingleOrDefault(z => z.Id == sendScheduleJob.Id);
 
             if (scheduleJob == null)
                 _context.Add(sendScheduleJob);
