@@ -231,7 +231,7 @@ namespace CityWatch.Kpi.Services
         private Table CreateGuardWandScanDetails(List<SiteTagStatusPendingNew> clientSiteLogBook)
         {
             var guardWandScanDetailsTable =
-                new Table(UnitValue.CreatePercentArray(new float[] { 2, 9, 5, 2, 2 }))
+                new Table(UnitValue.CreatePercentArray(new float[] { 2, 16, 2 }))
                 .UseAllAvailableWidth()
                 .SetMarginBottom(15);
 
@@ -255,21 +255,7 @@ namespace CityWatch.Kpi.Services
                  .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
                 
                 .SetFontSize(CELL_FONT_SIZE)
-                .Add(new Paragraph("Pending FQ")));
-
-            guardWandScanDetailsTable.AddCell(
-                new Cell()
-                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                
-                .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Scans")));
-
-            guardWandScanDetailsTable.AddCell(
-                new Cell()
-                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                
-                .SetFontSize(CELL_FONT_SIZE)
-                .Add(new Paragraph("[HN] Scans")));
 
             // DATA ROWS
             foreach (var groupItem in clientSiteLogBook)
@@ -288,21 +274,9 @@ namespace CityWatch.Kpi.Services
 
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
-                    
-                    .SetFontSize(CELL_FONT_SIZE)
-                    .Add(new Paragraph(groupItem.RoundNumber.ToString())));
-
-                guardWandScanDetailsTable.AddCell(
-                    new Cell()
                    
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.TodayScanCount.ToString())));
-
-                guardWandScanDetailsTable.AddCell(
-                    new Cell()
-                   
-                    .SetFontSize(CELL_FONT_SIZE)
-                    .Add(new Paragraph(groupItem.MyScans.ToString())));
             }
 
             return guardWandScanDetailsTable;
