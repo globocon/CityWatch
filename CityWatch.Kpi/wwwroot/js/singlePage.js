@@ -2137,8 +2137,9 @@ $(function () {
             }).done(function (result) {
                 if (result.success) {
                     //Use .one() instead of .on() here so the event runs only once after this reload.
-                    gritdWandTags.one('dataBound', function () {
-                        var rowCount = gritdWandTags.getAll().length;
+                    gritdWandTags.one('dataBound', function () {                        
+                        var rowCount = gritdWandTags.getAll()
+                            .filter(x => x.fqBypass === false || x.fqBypass === 0 || x.fqBypass == null).length;                        
                         $('#WandPointsPerPatrol').val(rowCount);
                     });
                     gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
@@ -2169,7 +2170,8 @@ $(function () {
                 }).done(function () {
                     //Use .one() instead of .on() here so the event runs only once after this reload.
                     gritdWandTags.one('dataBound', function () {
-                        var rowCount = gritdWandTags.getAll().length;
+                        var rowCount = gritdWandTags.getAll()
+                            .filter(x => x.fqBypass === false || x.fqBypass === 0 || x.fqBypass == null).length;
                         $('#WandPointsPerPatrol').val(rowCount);
                     });
                     gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });

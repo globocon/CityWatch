@@ -290,7 +290,7 @@ namespace CityWatch.Data.Providers
                 if (clientSiteKpiSetting != null)
                 {
                     var WandPointsPerPatrol = _dbContext.ClientSiteSmartWandTags.Where(x => x.ClientSiteId == clientSiteSmartWandTag.ClientSiteId
-                    && x.IsDeleted == false).Count();
+                    && x.IsDeleted == false && !x.FqBypass).Count();
                     clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
                 }
             }
@@ -328,7 +328,7 @@ namespace CityWatch.Data.Providers
                 if (clientSiteKpiSetting != null)
                 {
                     var WandPointsPerPatrol = _dbContext.ClientSiteSmartWandTags.Where(x => x.ClientSiteId == deleteClientSiteSmartWandTags.ClientSiteId
-                    && x.IsDeleted == false).Count();
+                    && x.IsDeleted == false && !x.FqBypass).Count();
                     clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
                 }
             }
