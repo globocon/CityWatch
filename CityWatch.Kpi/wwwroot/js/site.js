@@ -3127,11 +3127,13 @@ $(function () {
         //and the value is set to the hidden field "DropboxImagesDir" before saving. (Refer singlePage.js function  $('#save_site_dropboxsettings').on('click', function ())
         var _dropboxImagesDir = $('#DropboxImagesDir_DropboxSettings').val();
         $('#DropboxImagesDir').val(_dropboxImagesDir);
+                
+        var formData = $('#frm_site_settings').serialize();
 
         $.ajax({
             url: '/admin/settings?handler=ClientSiteKpiSettings',
             type: 'POST',
-            data: $('#frm_site_settings').serialize(),
+            data: formData,
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {

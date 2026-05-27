@@ -264,6 +264,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+            var WandPointsPerPatrol = _clientSiteWandDataProvider.GetClientSiteSmartWandTags(siteId).Where(x => !x.FqBypass).Count();
             var _clientSiteMobileAppSettings = _configDataProvider.GetCrowdSettingForSite(siteId);
             if (_clientSiteMobileAppSettings == null)
             {
@@ -276,6 +277,7 @@ namespace CityWatch.Kpi.Pages.Admin
             }
             else
             {
+                clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
                 clientSiteKpiSetting.clientSiteMobileAppSettings = _clientSiteMobileAppSettings;
             }
 
@@ -301,6 +303,9 @@ namespace CityWatch.Kpi.Pages.Admin
             try
             {
                 clientSiteId = clientSiteKpiSetting.ClientSiteId;
+
+                var WandPointsPerPatrol = _clientSiteWandDataProvider.GetClientSiteSmartWandTags(clientSiteId).Where(x => !x.FqBypass).Count();
+                clientSiteKpiSetting.WandPointsPerPatrol = WandPointsPerPatrol == 0 ? null : WandPointsPerPatrol;
 
                 // Default TuneDowngradeBuffer = 1
                 if (clientSiteKpiSetting.TuneDowngradeBuffer.GetValueOrDefault() == 0)

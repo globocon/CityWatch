@@ -2112,7 +2112,8 @@ $(function () {
                 $(this).find('.gj-sno').text(i + 1);
             });
             var rowCount = $table.find('tbody tr').length;
-            $('#WandPointsPerPatrol').val(rowCount - 1);
+            // Commented to fix the issue Monthly report where WandPointsPerPatrol was getting null - 15-05-2026
+            //$('#WandPointsPerPatrol').val(rowCount - 1);
         },
 
         initialized: function (e) {
@@ -2135,6 +2136,12 @@ $(function () {
                 headers: { 'RequestVerificationToken': token },
             }).done(function (result) {
                 if (result.success) {
+                    //Use .one() instead of .on() here so the event runs only once after this reload.
+                    gritdWandTags.one('dataBound', function () {                        
+                        var rowCount = gritdWandTags.getAll()
+                            .filter(x => x.fqBypass === false || x.fqBypass === 0 || x.fqBypass == null).length;                        
+                        $('#WandPointsPerPatrol').val(rowCount);
+                    });
                     gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
                 } else {
                     gritdWandTags.edit(id);
@@ -2161,6 +2168,12 @@ $(function () {
                     type: 'POST',
                     headers: { 'RequestVerificationToken': token },
                 }).done(function () {
+                    //Use .one() instead of .on() here so the event runs only once after this reload.
+                    gritdWandTags.one('dataBound', function () {
+                        var rowCount = gritdWandTags.getAll()
+                            .filter(x => x.fqBypass === false || x.fqBypass === 0 || x.fqBypass == null).length;
+                        $('#WandPointsPerPatrol').val(rowCount);
+                    });
                     gritdWandTags.reload({ clientSiteId: $('#gl_client_site_id').val() });
                 }).fail(function () {
                     console.log('error');

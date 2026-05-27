@@ -45,7 +45,7 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_GREEN = "#96e3ac";
         private const string CELL_BG_RED = "#ffcccc";
         private const string CELL_BG_YELLOW = "#fcf8d1";
-        private const string CELL_BG_ORANGE = "#ffe5b4";
+        private const string CELL_BG_ORANGE = "#FFA500";
         private const string CELL_BG_BLUE_HEADER = "#bdd7ee";
         private const string CELL_BG_YELLOW_IR_COUNT = "#feff9a";
         private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
@@ -230,8 +230,9 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateGuardWandScanDetails(List<SiteTagStatusPendingNew> clientSiteLogBook)
         {
+            //new Table(UnitValue.CreatePercentArray(new float[] { 2, 9, 5, 2, 2 }))
             var guardWandScanDetailsTable =
-                new Table(UnitValue.CreatePercentArray(new float[] { 2, 9, 5, 2, 2 }))
+                new Table(UnitValue.CreatePercentArray(new float[] { 2, 9, 5 }))
                 .UseAllAvailableWidth()
                 .SetMarginBottom(15);
 
@@ -250,12 +251,19 @@ namespace CityWatch.Kpi.Services
                 .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Label")));
 
-            guardWandScanDetailsTable.AddCell(
-                new Cell()
-                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+            //guardWandScanDetailsTable.AddCell(
+            //    new Cell()
+            //     .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
                 
-                .SetFontSize(CELL_FONT_SIZE)
-                .Add(new Paragraph("Pending FQ")));
+            //    .SetFontSize(CELL_FONT_SIZE)
+            //    .Add(new Paragraph("Pending FQ")));
+
+            //guardWandScanDetailsTable.AddCell(
+            //    new Cell()
+            //     .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                
+            //    .SetFontSize(CELL_FONT_SIZE)
+            //    .Add(new Paragraph("Scans")));
 
             guardWandScanDetailsTable.AddCell(
                 new Cell()
@@ -263,13 +271,6 @@ namespace CityWatch.Kpi.Services
                 
                 .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Scans")));
-
-            guardWandScanDetailsTable.AddCell(
-                new Cell()
-                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                
-                .SetFontSize(CELL_FONT_SIZE)
-                .Add(new Paragraph("[HN] Scans")));
 
             // DATA ROWS
             foreach (var groupItem in clientSiteLogBook)
@@ -286,17 +287,17 @@ namespace CityWatch.Kpi.Services
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.LabelDescription)));
 
-                guardWandScanDetailsTable.AddCell(
-                    new Cell()
+                //guardWandScanDetailsTable.AddCell(
+                //    new Cell()
                     
-                    .SetFontSize(CELL_FONT_SIZE)
-                    .Add(new Paragraph(groupItem.RoundNumber.ToString())));
+                //    .SetFontSize(CELL_FONT_SIZE)
+                //    .Add(new Paragraph(groupItem.RoundNumber.ToString())));
 
-                guardWandScanDetailsTable.AddCell(
-                    new Cell()
+                //guardWandScanDetailsTable.AddCell(
+                //    new Cell()
                    
-                    .SetFontSize(CELL_FONT_SIZE)
-                    .Add(new Paragraph(groupItem.TodayScanCount.ToString())));
+                //    .SetFontSize(CELL_FONT_SIZE)
+                //    .Add(new Paragraph(groupItem.TodayScanCount.ToString())));
 
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
