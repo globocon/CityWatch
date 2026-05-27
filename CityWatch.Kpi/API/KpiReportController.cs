@@ -197,6 +197,7 @@ namespace CityWatch.Kpi.API
             return success;
         }
 
+
         [Route("[action]", Name = "SendCustomWand")]
         [HttpGet]
         public async Task<bool> SendCustomWand()
@@ -230,7 +231,7 @@ namespace CityWatch.Kpi.API
                 foreach (var schedule in pendingSchedules)
                 {
                     DateTime _reportStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-                    var result = await _sendScheduleService.ProcessCustomWandSchedule(schedule, _reportStartDate, false, true);
+                    var (result, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, _reportStartDate, false, true, true, true);
                     statusLog.AppendLine(result);
                 }
             }

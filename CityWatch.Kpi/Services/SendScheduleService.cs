@@ -47,7 +47,7 @@ namespace CityWatch.Kpi.Services
         byte[] ProcessDownloadKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
 
         //Kpi Custom Wand
-        Task<string> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+        Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload,bool isAutoRunFromScheduler, bool cleanUpFiles);
     }
 
     public class SendScheduleService : ISendScheduleService
@@ -640,16 +640,7 @@ namespace CityWatch.Kpi.Services
 
             return string.Join(", ", schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
         }
-        private string GetSchduleIdentifierCustomWand(KpiSendCustomWandSchedules schedule)
-        {
-            if (!string.IsNullOrEmpty(schedule.ProjectName))
-                return schedule.ProjectName;
-
-            if (schedule.KpiSendCustomWandClientSites.Count == 1)
-                return schedule.KpiSendCustomWandClientSites.Single().ClientSite.Name;
-
-            return string.Join(", ", schedule.KpiSendCustomWandClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
-        }
+        
         private string CreateSummaryReportTimesheetNew(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate, string FileName)
         {
             var summaryFileName = FileName;
@@ -1141,9 +1132,12 @@ namespace CityWatch.Kpi.Services
 
 
         //Custom Wand Start
-        public async Task<string> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
+        public async Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, 
+            bool upload, bool isAutoRunFromScheduler, bool cleanUpFiles)
         {
             var statusLog = new StringBuilder();
+            var siteReportFileNames = new List<string>();
+
             try
             {
                 statusLog.AppendLine($"Schedule {schedule.Id} - Starting. ");
@@ -1152,26 +1146,50 @@ namespace CityWatch.Kpi.Services
                 string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
 
                 if (schedule.Frequency == SendSchdeuleFrequency.Daily)
-                {
-                    // Send yesterday's scan data in report
-                    reportStartDate = DateTime.Today.AddDays(-1);
-                    reportEndDate = reportStartDate; // DateTime.Today;
+                {                    
+                    if (!isAutoRunFromScheduler)
+                    {
+                        reportEndDate = reportStartDate;
+                        reportStartDate = reportStartDate.AddDays(-1);
+                    }
+                    else
+                    {
+                        // Send yesterday's scan data in report
+                        reportStartDate = DateTime.Today.AddDays(-1);
+                        reportEndDate = reportStartDate; // DateTime.Today;
+                    }
                 }
 
                 if (schedule.Frequency == SendSchdeuleFrequency.Weekly)
                 {
-                    //Send Previous week scan data in report
-                    reportStartDate = DateTime.Today.AddDays(-7);
-                    reportEndDate = DateTime.Today.AddDays(-1);
+                    if (!isAutoRunFromScheduler)
+                    {
+                        reportEndDate = reportStartDate;
+                        reportStartDate = reportStartDate.AddDays(-6);
+                    }
+                    else
+                    {
+                        //Send Previous week scan data in report
+                        reportStartDate = DateTime.Today.AddDays(-7);
+                        reportEndDate = DateTime.Today.AddDays(-1);
+                    }
+
+                    
                 }
                 if (schedule.Frequency == SendSchdeuleFrequency.Monthly)
                 {
-                    //Send current month scan data in report
-                    // No need to change report start date 
-                    reportEndDate = reportStartDate.AddMonths(1).AddDays(-1); // Last date of the month
+                    if (!isAutoRunFromScheduler)
+                    {
+                        reportEndDate = reportStartDate;
+                        reportStartDate =  new DateTime(reportStartDate.Year, reportStartDate.Month, 1);
+                    }
+                    else
+                    {
+                        //Send current month scan data in report
+                        // No need to change report start date 
+                        reportEndDate = reportStartDate.AddMonths(1).AddDays(-1); // Last date of the month
+                    }
                 }
-
-                var siteReportFileNames = new List<string>();
 
                 string StartDate = reportStartDate.ToString("MM-dd-yyyy");
                 string EndDate = reportEndDate.ToString("MM-dd-yyyy");
@@ -1333,11 +1351,14 @@ namespace CityWatch.Kpi.Services
                     }
 
                     // Cleanup files
-                    foreach (var fileName1 in siteReportFileNames)
+                    if (cleanUpFiles)
                     {
-                        statusLog.AppendLine($"Cleanup file {fileName1}");
-                        if (File.Exists(fileName1))
-                            File.Delete(fileName1);
+                        foreach (var fileName1 in siteReportFileNames)
+                        {
+                            statusLog.AppendLine($"Cleanup file {fileName1}");
+                            if (File.Exists(fileName1))
+                                File.Delete(fileName1);
+                        }
                     }
                 }
 
@@ -1348,7 +1369,18 @@ namespace CityWatch.Kpi.Services
                 statusLog.AppendLine($"Schedule {schedule.Id} - Exception - {ex.ToString()}");
             }
 
-            return statusLog.ToString();
+            return (statusLog.ToString(), siteReportFileNames);
+        }
+
+        private string GetSchduleIdentifierCustomWand(KpiSendCustomWandSchedules schedule)
+        {
+            if (!string.IsNullOrEmpty(schedule.ProjectName))
+                return schedule.ProjectName;
+
+            if (schedule.KpiSendCustomWandClientSites.Count == 1)
+                return schedule.KpiSendCustomWandClientSites.Single().ClientSite.Name;
+
+            return string.Join(", ", schedule.KpiSendCustomWandClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
         }
 
         //Custom Wand End

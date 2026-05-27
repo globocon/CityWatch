@@ -503,6 +503,7 @@ $(function () {
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
         if (sel_schedule_report_type === '2') {
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-customWands-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
             buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#customWands-schedule-modal" data-sch-id="' + record.id + '" ';
             buttonHtml += 'data-action="editScheduleCustomWand"><i class="fa fa-pencil mr-2"></i>Edit</button>';
             buttonHtml += '<button class="btn btn-outline-danger del-customwand-schedule mr-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
@@ -576,6 +577,140 @@ $(function () {
         $('#sch-id').val(schId);
         $('#btnScheduleRunKV').prop('disabled', false);
         $('#schRunStatus').html('');
+    });
+    $('#run-customWands-schedule-modal').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const schId = button.data('sch-id');
+        $('#sch-id-CustomWands').val(schId);
+        $('#btnScheduleRunCustomWands').prop('disabled', false);
+        $('#schRunStatusCustomWands').html('');
+
+        const today = new Date();
+        // yyyy-MM-dd format for input value and API
+        const formattedDate =
+            today.getFullYear() + '-' +
+            String(today.getMonth() + 1).padStart(2, '0') + '-' +
+            String(today.getDate()).padStart(2, '0');
+
+        $('#reportRunDateCustomWand').attr('max', formattedDate).val(formattedDate);
+    });
+
+    $('#btnScheduleRunCustomWands').on('click', function () {
+        const startDate = $('#reportRunDateCustomWand').val();
+
+        if (!startDate) {
+            alert('Please select report run date.');
+            return;
+        }
+
+        $('#btnScheduleRunCustomWands').prop('disabled', true);
+        $('#btnScheduleDownloadCustomWands').prop('disabled', true);
+        $('#schRunStatusCustomWands').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Report. Please wait...');
+        $.ajax({
+            url: '/Admin/Settings?handler=RunScheduleCustomWand',
+            type: 'POST',
+            data: {
+                scheduleId: $('#sch-id-CustomWands').val(),
+                reportDate: $('#reportRunDateCustomWand').val(),
+                ignoreRecipients: $('#cbIgnoreRecipientsCustomWands').is(':checked'),
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            $('#btnScheduleRunCustomWands').prop('disabled', false);
+            $('#btnScheduleDownloadCustomWands').prop('disabled', false);
+            const messageHtml = result.success ? '<i class="fa fa-check-circle-o text-success"></i> Done. Report sent via email' :
+                '<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details';
+            $('#schRunStatusCustomWands').html(messageHtml);
+        });
+    });
+
+    $('#btnScheduleDownloadCustomWands').on('click', function () {
+
+        const startDate = $('#reportRunDateCustomWand').val();
+
+        if (!startDate) {
+            alert('Please select report run date.');
+            return;
+        }
+
+        $('#btnScheduleDownloadCustomWands').prop('disabled', true);
+        $('#btnScheduleRunCustomWands').prop('disabled', true);
+
+        $('#schRunStatusCustomWands').html(
+            '<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Excel. Please wait...'
+        );
+
+        $.ajax({
+            type: 'GET',
+            url: '/Admin/Settings?handler=DownloadExcelCustomWands',
+            data: {
+                scheduleId: $('#sch-id-CustomWands').val(),
+                reportDate: $('#reportRunDateCustomWand').val(),
+                ignoreRecipients: $('#cbIgnoreRecipientsCustomWands').is(':checked'),
+            },
+            xhrFields: {
+                responseType: 'blob'
+            },
+
+            success: function (data, textStatus, request) {
+
+                var contentDispositionHeader =
+                    request.getResponseHeader('Content-Disposition');
+
+                var contentType =
+                    request.getResponseHeader('Content-Type');
+
+                var filenameRegex =
+                    /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+
+                var matches =
+                    filenameRegex.exec(contentDispositionHeader);
+
+                var downloadedFileName =
+                    matches !== null && matches[1]
+                        ? matches[1].replace(/['"]/g, '')
+                        : 'download';
+
+                // Create blob using server content type
+                var blob = new Blob(
+                    [data],
+                    {
+                        type: contentType
+                        // Can be excel or zip
+                    }
+                );
+
+                const URL = window.URL || window.webkitURL;
+
+                const bloburl = URL.createObjectURL(blob);
+
+                // Download file
+                var a = document.createElement('a');
+
+                a.href = bloburl;
+                a.download = downloadedFileName;
+
+                document.body.appendChild(a);
+
+                a.click();
+
+                document.body.removeChild(a);
+
+                URL.revokeObjectURL(bloburl);
+            },
+
+            error: function () {
+                alert('Error while downloading the file.');
+                $('#schRunStatusCustomWands').html('Error while downloading the file.');
+            },
+
+            complete: function () {
+                $('#btnScheduleDownloadCustomWands').prop('disabled', false);
+                $('#btnScheduleRunCustomWands').prop('disabled', false);
+
+                $('#schRunStatusCustomWands').html('');
+            }
+        });
     });
 
     $('#btnScheduleRunKV').on('click', function () {
@@ -2365,7 +2500,7 @@ $(function () {
 
         $('#CustomWandscheduleId').val('0');
         $('#clientTypeNameCustomWand').val('');
-        $('#clientSitesCustomWand').html('<option value="">Select</option>');
+        $('#clientSitesCustomWand').html('<option value="">Select</option><option value="-1">Select All</option>');
         $('#selectedSitesCustomWand').html('');
         updateSelectedSitesCustomWandCount();
         //$('input:hidden[name="clientSiteIds"]').remove();
@@ -2419,7 +2554,7 @@ $(function () {
             dataType: 'json',
         }).done(function (data) {
             $('#clientSitesCustomWand').html('');
-            $('#clientSitesCustomWand').append('<option value="">Select</option>');
+            $('#clientSitesCustomWand').append('<option value="">Select</option><option value="-1">Select All</option>');
             data.map(function (site) {
                 $('#clientSitesCustomWand').append('<option value="' + site.value + '">' + site.text + '</option>');
             });
@@ -2428,10 +2563,36 @@ $(function () {
     $('#clientSitesCustomWand').on('change', function () {
         const elem = $(this).find(":selected");
         if (elem.val() !== '') {
-            const existing = $('#selectedSitesCustomWand option[value="' + elem.val() + '"]');
-            if (existing.length === 0) {
-                $('#selectedSitesCustomWand').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+            if (elem.val() == '-1') {
+                $('#clientSitesCustomWand option').each(function () {
+
+                    const value = $(this).val();
+                    const text = $(this).text();
+
+                    // Skip empty and Select All option
+                    if (value === '' || value === '-1') {
+                        return;
+                    }
+
+                    // Check if already exists
+                    const existing = $('#selectedSitesCustomWand option[value="' + value + '"]');
+
+                    if (existing.length === 0) {
+                        $('#selectedSitesCustomWand').append(
+                            '<option value="' + value + '">' + text + '</option>'
+                        );
+                    }
+                });
                 updateSelectedSitesCustomWandCount();
+            }
+            else {
+                const existing = $('#selectedSitesCustomWand option[value="' + elem.val() + '"]');
+                if (existing.length === 0) {
+                    $('#selectedSitesCustomWand').append(
+                        '<option value="' + elem.val() + '">' + elem.text() + '</option>'
+                    );
+                    updateSelectedSitesCustomWandCount();
+                }
             }
         }
     });
@@ -2537,7 +2698,7 @@ $(function () {
             const dateEnd = '2100-01-01'
             $('#endDateCustomWand').val(dateEnd.split('T')[0]);
 
-            $('#CustomWandscheduleId').val(data.id);
+            $('#CustomWandscheduleId').val('0');
             // $('#startDateCustomWand').val(data.startDate.split('T')[0]);
             //if (data.endDate)
             //    $('#endDateCustomWand').val(data.endDate.split('T')[0]);
