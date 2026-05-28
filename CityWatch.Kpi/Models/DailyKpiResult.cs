@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using System;
 using System.Linq;
 
@@ -55,7 +55,20 @@ namespace CityWatch.Kpi.Models
 
         public string NameOfDay { get { return _dailyClientSiteKpi.Date.DayOfWeek.ToString(); } }
 
-        public int? WandScanFq { get { return _dailyClientSiteKpi.WandScanFq; } }
+        // Modified to return null for days with 0 effective employee hours (e.g. off-days for weekend-only sites).
+        // This ensures downstream reports display 'N/A' rather than incorrectly defaulting to '0'.
+        public int? WandScanFq
+        {
+            get
+            {
+                if (_dailyClientSiteKpi.EffectiveEmployeeHours.HasValue &&
+                    _dailyClientSiteKpi.EffectiveEmployeeHours.Value == 0 &&
+                    Date <= DateTime.Today)
+                    return null;
+
+                return _dailyClientSiteKpi.WandScanFq;
+            }
+        }
 
         public decimal? ImageCountPerHr
         {

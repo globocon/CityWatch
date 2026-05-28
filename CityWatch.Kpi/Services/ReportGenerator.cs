@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -45,14 +45,14 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_GREEN = "#96e3ac";
         private const string CELL_BG_RED = "#ffcccc";
         private const string CELL_BG_YELLOW = "#fcf8d1";
-        private const string CELL_BG_ORANGE = "#ffe5b4";
+        private const string CELL_BG_ORANGE = "#FFA500";
         private const string CELL_BG_BLUE_HEADER = "#bdd7ee";
         private const string CELL_BG_YELLOW_IR_COUNT = "#feff9a";
         private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
         private const string CELL_FONT_GREEN = "#008000";
         private const string CELL_FONT_RED = "#FF0000";
         private const string CELL_FONT_YELLOW = "#FFFF00";
-        private const string CELL_FONT_ORANGE = "#FFA500";
+        private const string CELL_FONT_ORANGE = "#FF8C00";
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
 
@@ -231,7 +231,7 @@ namespace CityWatch.Kpi.Services
         private Table CreateGuardWandScanDetails(List<SiteTagStatusPendingNew> clientSiteLogBook)
         {
             var guardWandScanDetailsTable =
-                new Table(UnitValue.CreatePercentArray(new float[] { 2, 9, 5, 2, 2 }))
+                new Table(UnitValue.CreatePercentArray(new float[] { 2, 16, 2 }))
                 .UseAllAvailableWidth()
                 .SetMarginBottom(15);
 
@@ -255,21 +255,7 @@ namespace CityWatch.Kpi.Services
                  .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
                 
                 .SetFontSize(CELL_FONT_SIZE)
-                .Add(new Paragraph("Pending FQ")));
-
-            guardWandScanDetailsTable.AddCell(
-                new Cell()
-                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                
-                .SetFontSize(CELL_FONT_SIZE)
                 .Add(new Paragraph("Scans")));
-
-            guardWandScanDetailsTable.AddCell(
-                new Cell()
-                 .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                
-                .SetFontSize(CELL_FONT_SIZE)
-                .Add(new Paragraph("[HN] Scans")));
 
             // DATA ROWS
             foreach (var groupItem in clientSiteLogBook)
@@ -288,21 +274,9 @@ namespace CityWatch.Kpi.Services
 
                 guardWandScanDetailsTable.AddCell(
                     new Cell()
-                    
-                    .SetFontSize(CELL_FONT_SIZE)
-                    .Add(new Paragraph(groupItem.RoundNumber.ToString())));
-
-                guardWandScanDetailsTable.AddCell(
-                    new Cell()
                    
                     .SetFontSize(CELL_FONT_SIZE)
                     .Add(new Paragraph(groupItem.TodayScanCount.ToString())));
-
-                guardWandScanDetailsTable.AddCell(
-                    new Cell()
-                   
-                    .SetFontSize(CELL_FONT_SIZE)
-                    .Add(new Paragraph(groupItem.MyScans.ToString())));
             }
 
             return guardWandScanDetailsTable;
@@ -723,8 +697,9 @@ namespace CityWatch.Kpi.Services
             }
             table.AddCell(CreateDataCell(cellValue, cellHasBg, cellColor));
 
-            //Missing Fq column — add blank cell
-            table.AddCell(CreateDataCell(item.WandScanFq.ToString()));
+            // Fq column - Print "N/A" when the value is null (e.g., for non-working days) instead of falling back to blank/0.
+            var fqCellValue = item.WandScanFq.HasValue ? item.WandScanFq.ToString() : "N/A";
+            table.AddCell(CreateDataCell(fqCellValue));
 
 
             //DAILY LOG 2HR TIMER
