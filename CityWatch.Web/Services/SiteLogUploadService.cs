@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs;
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
@@ -134,8 +134,8 @@ namespace CityWatch.Web.Services
 
             _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start---" });
             // Retrieve and filter the log books to upload only once.
-            //var yesterday = DateTime.Now.AddDays(-1).Date;
-            var yesterday = DateTime.Now.AddDays(-2).Date;
+            // Reverted back to -1 to fix the daily guard log scheduling issue
+            var yesterday = DateTime.Now.AddDays(-1).Date;
             var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooksForDailyLogBookGeneration(yesterday);
 
             // Check if there are any logs to process to avoid unnecessary operations.
