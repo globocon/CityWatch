@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Helpers;
+using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -616,7 +616,7 @@ namespace CityWatch.Web.Services
                 .SetBackgroundColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
                 .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .Add(new Paragraph("Gate House: Daily Shift Log Book"))
+                .Add(new Paragraph("Daily Shift Log Book"))
                 .Add(new Paragraph(version).SetFontSize(CELL_FONT_SIZE)));
 
             var clientSiteWandNos = GetClientSiteWandNumbers(clientSite);
@@ -652,7 +652,7 @@ namespace CityWatch.Web.Services
                 .SetBackgroundColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
                 .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .Add(new Paragraph("Gate House: Smart Wand Strikes"))
+                .Add(new Paragraph("Smart Wand Strikes"))
                 .Add(new Paragraph(version).SetFontSize(CELL_FONT_SIZE)));
 
             var clientSiteWandNos = GetClientSiteWandNumbers(clientSite);
