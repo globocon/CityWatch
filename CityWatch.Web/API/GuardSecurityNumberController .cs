@@ -4308,6 +4308,55 @@ namespace CityWatch.Web.API
             }
         }
 
+        [HttpGet("GetLinkedSitesForRoster")]
+        public async Task<IActionResult> GetLinkedSitesForRoster(int siteId)
+        {
+            try
+            {
+                var allLinkedSites = _guardLogDataProvider.getallClientSitesLinkedDuress(siteId);
+                bool isLinkedSiteGroup = allLinkedSites != null && allLinkedSites.Any();
+                var resultSites = new List<object>();
+
+                if (isLinkedSiteGroup)
+                {
+                    foreach (var linkedSite in allLinkedSites)
+                    {
+                        var siteDetails = await _context.ClientSites.FirstOrDefaultAsync(x => x.Id == linkedSite.ClientSiteId);
+                        if (siteDetails != null)
+                        {
+                            resultSites.Add(new
+                            {
+                                SiteId = siteDetails.Id,
+                                SiteName = siteDetails.Name
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    var siteDetails = await _context.ClientSites.FirstOrDefaultAsync(x => x.Id == siteId);
+                    if (siteDetails != null)
+                    {
+                        resultSites.Add(new
+                        {
+                            SiteId = siteDetails.Id,
+                            SiteName = siteDetails.Name
+                        });
+                    }
+                }
+
+                return Ok(new
+                {
+                    isLinkedSiteGroup = isLinkedSiteGroup,
+                    sites = resultSites
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while fetching linked sites.", error = ex.Message });
+            }
+        }
+
         [HttpGet("GetRoster")]
         public async Task<IActionResult> GetRoster(int guardId, int siteId, string? date = null)
         {
