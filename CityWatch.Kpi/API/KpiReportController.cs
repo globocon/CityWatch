@@ -230,8 +230,8 @@ namespace CityWatch.Kpi.API
             {
                 foreach (var schedule in pendingSchedules)
                 {
-                    DateTime _reportStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-                    var (result, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, _reportStartDate, false, true, true, true);
+                    DateTime _reportStartDate = schedule.NextRunOn; //new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    var (result, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, _reportStartDate, false, true, true, true, true);
                     statusLog.AppendLine(result);
                 }
             }
