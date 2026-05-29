@@ -1142,7 +1142,7 @@ namespace CityWatch.Kpi.Services
 
             try
             {
-                statusLog.AppendLine($"Schedule {schedule.Id} - Starting. ");
+                statusLog.AppendLine($"Schedule {schedule.Id} - Starting. Run Type: {(isAutoRunFromScheduler ? "Auto Scheduler" : "Manual")}.");
                 var siteIds = schedule.KpiSendCustomWandClientSites.Select(z => z.ClientSiteId).ToArray();
                 DateTime reportEndDate = DateTime.Today;
                 string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
