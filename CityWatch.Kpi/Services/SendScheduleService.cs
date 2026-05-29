@@ -13,6 +13,7 @@ using Dropbox.Api.Files;
 using Dropbox.Api.Users;
 using MailKit.Net.Smtp;
 using MailKit.Search;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -47,7 +48,8 @@ namespace CityWatch.Kpi.Services
         byte[] ProcessDownloadKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
 
         //Kpi Custom Wand
-        Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload,bool isAutoRunFromScheduler, bool cleanUpFiles);
+        Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, 
+            bool upload,bool isAutoRunFromScheduler, bool cleanUpFiles, bool sendMail);
     }
 
     public class SendScheduleService : ISendScheduleService
@@ -1133,7 +1135,7 @@ namespace CityWatch.Kpi.Services
 
         //Custom Wand Start
         public async Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, 
-            bool upload, bool isAutoRunFromScheduler, bool cleanUpFiles)
+            bool upload, bool isAutoRunFromScheduler, bool cleanUpFiles, bool sendMail)
         {
             var statusLog = new StringBuilder();
             var siteReportFileNames = new List<string>();
@@ -1150,7 +1152,7 @@ namespace CityWatch.Kpi.Services
                     if (!isAutoRunFromScheduler)
                     {
                         reportEndDate = reportStartDate;
-                        reportStartDate = reportStartDate.AddDays(-1);
+                        //reportStartDate = reportStartDate.AddDays(-1);
                     }
                     else
                     {
@@ -1164,8 +1166,14 @@ namespace CityWatch.Kpi.Services
                 {
                     if (!isAutoRunFromScheduler)
                     {
-                        reportEndDate = reportStartDate;
-                        reportStartDate = reportStartDate.AddDays(-6);
+
+                        // Assuming week starts on Monday
+                        int diff = (7 + (reportStartDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+
+                        DateTime startOfWeek = reportStartDate.AddDays(-1 * diff).Date;
+                        DateTime endOfWeek = startOfWeek.AddDays(6);
+                        reportStartDate = startOfWeek;
+                        reportEndDate = endOfWeek;
                     }
                     else
                     {
@@ -1173,8 +1181,6 @@ namespace CityWatch.Kpi.Services
                         reportStartDate = DateTime.Today.AddDays(-7);
                         reportEndDate = DateTime.Today.AddDays(-1);
                     }
-
-                    
                 }
                 if (schedule.Frequency == SendSchdeuleFrequency.Monthly)
                 {
@@ -1186,7 +1192,7 @@ namespace CityWatch.Kpi.Services
                     else
                     {
                         //Send current month scan data in report
-                        // No need to change report start date 
+                        reportStartDate = new DateTime(reportStartDate.Year, reportStartDate.Month, 1);
                         reportEndDate = reportStartDate.AddMonths(1).AddDays(-1); // Last date of the month
                     }
                 }
@@ -1337,9 +1343,12 @@ namespace CityWatch.Kpi.Services
                     schedule.ProjectName = GetSchduleIdentifierCustomWand(schedule);
 
                     // Send Email
-                    statusLog.AppendLine($"Sending Mail");
-                    SendEmailCustomWand(siteReportFileNames, schedule, reportStartDate, ignoreRecipients);
-                    statusLog.AppendLine($"Send Mail Success");
+                    if (sendMail)
+                    {
+                        statusLog.AppendLine($"Sending Mail");
+                        SendEmailCustomWand(siteReportFileNames, schedule, reportStartDate, ignoreRecipients);
+                        statusLog.AppendLine($"Send Mail Success");
+                    }
 
                     if (upload)
                     {

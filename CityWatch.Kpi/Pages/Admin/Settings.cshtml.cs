@@ -825,8 +825,6 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status, message });
         }
 
-
-
         public async Task<IActionResult> OnGetDownloadExcelCustomWands(int scheduleId, DateTime reportDate, bool ignoreRecipients)
         {
             var schedule = _kpiSchedulesDataProvider.GetCustomWandScheduleById(scheduleId);
@@ -834,7 +832,7 @@ namespace CityWatch.Kpi.Pages.Admin
             if (schedule == null)
                 throw new ArgumentException("Schedule not found");
 
-            var (task, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, reportDate, ignoreRecipients, false, false, false);
+            var (task, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, reportDate, ignoreRecipients, false, false, false, false);
 
             if (fileNames == null || !fileNames.Any())
                 return NotFound("No files generated.");
@@ -916,7 +914,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 if (schedule == null)
                     throw new ArgumentException("Schedule not found");
 
-                var (task, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, reportDate, ignoreRecipients, false, false, true);
+                var (task, fileNames) = await _sendScheduleService.ProcessCustomWandSchedule(schedule, reportDate, ignoreRecipients, false, false, true, true);
 
                 message = task;
                 success = !(message.Contains("Error") || message.Contains("Exception"));
