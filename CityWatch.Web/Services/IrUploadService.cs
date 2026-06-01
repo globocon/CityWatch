@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Models;
+using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -64,12 +64,30 @@ namespace CityWatch.Web.Services
                                     .Where(i => !i.DbxUploaded && i.ClientSiteId.HasValue)
                                     .ToList();
 
+            if (irsToProcess.Any())
+            {
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = $"IR Report Upload Started. Records to process: {irsToProcess.Count}" });
+            }
+
             foreach (var incidentReport in irsToProcess)
             {
-                if (!DateTime.TryParseExact(incidentReport.FileName[..8], "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime irDate))
+                if (string.IsNullOrEmpty(incidentReport.FileName) || incidentReport.FileName.Length < 8 || !DateTime.TryParseExact(incidentReport.FileName.Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime irDate))
                     continue;
 
-                await ProcessIncidentReportUpload(incidentReport, irDate);
+                try
+                {
+                    await ProcessIncidentReportUpload(incidentReport, irDate);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("FATAL Error processing IR {0}: {1}", incidentReport.FileName, ex.Message);
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "FATAL Error processing IR " + incidentReport.FileName + ": " + ex.Message });
+                }
+            }
+
+            if (irsToProcess.Any())
+            {
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "IR Report Upload Ended." });
             }
         }
 
@@ -92,6 +110,7 @@ namespace CityWatch.Web.Services
                     catch (Exception ex)
                     {
                         _logger.LogError("Error uploading IR {0} to patrols folder, Message : {1}", incidentReport.FileName, ex.Message);
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "IR Patrol Upload Error for " + incidentReport.FileName + ": " + ex.Message });
                     }
                 }
             }
@@ -117,7 +136,8 @@ namespace CityWatch.Web.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Error uploading IR {0} to client site folder , Message : {1}", incidentReport.FileName, ex.Message); ;
+                    _logger.LogError("Error uploading IR {0} to client site folder , Message : {1}", incidentReport.FileName, ex.Message);
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "IR Client Site Upload Error for " + incidentReport.FileName + ": " + ex.Message });
                 }
             }
         }
