@@ -1178,8 +1178,17 @@ namespace CityWatch.Kpi.Services
                     else
                     {
                         //Send Previous week scan data in report
-                        reportStartDate = DateTime.Today.AddDays(-7);
-                        reportEndDate = DateTime.Today.AddDays(-1);
+                        // Assuming week starts on Monday
+                        int diff = (7 + (reportStartDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+
+                        DateTime startOfWeek = reportStartDate.AddDays(-1 * diff).Date;
+                        DateTime endOfWeek = startOfWeek.AddDays(6);
+                        reportStartDate = startOfWeek;
+                        reportEndDate = endOfWeek;
+
+
+                        //reportStartDate = DateTime.Today.AddDays(-7);
+                        //reportEndDate = DateTime.Today.AddDays(-1);
                     }
                 }
                 if (schedule.Frequency == SendSchdeuleFrequency.Monthly)

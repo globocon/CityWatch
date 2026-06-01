@@ -80,6 +80,7 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
+CityWatch.Web.Helpers.AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
