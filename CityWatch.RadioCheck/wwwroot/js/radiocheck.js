@@ -1,6 +1,6 @@
 let nIntervId;
 let DuressAlarmNotificationPending = false;
-const duration = 60 * 3;
+const duration = 60 * 4;
 var isPaused = false;
 var sitebuttonSelectedClientTypeSiteId = -1;
 var sitebuttonSelectedClientSiteId = -1;
