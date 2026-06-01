@@ -123,6 +123,12 @@ namespace CityWatch.Kpi.Services
                 doc.Add(tableNotes);
             }
 
+            var pyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg")))
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetAutoScale(true)
+                .SetMarginTop(10);
+            doc.Add(pyramidImage);
+
             if (patrolDataReport.ResultsCount > 0)
             {                
                 doc.Add(new AreaBreak());
@@ -135,15 +141,6 @@ namespace CityWatch.Kpi.Services
 
                 var graphsTable = CreateGraphsTables(patrolDataReport);
                 doc.Add(graphsTable);
-
-                // Cone (Pyramid) on a new page
-                doc.Add(new AreaBreak());
-                doc.Add(tableReportHeader);
-                var pyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg")))
-                    .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                    .SetHeight(300)
-                    .SetMarginTop(40);
-                doc.Add(pyramidImage);
             }
 
             doc.Close();
