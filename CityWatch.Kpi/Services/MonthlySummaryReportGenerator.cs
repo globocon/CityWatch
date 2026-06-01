@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Services;
@@ -127,8 +127,23 @@ namespace CityWatch.Kpi.Services
             {                
                 doc.Add(new AreaBreak());
                 doc.Add(tableReportHeader);
+
+                // Placeholder for new HR charts at the top
+                var hrGraphsPlaceholder = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth().SetMarginTop(5).SetMarginBottom(5);
+                hrGraphsPlaceholder.AddCell(new Cell().SetMinHeight(200).SetBorder(Border.NO_BORDER));
+                doc.Add(hrGraphsPlaceholder);
+
                 var graphsTable = CreateGraphsTables(patrolDataReport);
                 doc.Add(graphsTable);
+
+                // Cone (Pyramid) on a new page
+                doc.Add(new AreaBreak());
+                doc.Add(tableReportHeader);
+                var pyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg")))
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                    .SetHeight(300)
+                    .SetMarginTop(40);
+                doc.Add(pyramidImage);
             }
 
             doc.Close();
@@ -198,9 +213,6 @@ namespace CityWatch.Kpi.Services
 
             var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
             chartDataTable.AddCell(GetChartImageCell(eventTypeBarChartImage).SetBorderLeft(Border.NO_BORDER));
-
-            var PyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg"))).SetHorizontalAlignment(HorizontalAlignment.CENTER).SetHeight(250).SetMarginTop(20);
-            chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
 
             return chartDataTable;
         }
