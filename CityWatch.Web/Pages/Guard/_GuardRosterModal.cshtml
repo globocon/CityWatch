@@ -677,7 +677,7 @@
                     </div>
                     <div class="col-6">
                         <label class="small font-weight-bold text-muted mb-1">SHIFT STATUS</label>
-                        <select id="geModalShiftType" class="form-control" style="width: 100%" disabled>
+                        <select id="geModalShiftType" class="form-control" style="width: 100%">
                             <option value="Regular">Unassigned - FIXED</option>
                             <option value="Adhoc">Unassigned - ADHOC</option>
                             <option value="RegularAccepted">Accepted - FIXED</option>
@@ -1964,14 +1964,15 @@
     // 3. Owner clicks Black (Cancelled) -> Status 1 (Green/Accepted) [Re-Accept Prompt]
     // 4. Non-Owner clicks Black (Cancelled) -> Status 1 (Purple/Relief) [Relief Prompt]
     // * Note: Guards cannot reset back to Orange (Pending) once interacted.
-    $(document).on('click', '.clickable-shift', function() {
+    $(document).on('click', '.clickable-shift', function(e) {
+        if ($(e.target).closest('.btn-delete-shift, .btn-edit-shift').length) return;
         var card = $(this);
         var shiftId = card.data('shift-id');
         var currentStatus = parseInt(card.data('status'));
         var isFuture = card.data('is-future') === true;
 
-        if (isAdminRoster) {
-            // Admin Cycle: Pushed (0) -> Accepted (1) -> Declined (2) -> Pushed (0)
+        if (isEditMode) {
+            // Editor Cycle: Pushed (0) -> Accepted (1) -> Declined (2) -> Pushed (0)
             var nextStatus = (currentStatus + 1) % 3;
             updateShiftStatusViaWeb(shiftId, nextStatus, card);
         } else {
