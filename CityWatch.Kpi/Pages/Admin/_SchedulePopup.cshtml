@@ -29,22 +29,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="clientTypeName">Client Type</label>
-                                        <select class="form-control" id="clientTypeName" name="clientTypeName">
-                                            @if (Model.GuardId != 0)
-                                            {
-                                                foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(Model.GuardId))
-                                                {
-                                                    <option value="@item.Value">@item.Text</option>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                foreach (var item in Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId))
-                                                {
-                                                    <option value="@item.Value">@item.Text</option>
-                                                }
-                                            }
-                                        </select>
+                                        <select class="form-control" id="clientTypeName" name="clientTypeName" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId)"></select>
                                     </div>
                                     <div class="form-group">
                                         <label for="clientSites">Client Site</label>
