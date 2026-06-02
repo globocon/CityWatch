@@ -594,6 +594,27 @@
     </div>
 </div>
 
+<!-- Overnight Shift Modal -->
+<div class="modal fade" id="geOvernightShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1250;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-header bg-warning text-dark" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i>Overnight Shift</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <!-- Dynamic Content Injected Here -->
+            </div>
+            <div class="modal-footer justify-content-center border-top-0">
+                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Edit</button>
+                <button type="button" class="btn btn-primary px-4" id="btnSplitGuardShift">Split</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Full Add/Edit Shift Modal (Copied from Booking) -->
 <div class="modal fade" id="guardAddShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
     <div class="modal-dialog" role="document">
@@ -1912,16 +1933,109 @@
             cellDate = new Date().toISOString().split('T')[0];
         }
 
+        // Client-side Validation: Time range check (00:01 - 23:59)
+        if (startTime === '00:00' || endTime === '00:00') {
+            alert('Time values of 00:00 or 24:00 are not allowed. Minimum value is 00:01 and maximum is 23:59.');
+            return;
+        }
+
+        // Client-side Validation: At least one selected
+        if (!guardId && !providerName && shiftType !== 'Cancelled') {
+            alert('Please select either a Guard OR a Provider.');
+            return;
+        }
+
+        // Client-side Validation: Time check (Overnight Shift Split)
+        if (startTime >= endTime) {
+            var dateStr = cellDate;
+            
+            var shiftDateObj = new Date(cellDate + 'T00:00:00');
+            var nextShiftDate = new Date(shiftDateObj);
+            nextShiftDate.setDate(nextShiftDate.getDate() + 1);
+            var nextDateStr = nextShiftDate.getFullYear() + '-' + String(nextShiftDate.getMonth() + 1).padStart(2, '0') + '-' + String(nextShiftDate.getDate()).padStart(2, '0');
+
+            // Calculate Durations
+            var parts1 = startTime.split(':');
+            var h1 = parseInt(parts1[0]);
+            var m1 = parseInt(parts1[1]);
+            
+            var parts2 = endTime.split(':');
+            var h2 = parseInt(parts2[0]);
+            var m2 = parseInt(parts2[1]);
+
+            var totalMin1 = (23 - h1) * 60 + (59 - m1);
+            var hrs1 = Math.floor(totalMin1 / 60);
+            var mins1 = totalMin1 % 60;
+            var durationStr1 = hrs1 + 'h ' + mins1 + 'm';
+
+            var totalMin2 = h2 * 60 + m2 - 1;
+            var hrs2 = Math.floor(totalMin2 / 60);
+            var mins2 = totalMin2 % 60;
+            var durationStr2 = hrs2 + 'h ' + mins2 + 'm';
+
+            // Update Modal Content
+            $('#geOvernightShiftModal .modal-body').html(
+                '<p class="mb-3 text-muted">This shift crosses midnight. If you split, it will create two shifts:</p>' +
+                '<div class="alert alert-light border text-left mb-3" style="font-size: 0.9rem;">' +
+                    '<div><i class="fa fa-calendar mr-2 text-primary"></i><strong>' + dateStr + '</strong>: ' + startTime + ' - 23:59 (' + durationStr1 + ')</div>' +
+                    '<div class="mt-2"><i class="fa fa-calendar mr-2 text-success"></i><strong>' + nextDateStr + '</strong>: 00:01 - ' + endTime + ' (' + durationStr2 + ')</div>' +
+                '</div>' +
+                '<p class="mb-0 text-muted">Please choose how to proceed.</p>'
+            );
+
+            $('#geOvernightShiftModal').modal('show');
+            
+            $('#btnSplitGuardShift').off('click').on('click', function() {
+                $('#geOvernightShiftModal').modal('hide');
+                
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                var statusValue = $('#geModalStatus').length ? $('#geModalStatus').val() : null;
+                
+                var postData1 = {
+                    groupId: groupId,
+                    siteId: siteId,
+                    start: dateStr + 'T' + startTime,
+                    end: dateStr + 'T23:59',
+                    guardId: guardId,
+                    providerName: providerName,
+                    payRateId: payRateId,
+                    payRate: payRateValue,
+                    shiftId: shiftId,
+                    callsignId: callsignId,
+                    reliefGuardId: reliefGuardId,
+                    reliefProviderName: reliefProviderName,
+                    reliefReason: reliefReason,
+                    reliefReasonOther: $('#geModalReliefReasonOther').val() || "",
+                    shiftType: shiftType,
+                    status: statusValue,
+                    adhocOffsiteText: adhocOffsiteText,
+                    ignoreUnavailability: ignoreUnavail
+                };
+
+                var postData2 = Object.assign({}, postData1);
+                postData2.start = nextDateStr + 'T00:01';
+                postData2.end = nextDateStr + 'T' + endTime;
+                postData2.shiftId = 0; // Always new shift
+
+                if (shiftId > 0) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=DeleteShift',
+                        type: 'POST',
+                        data: { id: shiftId },
+                        headers: { "RequestVerificationToken": token },
+                        success: function() {
+                            createSplitGuardShifts(postData1, postData2, token);
+                        }
+                    });
+                } else {
+                    createSplitGuardShifts(postData1, postData2, token);
+                }
+            });
+            return;
+        }
+
         var startDateTime = cellDate + 'T' + startTime;
         var endDateTime = cellDate + 'T' + endTime;
-        
-        if (endTime < startTime) {
-            var startD = new Date(cellDate + 'T00:00:00');
-            var endD = new Date(startD);
-            endD.setDate(endD.getDate() + 1);
-            var endStr = endD.getFullYear() + '-' + String(endD.getMonth() + 1).padStart(2, '0') + '-' + String(endD.getDate()).padStart(2, '0');
-            endDateTime = endStr + 'T' + endTime;
-        }
 
         var postData = {
             groupId: groupId,
@@ -1961,6 +2075,41 @@
                     }
                 } else {
                     alert('Failed to save: ' + res.message);
+                }
+            }
+        });
+    }
+
+    function createSplitGuardShifts(postData1, postData2, token) {
+        $.ajax({
+            url: '/roster/Booking?handler=AddShift',
+            type: 'POST',
+            data: postData1,
+            headers: { "RequestVerificationToken": token },
+            success: function(res1) {
+                if (res1.success) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddShift',
+                        type: 'POST',
+                        data: postData2,
+                        headers: { "RequestVerificationToken": token },
+                        success: function(res2) {
+                            if (res2.success) {
+                                loadGuardRoster();
+                            } else {
+                                alert('First part saved, but failed to save the second part: ' + res2.message);
+                                loadGuardRoster();
+                            }
+                        }
+                    });
+                } else if (res1.isUnavailConflict || (res1.message && res1.message.indexOf('Conflict:') > -1)) {
+                    if (confirm(res1.message + "\n\nDo you want to proceed with the split anyway?")) {
+                        postData1.ignoreUnavailability = true;
+                        postData2.ignoreUnavailability = true;
+                        createSplitGuardShifts(postData1, postData2, token);
+                    }
+                } else {
+                    alert('Failed to save the first part: ' + res1.message);
                 }
             }
         });
