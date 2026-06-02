@@ -251,6 +251,7 @@ namespace CityWatch.Data.Providers
         void DeleteAllowance(int id);
         List<object> GetCriticalDocsUsingClientSiteIds(int[] clientSiteIds);
         void SaveOnboardUsersTrainingAndAssessmentTab(OnBoardUsersTrainingAndAssessment trainingAssessment);
+        List<OnBoardUsersTrainingAndAssessment> GetOnBoardUsersTrainingAndAssessment(int userId);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -2923,6 +2924,10 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+        }
+        public List<OnBoardUsersTrainingAndAssessment> GetOnBoardUsersTrainingAndAssessment(int userId)
+        {
+            return _context.OnBoardUsersTrainingAndAssessment.Where(x => x.UserId == userId).ToList();
         }
 
     }

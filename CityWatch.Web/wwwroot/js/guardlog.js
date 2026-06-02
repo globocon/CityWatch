@@ -707,7 +707,8 @@ $(function () {
     $('#GuardLogin_IsNewGuard').on('change', function () {
         resetGuardLoginDetails();
         const isChecked = $('#GuardLogin_IsNewGuard').is(':checked');
-        if (isChecked) {
+        var userId = $('#GuardLogin_UserID').val();
+        if (isChecked && userId !=74) {
             $('#GuardLogin_Guard_SecurityNo').val('');
             showGuardSearchResult('Enter Security License No of New Guard');
             $('#divNewGuard').show();
@@ -716,6 +717,34 @@ $(function () {
             $('#GuardLogin_OnDuty_Time').prop('disabled', false);
             $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date()));
             $('#GuardLogin_OffDuty_Time').prop('disabled', false);
+            $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
+            $('#GuardLogin_Guard_Email').val('');
+            $("#divGuardEmail").show();
+            $('#GuardLogin_Guard_Mobile').val('+61 4');
+            $('#guardLoginDetails').show();
+            $("#divGuardMobile").show();
+        }
+        else if (isChecked ) {
+            $('#GuardLogin_Guard_SecurityNo').val('');
+            showGuardSearchResult('Enter Security License No of New Guard');
+            $('#divNewGuard').show();
+            $('#GuardLogin_ClientType').closest('.form-row').hide();
+            $('#GuardLogin_ClientSiteName').prop('disabled', false);
+            $('#GuardLogin_ClientType').prop('disabled', false);
+            $('#GuardLogin_ClientType').val('C4i System');
+            populateClientSites('Onboarding')
+            $('#GuardLogin_ClientSiteName').val('disabled', false);
+            
+            //$('#GuardLogin_ClientSiteName').val('Onboarding');
+            //$('#GuardLogin_ClientSiteName').change();
+            $('#GuardLogin_IsPosition').prop('checked', true);
+            getSmartWandOrOfficerPosition(true, 'Onboarding', 'Security - In Training (Shadow)');
+            $('#GuardLogin_SmartWandOrPosition').val('Security - In Training (Shadow)');
+            $('#GuardLogin_SmartWandOrPosition').closest('.form-row').hide();
+            $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date()));
+            $('#GuardLogin_OffDuty_Time').val(getOffDutyTime(new Date()));
+            $('#GuardLogin_OffDuty_Time').prop('disabled', false);
+            $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
             $('#GuardLogin_Guard_Email').val('');
             $("#divGuardEmail").show();
             $('#GuardLogin_Guard_Mobile').val('+61 4');
@@ -728,7 +757,15 @@ $(function () {
             showGuardSearchResult('Enter Security License No and click Search');
         }
     });
+    function getOffDutyTime(onDutyTime) {
+        const offDuty = new Date(onDutyTime); // copy date
+        offDuty.setHours(offDuty.getHours() + 5);
 
+        const mins = (offDuty.getMinutes() < 10 ? '0' : '') + offDuty.getMinutes();
+        const hours = (offDuty.getHours() < 10 ? '0' : '') + offDuty.getHours();
+
+        return hours + ':' + mins;
+    }
     function getTargetUrl(logBookType) {
         if (logBookType === 1) return '/Guard/DailyLog';
         if (logBookType === 2) return '/Guard/KeyVehicleLog';
@@ -1065,6 +1102,7 @@ $(function () {
         if (selected) $('#' + ctrlId).removeClass('font-weight-light').addClass('font-weight-bold');
         else $('#' + ctrlId).removeClass('font-weight-bold').addClass('font-weight-light');
     }
+
 
     //*************** Daily Guard Log  *************** //
 
