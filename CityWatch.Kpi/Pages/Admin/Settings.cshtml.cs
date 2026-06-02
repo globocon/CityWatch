@@ -666,6 +666,10 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            {
+                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+            }
 
             if (GuardId != 0)
             {
@@ -760,6 +764,10 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            {
+                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+            }
 
             if (GuardId != 0)
             {
@@ -2188,6 +2196,10 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            {
+                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+            }
 
             if (GuardId != 0)
             {
@@ -2740,6 +2752,10 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            {
+                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+            }
 
             if (GuardId != 0)
             {
@@ -2766,6 +2782,10 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            {
+                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+            }
 
             if (userId != 0)
             {
