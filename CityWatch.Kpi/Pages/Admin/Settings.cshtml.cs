@@ -681,9 +681,12 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
-            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
 
             if (GuardId != 0)
@@ -779,9 +782,12 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
-            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
 
             if (GuardId != 0)
@@ -2211,9 +2217,12 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
-            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
 
             if (GuardId != 0)
@@ -2767,9 +2776,12 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
-            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
 
             if (GuardId != 0)
@@ -2797,9 +2809,12 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
-            if (userId == 0 && CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.HasValue)
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                userId = CityWatch.Data.Helpers.AuthUserHelperRadio.LoggedInUserId.Value;
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
 
             if (userId != 0)
