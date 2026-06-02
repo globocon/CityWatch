@@ -1,4 +1,4 @@
-﻿<!-- schedule modal -->
+<!-- schedule modal -->
 <div class="modal" tabindex="-1" role="dialog" id="schedule-modal" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -30,9 +30,19 @@
                                     <div class="form-group">
                                         <label for="clientTypeName">Client Type</label>
                                         <select class="form-control" id="clientTypeName" name="clientTypeName">
-                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
+                                            @if (Model.GuardId != 0)
                                             {
-                                                <option value="@item.Value">@item.Text</option>
+                                                foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(Model.GuardId))
+                                                {
+                                                    <option value="@item.Value">@item.Text</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                foreach (var item in Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId))
+                                                {
+                                                    <option value="@item.Value">@item.Text</option>
+                                                }
                                             }
                                         </select>
                                     </div>
