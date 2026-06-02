@@ -110,6 +110,26 @@ namespace CityWatch.Kpi.Pages.Admin
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+
+            // Fallback to query string if session is completely lost
+            if (GuardId == 0 && Request.Query.ContainsKey("guardId"))
+            {
+                if (int.TryParse(Request.Query["guardId"], out int parsedGuardId))
+                {
+                    GuardId = parsedGuardId;
+                    HttpContext.Session.SetInt32("GuardId", GuardId);
+                }
+            }
+
+            if (userId == 0 && Request.Query.ContainsKey("userId"))
+            {
+                if (int.TryParse(Request.Query["userId"], out int parsedUserId))
+                {
+                    userId = parsedUserId;
+                    HttpContext.Session.SetInt32("loginUserId", userId);
+                }
+            }
+
             ClientTypeId = HttpContext.Session.GetInt32("ClientTypeId") ?? 0;
             ClientSiteId = HttpContext.Session.GetInt32("ClientSiteId") ?? 0;
             var claimsIdentity = User.Identity as ClaimsIdentity;
