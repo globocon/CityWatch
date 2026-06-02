@@ -1,4 +1,15 @@
 <style>
+    /* Type Dropdown Color Dots */
+    .type-dot {
+        height: 10px;
+        width: 10px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
     /* Table Styling matched to Booking module */
     #guard_roster_grid { border-collapse: separate; border-spacing: 0; }
     
@@ -678,12 +689,12 @@
                     <div class="col-6">
                         <label class="small font-weight-bold text-muted mb-1">SHIFT STATUS</label>
                         <select id="geModalShiftType" class="form-control" style="width: 100%">
-                            <option value="Regular">Unassigned - FIXED</option>
-                            <option value="Adhoc">Unassigned - ADHOC</option>
-                            <option value="RegularAccepted">Accepted - FIXED</option>
-                            <option value="AdhocAccepted">Accepted - ADHOC</option>
-                            <option value="Declined">DECLINED (OPEN)</option>
-                            <option value="Cancelled">❌ CANCELLED (CLOSED)</option>
+                            <option value="Regular" data-color="#FFA726">Unassigned - FIXED</option>
+                            <option value="Adhoc" data-color="#E65100">Unassigned - ADHOC</option>
+                            <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
+                            <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
+                            <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
+                            <option value="Cancelled" data-color="#B71C1C">❌ CANCELLED (CLOSED)</option>
                         </select>
                     </div>
                 </div>
@@ -871,6 +882,24 @@
         });
 
         // --- Initialize Guard Modal Select2s (Copied from Booking) ---
+        function formatGuardShiftType(state) {
+            if (!state.id) return state.text;
+            var color = $(state.element).data('color');
+            if (!color) return state.text;
+            var $state = $(
+                '<span><span class="type-dot" style="background-color:' + color + ';"></span>' + state.text + '</span>'
+            );
+            return $state;
+        };
+
+        $('#geModalShiftType').select2({
+            theme: 'bootstrap4',
+            minimumResultsForSearch: -1, // Hide search box
+            dropdownParent: $('#guardAddShiftModal'),
+            templateResult: formatGuardShiftType,
+            templateSelection: formatGuardShiftType
+        });
+
         $('#geModalGuardId').select2({
             placeholder: 'Select Guard',
             theme: 'bootstrap4',
@@ -1972,9 +2001,8 @@
         var isFuture = card.data('is-future') === true;
 
         if (isEditMode) {
-            // Editor Cycle: Pushed (0) -> Accepted (1) -> Declined (2) -> Pushed (0)
-            var nextStatus = (currentStatus + 1) % 3;
-            updateShiftStatusViaWeb(shiftId, nextStatus, card);
+            // Use the same endpoint as Booking.cshtml to correctly cycle shift type/status
+            cycleShiftTypeGuardRoster(shiftId, card);
         } else {
             // Guard Logic
             if (!isFuture || !loggedGuardId) return;
@@ -2004,36 +2032,35 @@
         }
     });
 
-    function updateShiftStatusViaWeb(shiftId, newStatus, card) {
+    function cycleShiftTypeGuardRoster(id, card) {
         $.ajax({
-            url: '/api/GuardSecurityNumber/UpdateShiftStatus',
+            url: '/roster/Booking?handler=CycleShiftType',
             type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                shiftId: shiftId,
-                newStatus: newStatus,
-                expectedStatus: parseInt(card.data('status')),
-                callingGuardId: 1, // System/Admin ID for web updates
-                reason: newStatus === 2 ? "Cancelled via Web Dashboard" : ""
-            }),
-            success: function(res) {
-                if (res.isSuccess) {
-                    // Update card locally for immediate feedback
-                    card.data('status', newStatus);
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: { id: id },
+            success: function (res) {
+                if (res.success) {
+                    // Find all instances of this shift in the DOM
+                    var allCards = $('.guard-shift-card[data-shift-id="' + id + '"]');
                     
-                    // Remove all status classes
-                    card.removeClass('status-pushed status-accepted status-declined adhoc-pushed adhoc-accepted');
+                    // Remove all status/type classes
+                    allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted');
                     
-                    var isAdhoc = card.data('type') === 'Adhoc';
+                    var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
                     var statusClass = 'status-pushed';
-                    if (newStatus === 1) statusClass = 'status-accepted';
-                    if (newStatus === 2) statusClass = 'status-declined';
-                    if (newStatus === 3) statusClass = 'status-cancelled';
+                    if (res.status === 1) statusClass = 'status-accepted';
+                    if (res.status === 2) statusClass = 'status-declined';
+                    if (res.status === 3) statusClass = 'status-cancelled';
                     
-                    var typeClass = isAdhoc ? (newStatus === 1 ? 'adhoc-accepted' : 'adhoc-pushed') : '';
-                    card.addClass(statusClass + ' ' + typeClass);
+                    allCards.addClass(statusClass + ' ' + typeClass);
+                    
+                    // Update Card Data and DOM Attributes for all instances
+                    allCards.data('type', res.shiftType);
+                    allCards.attr('data-type', res.shiftType);
+                    allCards.data('status', res.status);
+                    allCards.attr('data-status', res.status);
                 } else {
-                    alert(res.message || "Failed to update shift status.");
+                    if (res.message) alert(res.message);
                 }
             }
         });
