@@ -979,7 +979,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -1383,7 +1383,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -2276,7 +2276,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -2549,7 +2549,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -4289,7 +4289,7 @@ $('#clientTypeNameTimesheet').on('change', function () {
     }
 
     $.ajax({
-        url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+        url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
         type: 'GET',
         dataType: 'json',
     }).done(function (data) {
