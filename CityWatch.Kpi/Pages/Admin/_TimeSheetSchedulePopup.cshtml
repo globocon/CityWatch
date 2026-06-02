@@ -1,4 +1,4 @@
-﻿<!-- schedule modal -->
+<!-- schedule modal -->
 <div class="modal" tabindex="-1" role="dialog" id="TimeSheetschedule-modal" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -24,12 +24,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="clientTypeName">Client Type</label>
-                                        <select class="form-control" id="clientTypeNameTimesheet" name="clientTypeName">
-                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
-                                            {
-                                                <option value="@item.Value">@item.Text</option>
-                                            }
-                                        </select>
+                                        <select class="form-control" id="clientTypeNameTimesheet" name="clientTypeName" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId)"></select>
                                     </div>
                                     <div class="form-group">
                                         <label for="clientSites">Client Site</label>
@@ -174,12 +169,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="clientTypeNamekv">Client Type</label>
-                                        <select class="form-control" id="clientTypeNamekv" name="clientTypeName">
-                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
-                                            {
-                                                <option value="@item.Value">@item.Text</option>
-                                            }
-                                        </select>
+                                        <select class="form-control" id="clientTypeNamekv" name="clientTypeName" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId)"></select>
                                     </div>
                                     <div class="form-group">
                                         <label for="clientSites">Client Site</label>
@@ -408,12 +398,7 @@
                                             <div class="col-md-4">
                                                 <div class="form-group mb-1">
                                                     <label class="small mb-0">Client Type</label>
-                                                    <select class="form-control form-control-sm" id="clientTypeNameTimesheetpcr" name="clientTypeName">
-                                                        @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
-                                                        {
-                                                            <option value="@item.Value">@item.Text</option>
-                                                        }
-                                                    </select>
+                                                    <select class="form-control form-control-sm" id="clientTypeNameTimesheetpcr" name="clientTypeName" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId)"></select>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">

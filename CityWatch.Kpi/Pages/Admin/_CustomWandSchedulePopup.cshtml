@@ -1,4 +1,4 @@
-﻿<!-- CustomWand Schedule Modal -->
+<!-- CustomWand Schedule Modal -->
 <div class="modal" tabindex="-1" role="dialog" id="customWands-schedule-modal" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -16,12 +16,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="clientTypeName">Client Type</label>
-                                <select class="form-control" id="clientTypeNameCustomWand" name="clientTypeName">
-                                    @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
-                                    {
-                                        <option value="@item.Value">@item.Text</option>
-                                    }
-                                </select>
+                                <select class="form-control" id="clientTypeNameCustomWand" name="clientTypeName" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId)"></select>
                             </div>
                             <div class="form-group">
                                 <label for="clientSites">Client Site</label>
