@@ -11,6 +11,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
+using System.Linq;
 
 namespace CityWatch.Kpi.Pages
 {
