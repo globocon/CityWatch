@@ -117,7 +117,22 @@ namespace CityWatch.Kpi.Pages.Admin
             {   /* admin login only*/
                 ReportRequest = new KpiRequest();
                 HttpContext.Session.SetInt32("GuardId", 0);
-                HttpContext.Session.SetInt32("loginUserId", 0);
+                var roleClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+                if (roleClaim == "Administrator")
+                {
+                    HttpContext.Session.SetInt32("loginUserId", 0);
+                }
+                else if (roleClaim == "User")
+                {
+                    var sidClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
+                    if (!string.IsNullOrEmpty(sidClaim))
+                    {
+                        int parsedSid = int.Parse(sidClaim);
+                        HttpContext.Session.SetInt32("loginUserId", parsedSid);
+                        userId = parsedSid;
+                    }
+                }
+
                 if (ClientTypeId != 0)
                 {
                     HttpContext.Session.SetInt32("ClientTypeId", ClientTypeId);
