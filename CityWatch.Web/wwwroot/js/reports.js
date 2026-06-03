@@ -841,7 +841,7 @@ $(function () {
             drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
             $('#count_by_site3').html(response.chartData.sitePercentage.length);
             drawPieChartLargeSizeForPdf(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward3pdf");
-            drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf");
+            drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf", response.chartData.feedbackTemplatesColour);
             /* drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");*/
             /* drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");*/
             drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
@@ -1163,7 +1163,7 @@ $(function () {
                 drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
                 $('#count_by_site3').html(response.chartData.sitePercentage.length);
                 drawPieChartLargeSizeForPdf(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward3pdf");
-                drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf");
+                drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf", response.chartData.feedbackTemplatesColour);
                 drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
                 drawPieChartLargeSizeForPdf2(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity3");
                 drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity3");
@@ -1476,7 +1476,7 @@ $(function () {
 
 
 
-    function drawPieChartLargeSizeForPdf(data, recordCount, control) {
+    function drawPieChartLargeSizeForPdf(data, recordCount, control, customColors) {
 
         $(control).html('');
 
@@ -1516,7 +1516,12 @@ $(function () {
                 else
                     return '';
             })
-            .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
+            .attr('fill', function (d, i) {
+                if (customColors && customColors.length > i) {
+                    return customColors[i];
+                }
+                return getFillColor(d, i, data[i].key); 
+            })
             .attr('d', arc);
 
         //Append values on chart
@@ -1606,7 +1611,12 @@ $(function () {
         legend.append("rect")
             .attr("width", 8)
             .attr("height", 8)
-            .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); });
+            .attr("fill", function (d, i) { 
+                if (customColors && customColors.length > i) {
+                    return customColors[i];
+                }
+                return getFillColor(d, i, data[i].key); 
+            });
 
         //Append legend text
         legend.append("text")
