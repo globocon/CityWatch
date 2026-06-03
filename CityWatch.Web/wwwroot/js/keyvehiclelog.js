@@ -55,6 +55,23 @@ $(function () {
         return hours + ':' + mins;
     }
 
+    function formatDateWithWeekday(date) {
+        if (!date) {
+            return '';
+        }
+
+        const dt = new Date(date);
+
+        // Return empty string for invalid dates
+        if (isNaN(dt.getTime())) {
+            return '';
+        }
+
+        const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+        return `${weekdays[dt.getDay()]}-${String(dt.getDate()).padStart(2, '0')}-${String(dt.getMonth() + 1).padStart(2, '0')}-${dt.getFullYear()}`;
+    }
+
     function convertDbString(value) { return (value === null || value === undefined) ? '' : value; }
 
     function convertDateTimeString(value) { return (value === null || value === undefined) ? '' : getTimeFromDateTime(new Date(value)); }
@@ -2007,6 +2024,11 @@ $(function () {
         const vkl_modal_danger = 'POI Warning'
         $('#vkl-modal').find('.modal-title .btn-danger').html(vkl_modal_danger);
 
+        $('#new_log_initial_call_date_disp').val('');
+        $('#new_log_entry_date_disp').val('');
+        $('#new_log_sent_in_date_disp').val('');
+        $('#new_log_exit_date_disp').val('');
+
         $.ajax({
             type: 'GET',
             url: '/Guard/KeyVehicleLog?handler=KeyVehicleLog',
@@ -2034,6 +2056,12 @@ $(function () {
                 $('#new_log_initial_call').val(getTimeFromDateTime(new Date()));
                 $('#new_log_entry_time').val(getTimeFromDateTime(new Date()));
                 $('#new_log_sent_in_time').val(getTimeFromDateTime(new Date()));
+
+                $('#new_log_initial_call_date_disp').val(formatDateWithWeekday(new Date()));
+                $('#new_log_entry_date_disp').val(formatDateWithWeekday(new Date()));
+                $('#new_log_sent_in_date_disp').val(formatDateWithWeekday(new Date()));
+                $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
+
                 $('#ActiveGuardLoginId').val('');
                 $('#titlePOIWarning').attr('hidden', true)
                 $('#imagesiren').attr('hidden', true);
@@ -2077,22 +2105,35 @@ $(function () {
 
                 if ($('#InialCallTime').val() !== '') {
                     $('#new_log_initial_call').val(getTimeFromDateTime(new Date($('#InitialCallTime').val())));
+                    $('#new_log_initial_call_date_disp').val(formatDateWithWeekday(new Date($('#InitialCallTime').val())));
                 }
                 if ($('#EntryTime').val() !== '') {
                     $('#new_log_entry_time').val(getTimeFromDateTime(new Date($('#EntryTime').val())));
+                    $('#new_log_entry_date_disp').val(formatDateWithWeekday(new Date($('#EntryTime').val())));
                 }
 
                 if ($('#SentInTime').val() !== '') {
                     $('#new_log_sent_in_time').val(getTimeFromDateTime(new Date($('#SentInTime').val())));
+                    $('#new_log_sent_in_date_disp').val(formatDateWithWeekday(new Date($('#SentInTime').val())));
                 }
+
+                
+                
+                
+                
 
                 const previousDayEntry = $('#IsPreviousDayEntry').val().toLowerCase() === 'true';
                 $('#new_log_initial_call, #new_log_entry_time, #new_log_sent_in_time').prop('readonly', previousDayEntry);
                 $('#clear_initialcall_time, #clear_entry_time, #clear_sentin_time').prop('hidden', previousDayEntry);
                 if (previousDayEntry) $('#kvl_status_pd').show();
 
-                if ($('#ExitTime').val() !== '')
+                if ($('#ExitTime').val() !== '') {
                     $('#new_log_exit_time').val(getTimeFromDateTime(new Date($('#ExitTime').val())));
+                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date($('#ExitTime').val())));
+                }
+                else {
+                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
+                }
 
                 $('#ActiveGuardLoginId').val($('#KeyVehicleLog_GuardLogin_Id').val());
 
@@ -2161,6 +2202,11 @@ $(function () {
         const vkl_modal_danger = 'POI Warning'
         $('#vkl-modal').find('.modal-title .btn-danger').html(vkl_modal_danger);
 
+        $('#new_log_initial_call_date_disp').val('');
+        $('#new_log_entry_date_disp').val('');
+        $('#new_log_sent_in_date_disp').val('');
+        $('#new_log_exit_date_disp').val('');
+
         $.ajax({
             type: 'GET',
             url: '/Guard/KeyVehicleLog?handler=KeyVehicleLog',
@@ -2189,6 +2235,10 @@ $(function () {
                 $('#new_log_initial_call').val(getTimeFromDateTime(new Date()));
                 $('#new_log_entry_time').val(getTimeFromDateTime(new Date()));
                 $('#new_log_sent_in_time').val(getTimeFromDateTime(new Date()));
+                $('#new_log_initial_call_date_disp').val(formatDateWithWeekday(new Date()));
+                $('#new_log_entry_date_disp').val(formatDateWithWeekday(new Date()));
+                $('#new_log_sent_in_date_disp').val(formatDateWithWeekday(new Date()));
+                $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
                 $('#ActiveGuardLoginId').val('');
                 $('#titlePOIWarning').attr('hidden', true)
                 $('#imagesiren').attr('hidden', true);
@@ -2232,13 +2282,16 @@ $(function () {
 
                 if ($('#InialCallTime').val() !== '') {
                     $('#new_log_initial_call').val(getTimeFromDateTime(new Date($('#InitialCallTime').val())));
+                    $('#new_log_initial_call_date_disp').val(formatDateWithWeekday(new Date($('#InitialCallTime').val())));
                 }
                 if ($('#EntryTime').val() !== '') {
                     $('#new_log_entry_time').val(getTimeFromDateTime(new Date($('#EntryTime').val())));
+                    $('#new_log_entry_date_disp').val(formatDateWithWeekday(new Date($('#EntryTime').val())));
                 }
 
                 if ($('#SentInTime').val() !== '') {
                     $('#new_log_sent_in_time').val(getTimeFromDateTime(new Date($('#SentInTime').val())));
+                    $('#new_log_sent_in_date_disp').val(formatDateWithWeekday(new Date($('#SentInTime').val())));
                 }
 
                 const previousDayEntry = $('#IsPreviousDayEntry').val().toLowerCase() === 'true';
@@ -2246,8 +2299,13 @@ $(function () {
                 $('#clear_initialcall_time, #clear_entry_time, #clear_sentin_time').prop('hidden', previousDayEntry);
                 if (previousDayEntry) $('#kvl_status_pd').show();
 
-                if ($('#ExitTime').val() !== '')
+                if ($('#ExitTime').val() !== '') {
                     $('#new_log_exit_time').val(getTimeFromDateTime(new Date($('#ExitTime').val())));
+                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date($('#ExitTime').val())));
+                }
+                else {
+                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
+                }
 
                 $('#ActiveGuardLoginId').val($('#KeyVehicleLog_GuardLogin_Id').val());
 

@@ -43,6 +43,9 @@
                             <button type="button" class="input-group-text px-2 bg-light" id="clear_initialcall_time"><i class="fa fa-trash text-danger"></i></button>
                         </div>
                     </div>
+                    <div class="input-group mt-1">
+                        <input type="text" class="form-control w-75 form-control-sm" id="new_log_initial_call_date_disp" disabled>
+                    </div>
                     <input type="datetime-local" asp-for="@Model.InitialCallTime" hidden />
                 </div>
                 <div class="form-group col-md-3">
@@ -52,6 +55,9 @@
                         <div class="input-group-append">
                             <button type="button" class="input-group-text px-2 bg-light" id="clear_entry_time"><i class="fa fa-trash text-danger"></i></button>
                         </div>
+                    </div>
+                    <div class="input-group mt-1">
+                        <input type="text" class="form-control w-75 form-control-sm" id="new_log_entry_date_disp" disabled>
                     </div>
                     <input type="datetime-local" asp-for="@Model.EntryTime" hidden />
                 </div>
@@ -63,6 +69,9 @@
                             <button type="button" class="input-group-text px-2 bg-light" id="clear_sentin_time"><i class="fa fa-trash text-danger"></i></button>
                         </div>
                     </div>
+                    <div class="input-group mt-1">
+                        <input type="text" class="form-control w-75 form-control-sm" id="new_log_sent_in_date_disp" disabled>
+                    </div>
                     <input type="datetime-local" asp-for="@Model.SentInTime" hidden />
                 </div>
                 <div class="form-group col-md-3">
@@ -72,6 +81,9 @@
                         <div class="input-group-append">
                             <button type="button" class="input-group-text px-2 bg-light" id="clear_exit_time"><i class="fa fa-trash text-danger"></i></button>
                         </div>
+                    </div>
+                    <div class="input-group mt-1">
+                        <input type="text" class="form-control w-75 form-control-sm" id="new_log_exit_date_disp" disabled>
                     </div>
                     <input type="datetime-local" asp-for="@Model.ExitTime" hidden />
                 </div>
