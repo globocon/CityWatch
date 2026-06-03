@@ -1555,7 +1555,7 @@ namespace CityWatch.Web.Pages.Guard
                         int hrgroupid = _configDataProvider.GetHrSettingById(hrsettingid).HRGroupId;
                         var result = _guardDataProvider.GetGuardTrainingAndAssessment(GuardId).Where(x => x.TrainingCourseId == TrainingCourseId).ToList();
                         int id = 0;
-                        if (result.Count < 0)
+                        if (result.Count == 0)
                         {
                            
 

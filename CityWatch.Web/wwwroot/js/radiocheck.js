@@ -2444,7 +2444,7 @@ $("#addGuardModalnew").on("shown.bs.modal", function () {
     }
     //var userId = $('#GuardLogin_UserID').val();
     const token = $('input[name="__RequestVerificationToken"]').val();
-    var guardId = $('#Guard_Id').val();
+    var guardId = $('#GuardLog_GuardLogin_GuardId').val();
     if (userId == 74) {
         $.ajax({
             url: '/Guard/DailyLog?handler=SaveGuardTrainingAndAssessmentFromOnboardingUsers',
