@@ -1343,6 +1343,7 @@ $(function () {
 
         // Generate the pie
         var pie = d3.pie()
+            .sort(null)
             .value(function (d) { return d.value; });
 
         // Generate the arcs
@@ -1494,6 +1495,7 @@ $(function () {
         radius = radius - 27;
         // Generate the pie
         var pie = d3.pie()
+            .sort(null)
             .value(function (d) { return d.value; });
 
         // Generate the arcs
@@ -1655,6 +1657,7 @@ $(function () {
         radius = radius - 27;
         // Generate the pie
         var pie = d3.pie()
+            .sort(null)
             .value(function (d) { return d.value; });
 
         // Generate the arcs
@@ -1835,6 +1838,7 @@ $(function () {
 
         // Generate the pie
         var pie = d3.pie()
+            .sort(null)
             .value(function (d) { return d.value; });
 
         // Generate the arcs
@@ -7804,7 +7808,7 @@ $('#convert-to-pdf').click(function (e) {
             margin: [0, 0, 0, 0],
             filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
+            html2canvas: { scale: 2, scrollY: 0 },
             jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
         }).then(function () {
             $('#loader-p').hide();
