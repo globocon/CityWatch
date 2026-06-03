@@ -3315,7 +3315,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     });
     function schButtonRendererNew(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<a href="' + record.filePath + '" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>';
+        buttonHtml += '<a href="' + record.filePath + '" download="' + record.fileName + '" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>';
         return buttonHtml;
     }
 
