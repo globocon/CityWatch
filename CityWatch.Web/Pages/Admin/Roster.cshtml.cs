@@ -247,6 +247,22 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success = Issuccess, message = exMessage });
         }
+        public JsonResult OnGetClientTypesList()
+        {
+            try
+            {
+                var clientTypes = _viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId)
+                                  .Select(s => new { value = s.Name, text = s.Name })
+                                  .ToList();
+                return new JsonResult(clientTypes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+            return new JsonResult(new List<object>());
+        }
+
         public JsonResult OnGetClientSitesWithIds(string type)
         {
             try
