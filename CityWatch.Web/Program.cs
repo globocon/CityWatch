@@ -80,6 +80,7 @@ builder.Services.AddScoped<IAlertEmailServices, AlertEmailServices>();
 builder.Services.AddScoped<ISmartWandReportZipGenarator, SmartWandReportZipGenarator>();
 builder.Services.AddScoped<IWandStrikeReportDataService, WandStrikeReportDataService>();
 
+builder.Services.AddHostedService<ShiftCancellationEmailBackgroundService>();
 
 builder.Services.AddRazorPages(options =>
 {

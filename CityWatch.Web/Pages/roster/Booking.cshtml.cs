@@ -29,6 +29,7 @@ namespace CityWatch.Web.Pages.roster
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IRosterReportGenerator _rosterReportGenerator;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IAlertEmailServices _alertEmailServices;
 
         public BookingModel(
             ILogger<BookingModel> logger,
@@ -36,7 +37,8 @@ namespace CityWatch.Web.Pages.roster
             CityWatchDbContext context,
             IClientDataProvider clientDataProvider,
             IRosterReportGenerator rosterReportGenerator,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            IAlertEmailServices alertEmailServices)
         {
             _logger = logger;
             _viewDataService = viewDataService;
@@ -44,6 +46,7 @@ namespace CityWatch.Web.Pages.roster
             _clientDataProvider = clientDataProvider;
             _rosterReportGenerator = rosterReportGenerator;
             _webHostEnvironment = webHostEnvironment;
+            _alertEmailServices = alertEmailServices;
         }
 
         public DateTime StartDate { get; set; }
@@ -567,6 +570,27 @@ namespace CityWatch.Web.Pages.roster
 
                 // 1. Save the actual shift change first
                 await _context.SaveChangesAsync();
+                
+                // Queue web cancellation email if applicable
+                if (finalStatus == RosterShiftStatus.Declined || finalStatus == RosterShiftStatus.Cancelled)
+                {
+                    try
+                    {
+                        var userName = HttpContext.User.Identity?.Name ?? "Admin";
+                        bool isGuard = HttpContext.User.IsInRole("Guard");
+                        string cancelledBy = isGuard ? $"Guard|{userName}" : userName;
+                        
+                        await _alertEmailServices.QueueWebShiftCancellation(existing, "Cancelled via Web Portal", cancelledBy);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to queue web shift cancellation email.");
+                    }
+                }
+                else
+                {
+                    try { await _alertEmailServices.RemoveFromQueue(existing); } catch { }
+                }
 
                 // 2. Build a detailed change message
                 try
@@ -1695,6 +1719,27 @@ namespace CityWatch.Web.Pages.roster
             schedule.Status = nextStatus;
 
             await _context.SaveChangesAsync();
+
+            // Queue web cancellation email if applicable
+            if (nextStatus == RosterShiftStatus.Declined || nextStatus == RosterShiftStatus.Cancelled)
+            {
+                try
+                {
+                    var userName = HttpContext.User.Identity?.Name ?? "Admin";
+                    bool isGuard = HttpContext.User.IsInRole("Guard");
+                    string cancelledBy = isGuard ? $"Guard|{userName}" : userName;
+
+                    await _alertEmailServices.QueueWebShiftCancellation(schedule, "Cancelled via Status Cycle", cancelledBy);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to queue web shift cancellation email from cycle.");
+                }
+            }
+            else
+            {
+                try { await _alertEmailServices.RemoveFromQueue(schedule); } catch { }
+            }
 
             // Real-time broadcast
             var hub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
