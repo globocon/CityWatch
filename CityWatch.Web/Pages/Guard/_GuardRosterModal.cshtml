@@ -378,23 +378,23 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 95%;">
         <div class="modal-content border-0 shadow-lg overflow-hidden">
             <div class="modal-header bg-white text-dark p-3 border-bottom d-flex justify-content-between align-items-center">
-                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 mr-4">
+                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 mr-2">
                     <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
                     <span class="font-weight-bold text-dark px-2 text-nowrap" style="min-width: 140px; font-size: 0.8rem;" id="guardWeekRangeText">Loading...</span>
                     <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
                 </div>
 
-                <div class="flex-grow-1 text-center mx-4 text-nowrap">
+                <div class="flex-grow-1 text-center text-nowrap">
                     <span class="font-weight-bold mb-0" style="color: #333; font-size: 13.5px; letter-spacing: 1px;">ROSTER</span>
                 </div>
 
-                <div class="d-flex align-items-center pr-4">
+                <div class="d-flex align-items-center">
                     <!-- Roster Admin Controls -->
-                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
+                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-2 pr-2 border-right">
                         <!-- Financials & Buy/Sell Rate capsule -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                        <div class="d-inline-flex align-items-center mr-2 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
                             <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
-                            <input type="checkbox" id="adminFinancialToggle" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                            <input type="checkbox" id="adminFinancialToggle" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
                             
                             <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
                             <div class="custom-control custom-switch mr-2">
@@ -405,7 +405,7 @@
                         </div>
 
                         <!-- Truck Toggle group -->
-                        <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                        <div class="d-inline-flex align-items-center mr-2" style="vertical-align: middle;">
                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
                                 <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
                                 <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
@@ -431,7 +431,7 @@
                         </div>
 
                         <!-- Guard Filter Control [NEW] -->
-                        <div class="input-group input-group-sm ml-3" style="width: 190.14px;">
+                        <div class="input-group input-group-sm ml-2" style="width: 150px;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-filter mr-1"></i> FILTER</span>
                             </div>
@@ -442,7 +442,7 @@
                     </div>
 
                     <!-- Site Switcher (Admins & RO Editors) -->
-                    <div id="guardRosterSiteSwitcher" class="d-none align-items-center mr-3">
+                    <div id="guardRosterSiteSwitcher" class="d-none align-items-center mr-2">
                         <div class="input-group input-group-sm mr-2" style="width: 140px;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text bg-white text-muted small font-weight-bold border-right-0" title="Client Type"><i class="fa fa-building"></i></span>
@@ -461,10 +461,10 @@
                     <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
                         <i class="fa fa-pencil-square-o mr-1"></i>RO
                     </button>
-                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-4" id="btnDownloadGuardPdf" title="Download PDF">
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-2" id="btnDownloadGuardPdf" title="Download PDF">
                         <i class="fa fa-file-pdf-o mr-1"></i>PDF
                     </button>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="position: absolute; right: 15px; top: 15px; z-index: 1050; opacity: 1; outline: none;">
+                    <button type="button" class="close ml-2" data-dismiss="modal" aria-label="Close" style="opacity: 1; outline: none; box-shadow: none; flex-shrink: 0;">
                         <span aria-hidden="true" style="font-size: 1.5rem; color: #000;">&times;</span>
                     </button>
                 </div>
