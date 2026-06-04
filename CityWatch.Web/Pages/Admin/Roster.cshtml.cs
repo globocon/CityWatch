@@ -252,7 +252,7 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 var clientTypes = _viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId)
-                                  .Select(s => new { value = s.Id.ToString(), text = s.Name })
+                                  .Select(s => new { value = s.Name, text = s.Name })
                                   .ToList();
                 return new JsonResult(clientTypes);
             }
