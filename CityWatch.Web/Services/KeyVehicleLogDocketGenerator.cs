@@ -151,7 +151,7 @@ namespace CityWatch.Web.Services
                                         // to save dockets seperately
                                         int DockketId = 0;
                                         var dockets = _guardLogDataProvider.GetKeyVehicleLogsDocketsHistory(keyVehicleLogId);
-                                        if(dockets.Count()>0)
+                                        if (dockets.Count() > 0)
                                         {
                                             DockketId = dockets.FirstOrDefault().Id;
                                         }
@@ -496,7 +496,7 @@ namespace CityWatch.Web.Services
 
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var kvlPax = _guardLogDataProvider.GetKeyVehicleLogPaxs();
-            var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields,kvlPax);
+            var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields, kvlPax);
             //var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
             var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
 
@@ -1044,6 +1044,7 @@ namespace CityWatch.Web.Services
             var cellNotesTable = new Cell()
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
+                                    .SetPaddingBottom(0)
                                     .SetBorder(Border.NO_BORDER)
                                     .Add(GetNotesTable(keyVehicleLogViewModel, blankNoteOnOrOff));
             outerTable.AddCell(cellNotesTable);
@@ -1196,10 +1197,14 @@ namespace CityWatch.Web.Services
             var headerTimeSlotNo = keyVehicleLogViewModel.Detail.IsTimeSlotNo ? "Time Slot No." : "T-No. (Load)";
             clockDetails.AddCell(GetHeaderCell(headerTimeSlotNo));
 
-            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.InitialCallTime?.ToString("HH:mm")));
-            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.EntryTime?.ToString("HH:mm")));
-            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.SentInTime?.ToString("HH:mm")));
-            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ExitTime?.ToString("HH:mm")));
+            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.InitialCallTime?.ToString("HH:mm")));
+            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.EntryTime?.ToString("HH:mm")));
+            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.SentInTime?.ToString("HH:mm")));
+            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ExitTime?.ToString("HH:mm")));
+            clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.InitialCallTime));
+            clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.EntryTime));
+            clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.SentInTime));
+            clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.ExitTime));
             clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.TimeSlotNo));
 
             return clockDetails;
@@ -1221,7 +1226,7 @@ namespace CityWatch.Web.Services
             companyDetails.AddCell(GetHeaderCell("Location"));
             companyDetails.AddCell(GetHeaderCell("Purpose Of Entry"));
 
-            companyDetails.AddCell(GetDataCellNew(keyVehicleLogViewModel.Detail.CompanyName, keyVehicleLogViewModel.PAX+ 1));
+            companyDetails.AddCell(GetDataCellNew(keyVehicleLogViewModel.Detail.CompanyName, keyVehicleLogViewModel.PAX + 1));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.PersonName));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.MobileNumber));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PersonTypeText));
@@ -1271,12 +1276,12 @@ namespace CityWatch.Web.Services
             notesTable.AddCell(GetHeaderCell("Notes", textAlignment: TextAlignment.LEFT));
             if (blankNoteOnOrOff == "true")
             {
-                notesTable.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT, minHeight: 82));
+                notesTable.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT, minHeight: 85));
 
             }
             else
             {
-                notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 82));
+                notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 85));
             }
             return notesTable;
         }
@@ -1301,10 +1306,10 @@ namespace CityWatch.Web.Services
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.TruckConfigText));
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.TrailerTypeText));
 
-          
-           
 
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate1+"\n"+ keyVehicleLogViewModel.Detail.Trailer1Rego));
+
+
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate1 + "\n" + keyVehicleLogViewModel.Detail.Trailer1Rego));
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate2 + "\n" + keyVehicleLogViewModel.Detail.Trailer2Rego));
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate3 + "\n" + keyVehicleLogViewModel.Detail.Trailer3Rego));
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate4 + "\n" + keyVehicleLogViewModel.Detail.Trailer4Rego));
@@ -1596,11 +1601,11 @@ namespace CityWatch.Web.Services
 
 
             int personType = Convert.ToInt32(keyVehicleLogViewModel.Detail.PersonType);
-            
+
             var IndividulaName = _guardLogDataProvider.GetIndividualType(personType);
             //var Image1 = keyVehicleLogViewModel.Detail.CompanyName + "-" + IndividulaName.Name + "-" + keyVehicleLogViewModel.Detail.PersonName + ".jpg";
             if (!string.IsNullOrEmpty(keyVehicleLogViewModel.Detail.PersonName))
-                
+
             {
                 var Image = keyVehicleLogViewModel.Detail.CompanyName + "-" + IndividulaName.Name + "-" + keyVehicleLogViewModel.Detail.PersonName + ".jpg";
 
@@ -1688,6 +1693,29 @@ namespace CityWatch.Web.Services
                 .SetTextAlignment(textAlignment)
                 .SetMinHeight(minHeight);
         }
+
+        private static Cell GetClockDataCell(DateTime? dateTime, TextAlignment textAlignment = TextAlignment.CENTER, float minHeight = 15, float cellFontSize = CELL_FONT_SIZE)
+        {
+            var cell = new Cell(1, 1)
+                .SetTextAlignment(textAlignment)
+                .SetMinHeight(minHeight);
+
+            if (!dateTime.HasValue)
+            {
+                cell.Add(new Paragraph().SetFontSize(cellFontSize)
+                    .Add(new Text(string.Empty)));
+                return cell;
+            }
+            var p = new Paragraph()
+                .SetFontSize(cellFontSize)
+                .Add(new Text(dateTime.Value.ToString("HH:mm")))
+                .Add("\n")
+                .Add(new Text(dateTime.Value.ToString("ddd-dd-MMM-yyyy").ToUpper()));
+
+            cell.Add(p);
+            return cell;
+        }
+
         private static Cell GetDataCellNew(string text, int rowSpan = 1, int colSpan = 1, TextAlignment textAlignment = TextAlignment.CENTER, float minHeight = 15, float cellFontSize = CELL_FONT_SIZE)
         {
             return new Cell(rowSpan, colSpan)
@@ -1705,7 +1733,7 @@ namespace CityWatch.Web.Services
             return string.Empty;
         }
 
-       
+
         private string GetKeyDetailsCommaSeparated(KeyVehicleLog keyVehicleLog)
         {
             var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeys(keyVehicleLog.ClientSiteLogBook.ClientSiteId);
