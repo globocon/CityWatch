@@ -438,17 +438,16 @@ namespace CityWatch.Web.Services
                                     var headerPara = new Paragraph("Remuneration Summary")
                                         .SetFont(PdfHelper.GetPdfFont())
                                         .SetFontSize(9f)
-                                        .SetBold()
                                         .SetFontColor(new DeviceRgb(25, 118, 210)); // Blue color like UI
                                     document.Add(headerPara);
 
                                     Table remTable = new Table(new float[] { 40f, 20f, 15f, 40f }).UseAllAvailableWidth().SetMarginTop(5f);
 
                                     // Header
-                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("GUARD NAME").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetBold().SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)));
-                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("TOTAL AMOUNT").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetBold().SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)).SetTextAlignment(TextAlignment.RIGHT));
-                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("PAID").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetBold().SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)).SetTextAlignment(TextAlignment.CENTER));
-                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("NOTES").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetBold().SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)));
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("GUARD NAME").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)));
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("TOTAL AMOUNT").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)).SetTextAlignment(TextAlignment.RIGHT));
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("PAID").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)).SetTextAlignment(TextAlignment.CENTER));
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("NOTES").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)));
 
                                     decimal grandTotal = 0m;
 
@@ -477,8 +476,8 @@ namespace CityWatch.Web.Services
                                     }
 
                                     // Grand Total row
-                                    remTable.AddCell(new Cell().Add(new Paragraph("SUMMARY TOTAL").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7.5f).SetBold().SetFontColor(ColorConstants.GRAY)));
-                                    remTable.AddCell(new Cell().Add(new Paragraph($"$ {grandTotal:F2}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(8f).SetBold().SetFontColor(ColorConstants.RED)).SetTextAlignment(TextAlignment.RIGHT));
+                                    remTable.AddCell(new Cell().Add(new Paragraph("SUMMARY TOTAL").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7.5f).SetFontColor(ColorConstants.GRAY)));
+                                    remTable.AddCell(new Cell().Add(new Paragraph($"$ {grandTotal:F2}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(8f).SetFontColor(ColorConstants.RED)).SetTextAlignment(TextAlignment.RIGHT));
                                     remTable.AddCell(new Cell(1, 2).Add(new Paragraph("")));
 
                                     document.Add(remTable);
