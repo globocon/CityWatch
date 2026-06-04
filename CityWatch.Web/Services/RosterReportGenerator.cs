@@ -465,6 +465,50 @@ namespace CityWatch.Web.Services
 
                             AddStatusStampToCell(siteCell, status);
 
+                            // Append Legend and Notes to siteCell
+                            var absences = new List<string>();
+                            foreach (var shift in schedules.Where(s => s.ClientSiteId == site.ClientSiteId && s.ShiftStart >= weekStart && s.ShiftStart < weekEnd.AddDays(1)))
+                            {
+                                if (!string.IsNullOrEmpty(shift.ReliefReason))
+                                {
+                                    var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
+                                    var note = $"{gName} - {shift.ReliefReason}";
+                                    if (!string.IsNullOrEmpty(shift.ReliefReasonOther)) note += $" ({shift.ReliefReasonOther})";
+                                    if (!absences.Contains(note)) absences.Add(note);
+                                }
+                                if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined)
+                                {
+                                    var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
+                                    var note = $"{gName} - Declined";
+                                    if (!absences.Contains(note)) absences.Add(note);
+                                }
+                            }
+                            
+                            siteCell.Add(new Paragraph("\n").SetFontSize(4f).SetMarginBottom(2f));
+                            void AddLegendRow(string text, Color color, bool isCancel = false) {
+                                var p = new Paragraph().SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetMarginBottom(1f);
+                                p.Add(new Text("● ").SetFontColor(color));
+                                if (isCancel) p.Add(new Text("X ").SetFontColor(ColorConstants.RED));
+                                p.Add(new Text(text).SetFontColor(ColorConstants.DARK_GRAY));
+                                siteCell.Add(p);
+                            }
+                            AddLegendRow("Unassigned - FIXED", new DeviceRgb(255, 183, 77));
+                            AddLegendRow("Unassigned - ADHOC", new DeviceRgb(255, 143, 0));
+                            AddLegendRow("Accepted - FIXED", new DeviceRgb(144, 238, 144));
+                            AddLegendRow("Accepted - ADHOC", new DeviceRgb(50, 205, 50));
+                            AddLegendRow("Relief Guard (Accepted)", new DeviceRgb(111, 66, 193));
+                            AddLegendRow("DECLINED (OPEN)", ColorConstants.BLACK);
+                            AddLegendRow("CANCELLED (CLOSED)", ColorConstants.RED, true);
+                            
+                            siteCell.Add(new Paragraph("Not Avalible (DNC):").SetFontSize(5.5f).SetBold().SetFontColor(ColorConstants.BLACK).SetMarginTop(4f).SetMarginBottom(1f));
+                            if (absences.Any()) {
+                                foreach(var note in absences) {
+                                    siteCell.Add(new Paragraph("- " + note).SetFontSize(5f).SetFontColor(ColorConstants.DARK_GRAY).SetMarginBottom(0.5f));
+                                }
+                            } else {
+                                siteCell.Add(new Paragraph("None").SetFontSize(5f).SetFontColor(ColorConstants.GRAY).SetItalic());
+                            }
+
                             siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
 
@@ -612,71 +656,7 @@ namespace CityWatch.Web.Services
 
                         document.Add(table);
 
-                        var legendNotesTable = new Table(UnitValue.CreatePercentArray(new float[] { 60f, 40f })).UseAllAvailableWidth().SetMarginTop(10f);
-
-                        // Legend Cell
-                        var legendCell = new Cell().SetBorder(Border.NO_BORDER);
-                        legendCell.Add(new Paragraph("COLOR LEGEND").SetFont(PdfHelper.GetPdfFont()).SetFontSize(8f).SetBold().SetFontColor(ColorConstants.GRAY).SetMarginBottom(3f));
-
-                        var legendTable = new Table(3).UseAllAvailableWidth();
-                        void AddLegendItem(string label, Color color, bool hasBorder = false)
-                        {
-                            var itemTable = new Table(2);
-                            var colorBox = new Cell().SetWidth(8f).SetHeight(8f).SetBackgroundColor(color).SetBorder(hasBorder ? new SolidBorder(ColorConstants.BLACK, 0.5f) : Border.NO_BORDER);
-                            var textCell = new Cell().Add(new Paragraph(label).SetFontSize(6f).SetFont(PdfHelper.GetPdfFont())).SetBorder(Border.NO_BORDER).SetPaddingLeft(3f).SetVerticalAlignment(VerticalAlignment.MIDDLE);
-                            itemTable.AddCell(colorBox);
-                            itemTable.AddCell(textCell);
-                            legendTable.AddCell(new Cell().Add(itemTable).SetBorder(Border.NO_BORDER).SetPadding(2f));
-                        }
-
-                        AddLegendItem("Unassigned (Fixed)", new DeviceRgb(255, 183, 77)); // Orange
-                        AddLegendItem("Accepted (Fixed)", new DeviceRgb(144, 238, 144)); // Light Green
-                        AddLegendItem("Shift Relief", new DeviceRgb(111, 66, 193)); // Purple
-                        AddLegendItem("Unassigned (Adhoc)", new DeviceRgb(255, 143, 0)); // Dark Orange
-                        AddLegendItem("Accepted (Adhoc)", new DeviceRgb(50, 205, 50)); // Dark Green
-                        AddLegendItem("Declined", ColorConstants.BLACK);
-                        AddLegendItem("Cancelled", ColorConstants.WHITE, true);
-
-                        legendCell.Add(legendTable);
-
-                        // Notes Cell
-                        var notesCell = new Cell().SetBorder(Border.NO_BORDER).SetBorderLeft(new SolidBorder(ColorConstants.LIGHT_GRAY, 1f)).SetPaddingLeft(10f);
-                        notesCell.Add(new Paragraph("NOTES (ABSENCES / LEAVE)").SetFont(PdfHelper.GetPdfFont()).SetFontSize(8f).SetBold().SetFontColor(ColorConstants.GRAY).SetMarginBottom(3f));
-
-                        var absences = new List<string>();
-                        foreach (var shift in schedules.Where(s => s.ShiftStart >= weekStart && s.ShiftStart < weekEnd.AddDays(1)))
-                        {
-                            if (!string.IsNullOrEmpty(shift.ReliefReason))
-                            {
-                                var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
-                                var note = $"{gName} - {shift.ReliefReason}";
-                                if (!string.IsNullOrEmpty(shift.ReliefReasonOther)) note += $" ({shift.ReliefReasonOther})";
-                                if (!absences.Contains(note)) absences.Add(note);
-                            }
-                            if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined)
-                            {
-                                var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
-                                var note = $"{gName} - Declined";
-                                if (!absences.Contains(note)) absences.Add(note);
-                            }
-                        }
-
-                        if (absences.Any())
-                        {
-                            foreach (var note in absences)
-                            {
-                                notesCell.Add(new Paragraph("• " + note).SetFontSize(7f).SetFont(PdfHelper.GetPdfFont()).SetMarginBottom(1f));
-                            }
-                        }
-                        else
-                        {
-                            notesCell.Add(new Paragraph("No leave or absences recorded.").SetFontSize(7f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.GRAY).SetItalic());
-                        }
-
-                        legendNotesTable.AddCell(legendCell);
-                        legendNotesTable.AddCell(notesCell);
-
-                        document.Add(legendNotesTable);
+ 
                         AddBrandedFooter(document, pdf, weekStart);
                     }
                     document.Close();

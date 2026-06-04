@@ -507,27 +507,7 @@
                     </table>
                 </div>
 
-                <!-- Legend and Notes Section -->
-                <div class="row mt-3 mx-2 bg-white p-2 rounded shadow-sm border" style="border-color: #e2e8f0 !important;">
-                    <div class="col-md-7">
-                        <h6 class="font-weight-bold text-secondary mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Color Legend</h6>
-                        <div class="d-flex flex-wrap" style="gap: 8px;">
-                            <div class="d-flex align-items-center" style="font-size: 10px;"><span style="width: 12px; height: 12px; display: inline-block; background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%); border-radius: 3px; margin-right: 4px;"></span> Unassigned (Fixed)</div>
-                            <div class="d-flex align-items-center" style="font-size: 10px;"><span style="width: 12px; height: 12px; display: inline-block; background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%); border-radius: 3px; margin-right: 4px;"></span> Unassigned (Adhoc)</div>
-                            <div class="d-flex align-items-center" style="font-size: 10px;"><span style="width: 12px; height: 12px; display: inline-block; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 3px; margin-right: 4px;"></span> Accepted (Fixed)</div>
-                            <div class="d-flex align-items-center" style="font-size: 10px;"><span style="width: 12px; height: 12px; display: inline-block; background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); border-radius: 3px; margin-right: 4px;"></span> Accepted (Adhoc)</div>
-                            <div class="d-flex align-items-center" style="font-size: 10px;"><span style="width: 12px; height: 12px; display: inline-block; background: linear-gradient(135deg, #434343 0%, #000000 100%); border-radius: 3px; margin-right: 4px;"></span> Declined</div>
-                            <div class="d-flex align-items-center" style="font-size: 10px;"><span style="width: 12px; height: 12px; display: inline-block; background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%); border-radius: 3px; margin-right: 4px;"></span> Shift Relief</div>
-                            <div class="d-flex align-items-center" style="font-size: 10px;"><span style="width: 12px; height: 12px; display: inline-block; background: white; border: 1px solid #ffcdd2; border-radius: 3px; margin-right: 4px;"></span> Cancelled</div>
-                        </div>
-                    </div>
-                    <div class="col-md-5 border-left">
-                        <h6 class="font-weight-bold text-secondary mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Notes (Absences / Leave)</h6>
-                        <ul id="guardRosterNotesList" class="list-unstyled mb-0" style="font-size: 10px; color: #444; max-height: 60px; overflow-y: auto;">
-                            <li class="text-muted font-italic">No leave or absences recorded.</li>
-                        </ul>
-                    </div>
-                </div>
+ 
 
                 <!-- Remuneration Summary Section -->
                 <div id="remuneration-summary-section" style="display: none;">
@@ -1551,6 +1531,43 @@
                 var dailyTotalHours = [0,0,0,0,0,0,0];
                 var dailyTotalCost = [0,0,0,0,0,0,0];
 
+                var globalAbsences = [];
+                res.results.forEach(function (r) {
+                    r.days.forEach(function (ds) {
+                        ds.forEach(function (s) {
+                            if (s.reliefReason) {
+                                var note = (s.guardName || "Unassigned") + " - " + s.reliefReason;
+                                if (s.reliefReasonOther) note += " (" + s.reliefReasonOther + ")";
+                                if (globalAbsences.indexOf(note) === -1) globalAbsences.push(note);
+                            }
+                            if (s.status === 2) {
+                                var note = (s.guardName || "Unassigned") + " - Declined";
+                                if (globalAbsences.indexOf(note) === -1) globalAbsences.push(note);
+                            }
+                        });
+                    });
+                });
+
+                var legendHtml = '<div class="mt-3 pt-2 border-top" style="font-size: 9px; line-height: 1.2; text-shadow: none;">' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #FFA726; margin-right: 4px; font-size: 10px;">●</span> Unassigned - FIXED</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #E65100; margin-right: 4px; font-size: 10px;">●</span> Unassigned - ADHOC</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #66BB6A; margin-right: 4px; font-size: 10px;">●</span> Accepted - FIXED</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #1B5E20; margin-right: 4px; font-size: 10px;">●</span> Accepted - ADHOC</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #8e24aa; margin-right: 4px; font-size: 10px;">●</span> Relief Guard (Accepted)</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #000; margin-right: 4px; font-size: 10px;">●</span> DECLINED (OPEN)</div>' +
+                    '<div class="d-flex align-items-center mb-2"><span style="color: #e53935; margin-right: 4px; font-size: 10px;">● <i class="fa fa-times" style="font-size: 8px;"></i></span> CANCELLED (CLOSED)</div>' +
+                    '<div class="font-weight-bold mt-2 mb-1" style="color: #000;">Not Avalible (DNC):</div>' +
+                    '<ul class="pl-3 mb-0" style="color: #000; list-style-type: disc;">';
+                
+                if (globalAbsences.length > 0) {
+                    globalAbsences.forEach(function(note) {
+                        legendHtml += '<li class="mb-1">' + note + '</li>';
+                    });
+                } else {
+                    legendHtml += '<li class="text-muted font-italic" style="list-style-type: none; margin-left: -1rem;">None</li>';
+                }
+                legendHtml += '</ul></div>';
+
                 res.results.forEach(function (row) {
                     var projectWeeklyHours = 0;
                     var projectWeeklyCost = 0;
@@ -1591,6 +1608,7 @@
                                 '<div class="guard-client-type">' + row.clientTypeName + '</div>' + 
                             '</div>' + 
                             '<div class="admin-status-grid-display mt-auto pb-2">' + statusStampHtml + '</div>' + 
+                            legendHtml +
                         '</td>';
 
                     row.days.forEach(function (dayShifts, index) {
@@ -1723,34 +1741,7 @@
                     }
                 });
 
-                var absences = [];
-                res.results.forEach(function (row) {
-                    row.days.forEach(function (dayShifts) {
-                        dayShifts.forEach(function (s) {
-                            if (s.reliefReason) {
-                                var guardDesc = s.guardName || "Unassigned";
-                                var note = guardDesc + " - " + s.reliefReason;
-                                if (s.reliefReasonOther) note += " (" + s.reliefReasonOther + ")";
-                                if (absences.indexOf(note) === -1) absences.push(note);
-                            }
-                            if (s.status === 2) {
-                                var guardDesc = s.guardName || "Unassigned";
-                                var note = guardDesc + " - Declined";
-                                if (absences.indexOf(note) === -1) absences.push(note);
-                            }
-                        });
-                    });
-                });
-                
-                var notesList = $('#guardRosterNotesList');
-                notesList.empty();
-                if (absences.length > 0) {
-                    absences.forEach(function(note) {
-                        notesList.append('<li class="mb-1"><i class="fa fa-info-circle text-primary mr-1"></i> ' + note + '</li>');
-                    });
-                } else {
-                    notesList.append('<li class="text-muted font-italic">No leave or absences recorded.</li>');
-                }
+ 
 
                 // Show Status Stamp in Grid
                 if (res.status) {
