@@ -385,7 +385,7 @@
                 </div>
 
                 <div class="flex-grow-1 text-center">
-                    <h3 class="font-weight-bold mb-0" style="color: #333; letter-spacing: 2px;">ROSTER</h3>
+                    <span class="font-weight-bold mb-0" style="color: #333; font-size: 13.5px; letter-spacing: 1px;">ROSTER</span>
                 </div>
 
                 <div class="d-flex align-items-center">
@@ -458,11 +458,11 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn-outline-dark btn-sm px-2 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
-                        <i class="fa fa-pencil-square-o"></i> Edit RO
+                    <button type="button" class="btn btn-outline-dark btn-sm px-3 py-1 shadow-sm font-weight-bold mr-2 d-none text-nowrap d-flex align-items-center justify-content-center" id="btnToggleRosterEditMode" title="Toggle Edit Mode" style="min-width: 90px;">
+                        <i class="fa fa-pencil-square-o mr-1"></i> Edit RO
                     </button>
-                    <button type="button" class="btn btn-outline-success btn-sm px-2 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf" title="Download PDF">
-                        <i class="fa fa-file-pdf-o"></i> <i class="fa fa-download ml-1"></i> PDF
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 py-1 shadow-sm font-weight-bold mr-3 text-nowrap d-flex align-items-center justify-content-center" id="btnDownloadGuardPdf" title="Download PDF" style="min-width: 80px;">
+                        <i class="fa fa-file-pdf-o mr-1"></i> PDF
                     </button>
                     <button type="button" class="close p-2 m-0" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
@@ -825,7 +825,7 @@
             isEditMode = !isEditMode;
             $(this).toggleClass('btn-outline-dark btn-primary');
             $(this).find('i').toggleClass('fa-pencil-square-o fa-check');
-            $(this).html(isEditMode ? '<i class="fa fa-check mr-2"></i>Exit Edit Mode' : '<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+            $(this).html(isEditMode ? '<i class="fa fa-check mr-1"></i> Exit Edit' : '<i class="fa fa-pencil-square-o mr-1"></i> Edit RO');
             loadGuardRoster();
         });
 
