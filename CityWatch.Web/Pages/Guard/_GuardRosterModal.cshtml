@@ -1531,21 +1531,33 @@
                 var dailyTotalHours = [0,0,0,0,0,0,0];
                 var dailyTotalCost = [0,0,0,0,0,0,0];
 
-                var globalAbsences = [];
+                var absenceDict = {};
                 res.results.forEach(function (r) {
-                    r.days.forEach(function (ds) {
+                    r.days.forEach(function (ds, dayIndex) {
+                        var ps = guardRosterStartDate.split('-');
+                        var loopDate = new Date(ps[0], ps[1]-1, ps[2]);
+                        loopDate.setDate(loopDate.getDate() + dayIndex);
+                        var dateStr = String(loopDate.getDate()).padStart(2, '0') + '/' + String(loopDate.getMonth()+1).padStart(2, '0');
+                        
                         ds.forEach(function (s) {
                             if (s.reliefReason) {
-                                var note = (s.guardName || "Unassigned") + " - " + s.reliefReason;
-                                if (s.reliefReasonOther) note += " (" + s.reliefReasonOther + ")";
-                                if (globalAbsences.indexOf(note) === -1) globalAbsences.push(note);
+                                var key = (s.guardName || "Unassigned") + " - " + s.reliefReason;
+                                if (s.reliefReasonOther) key += " (" + s.reliefReasonOther + ")";
+                                
+                                if (!absenceDict[key]) absenceDict[key] = [];
+                                if (absenceDict[key].indexOf(dateStr) === -1) absenceDict[key].push(dateStr);
                             }
                             if (s.status === 2) {
-                                var note = (s.guardName || "Unassigned") + " - Declined";
-                                if (globalAbsences.indexOf(note) === -1) globalAbsences.push(note);
+                                var key = (s.guardName || "Unassigned") + " - Declined";
+                                
+                                if (!absenceDict[key]) absenceDict[key] = [];
+                                if (absenceDict[key].indexOf(dateStr) === -1) absenceDict[key].push(dateStr);
                             }
                         });
                     });
+                });
+                var globalAbsences = Object.keys(absenceDict).map(function(key) {
+                    return "- " + key + " (" + absenceDict[key].join(', ') + ")";
                 });
 
                 var legendHtml = '<div class="mt-3 pt-2 border-top" style="font-size: 9px; line-height: 1.2; text-shadow: none;">' +
@@ -1557,16 +1569,16 @@
                     '<div class="d-flex align-items-center mb-1"><span style="color: #000; margin-right: 4px; font-size: 10px;">●</span> DECLINED (OPEN)</div>' +
                     '<div class="d-flex align-items-center mb-2"><span style="color: #e53935; margin-right: 4px; font-size: 10px;">● <i class="fa fa-times" style="font-size: 8px;"></i></span> CANCELLED (CLOSED)</div>' +
                     '<div class="font-weight-bold mt-2 mb-1" style="color: #000;">Not Avalible (DNC):</div>' +
-                    '<ul class="pl-3 mb-0" style="color: #000; list-style-type: disc;">';
+                    '<div style="color: #000;">';
                 
                 if (globalAbsences.length > 0) {
                     globalAbsences.forEach(function(note) {
-                        legendHtml += '<li class="mb-1">' + note + '</li>';
+                        legendHtml += '<div class="mb-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' + note + '">' + note + '</div>';
                     });
                 } else {
-                    legendHtml += '<li class="text-muted font-italic" style="list-style-type: none; margin-left: -1rem;">None</li>';
+                    legendHtml += '<div class="text-muted font-italic">None</div>';
                 }
-                legendHtml += '</ul></div>';
+                legendHtml += '</div></div>';
 
                 res.results.forEach(function (row) {
                     var projectWeeklyHours = 0;

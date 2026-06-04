@@ -466,31 +466,42 @@ namespace CityWatch.Web.Services
                             AddStatusStampToCell(siteCell, status);
 
                             // Append Legend and Notes to siteCell
-                            var absences = new List<string>();
+                            var absenceDict = new Dictionary<string, List<string>>();
                             foreach (var shift in schedules.Where(s => s.ClientSiteId == site.ClientSiteId && s.ShiftStart >= weekStart && s.ShiftStart < weekEnd.AddDays(1)))
                             {
+                                var dateStr = shift.ShiftStart.ToString("dd/MM");
                                 if (!string.IsNullOrEmpty(shift.ReliefReason))
                                 {
                                     var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
-                                    var note = $"{gName} - {shift.ReliefReason}";
-                                    if (!string.IsNullOrEmpty(shift.ReliefReasonOther)) note += $" ({shift.ReliefReasonOther})";
-                                    if (!absences.Contains(note)) absences.Add(note);
+                                    var key = $"{gName} - {shift.ReliefReason}";
+                                    if (!string.IsNullOrEmpty(shift.ReliefReasonOther)) key += $" ({shift.ReliefReasonOther})";
+                                    
+                                    if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
+                                    if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
                                 }
                                 if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined)
                                 {
                                     var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
-                                    var note = $"{gName} - Declined";
-                                    if (!absences.Contains(note)) absences.Add(note);
+                                    var key = $"{gName} - Declined";
+                                    
+                                    if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
+                                    if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
                                 }
                             }
+                            var absences = absenceDict.Select(kv => $"{kv.Key} ({string.Join(", ", kv.Value)})").ToList();
                             
                             siteCell.Add(new Paragraph("\n").SetFontSize(4f).SetMarginBottom(2f));
+                            var legendTable = new Table(UnitValue.CreatePercentArray(new float[] { 15f, 85f })).UseAllAvailableWidth();
                             void AddLegendRow(string text, Color color, bool isCancel = false) {
-                                var p = new Paragraph().SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetMarginBottom(1f);
-                                p.Add(new Text("● ").SetFontColor(color));
-                                if (isCancel) p.Add(new Text("X ").SetFontColor(ColorConstants.RED));
-                                p.Add(new Text(text).SetFontColor(ColorConstants.DARK_GRAY));
-                                siteCell.Add(p);
+                                var colorCell = new Cell().SetPadding(0).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.RIGHT).SetPaddingRight(3f);
+                                var colorBox = new Div().SetWidth(4f).SetHeight(4f).SetBackgroundColor(color);
+                                if (isCancel) colorBox.SetBorder(new SolidBorder(ColorConstants.RED, 0.5f)).SetBackgroundColor(ColorConstants.WHITE);
+                                colorCell.Add(colorBox);
+                                
+                                var textCell = new Cell().Add(new Paragraph(text).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMargin(0)).SetBorder(Border.NO_BORDER).SetPadding(0).SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                                
+                                legendTable.AddCell(colorCell);
+                                legendTable.AddCell(textCell);
                             }
                             AddLegendRow("Unassigned - FIXED", new DeviceRgb(255, 183, 77));
                             AddLegendRow("Unassigned - ADHOC", new DeviceRgb(255, 143, 0));
@@ -499,14 +510,15 @@ namespace CityWatch.Web.Services
                             AddLegendRow("Relief Guard (Accepted)", new DeviceRgb(111, 66, 193));
                             AddLegendRow("DECLINED (OPEN)", ColorConstants.BLACK);
                             AddLegendRow("CANCELLED (CLOSED)", ColorConstants.RED, true);
+                            siteCell.Add(legendTable);
                             
-                            siteCell.Add(new Paragraph("Not Avalible (DNC):").SetFontSize(5.5f).SetBold().SetFontColor(ColorConstants.BLACK).SetMarginTop(4f).SetMarginBottom(1f));
+                            siteCell.Add(new Paragraph("Not Avalible (DNC):").SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.BLACK).SetMarginTop(4f).SetMarginBottom(1f));
                             if (absences.Any()) {
                                 foreach(var note in absences) {
-                                    siteCell.Add(new Paragraph("- " + note).SetFontSize(5f).SetFontColor(ColorConstants.DARK_GRAY).SetMarginBottom(0.5f));
+                                    siteCell.Add(new Paragraph("- " + note).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMarginBottom(0.5f));
                                 }
                             } else {
-                                siteCell.Add(new Paragraph("None").SetFontSize(5f).SetFontColor(ColorConstants.GRAY).SetItalic());
+                                siteCell.Add(new Paragraph("None").SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.GRAY).SetItalic());
                             }
 
                             siteCell.SetMinHeight(60f);
