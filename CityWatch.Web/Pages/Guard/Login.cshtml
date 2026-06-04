@@ -11,6 +11,7 @@
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
     var IsLB_KV_IR = false;
+    var userId = AuthUserHelper.LoggedInUserId;
     if (Model.GuardLogin != null)
     {
         IsLB_KV_IR = Model.GuardLogin.Guard.IsLB_KV_IR;
@@ -23,7 +24,7 @@
             <input type="hidden" asp-for="@Model.GuardLogin.Id" />
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.Id" />
             <input type="hidden" id="GuardLogin_ClientSiteID" />
-            
+            <input type="hidden" id="GuardLogin_UserID" asp-for="@userId" />
             
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.IsLB_KV_IR" value="@IsLB_KV_IR" />
             <input type="hidden" asp-for="@Model.LogBookType" />

@@ -1534,7 +1534,59 @@ namespace CityWatch.Web.Pages.Guard
             Issuccess = true;
             return new JsonResult(new { success = Issuccess, message = exMessage });
         }
+        public JsonResult OnPostSaveGuardTrainingAndAssessmentFromOnboardingUsers(int UserId, int GuardId)
+        {
 
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                var Onboardingcourses = _configDataProvider.GetOnBoardUsersTrainingAndAssessment(UserId);
+                foreach (var onboardingCourse in Onboardingcourses)
+                {
+                    //int HRSettingsId = onboardingCourse.TrainingCourseId;
+                    var courseList = _configDataProvider.GetCourseDocuments().Where(x => x.Id == onboardingCourse.TrainingCourseId).ToList();
+                    foreach (var item in courseList)
+                    {
+                        int TrainingCourseId = item.Id;
+
+                        string description = _configDataProvider.GetCourseDocuments().Where(x => x.Id == TrainingCourseId).FirstOrDefault().FileName;
+                        int hrsettingid = _configDataProvider.GetCourseDocuments().Where(x => x.Id == TrainingCourseId).FirstOrDefault().HRSettingsId;
+                        int hrgroupid = _configDataProvider.GetHrSettingById(hrsettingid).HRGroupId;
+                        var result = _guardDataProvider.GetGuardTrainingAndAssessment(GuardId).Where(x => x.TrainingCourseId == TrainingCourseId).ToList();
+                        int id = 0;
+                        if (result.Count == 0)
+                        {
+                           
+
+                            int TrainingCourseStatusId = 1;
+                            _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
+                            {
+                                Id = id,
+                                GuardId = GuardId,
+                                TrainingCourseId = TrainingCourseId,
+                                TrainingCourseStatusId = TrainingCourseStatusId,
+                                Description = description,
+                                HRGroupId = hrgroupid
+                                //,
+                                //IsCompleted = false
+
+                            });
+                        }
+
+                    }
+                }
+                success = true;
+
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+
+            return new JsonResult(new { success, message });
+        }
     }
 
 
