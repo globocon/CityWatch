@@ -15,9 +15,8 @@ namespace CityWatch.Web.Services
         private readonly ILogger<ShiftCancellationEmailBackgroundService> _logger;
         private readonly IServiceProvider _serviceProvider;
         
-        // TEMPORARY FOR TESTING: Set to 1 minute. (Default was 15 minutes period and 60 minutes wait)
-        private readonly TimeSpan _period = TimeSpan.FromMinutes(1);
-        private readonly TimeSpan _waitBeforeSend = TimeSpan.FromMinutes(1);
+        private readonly TimeSpan _period = TimeSpan.FromMinutes(15);
+        private readonly TimeSpan _waitBeforeSend = TimeSpan.FromMinutes(60);
 
         public ShiftCancellationEmailBackgroundService(
             ILogger<ShiftCancellationEmailBackgroundService> logger,
