@@ -440,13 +440,29 @@
                             </select>
                         </div>
                     </div>
-                </div>
 
-                    <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
-                        <i class="fa fa-pencil-square-o mr-2"></i>Edit Roster
+                    <!-- Site Switcher (Admins & RO Editors) -->
+                    <div id="guardRosterSiteSwitcher" class="d-none align-items-center mr-3">
+                        <div class="input-group input-group-sm mr-2" style="width: 140px;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white text-muted small font-weight-bold border-right-0" title="Client Type"><i class="fa fa-building"></i></span>
+                            </div>
+                            <select id="grModalClientType" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="">Client Type</option>
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm" style="width: 180px;">
+                            <select id="grModalClientSite" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px;">
+                                <option value="">Client Site</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-dark btn-sm px-2 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
+                        <i class="fa fa-pencil-square-o"></i> Edit RO
                     </button>
-                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
-                        <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
+                    <button type="button" class="btn btn-outline-success btn-sm px-2 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf" title="Download PDF">
+                        <i class="fa fa-file-pdf-o"></i> <i class="fa fa-download ml-1"></i> PDF
                     </button>
                     <button type="button" class="close p-2 m-0" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
@@ -773,6 +789,34 @@
         $('#guardRosterModal').on('hidden.bs.modal', function () {
             if (window.isPaused !== undefined) {
                 window.isPaused = false;
+            }
+        });
+
+        // Site Switcher logic for Guard Roster Popup
+        $('#grModalClientType').off('change').on('change', function() {
+            var typeId = $(this).val();
+            var siteDd = $('#grModalClientSite');
+            siteDd.empty().append('<option value="">Client Site</option>');
+            if (typeId) {
+                $.ajax({
+                    url: '/RoosterHub?handler=ClientSitesWithIds',
+                    type: 'GET',
+                    data: { type: typeId },
+                    success: function(res) {
+                        $.each(res, function(i, item) {
+                            siteDd.append('<option value="'+item.value+'">'+item.text+'</option>');
+                        });
+                    }
+                });
+            }
+        });
+
+        $('#grModalClientSite').off('change').on('change', function() {
+            var newSiteId = $(this).val();
+            if (newSiteId) {
+                currentGuardSiteId = newSiteId;
+                loadGuardRoster();
+                if (isAdminRoster) loadAdminRosterStatus();
             }
         });
 
@@ -1159,18 +1203,37 @@
         loggedGuardId = guardId ? parseInt(guardId) : null;
         isROEditor = _isROEditor || _isAdmin; // Admins are editors by default
         isEditMode = false; // Always start with edit mode off as requested
-        
         // Reset Edit Button
         $('#btnToggleRosterEditMode').removeClass('btn-primary').addClass('btn-outline-dark');
-        $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+        $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o"></i> Edit RO');
 
-        // Only show Edit button if user has permission
+        // Only show Edit button and Site Switcher if user has permission
         if (isROEditor) {
             $('#btnToggleRosterEditMode').removeClass('d-none');
+            $('#guardRosterSiteSwitcher').removeClass('d-none').addClass('d-flex');
+            
+            // Reset dropdowns so they don't show stale data if the modal was previously opened for another site
+            $('#grModalClientType').val('');
+            $('#grModalClientSite').empty().append('<option value="">Client Site</option>');
+            
+            // Fetch Client Types if not loaded yet
+            if ($('#grModalClientType option').length <= 1) {
+                $.ajax({
+                    url: '/RoosterHub?handler=ClientTypesList',
+                    type: 'GET',
+                    success: function(res) {
+                        var dd = $('#grModalClientType');
+                        dd.empty().append('<option value="">Client Type</option>');
+                        $.each(res, function(i, item) {
+                            dd.append('<option value="'+item.value+'">'+item.text+'</option>');
+                        });
+                    }
+                });
+            }
         } else {
             $('#btnToggleRosterEditMode').addClass('d-none');
+            $('#guardRosterSiteSwitcher').removeClass('d-flex').addClass('d-none');
         }
-        
         if (isAdminRoster) {
             $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
         } else {
