@@ -3295,12 +3295,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkPersonalEmail').prop('checked', false);
     /*p4-79 menu corrections-end*/
     gridSiteStaffDocAlarm = $('#StaffDocumentsAlarm').grid({
-
-        //dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
-        dataSource: {
-            url: '/RadioCheckV2?handler=StaffDocsUsingTypeNew&&type=6&&ClientSiteId=' + id,
-
-        },
+        dataSource: window.mergedAlarmDocsData || [],
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -3320,7 +3315,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     });
     function schButtonRendererNew(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<a href="' + record.filePath + record.fileName + '" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>';
+        buttonHtml += '<a href="' + record.filePath + '" download="' + record.fileName + '" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-1"></i>Download</a>';
         return buttonHtml;
     }
 
@@ -3693,36 +3688,17 @@ $('#dglClientSiteIdActionList').on('change', function () {
             $('#Site_Combination_Look').val(data.siteCombinationLook);
             $('#txtComments').html(data.controlRoomOperator);
             $('#btncontractedmanning').prop('disabled', false);
-            //if (data.imagepath != null) {
-            //    const myArray = data.imagepath.split(":-:");
-            //    $('#download_imageRCList').attr('href', myArray[1]);
-            //    $('#download_imageRCList').attr('download', myArray[0]);
-            //} else {
-            //    $('#download_imageRCList').removeAttr('href');
-            //    $('#download_imageRCList').removeAttr('download');
-            //}
-            if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length <= 1) {
-
-                // $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
-                $('#download_imageRCList').attr('href', data.sopAlarmFilePath + data.sopAlarmFileNme);
-                //p4-143-steps-update-start
-                //$('#download_imageRCList').addClass('btn-primary');
+            $('#download_imageRCList').removeAttr('href').removeAttr('download').removeAttr('data-toggle').removeAttr('data-target').addClass('no-docs');
+            window.mergedAlarmDocsData = data.mergedAlarmDocs || [];
+            if (window.mergedAlarmDocsData.length === 1) {
+                $('#download_imageRCList').attr('href', window.mergedAlarmDocsData[0].filePath).attr('download', window.mergedAlarmDocsData[0].fileName);
                 $('#download_imageRCList').removeClass('no-docs');
-                //p4-143-steps-update-end
-            } else if (data.sopAlarmFileNme != null && data.sopAlarmFileNme.length > 1) {
-                $('#download_imageRCList')
-                    .attr('data-toggle', 'modal')
-                    .attr('data-target', '.bd-example-modal-lgAlarm');
-               // $('#download_imageRCList').addClass('btn-primary');
+            } else if (window.mergedAlarmDocsData.length > 1) {
+                $('#download_imageRCList').attr('data-toggle', 'modal').attr('data-target', '.bd-example-modal-lgAlarm');
                 $('#download_imageRCList').removeClass('no-docs');
-                //$('.bd-example-modal-lg').show();
             }
-            else {
-                $('#download_imageRCList').removeAttr('href');
-                //p4-143-steps-update-start
-                
-                $('#download_imageRCList').addClass('no-docs');
-                //p4-143-steps-update-end
+            if (typeof gridSiteStaffDocAlarm !== 'undefined' && gridSiteStaffDocAlarm) {
+                gridSiteStaffDocAlarm.render(window.mergedAlarmDocsData);
             }
             if (data.sopFileNme != null) {
 
@@ -7214,17 +7190,17 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
                 $('#Site_Combination_Look').val(data.siteCombinationLook);
                 $('#txtComments').html(data.controlRoomOperator);
 
-                if (data.imagepath != null) {
-                    const myArray = data.imagepath.split(":-:");
-                    $('#download_imageRCList').attr('href', myArray[1]);
-                    $('#download_imageRCList').attr('download', myArray[0]);
-                } else {
-                    $('#download_imageRCList').removeAttr('href');
-                    $('#download_imageRCList').removeAttr('download');
-                    //p4-143-steps-update-start
-                    $('#download_imageRCList').removeClass('btn-primary');
-                    $('#download_imageRCList').addClass('text-primary');
-                    //p4-143-steps-update-end
+                $('#download_imageRCList').removeAttr('href').removeAttr('download').removeAttr('data-toggle').removeAttr('data-target').addClass('no-docs').removeClass('btn-primary').addClass('text-primary');
+                window.mergedAlarmDocsData = data.mergedAlarmDocs || [];
+                if (window.mergedAlarmDocsData.length === 1) {
+                    $('#download_imageRCList').attr('href', window.mergedAlarmDocsData[0].filePath).attr('download', window.mergedAlarmDocsData[0].fileName);
+                    $('#download_imageRCList').removeClass('no-docs text-primary');
+                } else if (window.mergedAlarmDocsData.length > 1) {
+                    $('#download_imageRCList').attr('data-toggle', 'modal').attr('data-target', '.bd-example-modal-lgAlarm');
+                    $('#download_imageRCList').removeClass('no-docs text-primary');
+                }
+                if (typeof gridSiteStaffDocAlarm !== 'undefined' && gridSiteStaffDocAlarm) {
+                    gridSiteStaffDocAlarm.render(window.mergedAlarmDocsData);
                 }
 
 

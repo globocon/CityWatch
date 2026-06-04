@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -49,6 +49,13 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public string FormattedExpiredDate { get { return ExpiredDate.HasValue ? ExpiredDate.Value.ToString("dd MMM yyyy") : string.Empty; } }
 
+        [NotMapped]
+        public List<MergedAlarmDoc> MergedAlarmDocs { get; set; }
+    }
 
+    public class MergedAlarmDoc
+    {
+        public string fileName { get; set; }
+        public string filePath { get; set; }
     }
 }

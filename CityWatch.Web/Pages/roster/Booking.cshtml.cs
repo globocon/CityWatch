@@ -887,19 +887,12 @@ namespace CityWatch.Web.Pages.roster
 
             if (siteId.HasValue && siteId.Value > 0)
             {
-                var mainGuardIds = _context.RosterSchedules
-                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.GuardId != null)
-                    .Select(x => x.GuardId.Value)
+                var limitDate = DateTime.Now.AddDays(-120);
+                var siteGuardIds = _context.GuardLogins
+                    .Where(x => x.ClientSiteId == siteId.Value && x.LoginDate >= limitDate)
+                    .Select(x => x.GuardId)
                     .Distinct()
                     .ToList();
-
-                var reliefGuardIds = _context.RosterSchedules
-                    .Where(x => x.ClientSiteId == siteId.Value && !x.IsDeleted && x.ReliefGuardId != null)
-                    .Select(x => x.ReliefGuardId.Value)
-                    .Distinct()
-                    .ToList();
-
-                var siteGuardIds = mainGuardIds.Union(reliefGuardIds).Distinct().ToList();
 
                 if (siteGuardIds.Any())
                 {
