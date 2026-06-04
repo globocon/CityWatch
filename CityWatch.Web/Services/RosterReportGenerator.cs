@@ -491,14 +491,14 @@ namespace CityWatch.Web.Services
                             var absences = absenceDict.Select(kv => $"{kv.Key} ({string.Join(", ", kv.Value)})").ToList();
                             
                             siteCell.Add(new Paragraph("\n").SetFontSize(4f).SetMarginBottom(2f));
-                            var legendTable = new Table(UnitValue.CreatePercentArray(new float[] { 15f, 85f })).UseAllAvailableWidth();
+                            var legendTable = new Table(new float[] { 8f, 150f });
                             void AddLegendRow(string text, Color color, bool isCancel = false) {
-                                var colorCell = new Cell().SetPadding(0).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.RIGHT).SetPaddingRight(3f);
+                                var colorCell = new Cell().SetPadding(0).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.LEFT);
                                 var colorBox = new Div().SetWidth(4f).SetHeight(4f).SetBackgroundColor(color);
                                 if (isCancel) colorBox.SetBorder(new SolidBorder(ColorConstants.RED, 0.5f)).SetBackgroundColor(ColorConstants.WHITE);
                                 colorCell.Add(colorBox);
                                 
-                                var textCell = new Cell().Add(new Paragraph(text).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMargin(0)).SetBorder(Border.NO_BORDER).SetPadding(0).SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                                var textCell = new Cell().Add(new Paragraph(text).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMargin(0)).SetBorder(Border.NO_BORDER).SetPadding(0).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.LEFT);
                                 
                                 legendTable.AddCell(colorCell);
                                 legendTable.AddCell(textCell);
