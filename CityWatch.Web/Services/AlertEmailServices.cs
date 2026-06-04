@@ -217,8 +217,10 @@ namespace CityWatch.Web.Services
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var FromAddress = new MailboxAddress(fromAddress[1], fromAddress[0]);
 
-            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+            // TEMPORARY FOR TESTING: Send only to this email and ignore all others
+            var toAddresses = new List<string> { "addileepsebastian@gmail.com" };
             
+            /*
             // Collect unique KPI managers for all sites involved
             var distinctSiteIds = cancellations.Select(c => c.ClientSiteId).Distinct();
             foreach (var siteId in distinctSiteIds)
@@ -240,6 +242,7 @@ namespace CityWatch.Web.Services
                     // Ignore individual KPI fetch errors
                 }
             }
+            */
 
             var _toAddressList = GetToEmailAddressList(toAddresses.ToArray());
 
