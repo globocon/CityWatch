@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Helpers;
 using System;
@@ -95,6 +95,43 @@ namespace CityWatch.RadioCheck.Services
                 //    if (!isActive)
                 //        _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
                 //}
+
+                /* =====================================================================================================
+                 * FALLBACK DELETION LOGIC (Timezone Fix)
+                 * =====================================================================================================
+                 * WHY THIS EXISTS: 
+                 * The original logic above uses 'siteLocalNow' to calculate the 2-hour timeout. 
+                 * However, the database saves timestamps (LastIRCreatedTime, etc.) in the Server's timezone (AEST). 
+                 * For sites outside of AEST (e.g. WA), this timezone mismatch prevents records from deleting at 120 mins.
+                 * 
+                 * HOW THIS WORKS:
+                 * This block acts as a safety net. If a record survives the above checks due to the timezone bug, 
+                 * we do a final check here comparing directly against 'DateTime.Now' (Server Time).
+                 * 
+                 * RULES:
+                 * 1. We check Incident Reports (IR), Key Vehicle (KV), and Logbook (LB) independently.
+                 * 2. If ANY of these is >= 2 hours old, the entire record is deleted (Guard moves to Inactive Grid).
+                 * 3. Smart Wand (SW) is intentionally IGNORED here per requirements.
+                 * ===================================================================================================== */
+                if (ClientSiteRadioChecksActivity.LastIRCreatedTime != null)
+                {
+                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastIRCreatedTime.Value).TotalHours < 2;
+                    if (!isActive)
+                        _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
+                }
+                if (ClientSiteRadioChecksActivity.LastKVCreatedTime != null)
+                {
+                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastKVCreatedTime.Value).TotalHours < 2;
+                    if (!isActive)
+                        _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
+                }
+                if (ClientSiteRadioChecksActivity.LastLBCreatedTime != null)
+                {
+                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastLBCreatedTime.Value).TotalHours < 2;
+                    if (!isActive)
+                        _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
+                }
+
                 /* Check if guard off duty time expired  New Change In Api by Dileep for task p4 task17 Start */
                 if (ClientSiteRadioChecksActivity.GuardLoginTime != null)
                 {
