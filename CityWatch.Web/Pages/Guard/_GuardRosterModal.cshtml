@@ -2319,7 +2319,7 @@
                     allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted type-provider');
                     
                     var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
-                    if (allCards.data('provider') && (!allCards.data('guardid') || allCards.data('guardname') === 'External')) typeClass += ' type-provider';
+                    if (allCards.data('provider-name') && (!allCards.data('guard-id') || allCards.data('guard-name') === 'External')) typeClass += ' type-provider';
                     var statusClass = 'status-pushed';
                     if (res.status === 1) statusClass = 'status-accepted';
                     if (res.status === 2) statusClass = 'status-declined';
