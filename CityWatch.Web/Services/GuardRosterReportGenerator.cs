@@ -368,6 +368,12 @@ namespace CityWatch.Web.Services
                                             bgColor = new DeviceRgb(255, 143, 0); // Dark Orange (#FF8F00)
                                     }
 
+                                    // Contractor / Provider Color Override
+                                    if (!string.IsNullOrEmpty(shift.ProviderName) && (shift.GuardId == null || shift.Guard?.Name == "External"))
+                                    {
+                                        bgColor = new DeviceRgb(189, 189, 189); // Light Grey
+                                    }
+
                                     var borderColor = ColorConstants.BLACK;
                                     var fontColor = ColorConstants.BLACK;
 
