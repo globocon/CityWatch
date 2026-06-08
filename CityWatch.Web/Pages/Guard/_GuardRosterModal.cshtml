@@ -142,6 +142,11 @@
         background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%) !important;
         border-left: 3px solid #FFCC80 !important;
     }
+    .guard-shift-card.type-provider {
+        background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%) !important;
+        border-left: 3px solid #9e9e9e !important;
+        color: #333 !important;
+    }
     .guard-shift-card.type-regular.status-accepted {
         background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%) !important;
         border-left: 3px solid #C8E6C9 !important;
@@ -1668,6 +1673,7 @@
 
                             var typeClass = 'type-regular';
                             if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
+                            if (s.providerName && (!s.guardId || s.guardName === 'External')) typeClass += ' type-provider';
 
                              var isRelief = s.reliefGuardId || s.reliefProviderName;
                             // Ownership logic: If a relief guard is assigned, they are the ONLY owner. 
@@ -2310,9 +2316,10 @@
                     var allCards = $('.guard-shift-card[data-shift-id="' + id + '"]');
                     
                     // Remove all status/type classes
-                    allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted');
+                    allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted type-provider');
                     
                     var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
+                    if (allCards.data('provider') && (!allCards.data('guardid') || allCards.data('guardname') === 'External')) typeClass += ' type-provider';
                     var statusClass = 'status-pushed';
                     if (res.status === 1) statusClass = 'status-accepted';
                     if (res.status === 2) statusClass = 'status-declined';

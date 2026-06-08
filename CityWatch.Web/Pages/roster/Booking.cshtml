@@ -934,6 +934,11 @@
                 background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%);
             }
 
+            .shift-card.type-provider {
+                background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%) !important;
+                color: #333 !important;
+            }
+
             .shift-card.type-regular.status-accepted {
                 background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
             }
@@ -2074,6 +2079,7 @@
 
                                      var typeClass = 'type-regular';
                                     if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
+                                    if (s.providerName && (!s.guardId || s.guardName === 'External')) typeClass += ' type-provider';
 
                                     rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                         'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +
@@ -2276,9 +2282,10 @@
                             var allCards = $('.shift-card[data-id="' + id + '"]');
                             
                             // Remove all status/type classes
-                            allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted');
+                            allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted type-provider');
                             
                             var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
+                            if (allCards.data('provider') && (!allCards.data('guardid') || allCards.data('guardname') === 'External')) typeClass += ' type-provider';
                             var statusClass = 'status-pushed';
                             if (res.status === 1) statusClass = 'status-accepted';
                             if (res.status === 2) statusClass = 'status-declined';
@@ -3377,6 +3384,7 @@
 
                                         var typeClass = 'type-regular';
                                         if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
+                                        if (s.providerName && (!s.guardId || s.guardName === 'External')) typeClass += ' type-provider';
 
                                         rowHtml += '<div class="shift-card ' + (s.reliefGuardId || s.reliefProviderName ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (!isDayLocked) + '" data-id="' + s.id + '" data-status="' + s.status + '" data-locked="' + isDayLocked + '" ' +
                                             'data-guardid="' + (s.guardId || '') + '" data-guardname="' + (s.guardName || '') + '" data-provider="' + (s.providerName || '') + '" data-payrateid="' + (s.payRateId || '') + '" data-callsignid="' + (s.callsignId || '') + '" ' +

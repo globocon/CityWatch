@@ -42,6 +42,7 @@
     }
     .shift-card.type-regular.status-pushed { background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%); }
     .shift-card.type-adhoc.status-pushed { background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%); }
+    .shift-card.type-provider { background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%) !important; color: #333 !important; }
     .shift-card.type-regular.status-accepted { background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); }
     .shift-card.type-adhoc.status-accepted { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); }
     .shift-card.status-declined { background: linear-gradient(135deg, #434343 0%, #000000 100%); color: #FFFFFF !important; }
@@ -188,6 +189,7 @@
                                     else if (shift.status === 1) classes += (shift.shiftType === 'Adhoc' ? ' type-adhoc status-accepted' : ' type-regular status-accepted');
                                     else classes += (shift.shiftType === 'Adhoc' ? ' type-adhoc status-pushed' : ' type-regular status-pushed');
                                     
+                                    if (shift.providerName && (!shift.guardId || shift.guardName === 'External')) classes += ' type-provider';
                                     if (shift.reliefGuardName) classes += ' shift-relief';
                                     
                                     html += '<div class="' + classes + '">';
