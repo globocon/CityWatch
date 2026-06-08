@@ -19,6 +19,10 @@ namespace CityWatch.Data.Models
             Trailer2Rego = keyVehicleLog.Trailer2Rego;
             Trailer3Rego = keyVehicleLog.Trailer3Rego;
             Trailer4Rego = keyVehicleLog.Trailer4Rego;
+            Trailer5Rego = keyVehicleLog.Trailer5Rego;
+            Trailer6Rego = keyVehicleLog.Trailer6Rego;
+            Trailer7Rego = keyVehicleLog.Trailer7Rego;
+            Trailer8Rego = keyVehicleLog.Trailer8Rego;
             PlateId = keyVehicleLog.PlateId;            
             MobileNumber = keyVehicleLog.MobileNumber;
             Product = keyVehicleLog.Product;
@@ -32,6 +36,10 @@ namespace CityWatch.Data.Models
             Trailer2PlateId = keyVehicleLog.Trailer2PlateId;
             Trailer3PlateId = keyVehicleLog.Trailer3PlateId;
             Trailer4PlateId = keyVehicleLog.Trailer4PlateId;
+            Trailer5PlateId = keyVehicleLog.Trailer5PlateId;
+            Trailer6PlateId = keyVehicleLog.Trailer6PlateId;
+            Trailer7PlateId = keyVehicleLog.Trailer7PlateId;
+            Trailer8PlateId = keyVehicleLog.Trailer8PlateId;
         }
 
         [Key]
@@ -46,6 +54,14 @@ namespace CityWatch.Data.Models
         public string Trailer3Rego { get; set; }
 
         public string Trailer4Rego { get; set; }
+
+        public string Trailer5Rego { get; set; }
+
+        public string Trailer6Rego { get; set; }
+
+        public string Trailer7Rego { get; set; }
+
+        public string Trailer8Rego { get; set; }
 
         public int? PlateId { get; set; }
 
@@ -80,5 +96,13 @@ namespace CityWatch.Data.Models
         public int? Trailer3PlateId { get; set; }
 
         public int? Trailer4PlateId { get; set; }
+
+        public int? Trailer5PlateId { get; set; }
+
+        public int? Trailer6PlateId { get; set; }
+
+        public int? Trailer7PlateId { get; set; }
+
+        public int? Trailer8PlateId { get; set; }
     }
 }

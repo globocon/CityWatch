@@ -42,6 +42,13 @@ namespace CityWatch.Data.Models
         public string Trailer3Rego { get; set; }
 
         public string Trailer4Rego { get; set; }
+        public string Trailer5Rego { get; set; }
+
+        public string Trailer6Rego { get; set; }
+
+        public string Trailer7Rego { get; set; }
+
+        public string Trailer8Rego { get; set; }
         public string IndividualTitle { get; set; }
         public string Gender { get; set; }
         public string CompanyABN { get; set; }
@@ -174,6 +181,14 @@ namespace CityWatch.Data.Models
         public int? Trailer3PlateId { get; set; }
 
         public int? Trailer4PlateId { get; set; }
+
+        public int? Trailer5PlateId { get; set; }
+
+        public int? Trailer6PlateId { get; set; }
+
+        public int? Trailer7PlateId { get; set; }
+
+        public int? Trailer8PlateId { get; set; }
 
 
         [HiddenInput]

@@ -4389,6 +4389,36 @@ $(function () {
             let regoToUpper = $(this).val().toUpperCase();
             $(this).val(regoToUpper);
         });
+        $('#Trailer5Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+
+            $('#Trailer5Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer5Rego_Vehicle_type option:selected').prop('selected', false);
+
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
+        $('#Trailer6Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#Trailer6Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer6Rego_Vehicle_type option:selected').prop('selected', false);
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
+        $('#Trailer7Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#Trailer7Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer7Rego_Vehicle_type option:selected').prop('selected', false);
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
+        $('#Trailer8Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#Trailer8Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer8Rego_Vehicle_type option:selected').prop('selected', false);
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
 
 
         let gridKeyVehicleLogtrailerProfile = $('#key_vehicle_log_trailerprofiles').DataTable({
@@ -4682,6 +4712,34 @@ $(function () {
             }
 
         });
+        $('#Trailer5Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer5PlateId').val(option.val());
+            }
+
+        });
+        $('#Trailer6Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer6PlateId').val(option.val());
+            }
+
+        });
+        $('#Trailer7Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer7PlateId').val(option.val());
+            }
+
+        });
+        $('#Trailer8Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer8PlateId').val(option.val());
+            }
+
+        });
 
 
         $('#key_vehicle_log_trailerprofiles tbody').on('click', '#btnSelectTrailerProfile', function () {
@@ -4919,8 +4977,49 @@ $(function () {
                         $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                     }
                 }
-                if ($('#Trailer1Rego').val() !== '') {
+                if (!$('#Trailer5PlateId').val()) {
+                    if (textBoxName === 'Trailer5Rego') {
+                        $('#Trailer5PlateId').val(result.keyVehicleLogProfile.trailer5PlateId);
+                    }
+                }
+                if (!$('#Trailer5Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer5Rego') {
+                        $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
 
+                    }
+                }
+                if (!$('#Trailer6PlateId').val()) {
+                    if (textBoxName === 'Trailer6Rego') {
+                        $('#Trailer6PlateId').val(result.keyVehicleLogProfile.trailer6PlateId);
+                    }
+                }
+                if (!$('#Trailer6Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer6Rego') {
+                        $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                    }
+                }
+                if (!$('#Trailer7PlateId').val()) {
+                    if (textBoxName === 'Trailer7Rego') {
+                        $('#Trailer7PlateId').val(result.keyVehicleLogProfile.trailer7PlateId);
+                    }
+                }
+                if (!$('#Trailer7Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer7Rego') {
+                        $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                    }
+                }
+                if (!$('#Trailer8PlateId').val()) {
+                    if (textBoxName === 'Trailer8Rego') {
+                        $('#Trailer8PlateId').val(result.keyVehicleLogProfile.trailer8PlateId);
+                    }
+                }
+                if (!$('#Trailer8Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer8Rego') {
+                        $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                    }
+                }
+
+                if ($('#Trailer1Rego').val() !== '') {
                     $('#Trailer1Rego_Vehicle_type').attr('disabled', false);
                 }
                 if ($('#Trailer2Rego').val() !== '') {
@@ -4932,20 +5031,26 @@ $(function () {
                 if ($('#Trailer4Rego').val() !== '') {
                     $('#Trailer4Rego_Vehicle_type').attr('disabled', false);
                 }
+                if ($('#Trailer5Rego').val() !== '') {
+                    $('#Trailer5Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer6Rego').val() !== '') {
+                    $('#Trailer6Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer7Rego').val() !== '') {
+                    $('#Trailer7Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer8Rego').val() !== '') {
+                    $('#Trailer8Rego_Vehicle_type').attr('disabled', false);
+                }
 
-
-                if (result.keyVehicleLogProfile.trailer1PlateId === null
-                ) {
+                if (result.keyVehicleLogProfile.trailer1PlateId === null) {
                     if (textBoxName === 'Trailer1Rego') {
-
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
-
-
                         if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -4962,26 +5067,37 @@ $(function () {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer1Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
-
                     }
                 }
                 else {
-
                     if (textBoxName === 'Trailer1Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
-
-
                         if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -4998,26 +5114,39 @@ $(function () {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
-
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer1Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
                     }
-
-
                 }
-                if (result.keyVehicleLogProfile.trailer2PlateId === null
-                ) {
+
+
+                if (result.keyVehicleLogProfile.trailer2PlateId === null) {
                     if (textBoxName === 'Trailer2Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -5034,6 +5163,22 @@ $(function () {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer2Rego').val(result.keyVehicleLogProfile.vehicleRego);
@@ -5049,7 +5194,6 @@ $(function () {
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -5066,6 +5210,22 @@ $(function () {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer2Rego').val(result.keyVehicleLogProfile.vehicleRego);
@@ -5074,15 +5234,15 @@ $(function () {
                         }
                     }
                 }
-                if (result.keyVehicleLogProfile.trailer3PlateId === null
-                ) {
+
+
+                if (result.keyVehicleLogProfile.trailer3PlateId === null) {
                     if (textBoxName === 'Trailer3Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -5099,14 +5259,28 @@ $(function () {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer3Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
-
-
                     }
                 }
                 else {
@@ -5116,7 +5290,6 @@ $(function () {
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -5133,6 +5306,22 @@ $(function () {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer3Rego').val(result.keyVehicleLogProfile.vehicleRego);
@@ -5141,15 +5330,15 @@ $(function () {
                         }
                     }
                 }
-                if (result.keyVehicleLogProfile.trailer4PlateId === null
-                ) {
+
+
+                if (result.keyVehicleLogProfile.trailer4PlateId === null) {
                     if (textBoxName === 'Trailer4Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -5166,43 +5355,456 @@ $(function () {
                             $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer4Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
-
                     }
-                    else {
-                        if (textBoxName === 'Trailer4Rego') {
-                            if (!$('#VehicleRego').val()) {
-                                $('#VehicleRego').val('');
-                                $('#kvl_list_plates').val('');
-                                $('#kvl_list_plates').attr('disabled', true);
+                }
+                else {
+                    if (textBoxName === 'Trailer4Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
+                        }
+                    }
+                }
 
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer1Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                if (result.keyVehicleLogProfile.trailer5PlateId === null) {
+                    if (textBoxName === 'Trailer5Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer5Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer2Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer5Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer5Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer3Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                    }
+                }
+
+
+                if (result.keyVehicleLogProfile.trailer6PlateId === null) {
+                    if (textBoxName === 'Trailer6Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer6Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer6Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer6Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
-                            if (result.keyVehicleLogProfile.vehicleRego !== null) {
-                                if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
-                                    $('#Trailer4Rego').val(result.keyVehicleLogProfile.vehicleRego);
-                                    $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
-                                }
+                        }
+                    }
+                }
+
+
+                if (result.keyVehicleLogProfile.trailer7PlateId === null) {
+                    if (textBoxName === 'Trailer7Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer7Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer7Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer7Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+
+
+                if (result.keyVehicleLogProfile.trailer8PlateId === null) {
+                    if (textBoxName === 'Trailer8Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer8Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer8Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer8Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
                     }
@@ -5762,6 +6364,18 @@ $(function () {
             }
             if ($('#Trailer4Rego').val() !== '') {
                 $('#Trailer4Rego_Vehicle_type').attr('disabled', false);
+            }
+            if ($('#Trailer5Rego').val() !== '') {
+                $('#Trailer5Rego_Vehicle_type').attr('disabled', false);
+            }
+            if ($('#Trailer6Rego').val() !== '') {
+                $('#Trailer6Rego_Vehicle_type').attr('disabled', false);
+            }
+            if ($('#Trailer7Rego').val() !== '') {
+                $('#Trailer7Rego_Vehicle_type').attr('disabled', false);
+            }
+            if ($('#Trailer8Rego').val() !== '') {
+                $('#Trailer8Rego_Vehicle_type').attr('disabled', false);
             }
             //traliler changes New change for Add rigo without plate number 21032024 dileep end
 
@@ -7218,6 +7832,36 @@ $(function () {
             let regoToUpper = $(this).val().toUpperCase();
             $(this).val(regoToUpper);
         });
+        $('#Trailer5Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+
+            $('#Trailer5Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer5Rego_Vehicle_type option:selected').prop('selected', false);
+
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
+        $('#Trailer6Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#Trailer6Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer6Rego_Vehicle_type option:selected').prop('selected', false);
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
+        $('#Trailer7Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#Trailer7Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer7Rego_Vehicle_type option:selected').prop('selected', false);
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
+        $('#Trailer8Rego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#Trailer8Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
+            $('#Trailer8Rego_Vehicle_type option:selected').prop('selected', false);
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        });
 
 
         let gridKeyVehicleLogtrailerProfile = $('#key_vehicle_log_trailerprofiles').DataTable({
@@ -7511,6 +8155,34 @@ $(function () {
             }
 
         });
+        $('#Trailer5Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer5PlateId').val(option.val());
+            }
+
+        });
+        $('#Trailer6Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer6PlateId').val(option.val());
+            }
+
+        });
+        $('#Trailer7Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer7PlateId').val(option.val());
+            }
+
+        });
+        $('#Trailer8Rego_Vehicle_type').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#Trailer8PlateId').val(option.val());
+            }
+
+        });
 
 
         $('#key_vehicle_log_trailerprofiles tbody').on('click', '#btnSelectTrailerProfile', function () {
@@ -7748,6 +8420,50 @@ $(function () {
                         $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                     }
                 }
+
+                if (!$('#Trailer5PlateId').val()) {
+                    if (textBoxName === 'Trailer5Rego') {
+                        $('#Trailer5PlateId').val(result.keyVehicleLogProfile.trailer1PlateId);
+                    }
+                }
+                if (!$('#Trailer5Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer5Rego') {
+                        $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+
+                    }
+                }
+                if (!$('#Trailer6PlateId').val()) {
+                    if (textBoxName === 'Trailer6Rego') {
+                        $('#Trailer6PlateId').val(result.keyVehicleLogProfile.trailer2PlateId);
+                    }
+                }
+                if (!$('#Trailer6Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer6Rego') {
+                        $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                    }
+                }
+                if (!$('#Trailer7PlateId').val()) {
+                    if (textBoxName === 'Trailer7Rego') {
+                        $('#Trailer7PlateId').val(result.keyVehicleLogProfile.trailer3PlateId);
+                    }
+                }
+                if (!$('#Trailer7Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer7Rego') {
+                        $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                    }
+                }
+                if (!$('#Trailer8PlateId').val()) {
+                    if (textBoxName === 'Trailer8Rego') {
+                        $('#Trailer8PlateId').val(result.keyVehicleLogProfile.trailer4PlateId);
+                    }
+                }
+                if (!$('#Trailer8Rego_Vehicle_type').val()) {
+                    if (textBoxName === 'Trailer8Rego') {
+                        $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                    }
+                }
+
+
                 if ($('#Trailer1Rego').val() !== '') {
 
                     $('#Trailer1Rego_Vehicle_type').attr('disabled', false);
@@ -7761,20 +8477,27 @@ $(function () {
                 if ($('#Trailer4Rego').val() !== '') {
                     $('#Trailer4Rego_Vehicle_type').attr('disabled', false);
                 }
+                if ($('#Trailer5Rego').val() !== '') {
 
+                    $('#Trailer5Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer6Rego').val() !== '') {
+                    $('#Trailer6Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer7Rego').val() !== '') {
+                    $('#Trailer7Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer8Rego').val() !== '') {
+                    $('#Trailer8Rego_Vehicle_type').attr('disabled', false);
+                }
 
-                if (result.keyVehicleLogProfile.trailer1PlateId === null
-                ) {
+                if (result.keyVehicleLogProfile.trailer1PlateId === null) {
                     if (textBoxName === 'Trailer1Rego') {
-
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
-
-
                         if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -7791,26 +8514,37 @@ $(function () {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer1Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
-
                     }
                 }
                 else {
-
                     if (textBoxName === 'Trailer1Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
-
-
                         if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -7827,26 +8561,39 @@ $(function () {
                             $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer1Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
-
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer1Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
                     }
-
-
                 }
-                if (result.keyVehicleLogProfile.trailer2PlateId === null
-                ) {
+
+
+                if (result.keyVehicleLogProfile.trailer2PlateId === null) {
                     if (textBoxName === 'Trailer2Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -7863,6 +8610,22 @@ $(function () {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer2Rego').val(result.keyVehicleLogProfile.vehicleRego);
@@ -7878,7 +8641,6 @@ $(function () {
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -7895,6 +8657,22 @@ $(function () {
                             $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer2Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer2Rego').val(result.keyVehicleLogProfile.vehicleRego);
@@ -7903,15 +8681,15 @@ $(function () {
                         }
                     }
                 }
-                if (result.keyVehicleLogProfile.trailer3PlateId === null
-                ) {
+
+
+                if (result.keyVehicleLogProfile.trailer3PlateId === null) {
                     if (textBoxName === 'Trailer3Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -7928,14 +8706,28 @@ $(function () {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer3Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
-
-
                     }
                 }
                 else {
@@ -7945,7 +8737,6 @@ $(function () {
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -7962,6 +8753,22 @@ $(function () {
                             $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer3Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer3Rego').val(result.keyVehicleLogProfile.vehicleRego);
@@ -7970,15 +8777,15 @@ $(function () {
                         }
                     }
                 }
-                if (result.keyVehicleLogProfile.trailer4PlateId === null
-                ) {
+
+
+                if (result.keyVehicleLogProfile.trailer4PlateId === null) {
                     if (textBoxName === 'Trailer4Rego') {
                         if (!$('#VehicleRego').val()) {
                             $('#VehicleRego').val('');
                             $('#kvl_list_plates').val('');
                             $('#kvl_list_plates').attr('disabled', true);
                         }
-
                         if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
                             $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer1Rego);
                             $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
@@ -7995,47 +8802,461 @@ $(function () {
                             $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
                             $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
                         }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
                         if (result.keyVehicleLogProfile.vehicleRego !== null) {
                             if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
                                 $('#Trailer4Rego').val(result.keyVehicleLogProfile.vehicleRego);
                                 $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
-
                     }
-                    else {
-                        if (textBoxName === 'Trailer4Rego') {
-                            if (!$('#VehicleRego').val()) {
-                                $('#VehicleRego').val('');
-                                $('#kvl_list_plates').val('');
-                                $('#kvl_list_plates').attr('disabled', true);
-                            }
-
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer1Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
-                            }
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer2Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
-                            }
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer3Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
-                            }
-                            if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
-                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
-                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
-                            }
-                            if (result.keyVehicleLogProfile.vehicleRego !== null) {
-                                if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
-                                    $('#Trailer4Rego').val(result.keyVehicleLogProfile.vehicleRego);
-                                    $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
-                                }
+                }
+                else {
+                    if (textBoxName === 'Trailer4Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer4Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer4Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
                             }
                         }
                     }
                 }
+
+                if (result.keyVehicleLogProfile.trailer5PlateId === null) {
+                    if (textBoxName === 'Trailer5Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer5Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer5Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer5Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer5Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer5Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer5Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+
+
+                if (result.keyVehicleLogProfile.trailer6PlateId === null) {
+                    if (textBoxName === 'Trailer6Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer6Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer6Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer6Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer6Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer6Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer6Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+
+
+                if (result.keyVehicleLogProfile.trailer7PlateId === null) {
+                    if (textBoxName === 'Trailer7Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer7Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer7Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer7Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer7Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer7Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer7Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+
+
+                if (result.keyVehicleLogProfile.trailer8PlateId === null) {
+                    if (textBoxName === 'Trailer8Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer8Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (textBoxName === 'Trailer8Rego') {
+                        if (!$('#VehicleRego').val()) {
+                            $('#VehicleRego').val('');
+                            $('#kvl_list_plates').val('');
+                            $('#kvl_list_plates').attr('disabled', true);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer1Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer2Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer3Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer4Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer5Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer5Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer5PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer6Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer6Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer6PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer7Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer7Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer7PlateId);
+                        }
+                        if ($('#Trailer8Rego').val() === result.keyVehicleLogProfile.trailer8Rego) {
+                            $('#Trailer8Rego').val(result.keyVehicleLogProfile.trailer8Rego);
+                            $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer8PlateId);
+                        }
+                        if (result.keyVehicleLogProfile.vehicleRego !== null) {
+                            if (result.keyVehicleLogProfile.vehicleRego == $('#kvl-trailer_profiles-modal').find('#kvl-profile-title-rego').html()) {
+                                $('#Trailer8Rego').val(result.keyVehicleLogProfile.vehicleRego);
+                                $('#Trailer8Rego_Vehicle_type').val(result.keyVehicleLogProfile.plateId);
+                            }
+                        }
+                    }
+                }
+                
                 //traliler changes New change for Add rigo without plate number 21032024 dileep end
 
 

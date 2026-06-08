@@ -173,6 +173,34 @@ namespace CityWatch.Web.Models
                 return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer4PlateId)?.Name;
             }
         }
+        public string Plate5
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer5PlateId)?.Name;
+            }
+        }
+        public string Plate6
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer6PlateId)?.Name;
+            }
+        }
+        public string Plate7
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer7PlateId)?.Name;
+            }
+        }
+        public string Plate8
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer8PlateId)?.Name;
+            }
+        }
         //p7-137--pax-start
         public int PAX
         {
