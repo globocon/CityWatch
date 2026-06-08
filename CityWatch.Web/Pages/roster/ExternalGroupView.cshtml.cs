@@ -122,6 +122,8 @@ namespace CityWatch.Web.Pages.roster
                             .Select(s => new
                             {
                                 id = s.Id,
+                                providerName = s.ProviderName,
+                                guardId = s.GuardId,
                                 guardName = s.GuardId.HasValue ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
                                 guardLicense = s.GuardId.HasValue ? s.Guard.SecurityNo : "",
                                 shiftStart = s.ShiftStart.ToString("HH:mm"),
