@@ -110,6 +110,26 @@ namespace CityWatch.Kpi.Pages.Admin
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+
+            // Fallback to query string if session is completely lost
+            if (GuardId == 0 && Request.Query.ContainsKey("guardId"))
+            {
+                if (int.TryParse(Request.Query["guardId"], out int parsedGuardId))
+                {
+                    GuardId = parsedGuardId;
+                    HttpContext.Session.SetInt32("GuardId", GuardId);
+                }
+            }
+
+            if (userId == 0 && Request.Query.ContainsKey("userId"))
+            {
+                if (int.TryParse(Request.Query["userId"], out int parsedUserId))
+                {
+                    userId = parsedUserId;
+                    HttpContext.Session.SetInt32("loginUserId", userId);
+                }
+            }
+
             ClientTypeId = HttpContext.Session.GetInt32("ClientTypeId") ?? 0;
             ClientSiteId = HttpContext.Session.GetInt32("ClientSiteId") ?? 0;
             var claimsIdentity = User.Identity as ClaimsIdentity;
@@ -117,7 +137,22 @@ namespace CityWatch.Kpi.Pages.Admin
             {   /* admin login only*/
                 ReportRequest = new KpiRequest();
                 HttpContext.Session.SetInt32("GuardId", 0);
-                HttpContext.Session.SetInt32("loginUserId", 0);
+                var roleClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+                if (roleClaim == "Administrator")
+                {
+                    HttpContext.Session.SetInt32("loginUserId", 0);
+                }
+                else if (roleClaim == "User")
+                {
+                    var sidClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
+                    if (!string.IsNullOrEmpty(sidClaim))
+                    {
+                        int parsedSid = int.Parse(sidClaim);
+                        HttpContext.Session.SetInt32("loginUserId", parsedSid);
+                        userId = parsedSid;
+                    }
+                }
+
                 if (ClientTypeId != 0)
                 {
                     HttpContext.Session.SetInt32("ClientTypeId", ClientTypeId);
@@ -159,14 +194,16 @@ namespace CityWatch.Kpi.Pages.Admin
             else
             {
                 /*unauthorized login*/
-                HttpContext.Session.SetInt32("GuardId", 0);
-                HttpContext.Session.SetInt32("loginUserId", 0);
                 if (ClientSiteId != 0)
                 {
                     HttpContext.Session.SetInt32("ClientSiteId", ClientSiteId);
                     ClientSiteName = _viewDataService.ClientSitesUsingId(ClientSiteId);
                     return Page();
                 }
+                
+                // Only wipe session if completely unauthorized and redirecting to login
+                HttpContext.Session.SetInt32("GuardId", 0);
+                HttpContext.Session.SetInt32("loginUserId", 0);
                 return Redirect(Url.Page("/Account/Login"));
             }
         }
@@ -665,24 +702,42 @@ namespace CityWatch.Kpi.Pages.Admin
         public JsonResult OnGetKpiSendSchedules(int type, string searchTerm)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            if (GuardId == 0)
+            userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedules()
-                    .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
-                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                    .OrderBy(x => x.ProjectName)
-                    .ThenBy(x => x.ClientTypes));
-
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
-            else
-            {
 
+            if (GuardId != 0)
+            {
+                // Guard accessing via specific portal link - check sites they've logged into
                 return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
                    .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
                    .OrderBy(x => x.ProjectName)
                    .ThenBy(x => x.ClientTypes));
-
+            }
+            else if (userId != 0)
+            {
+                // Normal User logged in (like MARTHA) - restrict by their explicit UserClientSiteAccess assignments
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUsingUserId(userId)
+                   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
+                   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+            }
+            else
+            {
+                // Super Admin / Main Admin accessing via CityWatch login portal (claimsIdentity.IsAuthenticated)
+                // Their session explicitly sets GuardId = 0 and loginUserId = 0, so they can see all schedules
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedules()
+                    .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
+                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
             }
         }
 
@@ -748,24 +803,39 @@ namespace CityWatch.Kpi.Pages.Admin
         public JsonResult OnGetKpiCustomWandSendSchedules(int type, string searchTerm)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            if (GuardId == 0)
+            userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedules()
-                    .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
-                    .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                    .OrderBy(x => x.ProjectName)
-                    .ThenBy(x => x.ClientTypes));
-
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
-            else
-            {
 
+            if (GuardId != 0)
+            {
                 return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedulesUisngGuardId(GuardId)
                    .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
                    .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
                    .OrderBy(x => x.ProjectName)
                    .ThenBy(x => x.ClientTypes));
-
+            }
+            else if (userId != 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedulesUsingUserId(userId)
+                   .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
+                   .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+            }
+            else
+            {
+                // Super Admin / Main Admin fallback
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllCustomWandSchedules()
+                    .Select(z => KpiCustomWandScheduleViewModel.FromDataModel(z))
+                    .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
             }
         }
 
@@ -2171,24 +2241,39 @@ namespace CityWatch.Kpi.Pages.Admin
         public JsonResult OnGetKpiTimesheetSchedules(int type, string searchTerm)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            if (GuardId == 0)
+            userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
             {
-                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedules()
-                    .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
-                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                    .OrderBy(x => x.ProjectName)
-                    .ThenBy(x => x.ClientTypes));
-
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
             }
-            else
-            {
 
+            if (GuardId != 0)
+            {
                 return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedulesUisngGuardId(GuardId)
                    .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
                    .OrderBy(x => x.ProjectName)
                    .ThenBy(x => x.ClientTypes));
-
+            }
+            else if (userId != 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedulesUsingUserId(userId)
+                   .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
+                   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+            }
+            else
+            {
+                // Super Admin / Main Admin fallback
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedules()
+                    .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
+                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
             }
         }
         public JsonResult OnGetKpiTimesheetSchedule(int id)
@@ -2714,21 +2799,58 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public JsonResult OnGetKpiKVSchedules()
         {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
+            {
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
+            }
 
-            return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules()
-                .OrderBy(x => x.ProjectName));
-
-
+            if (GuardId != 0)
+            {
+                // Wait, KV doesn't have GuardId method in existing code? Let's just fallback or skip it? No, wait! The original code for KV didn't even check GuardId! It just returned GetAllKVSchedules.
+                // We'll fallback to GetAllKVSchedules for GuardId != 0 as well to preserve existing behavior for guards, or let's use the new UserId check.
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules()
+                    .OrderBy(x => x.ProjectName));
+            }
+            else if (userId != 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedulesUsingUserId(userId)
+                    .OrderBy(x => x.ProjectName));
+            }
+            else
+            {
+                // Super Admin fallback
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllKVSchedules()
+                    .OrderBy(x => x.ProjectName));
+            }
         }
 
 
         public JsonResult OnGetPCARProfiles()
         {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            if (userId == 0 && Request.Query.ContainsKey("uId"))
+            {
+                if (int.TryParse(Request.Query["uId"], out int parsedUId))
+                {
+                    userId = parsedUId;
+                }
+            }
 
-            return new JsonResult(_kpiSchedulesDataProvider.GetPCARProfilesAll());
-
-
-
+            if (userId != 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetPCARProfilesUsingUserId(userId));
+            }
+            else
+            {
+                // Super Admin / Guard fallback (Original code didn't filter by GuardId for PCAR Routes)
+                return new JsonResult(_kpiSchedulesDataProvider.GetPCARProfilesAll());
+            }
         }
 
         public JsonResult OnGetPCARRouteDetails(int id)

@@ -1933,6 +1933,7 @@ $('#btnGuardHrUpdate').on('click', function () {
                 }).done(function (response) {
                     $('#loginHrEditGuard').modal('hide');
                     $('#addGuardModalnew').modal('show');
+                    $('#Guard_Id').val(response[0].id);
                     isPaused = true;
                     $('.btn-add-guard-addl-details').show();
                     $('#addGuardModal1').modal('show');
@@ -2433,6 +2434,47 @@ function ExpiredDocuments() {
 }
 $("#addGuardModalnew").on("hidden.bs.modal", function () {
     isPaused = false;
+});
+$("#addGuardModalnew").on("shown.bs.modal", function () {
+    isPaused = true;
+    var userId=0;
+
+    if ($('#ClientSiteName').val() === 'Onboarding') {
+        userId = 74;
+    }
+    //var userId = $('#GuardLogin_UserID').val();
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var guardId = $('#GuardLog_GuardLogin_GuardId').val();
+    if (userId == 74) {
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SaveGuardTrainingAndAssessmentFromOnboardingUsers',
+            data: {
+                'UserId': userId,
+                'GuardId': guardId
+            },
+            type: 'POST',
+           headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            if (result.success) {
+                
+                gridGuardTrainingAndAssessment.clear().draw();
+                gridGuardTrainingAndAssessment.ajax.reload();
+            }
+            else {
+              
+                let errorList = [];
+                result.errors.forEach(function (item) {
+                    errorList.push(item.errorList[0]);
+                });
+                alert('Update failed. ' + errorList.join(', '));
+            }
+
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
 });
 
 var hrDescriptionConfigs = {};

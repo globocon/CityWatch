@@ -2166,15 +2166,22 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 rtn.Landline = LandLine.LandLine;
                 var SmartWandIDs = _configDataProvider.GetClientSiteSmartwands(clientSiteId);
                 rtn.SmartWandID = SmartWandIDs.Select(x => x.PhoneNumber).ToList();
+                rtn.MergedAlarmDocs = new List<MergedAlarmDoc>();
                 if (rtn.Imagepath != null)
                 {
+                    var originalFileName = rtn.Imagepath;
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
+                    rtn.MergedAlarmDocs.Add(new MergedAlarmDoc { fileName = originalFileName, filePath = rtn.Imagepath.Split(":-:")[1] });
                 }
                 var sopAlarmfileType= _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
                 if (sopAlarmfileType.Count() != 0)
                 {
                     rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x=>x.FileName).ToList();
                     rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
+                    foreach (var doc in sopAlarmfileType)
+                    {
+                        rtn.MergedAlarmDocs.Add(new MergedAlarmDoc { fileName = doc.FileName, filePath = doc.FilePath + doc.FileName });
+                    }
                 }
                     var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
                 if (sopfiletype.Count() != 0)
@@ -2196,10 +2203,15 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 rtn = new RCActionList();
 
                 var sopAlarmfileType = _configDataProvider.GetStaffDocumentsUsingType(6).Where(z => z.ClientSite == clientSiteId);
+                rtn.MergedAlarmDocs = new List<MergedAlarmDoc>();
                 if (sopAlarmfileType.Count() != 0)
                 {
                     rtn.SOPAlarmFileNme = sopAlarmfileType.Select(x => x.FileName).ToList();
                     rtn.SOPAlarmFilePath = sopAlarmfileType.Select(x => x.FilePath).ToList();
+                    foreach (var doc in sopAlarmfileType)
+                    {
+                        rtn.MergedAlarmDocs.Add(new MergedAlarmDoc { fileName = doc.FileName, filePath = doc.FilePath + doc.FileName });
+                    }
                 }
 
                 rtn.Landline = LandLine.LandLine;

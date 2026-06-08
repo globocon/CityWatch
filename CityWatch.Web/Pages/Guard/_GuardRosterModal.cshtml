@@ -1,4 +1,15 @@
 <style>
+    /* Type Dropdown Color Dots */
+    .type-dot {
+        height: 10px;
+        width: 10px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
     /* Table Styling matched to Booking module */
     #guard_roster_grid { border-collapse: separate; border-spacing: 0; }
     
@@ -367,23 +378,23 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 95%;">
         <div class="modal-content border-0 shadow-lg overflow-hidden">
             <div class="modal-header bg-white text-dark p-3 border-bottom d-flex justify-content-between align-items-center">
-                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1">
+                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 mr-2">
                     <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
-                    <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;" id="guardWeekRangeText">Loading...</span>
+                    <span class="font-weight-bold text-dark px-2 text-nowrap" style="min-width: 140px; font-size: 0.8rem;" id="guardWeekRangeText">Loading...</span>
                     <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
                 </div>
 
-                <div class="flex-grow-1 text-center">
-                    <h3 class="font-weight-bold mb-0" style="color: #333; letter-spacing: 2px;">ROSTER</h3>
+                <div class="flex-grow-1 text-center text-nowrap">
+                    <span class="font-weight-bold mb-0" style="color: #333; font-size: 13.5px; letter-spacing: 1px;">ROSTER</span>
                 </div>
 
                 <div class="d-flex align-items-center">
                     <!-- Roster Admin Controls -->
-                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-4 pr-3 border-right">
+                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-2 pr-2 border-right">
                         <!-- Financials & Buy/Sell Rate capsule -->
-                        <div class="d-inline-flex align-items-center mr-3 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                        <div class="d-inline-flex align-items-center mr-2 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
                             <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
-                            <input type="checkbox" id="adminFinancialToggle" class="mr-3" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                            <input type="checkbox" id="adminFinancialToggle" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
                             
                             <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
                             <div class="custom-control custom-switch mr-2">
@@ -394,7 +405,7 @@
                         </div>
 
                         <!-- Truck Toggle group -->
-                        <div class="d-inline-flex align-items-center mr-4" style="vertical-align: middle;">
+                        <div class="d-inline-flex align-items-center mr-2" style="vertical-align: middle;">
                             <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
                                 <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
                                 <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
@@ -420,7 +431,7 @@
                         </div>
 
                         <!-- Guard Filter Control [NEW] -->
-                        <div class="input-group input-group-sm ml-3" style="width: 190.14px;">
+                        <div class="input-group input-group-sm ml-2" style="width: 150px;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-filter mr-1"></i> FILTER</span>
                             </div>
@@ -429,18 +440,35 @@
                             </select>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Site Switcher (Admins & RO Editors) -->
+                    <div id="guardRosterSiteSwitcher" class="d-none align-items-center mr-2">
+                        <div class="input-group input-group-sm mr-2" style="width: 140px;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white text-muted small font-weight-bold border-right-0" title="Client Type"><i class="fa fa-building"></i></span>
+                            </div>
+                            <select id="grModalClientType" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="">Client Type</option>
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm" style="width: 180px;">
+                            <select id="grModalClientSite" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px;">
+                                <option value="">Client Site</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
-                        <i class="fa fa-pencil-square-o mr-2"></i>Edit Roster
+                        <i class="fa fa-pencil-square-o mr-1"></i>RO
                     </button>
-                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-3" id="btnDownloadGuardPdf">
-                        <i class="fa fa-file-pdf-o mr-2"></i>Download PDF
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-2" id="btnDownloadGuardPdf" title="Download PDF">
+                        <i class="fa fa-file-pdf-o mr-1"></i>PDF
                     </button>
-                    <button type="button" class="close p-2 m-0" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                    <button type="button" class="close ml-2" data-dismiss="modal" aria-label="Close" style="opacity: 1; outline: none; box-shadow: none; flex-shrink: 0;">
+                        <span aria-hidden="true" style="font-size: 1.5rem; color: #000;">&times;</span>
                     </button>
                 </div>
+            </div>
             <div id="rosterAdminAlert" class="alert alert-success d-none py-1 px-3 m-0 rounded-0 text-center font-weight-bold" style="font-size: 0.8rem; border-bottom: 1px solid #c3e6cb;">
                 <i class="fa fa-check-circle mr-2"></i>Status updated to <span id="spanUpdatedStatusName"></span> successfully!
             </div>
@@ -475,10 +503,11 @@
                                     </div>
                                 </td>
                                 <!-- Daily totals will be injected here -->
-                            </tr>
                         </tfoot>
                     </table>
                 </div>
+
+ 
 
                 <!-- Remuneration Summary Section -->
                 <div id="remuneration-summary-section" style="display: none;">
@@ -583,6 +612,27 @@
     </div>
 </div>
 
+<!-- Overnight Shift Modal -->
+<div class="modal fade" id="geOvernightShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1250;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-header bg-warning text-dark" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i>Overnight Shift</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <!-- Dynamic Content Injected Here -->
+            </div>
+            <div class="modal-footer justify-content-center border-top-0">
+                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Edit</button>
+                <button type="button" class="btn btn-primary px-4" id="btnSplitGuardShift">Split</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Full Add/Edit Shift Modal (Copied from Booking) -->
 <div class="modal fade" id="guardAddShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
     <div class="modal-dialog" role="document">
@@ -677,13 +727,13 @@
                     </div>
                     <div class="col-6">
                         <label class="small font-weight-bold text-muted mb-1">SHIFT STATUS</label>
-                        <select id="geModalShiftType" class="form-control" style="width: 100%" disabled>
-                            <option value="Regular">Unassigned - FIXED</option>
-                            <option value="Adhoc">Unassigned - ADHOC</option>
-                            <option value="RegularAccepted">Accepted - FIXED</option>
-                            <option value="AdhocAccepted">Accepted - ADHOC</option>
-                            <option value="Declined">DECLINED (OPEN)</option>
-                            <option value="Cancelled">❌ CANCELLED (CLOSED)</option>
+                        <select id="geModalShiftType" class="form-control" style="width: 100%">
+                            <option value="Regular" data-color="#FFA726">Unassigned - FIXED</option>
+                            <option value="Adhoc" data-color="#E65100">Unassigned - ADHOC</option>
+                            <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
+                            <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
+                            <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
+                            <option value="Cancelled" data-color="#B71C1C">❌ CANCELLED (CLOSED)</option>
                         </select>
                     </div>
                 </div>
@@ -744,11 +794,39 @@
             }
         });
 
+        // Site Switcher logic for Guard Roster Popup
+        $('#grModalClientType').off('change').on('change', function() {
+            var typeId = $(this).val();
+            var siteDd = $('#grModalClientSite');
+            siteDd.empty().append('<option value="">Client Site</option>');
+            if (typeId) {
+                $.ajax({
+                    url: '/RoosterHub?handler=ClientSitesWithIds',
+                    type: 'GET',
+                    data: { type: typeId },
+                    success: function(res) {
+                        $.each(res, function(i, item) {
+                            siteDd.append('<option value="'+item.value+'">'+item.text+'</option>');
+                        });
+                    }
+                });
+            }
+        });
+
+        $('#grModalClientSite').off('change').on('change', function() {
+            var newSiteId = $(this).val();
+            if (newSiteId) {
+                currentGuardSiteId = newSiteId;
+                loadGuardRoster();
+                if (isAdminRoster) loadAdminRosterStatus();
+            }
+        });
+
         $('#btnToggleRosterEditMode').on('click', function() {
             isEditMode = !isEditMode;
             $(this).toggleClass('btn-outline-dark btn-primary');
             $(this).find('i').toggleClass('fa-pencil-square-o fa-check');
-            $(this).html(isEditMode ? '<i class="fa fa-check mr-2"></i>Exit Edit Mode' : '<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+            $(this).html(isEditMode ? '<i class="fa fa-check mr-1"></i> Exit' : '<i class="fa fa-pencil-square-o mr-1"></i> RO');
             loadGuardRoster();
         });
 
@@ -871,6 +949,24 @@
         });
 
         // --- Initialize Guard Modal Select2s (Copied from Booking) ---
+        function formatGuardShiftType(state) {
+            if (!state.id) return state.text;
+            var color = $(state.element).data('color');
+            if (!color) return state.text;
+            var $state = $(
+                '<span><span class="type-dot" style="background-color:' + color + ';"></span>' + state.text + '</span>'
+            );
+            return $state;
+        };
+
+        $('#geModalShiftType').select2({
+            theme: 'bootstrap4',
+            minimumResultsForSearch: -1, // Hide search box
+            dropdownParent: $('#guardAddShiftModal'),
+            templateResult: formatGuardShiftType,
+            templateSelection: formatGuardShiftType
+        });
+
         $('#geModalGuardId').select2({
             placeholder: 'Select Guard',
             theme: 'bootstrap4',
@@ -1109,18 +1205,37 @@
         loggedGuardId = guardId ? parseInt(guardId) : null;
         isROEditor = _isROEditor || _isAdmin; // Admins are editors by default
         isEditMode = false; // Always start with edit mode off as requested
-        
         // Reset Edit Button
         $('#btnToggleRosterEditMode').removeClass('btn-primary').addClass('btn-outline-dark');
-        $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-2"></i>Edit Roster');
+        $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-1"></i> RO');
 
-        // Only show Edit button if user has permission
+        // Only show Edit button and Site Switcher if user has permission
         if (isROEditor) {
             $('#btnToggleRosterEditMode').removeClass('d-none');
+            $('#guardRosterSiteSwitcher').removeClass('d-none').addClass('d-flex');
+            
+            // Reset dropdowns so they don't show stale data if the modal was previously opened for another site
+            $('#grModalClientType').val('');
+            $('#grModalClientSite').empty().append('<option value="">Client Site</option>');
+            
+            // Fetch Client Types if not loaded yet
+            if ($('#grModalClientType option').length <= 1) {
+                $.ajax({
+                    url: '/RoosterHub?handler=ClientTypesList',
+                    type: 'GET',
+                    success: function(res) {
+                        var dd = $('#grModalClientType');
+                        dd.empty().append('<option value="">Client Type</option>');
+                        $.each(res, function(i, item) {
+                            dd.append('<option value="'+item.value+'">'+item.text+'</option>');
+                        });
+                    }
+                });
+            }
         } else {
             $('#btnToggleRosterEditMode').addClass('d-none');
+            $('#guardRosterSiteSwitcher').removeClass('d-flex').addClass('d-none');
         }
-        
         if (isAdminRoster) {
             $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
         } else {
@@ -1416,6 +1531,55 @@
                 var dailyTotalHours = [0,0,0,0,0,0,0];
                 var dailyTotalCost = [0,0,0,0,0,0,0];
 
+                var absenceDict = {};
+                res.results.forEach(function (r) {
+                    r.days.forEach(function (ds, dayIndex) {
+                        var ps = guardRosterStartDate.split('-');
+                        var loopDate = new Date(ps[0], ps[1]-1, ps[2]);
+                        loopDate.setDate(loopDate.getDate() + dayIndex);
+                        var dateStr = String(loopDate.getDate()).padStart(2, '0') + '/' + String(loopDate.getMonth()+1).padStart(2, '0');
+                        
+                        ds.forEach(function (s) {
+                            if (s.reliefReason) {
+                                var key = (s.guardName || "Unassigned") + " - " + s.reliefReason;
+                                if (s.reliefReasonOther) key += " (" + s.reliefReasonOther + ")";
+                                
+                                if (!absenceDict[key]) absenceDict[key] = [];
+                                if (absenceDict[key].indexOf(dateStr) === -1) absenceDict[key].push(dateStr);
+                            }
+                            if (s.status === 2) {
+                                var key = (s.guardName || "Unassigned") + " - Declined";
+                                
+                                if (!absenceDict[key]) absenceDict[key] = [];
+                                if (absenceDict[key].indexOf(dateStr) === -1) absenceDict[key].push(dateStr);
+                            }
+                        });
+                    });
+                });
+                var globalAbsences = Object.keys(absenceDict).map(function(key) {
+                    return "- " + key + " (" + absenceDict[key].join(', ') + ")";
+                });
+
+                var legendHtml = '<div class="mt-3 pt-2 border-top" style="font-size: 9px; line-height: 1.2; text-shadow: none;">' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #FFA726; margin-right: 4px; font-size: 10px;">●</span> Unassigned - FIXED</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #E65100; margin-right: 4px; font-size: 10px;">●</span> Unassigned - ADHOC</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #66BB6A; margin-right: 4px; font-size: 10px;">●</span> Accepted - FIXED</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #1B5E20; margin-right: 4px; font-size: 10px;">●</span> Accepted - ADHOC</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #8e24aa; margin-right: 4px; font-size: 10px;">●</span> Relief Guard (Accepted)</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #000; margin-right: 4px; font-size: 10px;">●</span> DECLINED (OPEN)</div>' +
+                    '<div class="d-flex align-items-center mb-2"><span style="color: #e53935; margin-right: 4px; font-size: 10px;">● <i class="fa fa-times" style="font-size: 8px;"></i></span> CANCELLED (CLOSED)</div>' +
+                    '<div class="font-weight-bold mt-2 mb-1" style="color: #000;">Not Avalible (DNC):</div>' +
+                    '<div style="color: #000;">';
+                
+                if (globalAbsences.length > 0) {
+                    globalAbsences.forEach(function(note) {
+                        legendHtml += '<div class="mb-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' + note + '">' + note + '</div>';
+                    });
+                } else {
+                    legendHtml += '<div class="text-muted font-italic">None</div>';
+                }
+                legendHtml += '</div></div>';
+
                 res.results.forEach(function (row) {
                     var projectWeeklyHours = 0;
                     var projectWeeklyCost = 0;
@@ -1456,6 +1620,7 @@
                                 '<div class="guard-client-type">' + row.clientTypeName + '</div>' + 
                             '</div>' + 
                             '<div class="admin-status-grid-display mt-auto pb-2">' + statusStampHtml + '</div>' + 
+                            legendHtml +
                         '</td>';
 
                     row.days.forEach(function (dayShifts, index) {
@@ -1587,6 +1752,8 @@
                         tbody.append(projectTotalRowHtml);
                     }
                 });
+
+ 
 
                 // Show Status Stamp in Grid
                 if (res.status) {
@@ -1883,16 +2050,109 @@
             cellDate = new Date().toISOString().split('T')[0];
         }
 
+        // Client-side Validation: Time range check (00:01 - 23:59)
+        if (startTime === '00:00' || endTime === '00:00') {
+            alert('Time values of 00:00 or 24:00 are not allowed. Minimum value is 00:01 and maximum is 23:59.');
+            return;
+        }
+
+        // Client-side Validation: At least one selected
+        if (!guardId && !providerName && shiftType !== 'Cancelled') {
+            alert('Please select either a Guard OR a Provider.');
+            return;
+        }
+
+        // Client-side Validation: Time check (Overnight Shift Split)
+        if (startTime >= endTime) {
+            var dateStr = cellDate;
+            
+            var shiftDateObj = new Date(cellDate + 'T00:00:00');
+            var nextShiftDate = new Date(shiftDateObj);
+            nextShiftDate.setDate(nextShiftDate.getDate() + 1);
+            var nextDateStr = nextShiftDate.getFullYear() + '-' + String(nextShiftDate.getMonth() + 1).padStart(2, '0') + '-' + String(nextShiftDate.getDate()).padStart(2, '0');
+
+            // Calculate Durations
+            var parts1 = startTime.split(':');
+            var h1 = parseInt(parts1[0]);
+            var m1 = parseInt(parts1[1]);
+            
+            var parts2 = endTime.split(':');
+            var h2 = parseInt(parts2[0]);
+            var m2 = parseInt(parts2[1]);
+
+            var totalMin1 = (23 - h1) * 60 + (59 - m1);
+            var hrs1 = Math.floor(totalMin1 / 60);
+            var mins1 = totalMin1 % 60;
+            var durationStr1 = hrs1 + 'h ' + mins1 + 'm';
+
+            var totalMin2 = h2 * 60 + m2 - 1;
+            var hrs2 = Math.floor(totalMin2 / 60);
+            var mins2 = totalMin2 % 60;
+            var durationStr2 = hrs2 + 'h ' + mins2 + 'm';
+
+            // Update Modal Content
+            $('#geOvernightShiftModal .modal-body').html(
+                '<p class="mb-3 text-muted">This shift crosses midnight. If you split, it will create two shifts:</p>' +
+                '<div class="alert alert-light border text-left mb-3" style="font-size: 0.9rem;">' +
+                    '<div><i class="fa fa-calendar mr-2 text-primary"></i><strong>' + dateStr + '</strong>: ' + startTime + ' - 23:59 (' + durationStr1 + ')</div>' +
+                    '<div class="mt-2"><i class="fa fa-calendar mr-2 text-success"></i><strong>' + nextDateStr + '</strong>: 00:01 - ' + endTime + ' (' + durationStr2 + ')</div>' +
+                '</div>' +
+                '<p class="mb-0 text-muted">Please choose how to proceed.</p>'
+            );
+
+            $('#geOvernightShiftModal').modal('show');
+            
+            $('#btnSplitGuardShift').off('click').on('click', function() {
+                $('#geOvernightShiftModal').modal('hide');
+                
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                var statusValue = $('#geModalStatus').length ? $('#geModalStatus').val() : null;
+                
+                var postData1 = {
+                    groupId: groupId,
+                    siteId: siteId,
+                    start: dateStr + 'T' + startTime,
+                    end: dateStr + 'T23:59',
+                    guardId: guardId,
+                    providerName: providerName,
+                    payRateId: payRateId,
+                    payRate: payRateValue,
+                    shiftId: shiftId,
+                    callsignId: callsignId,
+                    reliefGuardId: reliefGuardId,
+                    reliefProviderName: reliefProviderName,
+                    reliefReason: reliefReason,
+                    reliefReasonOther: $('#geModalReliefReasonOther').val() || "",
+                    shiftType: shiftType,
+                    status: statusValue,
+                    adhocOffsiteText: adhocOffsiteText,
+                    ignoreUnavailability: ignoreUnavail
+                };
+
+                var postData2 = Object.assign({}, postData1);
+                postData2.start = nextDateStr + 'T00:01';
+                postData2.end = nextDateStr + 'T' + endTime;
+                postData2.shiftId = 0; // Always new shift
+
+                if (shiftId > 0) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=DeleteShift',
+                        type: 'POST',
+                        data: { id: shiftId },
+                        headers: { "RequestVerificationToken": token },
+                        success: function() {
+                            createSplitGuardShifts(postData1, postData2, token);
+                        }
+                    });
+                } else {
+                    createSplitGuardShifts(postData1, postData2, token);
+                }
+            });
+            return;
+        }
+
         var startDateTime = cellDate + 'T' + startTime;
         var endDateTime = cellDate + 'T' + endTime;
-        
-        if (endTime < startTime) {
-            var startD = new Date(cellDate + 'T00:00:00');
-            var endD = new Date(startD);
-            endD.setDate(endD.getDate() + 1);
-            var endStr = endD.getFullYear() + '-' + String(endD.getMonth() + 1).padStart(2, '0') + '-' + String(endD.getDate()).padStart(2, '0');
-            endDateTime = endStr + 'T' + endTime;
-        }
 
         var postData = {
             groupId: groupId,
@@ -1936,6 +2196,41 @@
             }
         });
     }
+
+    function createSplitGuardShifts(postData1, postData2, token) {
+        $.ajax({
+            url: '/roster/Booking?handler=AddShift',
+            type: 'POST',
+            data: postData1,
+            headers: { "RequestVerificationToken": token },
+            success: function(res1) {
+                if (res1.success) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddShift',
+                        type: 'POST',
+                        data: postData2,
+                        headers: { "RequestVerificationToken": token },
+                        success: function(res2) {
+                            if (res2.success) {
+                                loadGuardRoster();
+                            } else {
+                                alert('First part saved, but failed to save the second part: ' + res2.message);
+                                loadGuardRoster();
+                            }
+                        }
+                    });
+                } else if (res1.isUnavailConflict || (res1.message && res1.message.indexOf('Conflict:') > -1)) {
+                    if (confirm(res1.message + "\n\nDo you want to proceed with the split anyway?")) {
+                        postData1.ignoreUnavailability = true;
+                        postData2.ignoreUnavailability = true;
+                        createSplitGuardShifts(postData1, postData2, token);
+                    }
+                } else {
+                    alert('Failed to save the first part: ' + res1.message);
+                }
+            }
+        });
+    }
     
     function deleteGuardRosterShift(event, shiftId) {
         if (event) event.stopPropagation();
@@ -1964,16 +2259,16 @@
     // 3. Owner clicks Black (Cancelled) -> Status 1 (Green/Accepted) [Re-Accept Prompt]
     // 4. Non-Owner clicks Black (Cancelled) -> Status 1 (Purple/Relief) [Relief Prompt]
     // * Note: Guards cannot reset back to Orange (Pending) once interacted.
-    $(document).on('click', '.clickable-shift', function() {
+    $(document).on('click', '.clickable-shift', function(e) {
+        if ($(e.target).closest('.btn-delete-shift, .btn-edit-shift').length) return;
         var card = $(this);
         var shiftId = card.data('shift-id');
         var currentStatus = parseInt(card.data('status'));
         var isFuture = card.data('is-future') === true;
 
-        if (isAdminRoster) {
-            // Admin Cycle: Pushed (0) -> Accepted (1) -> Declined (2) -> Pushed (0)
-            var nextStatus = (currentStatus + 1) % 3;
-            updateShiftStatusViaWeb(shiftId, nextStatus, card);
+        if (isEditMode) {
+            // Use the same endpoint as Booking.cshtml to correctly cycle shift type/status
+            cycleShiftTypeGuardRoster(shiftId, card);
         } else {
             // Guard Logic
             if (!isFuture || !loggedGuardId) return;
@@ -2003,36 +2298,35 @@
         }
     });
 
-    function updateShiftStatusViaWeb(shiftId, newStatus, card) {
+    function cycleShiftTypeGuardRoster(id, card) {
         $.ajax({
-            url: '/api/GuardSecurityNumber/UpdateShiftStatus',
+            url: '/roster/Booking?handler=CycleShiftType',
             type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                shiftId: shiftId,
-                newStatus: newStatus,
-                expectedStatus: parseInt(card.data('status')),
-                callingGuardId: 1, // System/Admin ID for web updates
-                reason: newStatus === 2 ? "Cancelled via Web Dashboard" : ""
-            }),
-            success: function(res) {
-                if (res.isSuccess) {
-                    // Update card locally for immediate feedback
-                    card.data('status', newStatus);
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: { id: id },
+            success: function (res) {
+                if (res.success) {
+                    // Find all instances of this shift in the DOM
+                    var allCards = $('.guard-shift-card[data-shift-id="' + id + '"]');
                     
-                    // Remove all status classes
-                    card.removeClass('status-pushed status-accepted status-declined adhoc-pushed adhoc-accepted');
+                    // Remove all status/type classes
+                    allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted');
                     
-                    var isAdhoc = card.data('type') === 'Adhoc';
+                    var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
                     var statusClass = 'status-pushed';
-                    if (newStatus === 1) statusClass = 'status-accepted';
-                    if (newStatus === 2) statusClass = 'status-declined';
-                    if (newStatus === 3) statusClass = 'status-cancelled';
+                    if (res.status === 1) statusClass = 'status-accepted';
+                    if (res.status === 2) statusClass = 'status-declined';
+                    if (res.status === 3) statusClass = 'status-cancelled';
                     
-                    var typeClass = isAdhoc ? (newStatus === 1 ? 'adhoc-accepted' : 'adhoc-pushed') : '';
-                    card.addClass(statusClass + ' ' + typeClass);
+                    allCards.addClass(statusClass + ' ' + typeClass);
+                    
+                    // Update Card Data and DOM Attributes for all instances
+                    allCards.data('type', res.shiftType);
+                    allCards.attr('data-type', res.shiftType);
+                    allCards.data('status', res.status);
+                    allCards.attr('data-status', res.status);
                 } else {
-                    alert(res.message || "Failed to update shift status.");
+                    if (res.message) alert(res.message);
                 }
             }
         });

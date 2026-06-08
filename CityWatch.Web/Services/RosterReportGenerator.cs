@@ -465,6 +465,62 @@ namespace CityWatch.Web.Services
 
                             AddStatusStampToCell(siteCell, status);
 
+                            // Append Legend and Notes to siteCell
+                            var absenceDict = new Dictionary<string, List<string>>();
+                            foreach (var shift in schedules.Where(s => s.ClientSiteId == site.ClientSiteId && s.ShiftStart >= weekStart && s.ShiftStart < weekEnd.AddDays(1)))
+                            {
+                                var dateStr = shift.ShiftStart.ToString("dd/MM");
+                                if (!string.IsNullOrEmpty(shift.ReliefReason))
+                                {
+                                    var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
+                                    var key = $"{gName} - {shift.ReliefReason}";
+                                    if (!string.IsNullOrEmpty(shift.ReliefReasonOther)) key += $" ({shift.ReliefReasonOther})";
+                                    
+                                    if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
+                                    if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
+                                }
+                                if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined)
+                                {
+                                    var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
+                                    var key = $"{gName} - Declined";
+                                    
+                                    if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
+                                    if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
+                                }
+                            }
+                            var absences = absenceDict.Select(kv => $"{kv.Key} ({string.Join(", ", kv.Value)})").ToList();
+                            
+                            siteCell.Add(new Paragraph("\n").SetFontSize(4f).SetMarginBottom(2f));
+                            var legendTable = new Table(new float[] { 8f, 150f });
+                            void AddLegendRow(string text, Color color, bool isCancel = false) {
+                                var colorCell = new Cell().SetPadding(0).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.LEFT);
+                                var colorBox = new Div().SetWidth(4f).SetHeight(4f).SetBackgroundColor(color);
+                                if (isCancel) colorBox.SetBorder(new SolidBorder(ColorConstants.RED, 0.5f)).SetBackgroundColor(ColorConstants.WHITE);
+                                colorCell.Add(colorBox);
+                                
+                                var textCell = new Cell().Add(new Paragraph(text).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMargin(0)).SetBorder(Border.NO_BORDER).SetPadding(0).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.LEFT);
+                                
+                                legendTable.AddCell(colorCell);
+                                legendTable.AddCell(textCell);
+                            }
+                            AddLegendRow("Unassigned - FIXED", new DeviceRgb(255, 183, 77));
+                            AddLegendRow("Unassigned - ADHOC", new DeviceRgb(255, 143, 0));
+                            AddLegendRow("Accepted - FIXED", new DeviceRgb(144, 238, 144));
+                            AddLegendRow("Accepted - ADHOC", new DeviceRgb(50, 205, 50));
+                            AddLegendRow("Relief Guard (Accepted)", new DeviceRgb(111, 66, 193));
+                            AddLegendRow("DECLINED (OPEN)", ColorConstants.BLACK);
+                            AddLegendRow("CANCELLED (CLOSED)", ColorConstants.RED, true);
+                            siteCell.Add(legendTable);
+                            
+                            siteCell.Add(new Paragraph("Not Avalible (DNC):").SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.BLACK).SetMarginTop(4f).SetMarginBottom(1f));
+                            if (absences.Any()) {
+                                foreach(var note in absences) {
+                                    siteCell.Add(new Paragraph("- " + note).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMarginBottom(0.5f));
+                                }
+                            } else {
+                                siteCell.Add(new Paragraph("None").SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.GRAY).SetItalic());
+                            }
+
                             siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
 
@@ -611,6 +667,8 @@ namespace CityWatch.Web.Services
                         }
 
                         document.Add(table);
+
+ 
                         AddBrandedFooter(document, pdf, weekStart);
                     }
                     document.Close();

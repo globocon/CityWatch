@@ -17,6 +17,15 @@ window.onload = function () {
 };
 $(document).ready(function () {
 
+    $(document).ajaxSend(function (event, jqxhr, settings) {
+        if (settings.url && settings.url.indexOf('/Admin/Settings') !== -1) {
+            var userId = $('#hid_userId').val();
+            if (userId && userId !== '0' && settings.url.indexOf('uId=') === -1) {
+                settings.url += (settings.url.indexOf('?') === -1 ? '?' : '&') + 'uId=' + userId;
+            }
+        }
+    });
+
     //$(document).on('show.bs.modal', '.modal', function () {
     //    const zIndex = 1040 + 10 * $('.modal:visible').length;
     //    $(this).css('z-index', zIndex);
@@ -979,7 +988,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -1383,7 +1392,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -2276,7 +2285,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -2549,7 +2558,7 @@ $(function () {
         }
 
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
@@ -4289,7 +4298,7 @@ $('#clientTypeNameTimesheet').on('change', function () {
     }
 
     $.ajax({
-        url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+        url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&guardId=" + encodeURIComponent($("#hid_userId").val() || $("#hid_userIdSettings").val() || 0),
         type: 'GET',
         dataType: 'json',
     }).done(function (data) {

@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +64,11 @@ namespace CityWatch.Data.Providers
         public bool SavePcarrouteDetails(PcarRouteSaveViewModel model);
         public List<PcarRouteGridDto> GetPCARProfilesAll();
         public bool DeletePcarrouteProfile(int routeId);
+        List<KpiSendSchedule> GetAllSendSchedulesUsingUserId(int userId);
+        List<KpiSendTimesheetSchedules> GetAllTimesheetSchedulesUsingUserId(int userId);
+        List<KpiSendCustomWandSchedules> GetAllCustomWandSchedulesUsingUserId(int userId);
+        List<KpiSendKVSchedules> GetAllKVSchedulesUsingUserId(int userId);
+        List<PcarRouteGridDto> GetPCARProfilesUsingUserId(int userId);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -854,6 +859,150 @@ namespace CityWatch.Data.Providers
             return _context.ClientSiteKpiNotes.Where(z => z.Id == id).ToList();
         }
 
+        public List<KpiSendSchedule> GetAllSendSchedulesUsingUserId(int userId)
+        {
+            var selectedSiteSchedule = new List<KpiSendSchedule>();
+            var distinctClientSiteIds = _context.UserClientSiteAccess
+            .Where(z => z.UserId == userId && z.ClientSite.IsActive == true)
+            .Select(z => z.ClientSiteId)
+            .Distinct()
+            .ToList();
+
+            var list = _context.KpiSendSchedules
+               .Include(z => z.KpiSendScheduleSummaryImage)
+               .Include(z => z.KpiSendScheduleClientSites)
+               .ThenInclude(y => y.ClientSite)
+               .ThenInclude(y => y.ClientType)
+               .ToList();
+
+            foreach (var item in list)
+            {
+                foreach (var item2 in item.KpiSendScheduleClientSites)
+                {
+                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
+                    {
+                        selectedSiteSchedule.Add(item);
+                        break;
+                    }
+                }
+            }
+            return selectedSiteSchedule;
+        }
+
+        public List<KpiSendTimesheetSchedules> GetAllTimesheetSchedulesUsingUserId(int userId)
+        {
+            var selectedSiteSchedule = new List<KpiSendTimesheetSchedules>();
+            var distinctClientSiteIds = _context.UserClientSiteAccess
+            .Where(z => z.UserId == userId && z.ClientSite.IsActive == true)
+            .Select(z => z.ClientSiteId)
+            .Distinct()
+            .ToList();
+
+            var list = _context.KpiSendTimesheetSchedules
+               .Include(z => z.KpiSendTimesheetClientSites)
+               .ThenInclude(y => y.ClientSite)
+               .ThenInclude(y => y.ClientType)
+               .ToList();
+
+            foreach (var item in list)
+            {
+                foreach (var item2 in item.KpiSendTimesheetClientSites)
+                {
+                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
+                    {
+                        selectedSiteSchedule.Add(item);
+                        break;
+                    }
+                }
+            }
+            return selectedSiteSchedule;
+        }
+
+        public List<KpiSendCustomWandSchedules> GetAllCustomWandSchedulesUsingUserId(int userId)
+        {
+            var selectedSiteSchedule = new List<KpiSendCustomWandSchedules>();
+            var distinctClientSiteIds = _context.UserClientSiteAccess
+            .Where(z => z.UserId == userId && z.ClientSite.IsActive == true)
+            .Select(z => z.ClientSiteId)
+            .Distinct()
+            .ToList();
+
+            var list = _context.KpiSendCustomWandSchedules
+               .Include(z => z.KpiSendCustomWandClientSites)
+               .ThenInclude(y => y.ClientSite)
+               .ThenInclude(y => y.ClientType)
+               .ToList();
+
+            foreach (var item in list)
+            {
+                foreach (var item2 in item.KpiSendCustomWandClientSites)
+                {
+                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
+                    {
+                        selectedSiteSchedule.Add(item);
+                        break;
+                    }
+                }
+            }
+            return selectedSiteSchedule;
+        }
+
+        public List<KpiSendKVSchedules> GetAllKVSchedulesUsingUserId(int userId)
+        {
+            var selectedSiteSchedule = new List<KpiSendKVSchedules>();
+            var distinctClientSiteIds = _context.UserClientSiteAccess
+            .Where(z => z.UserId == userId && z.ClientSite.IsActive == true)
+            .Select(z => z.ClientSiteId)
+            .Distinct()
+            .ToList();
+
+            var list = _context.KpiSendKVSchedules
+               .Include(z => z.KpiSendKVClientSites)
+               .ThenInclude(y => y.ClientSite)
+               .ThenInclude(y => y.ClientType)
+               .ToList();
+
+            foreach (var item in list)
+            {
+                foreach (var item2 in item.KpiSendKVClientSites)
+                {
+                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
+                    {
+                        selectedSiteSchedule.Add(item);
+                        break;
+                    }
+                }
+            }
+            return selectedSiteSchedule;
+        }
+
+        public List<PcarRouteGridDto> GetPCARProfilesUsingUserId(int userId)
+        {
+            string pattern = @"\[R\d+\]";
+            var distinctClientSiteIds = _context.UserClientSiteAccess
+            .Where(z => z.UserId == userId && z.ClientSite.IsActive == true)
+            .Select(z => z.ClientSiteId)
+            .Distinct()
+            .ToList();
+
+            var routes = _context.PcarRoute
+               .Include(r => r.SmartWand)
+               .Include(r => r.RouteDetails)
+                   .ThenInclude(rd => rd.ClientSite)
+               .Where(r => r.RouteDetails.Any(rd => distinctClientSiteIds.Contains(rd.ClientSiteId)))
+               .Select(r => new PcarRouteGridDto
+               {
+                   Id = r.Id,
+                   Pcarroutename = r.Pcarroutename,
+                   Smartwandallocation = r.Smartwandallocation,
+                   SmartWandId = r.SmartWand.SmartWandId,
+                   PhoneNumber = Regex.Replace(r.SmartWand.PhoneNumber, pattern, "").Trim(),
+                   Sites = string.Join(", ", r.RouteDetails.Select(d => d.ClientSite.Name))
+               })
+               .ToList();
+
+            return routes;
+        }
     }
 
 

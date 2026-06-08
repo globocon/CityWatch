@@ -267,6 +267,62 @@ namespace CityWatch.Web.Services
 
                             AddStatusStampToCell(siteCell, weekStatus);
 
+                            // Append Legend and Notes to siteCell
+                            var absenceDict = new Dictionary<string, List<string>>();
+                            foreach (var shift in schedules.Where(s => s.ShiftStart >= weekStart && s.ShiftStart < weekEnd.AddDays(1)))
+                            {
+                                var dateStr = shift.ShiftStart.ToString("dd/MM");
+                                if (!string.IsNullOrEmpty(shift.ReliefReason))
+                                {
+                                    var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
+                                    var key = $"{gName} - {shift.ReliefReason}";
+                                    if (!string.IsNullOrEmpty(shift.ReliefReasonOther)) key += $" ({shift.ReliefReasonOther})";
+                                    
+                                    if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
+                                    if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
+                                }
+                                if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined)
+                                {
+                                    var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
+                                    var key = $"{gName} - Declined";
+                                    
+                                    if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
+                                    if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
+                                }
+                            }
+                            var absences = absenceDict.Select(kv => $"{kv.Key} ({string.Join(", ", kv.Value)})").ToList();
+                            
+                            siteCell.Add(new Paragraph("\n").SetFontSize(4f).SetMarginBottom(2f));
+                            var legendTable = new Table(new float[] { 8f, 150f });
+                            void AddLegendRow(string text, Color color, bool isCancel = false) {
+                                var colorCell = new Cell().SetPadding(0).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.LEFT);
+                                var colorBox = new Div().SetWidth(4f).SetHeight(4f).SetBackgroundColor(color);
+                                if (isCancel) colorBox.SetBorder(new SolidBorder(ColorConstants.RED, 0.5f)).SetBackgroundColor(ColorConstants.WHITE);
+                                colorCell.Add(colorBox);
+                                
+                                var textCell = new Cell().Add(new Paragraph(text).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMargin(0)).SetBorder(Border.NO_BORDER).SetPadding(0).SetVerticalAlignment(VerticalAlignment.MIDDLE).SetHorizontalAlignment(HorizontalAlignment.LEFT);
+                                
+                                legendTable.AddCell(colorCell);
+                                legendTable.AddCell(textCell);
+                            }
+                            AddLegendRow("Unassigned - FIXED", new DeviceRgb(255, 183, 77));
+                            AddLegendRow("Unassigned - ADHOC", new DeviceRgb(255, 143, 0));
+                            AddLegendRow("Accepted - FIXED", new DeviceRgb(144, 238, 144));
+                            AddLegendRow("Accepted - ADHOC", new DeviceRgb(50, 205, 50));
+                            AddLegendRow("Relief Guard (Accepted)", new DeviceRgb(111, 66, 193));
+                            AddLegendRow("DECLINED (OPEN)", ColorConstants.BLACK);
+                            AddLegendRow("CANCELLED (CLOSED)", ColorConstants.RED, true);
+                            siteCell.Add(legendTable);
+                            
+                            siteCell.Add(new Paragraph("Not Avalible (DNC):").SetFontSize(5.5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.BLACK).SetMarginTop(4f).SetMarginBottom(1f));
+                            if (absences.Any()) {
+                                foreach(var note in absences) {
+                                    siteCell.Add(new Paragraph("- " + note).SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.DARK_GRAY).SetMarginBottom(0.5f));
+                                }
+                            } else {
+                                siteCell.Add(new Paragraph("None").SetFontSize(5f).SetFont(PdfHelper.GetPdfFont()).SetFontColor(ColorConstants.GRAY).SetItalic());
+                            }
+
                             siteCell.SetMinHeight(60f);
                             table.AddCell(siteCell);
 
@@ -400,6 +456,90 @@ namespace CityWatch.Web.Services
                             }
 
                             document.Add(table);
+
+                            if (includeFinancials)
+                            {
+                                var weekSchedules = schedules.Where(s => s.ShiftStart >= weekStart && s.ShiftStart <= weekEnd.AddDays(1).AddSeconds(-1)).ToList();
+                                
+                                var summaries = await _context.RosterRemunerationSummaries
+                                    .Where(x => x.WeekStartDate == weekStart.Date && x.ClientSiteId == siteId)
+                                    .ToListAsync();
+
+                                var entities = new Dictionary<string, (string Name, decimal Total)>();
+
+                                foreach(var s in weekSchedules)
+                                {
+                                    var guardId = s.ReliefGuardId ?? s.GuardId;
+                                    var guardName = s.ReliefGuard?.Name ?? s.Guard?.Name ?? s.ProviderName;
+                                    if (string.IsNullOrEmpty(guardName)) continue;
+
+                                    var key = guardId.HasValue ? ("G" + guardId.Value) : ("P" + guardName);
+                                    
+                                    decimal duration = (decimal)((s.ShiftEnd - s.ShiftStart).TotalHours);
+                                    decimal payRate = (rateType == "sell") ? (s.PayRate?.SellRateToClient ?? 0m) : (s.PayRate?.GuardPayRate ?? 0m);
+                                    decimal amount = duration * payRate;
+
+                                    if (!entities.ContainsKey(key))
+                                    {
+                                        entities[key] = (guardName, 0m);
+                                    }
+                                    entities[key] = (guardName, entities[key].Total + amount);
+                                }
+
+                                if (entities.Any())
+                                {
+                                    // Optionally start on a new page if the table is too long, but iText7 handles breaks naturally.
+                                    document.Add(new Paragraph("\n"));
+                                    
+                                    var headerPara = new Paragraph("Remuneration Summary")
+                                        .SetFont(PdfHelper.GetPdfFont())
+                                        .SetFontSize(9f)
+                                        .SetFontColor(new DeviceRgb(25, 118, 210)); // Blue color like UI
+                                    document.Add(headerPara);
+
+                                    Table remTable = new Table(new float[] { 40f, 20f, 15f, 40f }).UseAllAvailableWidth().SetMarginTop(5f);
+
+                                    // Header
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("GUARD NAME").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)));
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("TOTAL AMOUNT").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)).SetTextAlignment(TextAlignment.RIGHT));
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("PAID").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)).SetTextAlignment(TextAlignment.CENTER));
+                                    remTable.AddHeaderCell(new Cell().Add(new Paragraph("NOTES").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7f).SetFontColor(ColorConstants.DARK_GRAY)).SetBackgroundColor(new DeviceRgb(241, 245, 249)));
+
+                                    decimal grandTotal = 0m;
+
+                                    var sortedKeys = entities.Keys.OrderBy(k => entities[k].Name).ToList();
+                                    foreach (var key in sortedKeys)
+                                    {
+                                        var ent = entities[key];
+                                        grandTotal += ent.Total;
+
+                                        int? gId = null;
+                                        string pName = null;
+                                        if (key.StartsWith("G")) gId = int.Parse(key.Substring(1));
+                                        else pName = ent.Name;
+
+                                        var dbItem = summaries.FirstOrDefault(x => x.GuardId == gId && (gId.HasValue || x.ProviderName == pName));
+                                        bool isPaid = dbItem?.IsPaid ?? false;
+                                        string notes = dbItem?.Notes ?? "";
+
+                                        remTable.AddCell(new Cell().Add(new Paragraph(ent.Name).SetFont(PdfHelper.GetPdfFont()).SetFontSize(7.5f)));
+                                        remTable.AddCell(new Cell().Add(new Paragraph($"$ {ent.Total:F2}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7.5f)).SetTextAlignment(TextAlignment.RIGHT));
+                                        
+                                        string checkText = isPaid ? "[ X ]" : "[   ]";
+                                        remTable.AddCell(new Cell().Add(new Paragraph(checkText).SetFont(PdfHelper.GetPdfFont()).SetFontSize(7.5f)).SetTextAlignment(TextAlignment.CENTER));
+                                        
+                                        remTable.AddCell(new Cell().Add(new Paragraph(notes).SetFont(PdfHelper.GetPdfFont()).SetFontSize(7.5f)));
+                                    }
+
+                                    // Grand Total row
+                                    remTable.AddCell(new Cell().Add(new Paragraph("SUMMARY TOTAL").SetFont(PdfHelper.GetPdfFont()).SetFontSize(7.5f).SetFontColor(ColorConstants.GRAY)));
+                                    remTable.AddCell(new Cell().Add(new Paragraph($"$ {grandTotal:F2}").SetFont(PdfHelper.GetPdfFont()).SetFontSize(8f).SetFontColor(ColorConstants.RED)).SetTextAlignment(TextAlignment.RIGHT));
+                                    remTable.AddCell(new Cell(1, 2).Add(new Paragraph("")));
+
+                                    document.Add(remTable);
+                                }
+                            }
+
                             AddBrandedFooter(document, pdf, weekStart);
                         }
                         document.Close();
@@ -553,3 +693,4 @@ namespace CityWatch.Web.Services
         }
     }
 }
+
