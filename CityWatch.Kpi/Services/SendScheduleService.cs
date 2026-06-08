@@ -1207,6 +1207,7 @@ namespace CityWatch.Kpi.Services
 
                 string StartDate = reportStartDate.ToString("MM-dd-yyyy");
                 string EndDate = reportEndDate.ToString("MM-dd-yyyy");
+                statusLog.AppendLine($"Generating Report from {reportStartDate.ToString("dd-MMM-yyyy")} To {reportEndDate.ToString("dd-MMM-yyyy")}.");
                 WandStrikeAuditLogRequest wandStrikeAuditLogRequest = new WandStrikeAuditLogRequest()
                 {
                     LogFromDate = reportStartDate,
