@@ -2304,5 +2304,12 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
+        public JsonResult OnGetKvlFieldTypes()
+        {
+            var _Plates = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate).ToList();
+            var _CarsStock = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.CarsStock).ToList();
+            return new JsonResult(new { plates = _Plates, carsStock = _CarsStock });
+        }
+
     }
 }

@@ -1282,7 +1282,7 @@ namespace CityWatch.Web.Services
                 items.Add(new SelectListItem("Select", "", true));
             }
 
-            foreach (var item in kvlFields)
+            foreach (var item in kvlFields.OrderBy(x=> x.Name))
             {
                 items.Add(new SelectListItem(item.Name, item.Id.ToString()));
             }

@@ -26,8 +26,10 @@ namespace CityWatch.Data.Models
         DocketReasons,
         [Display(Name = "Person of Interest (POI)")]
         PersonOfInterest,
-        [Display(Name = "CRM(BDM Activity)")]
+        [Display(Name = "CRM (BDM Activity)")]
         CRMActivity,
+        [Display(Name = "Cars (Stock)")]
+        CarsStock,
     }
 
     public class KeyVehcileLogField

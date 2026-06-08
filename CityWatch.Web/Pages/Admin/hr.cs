@@ -1901,10 +1901,10 @@ namespace CityWatch.Web.Pages.Admin
             int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive)
         {
 
-            _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
-            _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
-            _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
-            _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive, false, false, false, false);
+            _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive, false, false, false, false);
+            _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive, false, false, false, false);
+            _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive, false, false, false, false);
         }
         public IActionResult OnGetClientSiteToggle(int siteId)
         {
