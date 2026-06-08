@@ -1174,6 +1174,7 @@ namespace CityWatch.Kpi.Services
                         DateTime endOfWeek = startOfWeek.AddDays(6);
                         reportStartDate = startOfWeek;
                         reportEndDate = endOfWeek;
+
                     }
                     else
                     {
@@ -1181,14 +1182,12 @@ namespace CityWatch.Kpi.Services
                         // Assuming week starts on Monday
                         int diff = (7 + (reportStartDate.DayOfWeek - DayOfWeek.Monday)) % 7;
 
-                        DateTime startOfWeek = reportStartDate.AddDays(-1 * diff).Date;
-                        DateTime endOfWeek = startOfWeek.AddDays(6);
-                        reportStartDate = startOfWeek;
-                        reportEndDate = endOfWeek;
+                        // Monday of the current week
+                        DateTime currentWeekMonday = reportStartDate.AddDays(-diff).Date;
 
-
-                        //reportStartDate = DateTime.Today.AddDays(-7);
-                        //reportEndDate = DateTime.Today.AddDays(-1);
+                        // Previous week's Monday and Sunday
+                        reportStartDate = currentWeekMonday.AddDays(-7);
+                        reportEndDate = currentWeekMonday.AddDays(-1);
                     }
                 }
                 if (schedule.Frequency == SendSchdeuleFrequency.Monthly)
