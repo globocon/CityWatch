@@ -1247,17 +1247,17 @@ namespace CityWatch.Kpi.Services
 
                         if (string.IsNullOrEmpty(MonToSunExcel))
                         {
-                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report.");
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report (CustomWandReportType.MonSun).");
                         }
                         else
                         {
-                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  MonToSun Wand Excel Report Generated.");
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  MonToSun Wand Excel Report Generated (CustomWandReportType.MonSun).");
                             siteReportFileNames.Add(Path.Combine(filePath, MonToSunExcel));
                         }
                     }
                     catch (Exception ex)
                     {
-                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report. Error:- {ex.ToString()}");
+                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating MonToSun Wand Excel Report (CustomWandReportType.MonSun). Error:- {ex.ToString()}");
                     }
                 }
 
@@ -1275,17 +1275,17 @@ namespace CityWatch.Kpi.Services
 
                         if (string.IsNullOrEmpty(SiteExcel))
                         {
-                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report.");
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report (CustomWandReportType.ClientSite).");
                         }
                         else
                         {
-                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  Site Wand Excel Report Generated.");
+                            statusLog.AppendLine($"Site {string.Join(",", siteIds)} -  Site Wand Excel Report Generated (CustomWandReportType.ClientSite).");
                             siteReportFileNames.Add(Path.Combine(filePath, SiteExcel));
                         }
                     }
                     catch (Exception ex)
                     {
-                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report. Error:- {ex.ToString()}");
+                        statusLog.AppendLine($"Site {string.Join(",", siteIds)} - Error Creating Site Wand Excel Report (CustomWandReportType.ClientSite). Error:- {ex.ToString()}");
 
                     }
                 }
