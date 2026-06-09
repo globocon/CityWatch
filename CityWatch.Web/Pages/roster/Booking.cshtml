@@ -662,7 +662,8 @@
                                 <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
                                 <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
                                 <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
-                                <option value="Cancelled" data-color="#B71C1C">❌ CANCELLED (CLOSED)</option>
+                                <option value="Missed" data-color="#424242">MISSED (inc LATE)</option>
+                                <option value="Cancelled" data-color="#B71C1C">● CANCELLED (CLOSED)</option>
                             </select>
                         </div>
                     </div>
@@ -949,6 +950,11 @@
 
             .shift-card.status-declined {
                 background: linear-gradient(135deg, #434343 0%, #000000 100%);
+                color: #FFFFFF !important;
+            }
+
+            .shift-card.status-missed {
+                background: linear-gradient(135deg, #757575 0%, #424242 100%);
                 color: #FFFFFF !important;
             }
 
@@ -2069,14 +2075,17 @@
                                     if (s.status === 1) statusClass = 'status-accepted';
                                     if (s.status === 2) statusClass = 'status-declined';
                                     if (s.status === 3) statusClass = 'status-cancelled';
+                                    if (s.status === 4) statusClass = 'status-missed';
 
                                     var shiftValue = s.durationHours;
                                     if (projectFinancialMode) {
                                         var activeRate = (projectFinancialRateType === 'sell') ? (s.sellRate || 0) : (s.payRate || 0);
                                         shiftValue = s.durationHours * activeRate;
                                     }
-                                    dailyTotals[index] += shiftValue;
-                                    grandTotal += shiftValue;
+                                    if (s.status !== 3 && s.status !== 4) {
+                                        dailyTotals[index] += shiftValue;
+                                        grandTotal += shiftValue;
+                                    }
 
                                      var typeClass = 'type-regular';
                                     if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
@@ -2362,6 +2371,8 @@
                     compositeType = 'Declined';
                 } else if (currentStatus === 3) {
                     compositeType = 'Cancelled';
+                } else if (currentStatus === 4) {
+                    compositeType = 'Missed';
                 }
                 
                 $('#modalShiftType').val(compositeType).trigger('change');

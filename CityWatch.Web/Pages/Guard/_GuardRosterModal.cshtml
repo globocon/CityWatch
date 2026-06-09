@@ -162,10 +162,16 @@
         border-left: 3px solid #616161 !important;
         color: #FFFFFF !important;
     }
+    .guard-shift-card.status-missed {
+        background: linear-gradient(135deg, #757575 0%, #424242 100%) !important;
+        border-left: 3px solid #9E9E9E !important;
+        color: #FFFFFF !important;
+    }
 
     .guard-shift-card.shift-relief,
     .guard-shift-card.shift-relief.status-accepted,
     .guard-shift-card.shift-relief.status-pushed,
+    .guard-shift-card.shift-relief.status-missed,
     .guard-shift-card.shift-relief.status-declined { 
         background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important; 
         border-left: 3px solid #e1bee7 !important;
@@ -740,6 +746,7 @@
                             <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
                             <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
                             <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
+                            <option value="Missed" data-color="#424242">MISSED (inc LATE)</option>
                             <option value="Cancelled" data-color="#B71C1C">❌ CANCELLED (CLOSED)</option>
                         </select>
                     </div>
@@ -1673,6 +1680,7 @@
                             if (s.status === 1) statusClass = 'status-accepted';
                             if (s.status === 2) statusClass = 'status-declined';
                             if (s.status === 3) statusClass = 'status-cancelled';
+                            if (s.status === 4) statusClass = 'status-missed';
 
                             var typeClass = 'type-regular';
                             if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
@@ -1975,6 +1983,8 @@
             compositeType = 'Declined';
         } else if (currentStatus === 3) {
             compositeType = 'Cancelled';
+        } else if (currentStatus === 4) {
+            compositeType = 'Missed';
         }
         $('#geModalShiftType').val(compositeType).trigger('change');
 
@@ -2327,6 +2337,7 @@
                     if (res.status === 1) statusClass = 'status-accepted';
                     if (res.status === 2) statusClass = 'status-declined';
                     if (res.status === 3) statusClass = 'status-cancelled';
+                    if (res.status === 4) statusClass = 'status-missed';
                     
                     allCards.addClass(statusClass + ' ' + typeClass);
                     
