@@ -305,6 +305,7 @@ namespace CityWatch.Web.Services
                                 legendTable.AddCell(colorCell);
                                 legendTable.AddCell(textCell);
                             }
+                            AddLegendRow("Unassigned - UNKNOWN", new DeviceRgb(189, 189, 189));
                             AddLegendRow("Unassigned - FIXED", new DeviceRgb(255, 183, 77));
                             AddLegendRow("Unassigned - ADHOC", new DeviceRgb(255, 143, 0));
                             AddLegendRow("Accepted - FIXED", new DeviceRgb(144, 238, 144));
