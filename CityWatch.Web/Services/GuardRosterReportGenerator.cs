@@ -481,7 +481,7 @@ namespace CityWatch.Web.Services
 
                                     var key = guardId.HasValue ? ("G" + guardId.Value) : ("P" + guardName);
                                     
-                                    decimal duration = (decimal)((s.ShiftEnd - s.ShiftStart).TotalHours);
+                                    decimal duration = (decimal)DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd);
                                     decimal payRate = (rateType == "sell") ? (s.PayRate?.SellRateToClient ?? 0m) : (s.PayRate?.GuardPayRate ?? 0m);
                                     decimal amount = duration * payRate;
 
