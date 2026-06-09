@@ -559,6 +559,7 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Missed") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Missed; }
                 else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
@@ -657,6 +658,7 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Missed") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Missed; }
                 else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
@@ -1708,6 +1710,11 @@ namespace CityWatch.Web.Pages.roster
             {
                 nextType = "Regular";
                 nextStatus = RosterShiftStatus.Declined;
+            }
+            else if (currentType == "Regular" && currentStatus == RosterShiftStatus.Declined)
+            {
+                nextType = "Regular";
+                nextStatus = RosterShiftStatus.Missed;
             }
             else
             {

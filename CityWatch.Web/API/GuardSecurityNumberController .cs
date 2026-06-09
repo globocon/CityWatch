@@ -4492,9 +4492,9 @@ namespace CityWatch.Web.API
                 if (shift == null) return NotFound(new { isSuccess = false, message = "Shift not found." });
 
                 // 2. Concurrency and Status checks
-                if (shift.Status == RosterShiftStatus.Cancelled)
+                if (shift.Status == RosterShiftStatus.Cancelled || shift.Status == RosterShiftStatus.Missed)
                 {
-                    return BadRequest(new { isSuccess = false, message = "This shift has been cancelled and cannot be modified." });
+                    return BadRequest(new { isSuccess = false, message = "This shift is finalized and cannot be modified." });
                 }
 
                 if (shift.Status != model.ExpectedStatus)
