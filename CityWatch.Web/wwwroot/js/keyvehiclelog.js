@@ -11023,29 +11023,31 @@ function GetToggles(siteId, toggleId) {
                 $('#chk_cs_TrailerRego').prop('checked', false);
                 $('#chk_cs_CarsStock').prop('checked', false);                
 
-                $('.vehicle-type-dropdown').each(function () {
-                    this.attr('disabled', true);
-                });
+                //$('.vehicle-type-dropdown').each(function () {
+                //    this.attr('disabled', true);
+                //});
+
+                $('.vehicle-type-dropdown').prop('disabled', true);
 
                 if (response[0].isISO == true) {
                     $('#chk_cs_ISO').prop('checked', true);
                     $('.vehicle-type-dropdown').each(function () {
-                        this.empty();
-                        this.append($('<option>', { value: '', text: 'ISO + SEAL' }));
+                        $(this).empty();
+                        $(this).append($('<option>', { value: '', text: 'ISO + SEAL' }));
                     });
                 }
                 if (response[0].isVin == true) {
                     $('#chk_cs_VIN').prop('checked', true);
                     $('.vehicle-type-dropdown').each(function () {
-                        this.empty();
-                        this.append($('<option>', { value: '', text: 'VIN + SEAL' }));
+                        $(this).empty();
+                        $(this).append($('<option>', { value: '', text: 'VIN + SEAL' }));
                     });
                 }
                 if (response[0].isTrailerRego == true) {
                     $('#chk_cs_TrailerRego').prop('checked', true);
 
                     $('.vehicle-type-dropdown').each(function () {
-                        this.attr('disabled', false);
+                        $(this).prop('disabled', false);
                         populateVehicleTypeDropdown(this, kvlFieldPlateType);
                     });
                 }
@@ -11053,7 +11055,7 @@ function GetToggles(siteId, toggleId) {
                     $('#chk_cs_CarsStock').prop('checked', true);
 
                     $('.vehicle-type-dropdown').each(function () {
-                        this.attr('disabled', false);
+                        $(this).prop('disabled', false);
                         populateVehicleTypeDropdown(this, kvlFieldCarsStockType);
                     });
                 }
