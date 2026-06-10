@@ -152,7 +152,7 @@ namespace CityWatch.Web.Pages.Guard
                     ClientNameTitle = "Citywatch Security";
                 }
             }
-            }
+        }
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
         {
@@ -379,8 +379,11 @@ namespace CityWatch.Web.Pages.Guard
                 if (!string.IsNullOrEmpty(KeyVehicleLog.VehicleRego))
                     _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
                 else
-                    _guardLogDataProvider.SaveKeyVehicleLogProfileNotesByTrailerRiog(KeyVehicleLog.Trailer1Rego, KeyVehicleLog.Trailer2Rego, KeyVehicleLog.Trailer3Rego, KeyVehicleLog.Trailer4Rego, KeyVehicleLog.Trailer1PlateId,
-                        KeyVehicleLog.Trailer2PlateId, KeyVehicleLog.Trailer3PlateId, KeyVehicleLog.Trailer4PlateId, KeyVehicleLog.Notes);
+                    _guardLogDataProvider.SaveKeyVehicleLogProfileNotesByTrailerRiog(KeyVehicleLog.Trailer1Rego, KeyVehicleLog.Trailer2Rego, KeyVehicleLog.Trailer3Rego, KeyVehicleLog.Trailer4Rego,
+                        KeyVehicleLog.Trailer5Rego, KeyVehicleLog.Trailer6Rego, KeyVehicleLog.Trailer7Rego, KeyVehicleLog.Trailer8Rego,
+                        KeyVehicleLog.Trailer1PlateId, KeyVehicleLog.Trailer2PlateId, KeyVehicleLog.Trailer3PlateId, KeyVehicleLog.Trailer4PlateId,
+                        KeyVehicleLog.Trailer5PlateId, KeyVehicleLog.Trailer6PlateId, KeyVehicleLog.Trailer7PlateId, KeyVehicleLog.Trailer8PlateId,
+                        KeyVehicleLog.Notes);
                 //Dileep change 21032024  for trailer end
                 var guardlogins = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(KeyVehicleLog.GuardLoginId));
                 foreach (var item in guardlogins)
@@ -409,7 +412,7 @@ namespace CityWatch.Web.Pages.Guard
                             LastKVCreatedTime = DateTime.Now,
                             KVId = KeyVehicleLog.Id,
                             ActivityType = "KV",
-                            ActivityDescription= "KV Edit"
+                            ActivityDescription = "KV Edit"
                         };
                         _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
                         var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != KeyVehicleLog.GuardLogin.ClientSiteId);
@@ -512,25 +515,25 @@ namespace CityWatch.Web.Pages.Guard
                 //{
 
 
-                    var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
+                var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
+                {
+                    ClientSiteId = keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId,
+                    GuardId = guardId,
+                    LastKVCreatedTime = DateTime.Now,
+                    KVId = KeyVehicleLog.Id,
+                    ActivityType = "KV",
+                    ActivityDescription = "KV Exit"
+                };
+                _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
+                var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId);
+                if (ClientSiteRadioChecksActivityDetails.Count() != 0)
+                {
+                    foreach (var item in ClientSiteRadioChecksActivityDetails)
                     {
-                        ClientSiteId = keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId,
-                        GuardId = guardId,
-                        LastKVCreatedTime = DateTime.Now,
-                        KVId = KeyVehicleLog.Id,
-                        ActivityType = "KV",
-                        ActivityDescription= "KV Exit"
-                    };
-                    _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
-                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId);
-                    if (ClientSiteRadioChecksActivityDetails.Count() != 0)
-                    {
-                        foreach (var item in ClientSiteRadioChecksActivityDetails)
-                        {
-                            _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKV(item.Id);
-                        }
-
+                        _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKV(item.Id);
                     }
+
+                }
                 //}
                 //}
                 //for rc entry-end
@@ -567,13 +570,13 @@ namespace CityWatch.Web.Pages.Guard
             {
                 var CRMdetails = _guardLogDataProvider.GetKeyVehicleLogs(keyVehicleLogDetails.KeyVehicleLogProfile.VehicleRego.Trim());
 
-                if(CRMdetails.Count!=0)
+                if (CRMdetails.Count != 0)
                 {
                     var temp = CRMdetails.FirstOrDefault();
-                    keyVehicleLogDetails.Website=temp.Website;
-                    keyVehicleLogDetails.Email= temp.Email;
+                    keyVehicleLogDetails.Website = temp.Website;
+                    keyVehicleLogDetails.Email = temp.Email;
                     keyVehicleLogDetails.CompanyABN = temp.CompanyABN;
-                    keyVehicleLogDetails .CompanyLandline = temp.CompanyLandline;
+                    keyVehicleLogDetails.CompanyLandline = temp.CompanyLandline;
 
                 }
 
@@ -628,7 +631,8 @@ namespace CityWatch.Web.Pages.Guard
             var test = _viewDataService.GetClientSiteKeyNo(keyId, clientSiteId);
             return new JsonResult(_viewDataService.GetClientSiteKeyDescriptionAndImage(keyId, clientSiteId));
         }
-        public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego, string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego)
+        public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego, string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego,
+                    string trailer5Rego, string trailer6Rego, string trailer7Rego, string trailer8Rego)
         {
 
             if (!string.IsNullOrEmpty(vehicleRego))
@@ -642,17 +646,25 @@ namespace CityWatch.Web.Pages.Guard
                 //Old code 21032024 dileep New Start
                 if ((trailer1Rego != string.Empty)
                         || (trailer2Rego != string.Empty)
-                        || (trailer3Rego != string.Empty) ||
-                        (trailer4Rego != string.Empty))
+                        || (trailer3Rego != string.Empty)
+                        || (trailer4Rego != string.Empty)
+                        || (trailer5Rego != string.Empty)
+                        || (trailer6Rego != string.Empty)
+                        || (trailer7Rego != string.Empty)
+                        || (trailer8Rego != string.Empty))
                 {
 
                     var temp = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open);
                     var isOpenInThisSite2 = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open)
                     .Any(x =>
-                    (x.Detail.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
-                    (x.Detail.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
-                    (x.Detail.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
-                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)));
+                    (x.Detail.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer5Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer6Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer7Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer8Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer5Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer6Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer7Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer8Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer5Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer6Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer7Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer8Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer5Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer6Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer7Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer8Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer2Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer3Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer4Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer5Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer6Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer7Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer8Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer2Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer3Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer4Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer5Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer6Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer7Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer8Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer2Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer3Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer4Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer5Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer6Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer7Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer8Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer2Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer3Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer4Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer5Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer6Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer7Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer8Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)));
 
                     if (isOpenInThisSite2)
                         return new JsonResult(new { status = 1 });
@@ -665,17 +677,25 @@ namespace CityWatch.Web.Pages.Guard
                 //Old code 21032024 dileep New Start
                 if ((trailer1Rego != string.Empty)
                         || (trailer2Rego != string.Empty)
-                        || (trailer3Rego != string.Empty) ||
-                        (trailer4Rego != string.Empty))
+                        || (trailer3Rego != string.Empty)
+                        || (trailer4Rego != string.Empty)
+                        || (trailer5Rego != string.Empty)
+                        || (trailer6Rego != string.Empty)
+                        || (trailer7Rego != string.Empty)
+                        || (trailer8Rego != string.Empty))
                 {
 
                     var temp = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open);
                     var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open)
                     .Any(x =>
-                    (x.Detail.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
-                    (x.Detail.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
-                    (x.Detail.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
-                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)));
+                    (x.Detail.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer5Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer6Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer7Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer8Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer5Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer6Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer7Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer8Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer5Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer6Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer7Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer8Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer5Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer6Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer7Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer8Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer2Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer3Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer4Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer5Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer6Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer7Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) || (x.Detail.Trailer8Rego == trailer5Rego && !string.IsNullOrEmpty(trailer5Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer2Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer3Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer4Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer5Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer6Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer7Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) || (x.Detail.Trailer8Rego == trailer6Rego && !string.IsNullOrEmpty(trailer6Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer2Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer3Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer4Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer5Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer6Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer7Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) || (x.Detail.Trailer8Rego == trailer7Rego && !string.IsNullOrEmpty(trailer7Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer2Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer3Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer4Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer5Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer6Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer7Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)) || (x.Detail.Trailer8Rego == trailer8Rego && !string.IsNullOrEmpty(trailer8Rego)));
 
                     if (isOpenInThisSite)
                         return new JsonResult(new { status = 1 });
@@ -704,10 +724,14 @@ namespace CityWatch.Web.Pages.Guard
 
                 if ((trailer1Rego != string.Empty)
                       || (trailer2Rego != string.Empty)
-                      || (trailer3Rego != string.Empty) ||
-                      (trailer4Rego != string.Empty))
+                      || (trailer3Rego != string.Empty)
+                      || (trailer4Rego != string.Empty)
+                      || (trailer5Rego != string.Empty)
+                      || (trailer6Rego != string.Empty)
+                      || (trailer7Rego != string.Empty)
+                      || (trailer8Rego != string.Empty))
                 {
-                    var keyVehicleLogFromOtherSite2 = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRegoForTrailer(trailer1Rego, trailer2Rego, trailer3Rego, trailer4Rego)
+                    var keyVehicleLogFromOtherSite2 = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRegoForTrailer(trailer1Rego, trailer2Rego, trailer3Rego, trailer4Rego, trailer5Rego, trailer6Rego, trailer7Rego, trailer8Rego)
                    .Where(z => z.ClientSiteLogBookId != logbookId)
                    .FirstOrDefault();
 
@@ -721,10 +745,14 @@ namespace CityWatch.Web.Pages.Guard
             {  //Old code 21032024 dileep New Start
                 if ((trailer1Rego != string.Empty)
                        || (trailer2Rego != string.Empty)
-                       || (trailer3Rego != string.Empty) ||
-                       (trailer4Rego != string.Empty))
+                       || (trailer3Rego != string.Empty)
+                       || (trailer4Rego != string.Empty)
+                       || (trailer5Rego != string.Empty)
+                       || (trailer6Rego != string.Empty)
+                       || (trailer7Rego != string.Empty)
+                       || (trailer8Rego != string.Empty))
                 {
-                    var keyVehicleLogFromOtherSite = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRegoForTrailer(trailer1Rego, trailer2Rego, trailer3Rego, trailer4Rego)
+                    var keyVehicleLogFromOtherSite = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRegoForTrailer(trailer1Rego, trailer2Rego, trailer3Rego, trailer4Rego, trailer5Rego, trailer6Rego, trailer7Rego, trailer8Rego)
                    .Where(z => z.ClientSiteLogBookId != logbookId)
                    .FirstOrDefault();
 
@@ -1173,7 +1201,7 @@ namespace CityWatch.Web.Pages.Guard
         //To Get the Emails Related to POC start
         public async Task<JsonResult> OnPostGetPOCEmailsSelected(string Emails)
         {
-           
+
             List<string> pocEmails = new List<string>();
             if (!string.IsNullOrEmpty(Emails))
             {
@@ -1500,7 +1528,7 @@ namespace CityWatch.Web.Pages.Guard
                     CompanyName = vehicleKeyLogProfile.CompanyName,
                     PersonType = vehicleKeyLogProfile.PersonType,
                     PersonName = personName,
-                    KeyVehicleLogProfile=vehicleKeyLogProfile.KeyVehicleLogProfile,
+                    KeyVehicleLogProfile = vehicleKeyLogProfile.KeyVehicleLogProfile,
                     IsBDM = true
                 });
             }
@@ -1726,7 +1754,7 @@ namespace CityWatch.Web.Pages.Guard
             var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
             if (string.IsNullOrEmpty(siteBasePath))
                 throw new ArgumentException($"Dropbox directory missing for this client site");
-            if(!clientSiteKpiSettings.DropboxScheduleisActive)
+            if (!clientSiteKpiSettings.DropboxScheduleisActive)
                 throw new ArgumentException($"DropboxScheduleisActive:Desabled");
             var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
             var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
@@ -1853,7 +1881,7 @@ namespace CityWatch.Web.Pages.Guard
             // If plate already exists → lock company
             if (personalDetails.Any())
             {
-                var existingCompany = personalDetails.Where(x=>  !string.IsNullOrEmpty(x.CompanyName)).First().CompanyName;
+                var existingCompany = personalDetails.Where(x => !string.IsNullOrEmpty(x.CompanyName)).First().CompanyName;
 
                 // Force company to existing one
                 kvlPersonalDetail.CompanyName = existingCompany;
@@ -1890,9 +1918,11 @@ namespace CityWatch.Web.Pages.Guard
         {
             int profileId;
             var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
-            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego
-                (keyVehicleLog.Trailer1Rego, keyVehicleLog.Trailer2Rego, keyVehicleLog.Trailer3Rego, keyVehicleLog.Trailer4Rego,
-                keyVehicleLog.Trailer1PlateId, keyVehicleLog.Trailer2PlateId, keyVehicleLog.Trailer3PlateId, keyVehicleLog.Trailer4PlateId);
+            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego                (
+                keyVehicleLog.Trailer1Rego, keyVehicleLog.Trailer2Rego, keyVehicleLog.Trailer3Rego, keyVehicleLog.Trailer4Rego,
+                keyVehicleLog.Trailer5Rego, keyVehicleLog.Trailer6Rego, keyVehicleLog.Trailer7Rego, keyVehicleLog.Trailer8Rego,
+                keyVehicleLog.Trailer1PlateId, keyVehicleLog.Trailer2PlateId, keyVehicleLog.Trailer3PlateId, keyVehicleLog.Trailer4PlateId,
+                keyVehicleLog.Trailer5PlateId, keyVehicleLog.Trailer6PlateId, keyVehicleLog.Trailer7PlateId, keyVehicleLog.Trailer8PlateId);
             if (!personalDetails.Any() || !personalDetails.Any(z => z.EqualsTrailer(kvlPersonalDetail)))
             {
                 kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
@@ -1900,9 +1930,11 @@ namespace CityWatch.Web.Pages.Guard
             }
             else
             {
-                var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfileUsingTrailerRigo(kvlPersonalDetail.KeyVehicleLogProfile.Trailer1Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer2Rego,
-                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer3Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer1PlateId,
-                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer2PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer3PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4PlateId);
+                var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfileUsingTrailerRigo(
+                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer1Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer2Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer3Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4Rego,
+                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer5Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer6Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer7Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer8Rego,
+                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer1PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer2PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer3PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4PlateId,
+                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer5PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer6PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer7PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer8PlateId);
                 if (personalDetails.Any(z => z.EqualsTrailer(kvlPersonalDetail)))
                 {
                     kvlPersonalDetail.Id = personalDetails.Where(z => z.PersonName == kvlPersonalDetail.PersonName).Max(z => z.Id);
@@ -2233,28 +2265,29 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_viewDataService.GetANPR(clientSiteId));
         }
         //p7-137--pax-start
-        public JsonResult OnPostSaveKeyVehicleLogPAX(int paxId, string personType,int keyVehicleLogId,string personName,string mobileNo)
+        public JsonResult OnPostSaveKeyVehicleLogPAX(int paxId, string personType, int keyVehicleLogId, string personName, string mobileNo)
         {
             var results = new List<ValidationResult>();
-           
+
             var success = true;
             var message = "success";
             try
             {
-               
+
 
 
                 //logBookId entry for radio checklist-start
                 if (keyVehicleLogId != 0)
                 {
                     var keyVehicleLogPax = new KeyVehicleLogPax()
-                    {   Id = paxId,
+                    {
+                        Id = paxId,
                         KeyVehicleLogId = keyVehicleLogId,
                         PersonName = personName,
                         PersonType = Convert.ToInt16(personType),
-                        MobileNumber= mobileNo
+                        MobileNumber = mobileNo
                     };
-                 
+
 
                     bool isValid = Validator.TryValidateObject(
                         keyVehicleLogPax,                          // ✅ validate this object
@@ -2292,7 +2325,7 @@ namespace CityWatch.Web.Pages.Guard
             {
 
 
-                
+
                 //delete pax
                 _guardLogDataProvider.DeleteKeyVehicleLogPax(Id);
             }

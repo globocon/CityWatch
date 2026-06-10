@@ -235,6 +235,7 @@
                             </select>
                             @*<input type="hidden" asp-for="@Model.Trailer1PlateId" />*@
                             <input class="form-control form-control-sm" type="text" asp-for="@Model.Trailer1Rego" id="Trailer1Rego" autocomplete="off" />
+                            <input  type="hidden" asp-for="@Model.IsISO" id="modalIsISO"  />
                         </div>
                         <div class="form-group col-md-3 custom-control-log">
                             <input type="checkbox" id="chk_cs_VIN">
@@ -243,6 +244,7 @@
                             </select>
                             @* <input type="hidden" asp-for="@Model.Trailer2PlateId" />*@
                             <input class="form-control form-control-sm" type="text" asp-for="@Model.Trailer2Rego" id="Trailer2Rego" autocomplete="off" />
+                            <input type="hidden" asp-for="@Model.IsVin" id="modalIsVin"  />
                         </div>
                         <div class="form-group col-md-3 custom-control-log">
                             <input type="checkbox" id="chk_cs_TrailerRego" />
@@ -251,6 +253,7 @@
                             </select>
                             @* <input type="hidden" asp-for="@Model.Trailer3PlateId" />*@
                             <input class="form-control mb-0 form-control-sm" type="text" asp-for="@Model.Trailer3Rego" id="Trailer3Rego" autocomplete="off" />
+                            <input  type="hidden" asp-for="@Model.IsTrailerRego" id="modalIsTrailerRego" />
                         </div>
                         <div class="form-group col-md-3 custom-control-log">
                             @* <div class="d-flex flex-row justify-content-between"> *@
@@ -262,9 +265,11 @@
                                     <input hidden asp-for="@Model.IsISOVIN" />
                                 </div> *@
                            @*  </div> *@
+                           <input type="hidden" asp-for="@Model.IsISOVIN" />
                             <select class="form-control mb-0 form-control-sm vehicle-type-dropdown" asp-for="@Model.Trailer4PlateId" disabled id="Trailer4Rego_Vehicle_type">
                             </select>
                             <input class="form-control form-control-sm" type="text" asp-for="@Model.Trailer4Rego" id="Trailer4Rego" autocomplete="off" />
+                            <input  type="hidden" asp-for="@Model.IsCarsStock" id="modalIsCarsStock"/>
                         </div>
                     </div>
                     <div class="form-row custom-control-log pt-1">

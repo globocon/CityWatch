@@ -181,51 +181,7 @@ $(function () {
             ]
         });
     }
-
-    //function format_kvl_child_row(d) {
-    //    return (
-    //        '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
-    //        '<tr>' +
-    //        '<th colspan="4" style="background-color:#EAF0ED"><center>Trailers Rego or ISO</center></th>' +
-    //        '<th colspan="3" style="background-color:#EAF0ED"><center>Individual</center></th>' +
-    //        '<th rowspan="2" style="background-color:#EAF0ED"><center>Site POC</center></th>' +
-    //        '<th rowspan="2" style="background-color:#EAF0ED"><center>Site Location</center></th>' +
-    //        '<th rowspan="2" style="background-color:#EAF0ED"><center>Purpose Of Entry</center></th>' +
-    //        '<th colspan="3" style="background-color:#EAF0ED"><center>Weight</center></th>' +
-    //        '</tr>' +
-    //        '<tr>' +
-    //        '<th>1</th>' +
-    //        '<th>2</th>' +
-    //        '<th>3</th>' +
-    //        '<th>4</th>' +
-    //        '<th>Name</th>' +
-    //        '<th>Mobile No:</th>' +
-    //        '<th>Type</th>' +
-    //        '<th>In Gross (t)</th>' +
-    //        '<th>Out Net (t)</th>' +
-    //        '<th>Tare (t)</th>' +
-    //        '</tr>' +
-    //        '<tr>' +
-    //        '<td>' + convertDbString(d.detail.trailer1Rego) + '</td>' +
-    //        '<td>' + convertDbString(d.detail.trailer2Rego) + '</td>' +
-    //        '<td>' + convertDbString(d.detail.trailer3Rego) + '</td>' +
-    //        '<td>' + convertDbString(d.detail.trailer4Rego) + '</td>' +
-    //        '<td>' + convertDbString(d.detail.personName) + '</td>' +
-    //        '<td>' + convertDbString(d.detail.mobileNumber) + '</td>' +
-    //        '<td>' + convertDbString(d.personTypeText) + '</td>' +
-    //        '<td>' + convertDbString(d.clientSitePocName) + '</td>' +
-    //        '<td>' + convertDbString(d.clientSiteLocationName) + '</td>' +
-    //        '<td>' + convertDbString(d.purposeOfEntry) + '</td>' +
-    //        '<td width="8%">' + convertDbString(d.detail.inWeight) + '</td>' +
-    //        '<td width="8%">' + convertDbString(d.detail.outWeight) + '</td>' +
-    //        '<td width="8%">' + convertDbString(d.detail.tareWeight) + '</td>' +
-    //        '</tr>' +
-    //        '<tr>' +
-    //        '<td colspan="13"><b>Notes:</b> ' + convertDbString(d.detail.notes) + '</td>' +
-    //        '</tr>' +
-    //        '</table>'
-    //    );
-    //}
+        
     function format_kvl_child_row(d) {
         var paxTableHtml = '';
         var paxTableId = 'paxTable_' + d.detail.id;
@@ -911,6 +867,10 @@ $(function () {
                     trailer2Rego: $('#Trailer2Rego').val(),
                     trailer3Rego: $('#Trailer3Rego').val(),
                     trailer4Rego: $('#Trailer4Rego').val(),
+                    trailer5Rego: $('#Trailer5Rego').val(),
+                    trailer6Rego: $('#Trailer6Rego').val(),
+                    trailer7Rego: $('#Trailer7Rego').val(),
+                    trailer8Rego: $('#Trailer8Rego').val(),
                 }
             }).done(function (vehicleIsOnsite) {
                 if (vehicleIsOnsite.status === 2) {
@@ -953,6 +913,10 @@ $(function () {
         if ($('#new_log_exit_time').val() !== '')
             $('#ExitTime').val(parseDateInKvlEntryFormat(today, $('#new_log_exit_time').val()));
 
+        $('#modalIsISO').val($('#chk_cs_ISO').is(':checked'));
+        $('#modalIsVin').val($('#chk_cs_VIN').is(':checked'));
+        $('#modalIsTrailerRego').val($('#chk_cs_TrailerRego').is(':checked'));
+        $('#modalIsCarsStock').val($('#chk_cs_CarsStock').is(':checked'));
 
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
         var form = document.getElementById('form_new_vehicle_and_key_log');
@@ -2444,12 +2408,19 @@ $(function () {
             $('#lblIsReels').text(isReels ? 'Reels' : 'QTY');
             $('#cbIsReels').prop('checked', isReels);
 
-            let isISOVIN = $('#IsISOVIN').val().toLowerCase() === 'true';
-            $('#lblISO_One').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
-            $('#lblISO_Two').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
-            $('#lblISO_Three').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
-            $('#lblISO_Four').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 4 Rego.');
-            $('#cbIsISOVIN').prop('checked', isISOVIN);
+            //$('#chk_cs_ISO').prop('checked', false);
+            //$('#chk_cs_VIN').prop('checked', false);
+            //$('#chk_cs_TrailerRego').prop('checked', false);
+            //$('#chk_cs_CarsStock').prop('checked', false);
+
+
+
+            //let isISOVIN = $('#IsISOVIN').val().toLowerCase() === 'true';
+            //$('#lblISO_One').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
+            //$('#lblISO_Two').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
+            //$('#lblISO_Three').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+            //$('#lblISO_Four').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 4 Rego.');
+            //$('#cbIsISOVIN').prop('checked', isISOVIN);
 
 
             let isVWI = $('#IsVWI').val().toLowerCase() === 'true';
@@ -2574,6 +2545,64 @@ $(function () {
             $('#lblISO_Four').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 4 Rego.');
             $('#IsISOVIN').val(isChecked);
         });
+
+        $('#chk_cs_ISO').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked) {
+                $('#chk_cs_VIN').prop('checked', false);
+                $('#chk_cs_TrailerRego').prop('checked', false);
+                $('#chk_cs_CarsStock').prop('checked', false);
+
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).prop('disabled', true);
+                    $(this).empty();
+                    $(this).append($('<option>', { value: '', text: 'ISO + SEAL' }));
+                });
+            }
+        });
+        $('#chk_cs_VIN').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked) {
+                $('#chk_cs_ISO').prop('checked', false);
+                $('#chk_cs_TrailerRego').prop('checked', false);
+                $('#chk_cs_CarsStock').prop('checked', false);
+
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).prop('disabled', true);
+                    $(this).empty();
+                    $(this).append($('<option>', { value: '', text: 'VIN + SEAL' }));
+                });
+            }
+        });
+        $('#chk_cs_TrailerRego').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked) {
+                $('#chk_cs_ISO').prop('checked', false);
+                $('#chk_cs_VIN').prop('checked', false);
+                $('#chk_cs_CarsStock').prop('checked', false);
+
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).empty();
+                    //$(this).prop('disabled', false);
+                    populateVehicleTypeDropdown(this, kvlFieldPlateType);
+                });
+            }
+        });
+        $('#chk_cs_CarsStock').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked) {
+                $('#chk_cs_ISO').prop('checked', false);
+                $('#chk_cs_TrailerRego').prop('checked', false);
+                $('#chk_cs_VIN').prop('checked', false);
+
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).empty();
+                    //$(this).prop('disabled', false);
+                    populateVehicleTypeDropdown(this, kvlFieldCarsStockType);
+                });
+            }
+        });
+
         /*for manifest options-end*/
         /*for changing the BDM-start*/
         $('#cbIsBDMOrSales').on('change', function () {
@@ -2909,30 +2938,36 @@ $(function () {
             if ($('#VehicleRego').val() !== '') {
                 $('#kvl_list_plates').attr('disabled', false);
             }
+
+            $('.vehicle-type-dropdown').each(function () {
+                $(this).prop('disabled', true);
+            });
+
+            const isChecked = $('#chk_cs_ISO').is(':checked') || $('#chk_cs_VIN').is(':checked');
             //traliler changes New change for Add rigo without plate number 21032024 dileep Start
             if ($('#Trailer1Rego').val() !== '') {
-                $('#Trailer1Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer1Rego_Vehicle_type').attr('disabled', isChecked);
             }
             if ($('#Trailer2Rego').val() !== '') {
-                $('#Trailer2Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer2Rego_Vehicle_type').attr('disabled', isChecked);
             }
             if ($('#Trailer3Rego').val() !== '') {
-                $('#Trailer3Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer3Rego_Vehicle_type').attr('disabled', isChecked);
             }
             if ($('#Trailer4Rego').val() !== '') {
-                $('#Trailer4Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer4Rego_Vehicle_type').attr('disabled', isChecked);
             }
             if ($('#Trailer5Rego').val() !== '') {
-                $('#Trailer5Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer5Rego_Vehicle_type').attr('disabled', isChecked);
             }
             if ($('#Trailer6Rego').val() !== '') {
-                $('#Trailer6Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer6Rego_Vehicle_type').attr('disabled', isChecked);
             }
             if ($('#Trailer7Rego').val() !== '') {
-                $('#Trailer7Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer7Rego_Vehicle_type').attr('disabled', isChecked);
             }
             if ($('#Trailer8Rego').val() !== '') {
-                $('#Trailer8Rego_Vehicle_type').attr('disabled', false);
+                $('#Trailer8Rego_Vehicle_type').attr('disabled', isChecked);
             }
             //traliler changes New change for Add rigo without plate number 21032024 dileep end
 
@@ -11047,7 +11082,7 @@ function GetToggles(siteId, toggleId) {
                     $('#chk_cs_TrailerRego').prop('checked', true);
 
                     $('.vehicle-type-dropdown').each(function () {
-                        $(this).prop('disabled', false);
+                        //$(this).prop('disabled', false);
                         populateVehicleTypeDropdown(this, kvlFieldPlateType);
                     });
                 }
@@ -11055,7 +11090,7 @@ function GetToggles(siteId, toggleId) {
                     $('#chk_cs_CarsStock').prop('checked', true);
 
                     $('.vehicle-type-dropdown').each(function () {
-                        $(this).prop('disabled', false);
+                        //$(this).prop('disabled', false);
                         populateVehicleTypeDropdown(this, kvlFieldCarsStockType);
                     });
                 }
@@ -11085,6 +11120,7 @@ function GetToggles(siteId, toggleId) {
     });
 }
 
+
 function loadKvlFieldTypes() {
     kvlFieldPlateType = [];
     kvlFieldCarsStockType = [];
@@ -11105,7 +11141,7 @@ function populateVehicleTypeDropdown(selector, items) {
 
     $select.empty();
 
-    $select.append($('<option>', { value: '', text: 'Select' }));
+    //$select.append($('<option>', { value: '', text: 'Select' }));
 
     $.each(items, function (_, item) {
         $select.append($('<option>', { value: item.value, text: item.text }));

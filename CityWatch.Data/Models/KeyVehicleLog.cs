@@ -42,6 +42,7 @@ namespace CityWatch.Data.Models
         public string Trailer3Rego { get; set; }
 
         public string Trailer4Rego { get; set; }
+
         public string Trailer5Rego { get; set; }
 
         public string Trailer6Rego { get; set; }
@@ -209,14 +210,14 @@ namespace CityWatch.Data.Models
             if (string.IsNullOrEmpty(VehicleRego))
             {
                 if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego)
-                    || !string.IsNullOrEmpty(Trailer3Rego) || !string.IsNullOrEmpty(Trailer4Rego))
+                    || !string.IsNullOrEmpty(Trailer3Rego) || !string.IsNullOrEmpty(Trailer4Rego)
+                    || !string.IsNullOrEmpty(Trailer5Rego) || !string.IsNullOrEmpty(Trailer6Rego)
+                    || !string.IsNullOrEmpty(Trailer7Rego) || !string.IsNullOrEmpty(Trailer8Rego))
                 {
-
                     RegoStatus = true;
                 }
                 else
                 {
-
                     errors.Add(new ValidationResult("ID No or Vehicle Registration or Trailer Rego is required"));
                 }
 
@@ -226,10 +227,14 @@ namespace CityWatch.Data.Models
                 || !string.IsNullOrEmpty(Trailer2Rego)
                     || !string.IsNullOrEmpty(Trailer3Rego)
                     || !string.IsNullOrEmpty(Trailer4Rego)
+                    || !string.IsNullOrEmpty(Trailer5Rego)
+                    || !string.IsNullOrEmpty(Trailer6Rego)
+                    || !string.IsNullOrEmpty(Trailer7Rego)
+                    || !string.IsNullOrEmpty(Trailer8Rego)
                     || !string.IsNullOrEmpty(VehicleRego))
             {
                 bool sameValue = false;
-                string[] strings = { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, VehicleRego };
+                string[] strings = { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, Trailer5Rego, Trailer6Rego, Trailer7Rego, Trailer8Rego, VehicleRego };
 
                 // Loop through each string and compare it with the others
                 for (int i = 0; i < strings.Length; i++)
@@ -240,7 +245,6 @@ namespace CityWatch.Data.Models
                         {
                             if (strings[i] == strings[j])
                             {
-
                                 errors.Add(new ValidationResult("The same Trailer Rego or Vehicle Rego (" + strings[i] + ") not allowed. "));
                                 sameValue = true;
                                 break;
@@ -282,6 +286,38 @@ namespace CityWatch.Data.Models
                     if (Trailer4PlateId == null || Trailer4PlateId == 0)
                     {
                         errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 4 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer5Rego))
+                {
+                    if (Trailer5PlateId == null || Trailer5PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 5 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer6Rego))
+                {
+                    if (Trailer6PlateId == null || Trailer6PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 6 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer7Rego))
+                {
+                    if (Trailer7PlateId == null || Trailer7PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 7 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer8Rego))
+                {
+                    if (Trailer8PlateId == null || Trailer8PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 8 Rego"));
                     }
 
                 }
@@ -338,5 +374,13 @@ namespace CityWatch.Data.Models
         public string SitePocNames { get; set; }
         [HiddenInput]
         public bool IsISOVIN { get; set; }
+        [HiddenInput]
+        public bool? IsISO { get; set; }
+        [HiddenInput]
+        public bool? IsVin { get; set; }
+        [HiddenInput]
+        public bool? IsTrailerRego { get; set; }
+        [HiddenInput]
+        public bool? IsCarsStock { get; set; }
     }
 }

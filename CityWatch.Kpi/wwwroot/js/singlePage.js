@@ -1372,6 +1372,7 @@ $(function () {
             $('#chk_cs_CarsStock').prop('checked', false);
         }
         $('#chk_cs_ISO').val(isChecked);
+        $('#modalIsISO').val(isChecked);
     });
 
     $('#chk_cs_VIN').on('change', function () {
@@ -1382,6 +1383,7 @@ $(function () {
             $('#chk_cs_CarsStock').prop('checked', false);
         }
         $('#chk_cs_VIN').val(isChecked);
+        $('#modalIsVin').val(isChecked);
     });
 
     $('#chk_cs_TrailerRego').on('change', function () {
@@ -1392,6 +1394,7 @@ $(function () {
             $('#chk_cs_CarsStock').prop('checked', false);        
         }
         $('#chk_cs_TrailerRego').val(isChecked);
+        $('#modalIsTrailerRego').val(isChecked);
     });
 
     $('#chk_cs_CarsStock').on('change', function () {
@@ -1402,6 +1405,7 @@ $(function () {
             $('#chk_cs_TrailerRego').prop('checked', false);
         }
         $('#chk_cs_CarsStock').val(isChecked);
+        $('#modalIsCarsStock').val(isChecked);
     });
     //for Reels - start
     $('#btnSaveToggleKeys').on('click', function () {
@@ -1456,7 +1460,7 @@ $(function () {
                 reelstoggleTypeId: 4,
                 reelsIsActive: $('#chk_cs_Is_Reels').val(),
                 trailerRegoTypeId: 5,
-                isISO: $('#chk_cs_IsISO').is(":checked"),
+                isISO: $('#chk_cs_ISO').is(":checked"),
                 isVIN: $('#chk_cs_VIN').is(":checked"),
                 isTrailerRego: $('#chk_cs_TrailerRego').is(":checked"),
                 isCarsStock: $('#chk_cs_CarsStock').is(":checked"),
@@ -1473,7 +1477,7 @@ $(function () {
     function GetClientSiteToggle() {
         const token = $('input[name="__RequestVerificationToken"]').val();
 
-        $('#chk_cs_IsISO').prop('checked', false);
+        $('#chk_cs_ISO').prop('checked', false);
         $('#chk_cs_VIN').prop('checked', false);
         $('#chk_cs_TrailerRego').prop('checked', false);
         $('#chk_cs_CarsStock').prop('checked', false);
@@ -1539,7 +1543,7 @@ $(function () {
                 }
 
                 if (response[i].toggleTypeId == 5) {
-                    $('#chk_cs_IsISO').prop('checked', response[i].isISO);
+                    $('#chk_cs_ISO').prop('checked', response[i].isISO);
                     $('#chk_cs_VIN').prop('checked', response[i].isVin);
                     $('#chk_cs_TrailerRego').prop('checked', response[i].isTrailerRego);
                     $('#chk_cs_CarsStock').prop('checked', response[i].isCarsStock);

@@ -41,3 +41,11 @@ Add [Trailer5Rego] Varchar(20) null
     ,[Trailer6PlateId] int null
     ,[Trailer7PlateId] int null
     ,[Trailer8PlateId] int null;
+
+GO
+
+ALTER TABLE VehicleKeyLogs
+ADD IsISO bit null,
+IsVin bit null, 
+IsTrailerRego bit null,
+IsCarsStock bit null;

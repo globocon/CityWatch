@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
 using CityWatch.Web.Services;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -211,6 +212,23 @@ namespace CityWatch.Web.Models
             }
         }
         //p7-137--pax-end
+
+        public string VehicleRegoHeading
+        {
+            get
+            {
+                if (Detail.IsCarsStock.HasValue && Detail.IsCarsStock.Value)
+                    return "Cars (Stock)";
+                else if (Detail.IsISO.HasValue && Detail.IsISO.Value)
+                    return "ISO No + Seal";
+                else if (Detail.IsVin.HasValue && Detail.IsVin.Value)
+                    return "VIN No + Seal";
+                else if (Detail.IsTrailerRego.HasValue && Detail.IsTrailerRego.Value)
+                    return "Trailer Rego";
+                else
+                    return "";
+            }
+        }
 
     }
 }
