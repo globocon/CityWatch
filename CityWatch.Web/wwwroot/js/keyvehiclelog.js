@@ -2408,10 +2408,49 @@ $(function () {
             $('#lblIsReels').text(isReels ? 'Reels' : 'QTY');
             $('#cbIsReels').prop('checked', isReels);
 
-            //$('#chk_cs_ISO').prop('checked', false);
-            //$('#chk_cs_VIN').prop('checked', false);
-            //$('#chk_cs_TrailerRego').prop('checked', false);
-            //$('#chk_cs_CarsStock').prop('checked', false);
+            let isISO = $('#modalIsISO').val() && $('#modalIsISO').val().toLowerCase() === 'true';
+            let isVin = $('#modalIsVin').val() && $('#modalIsVin').val().toLowerCase() === 'true';
+            let isTrailerRego = $('#modalIsTrailerRego').val() && $('#modalIsTrailerRego').val().toLowerCase() === 'true';
+            let isCarsStock = $('#modalIsCarsStock').val() && $('#modalIsCarsStock').val().toLowerCase() === 'true';
+
+            $('#chk_cs_ISO').prop('checked', isISO);
+            $('#chk_cs_VIN').prop('checked', isVin);
+            $('#chk_cs_TrailerRego').prop('checked', isTrailerRego);
+            $('#chk_cs_CarsStock').prop('checked', isCarsStock);
+
+            if (isISO) {
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).prop('disabled', true);
+                    $(this).empty();
+                    $(this).append($('<option>', { value: '', text: 'ISO + SEAL' }));
+                });
+            } else if (isVin) {
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).prop('disabled', true);
+                    $(this).empty();
+                    $(this).append($('<option>', { value: '', text: 'VIN + SEAL' }));
+                });
+            } else if (isTrailerRego) {
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).prop('disabled', false);
+                    populateVehicleTypeDropdown(this, kvlFieldPlateType);
+                    let selectedVal = $(this).data('selected-val');
+                    if (selectedVal !== undefined && selectedVal !== null && selectedVal !== '') {
+                        $(this).val(selectedVal);
+                    }
+                });
+            } else if (isCarsStock) {
+                $('.vehicle-type-dropdown').each(function () {
+                    $(this).prop('disabled', false);
+                    populateVehicleTypeDropdown(this, kvlFieldCarsStockType);
+                    let selectedVal = $(this).data('selected-val');
+                    if (selectedVal !== undefined && selectedVal !== null && selectedVal !== '') {
+                        $(this).val(selectedVal);
+                    }
+                });
+            } else {
+                $('.vehicle-type-dropdown').prop('disabled', true).empty();
+            }
 
 
 
