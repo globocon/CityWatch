@@ -1853,7 +1853,7 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateHRGraphsTable1( int[]? guardIds)
         {
-            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
           
             var activeAndInActive = GetActiveAndInactiveGuardHrReport(guardIds).ToList();
             chartDataTable.AddCell(GetChartHeaderCell("Active Guard Vs Inactive Guard", " (Count: " + activeAndInActive.Count() + ")"));
@@ -1901,7 +1901,7 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateHRGraphsTable2(int[]? guardIds)
         {
-            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
          
             var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart(guardIds).ToList();
             chartDataTable.AddCell(GetChartHeaderCell("Year of Onboarding", " (Count: " + yearOfOnBoradingBarChart.Count() + ")"));
@@ -1947,7 +1947,7 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateHRGraphsTable3(int[]? guardIds)
         {
-            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49,51 })).UseAllAvailableWidth().SetMarginBottom(5);
           
             var languageReport = GetGuardLanguagesHrReport(guardIds).ToList();
             chartDataTable.AddCell(GetChartHeaderCell("LOTE", " (Count: " + languageReport.Count() + ")"));
@@ -2209,7 +2209,8 @@ namespace CityWatch.Kpi.Services
 
             try
             {
-                var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
+                var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now:ddMMyyyy_HHmmss}.png");
+              
                 var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
 
                 var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, modifiedData });
@@ -2227,7 +2228,7 @@ namespace CityWatch.Kpi.Services
 
                 return graphImage;
             }
-            catch
+            catch(Exception ex)
             {
                 // no ops
             }

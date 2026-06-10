@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 using IO = System.IO;
 
 namespace CityWatch.Kpi.Services
@@ -116,7 +117,8 @@ namespace CityWatch.Kpi.Services
                         
             var tableLegend = CreateLegend();
             doc.Add(tableLegend);
-
+            var pyramidChart = CreatePyramidImage();
+            doc.Add(pyramidChart);
             if (!(string.IsNullOrEmpty(schedule.SummaryNote1) && string.IsNullOrEmpty(schedule.SummaryNote2)))
             {
                 var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
@@ -142,6 +144,16 @@ namespace CityWatch.Kpi.Services
             doc.Close();
             pdfDoc.Close();
             return reportFileName;
+        }
+        private Table CreatePyramidImage()
+        {
+
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 70, 30 })).UseAllAvailableWidth().SetMarginTop(5);
+
+           
+            var PyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg"))).SetHorizontalAlignment(HorizontalAlignment.CENTER).SetHeight(250).SetMarginTop(20);
+            chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
+            return chartDataTable;
         }
         private Table CreateHRGraphsTables(PatrolRequest ReportRequest)
         {
@@ -171,7 +183,7 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateHRGraphsTable1(int[]? guardIds)
         {
-            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
 
             var activeAndInActive = GetActiveAndInactiveGuardHrReport(guardIds).ToList();
             chartDataTable.AddCell(GetChartHeaderCell("Active Guard Vs Inactive Guard", " (Count: " + activeAndInActive.Count() + ")"));
@@ -219,7 +231,7 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateHRGraphsTable2(int[]? guardIds)
         {
-            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
 
             var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart(guardIds).ToList();
             chartDataTable.AddCell(GetChartHeaderCell("Year of Onboarding", " (Count: " + yearOfOnBoradingBarChart.Count() + ")"));
@@ -265,7 +277,7 @@ namespace CityWatch.Kpi.Services
         }
         private Table CreateHRGraphsTable3(int[]? guardIds)
         {
-            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 51 })).UseAllAvailableWidth().SetMarginBottom(5);
 
             var languageReport = GetGuardLanguagesHrReport(guardIds).ToList();
             chartDataTable.AddCell(GetChartHeaderCell("LOTE", " (Count: " + languageReport.Count() + ")"));
@@ -480,9 +492,7 @@ namespace CityWatch.Kpi.Services
 
             var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
             chartDataTable.AddCell(GetChartImageCell(eventTypeBarChartImage).SetBorderLeft(Border.NO_BORDER));
-
-            var PyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg"))).SetHorizontalAlignment(HorizontalAlignment.CENTER).SetHeight(250).SetMarginTop(20);
-            chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
+            
 
             return chartDataTable;
         }
