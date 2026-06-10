@@ -64,10 +64,12 @@ namespace CityWatch.Kpi.Services
         List<SelectListItem> getSmartWandForTourmodel();
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
         public List<SelectListItem> GetAllPatrolCars();
+        //p2-184-hr-charts-start
         List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest);
         List<Guard> GetGuards();
         List<InActiveGuardsDetails> GetInActiveGuardDetails();
         List<LanguageDetails> GetGuardLanguages(int[] guardIds);
+        //p2-184-hr-charts-end
     }
 
     public class ViewDataService : IViewDataService
@@ -719,6 +721,7 @@ namespace CityWatch.Kpi.Services
             sitePatrolCars.AddRange(_clientSiteWandDataProvider.GetPatrolCars().OrderBy(x => x.Name).Select(z => new SelectListItem(z.Name, z.Id.ToString())));
             return sitePatrolCars;
         }
+        //p2-184-hr-charts-start
         public List<GuardLogin> GetGuardLoginsWithClientTypesAndSites(PatrolRequest ReportRequest)
         {
             
@@ -730,6 +733,7 @@ namespace CityWatch.Kpi.Services
 
 
         }
+       
         public List<Guard> GetGuards()
         {
             return _guardDataProvider.GetGuards().ToList();
@@ -751,6 +755,7 @@ namespace CityWatch.Kpi.Services
 
 
         }
+        //p2-184-hr-charts-end
 
     }
 }

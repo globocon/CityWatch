@@ -117,8 +117,10 @@ namespace CityWatch.Kpi.Services
                         
             var tableLegend = CreateLegend();
             doc.Add(tableLegend);
-            var pyramidChart = CreatePyramidImage();
+            //p2-184-hr-charts start
+            var pyramidChart = CreatePyramidImage();//replacing the pyramid image
             doc.Add(pyramidChart);
+            //p2-184-hr-charts end
             if (!(string.IsNullOrEmpty(schedule.SummaryNote1) && string.IsNullOrEmpty(schedule.SummaryNote2)))
             {
                 var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
@@ -129,14 +131,15 @@ namespace CityWatch.Kpi.Services
             {                
                 doc.Add(new AreaBreak());
                 doc.Add(tableReportHeader);
-                
+                //p2-184-hr-charts-start
                 PatrolRequest ReportRequest = new PatrolRequest();
                 ReportRequest.FromDate = fromDate;
                 ReportRequest.ToDate = toDate ;
                 ReportRequest.ClientSites= schedule.KpiSendScheduleClientSites.Select(z=>z.ClientSite.Name).ToArray();
                 ReportRequest.ClientTypes= schedule.KpiSendScheduleClientSites.Select(z => z.ClientSite.ClientType.Name).ToArray();
-                var hrGraphsTable = CreateHRGraphsTables(ReportRequest);
+                var hrGraphsTable = CreateHRGraphsTables(ReportRequest);// create hr charts
                 doc.Add(hrGraphsTable);
+                //p2-184-hr-charts- end
                 var graphsTable = CreateGraphsTables(patrolDataReport);
                 doc.Add(graphsTable);
             }
@@ -145,6 +148,7 @@ namespace CityWatch.Kpi.Services
             pdfDoc.Close();
             return reportFileName;
         }
+        //p2-184-hr-charts-start
         private Table CreatePyramidImage()
         {
 
@@ -155,7 +159,9 @@ namespace CityWatch.Kpi.Services
             chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
             return chartDataTable;
         }
-        private Table CreateHRGraphsTables(PatrolRequest ReportRequest)
+        
+        // create hr graphs monthly for all sites
+        private Table CreateHRGraphsTables(PatrolRequest ReportRequest) 
         {
             int[]? guardIds = null;
             var clientsites = _viewDataService.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
@@ -427,6 +433,7 @@ namespace CityWatch.Kpi.Services
 
             return groupedByLanguage;
         }
+        //p2-184-hr-charts-end
         private Table CreateGraphsTables(PatrolDataReport patrolDataReport)
         {
             var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()

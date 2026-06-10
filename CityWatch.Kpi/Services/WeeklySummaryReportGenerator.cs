@@ -84,6 +84,7 @@ namespace CityWatch.Kpi.Services
             {
                 doc.Add(new AreaBreak());
                 doc.Add(tableReportHeader);
+                //p2-184-hr-charts-start
                 PatrolRequest ReportRequest = new PatrolRequest();
                 ReportRequest.FromDate = fromDate;
                 ReportRequest.ToDate = toDate;
@@ -92,6 +93,7 @@ namespace CityWatch.Kpi.Services
                 ReportRequest.ClientTypes = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSite.ClientType.Name).ToArray();
                 var hrGraphsTable = CreateHRGraphsTables(ReportRequest);
                 doc.Add(hrGraphsTable);
+                //p2-184-hr-charts-end
                 var graphsTable = CreateGraphsTables(patrolDataReport);
                 doc.Add(graphsTable);
             }
@@ -346,6 +348,9 @@ namespace CityWatch.Kpi.Services
             return new Cell().SetBackgroundColor(WebColors.GetRGBColor(bgColor)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).SetFontColor(WebColors.GetRGBColor("#000000")).Add(new Paragraph(text));
         }
         //NEWLY ADDED-START
+
+        //p2-184-hr-charts-start
+        // create hr graphs weekly
         private Table CreateHRGraphsTables(PatrolRequest ReportRequest)
         {
             int[]? guardIds = null;
@@ -618,6 +623,7 @@ namespace CityWatch.Kpi.Services
 
             return groupedByLanguage;
         }
+        //p2-184-hr-charts-end
         private Table CreateGraphsTables(PatrolDataReport patrolDataReport)
         {
             var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
