@@ -672,6 +672,10 @@
                         <label class="custom-control-label" for="guardOptYear">Whole Year</label>
                     </div>
                 </div>
+                <div class="custom-control custom-switch mb-3">
+                    <input type="checkbox" class="custom-control-input" id="guardOptClearNames">
+                    <label class="custom-control-label font-weight-bold" for="guardOptClearNames">Clear Names?</label>
+                </div>
                 <div class="alert alert-info">
                     <i class="fa fa-info-circle mr-1"></i> This will replicate all shifts from the current week to the selected period.
                 </div>
@@ -2562,7 +2566,8 @@
                 groupId: guardRolloverTargetGroupId,
                 startDate: guardRosterStartDate,
                 option: option,
-                eraseFuture: eraseFuture
+                eraseFuture: eraseFuture,
+                clearNames: $('#guardOptClearNames').is(':checked')
             },
             success: function (res) {
                 executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
