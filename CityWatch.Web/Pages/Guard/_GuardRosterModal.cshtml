@@ -646,6 +646,62 @@
     </div>
 </div>
 
+<!-- Guard Roster Rollover Modal -->
+<div class="modal fade" id="guardRolloverModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Roster Rollover</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="guardRolloverStep1">
+                <p>Duplicate this week's roster to:</p>
+                <div class="form-group">
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptNextWeek" name="guardRolloverOption" class="custom-control-input" value="NextWeek" checked>
+                        <label class="custom-control-label" for="guardOptNextWeek">Next week</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptMonth" name="guardRolloverOption" class="custom-control-input" value="Month">
+                        <label class="custom-control-label" for="guardOptMonth">Whole month</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptYear" name="guardRolloverOption" class="custom-control-input" value="Year">
+                        <label class="custom-control-label" for="guardOptYear">Whole Year</label>
+                    </div>
+                </div>
+                <div class="custom-control custom-switch mb-3">
+                    <input type="checkbox" class="custom-control-input" id="guardOptClearNames">
+                    <label class="custom-control-label font-weight-bold" for="guardOptClearNames">Clear Names?</label>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle mr-1"></i> This will replicate all shifts from the current week to the selected period.
+                </div>
+            </div>
+            <div class="modal-body" id="guardRolloverStep2" style="display:none;">
+                <p>The projected roster for this site already has data. Would you like to:</p>
+                <div class="form-group">
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptErase" name="guardRolloverConflictOption" class="custom-control-input" value="Erase">
+                        <label class="custom-control-label" for="guardOptErase"><strong>Erase</strong> all existing future entries, and mirror current week across instead?</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptMerge" name="guardRolloverConflictOption" class="custom-control-input" value="Merge" checked>
+                        <label class="custom-control-label" for="guardOptMerge"><strong>Merge</strong> new entries into existing data sets, which risks duplicate entries?</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmGuardRollover">Confirm Rollover</button>
+                <button type="button" class="btn btn-primary" id="btnExecuteGuardRollover" style="display:none;">Execute Rollover</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Full Add/Edit Shift Modal (Copied from Booking) -->
 <div class="modal fade" id="guardAddShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
     <div class="modal-dialog" role="document">
@@ -1582,6 +1638,7 @@
                     '<div class="d-flex align-items-center mb-1"><span style="color: #1B5E20; margin-right: 4px; font-size: 10px;">●</span> Accepted - ADHOC</div>' +
                     '<div class="d-flex align-items-center mb-1"><span style="color: #8e24aa; margin-right: 4px; font-size: 10px;">●</span> Relief Guard (Accepted)</div>' +
                     '<div class="d-flex align-items-center mb-1"><span style="color: #000; margin-right: 4px; font-size: 10px;">●</span> DECLINED (OPEN)</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #424242; margin-right: 4px; font-size: 10px;">●</span> MISSED (inc LATE)</div>' +
                     '<div class="d-flex align-items-center mb-2"><span style="color: #e53935; margin-right: 4px; font-size: 10px;">● <i class="fa fa-times" style="font-size: 8px;"></i></span> CANCELLED (CLOSED)</div>' +
                     '<div class="font-weight-bold mt-2 mb-1" style="color: #000;">Not Avalible (DNC):</div>' +
                     '<div style="color: #000;">';
@@ -1604,7 +1661,10 @@
                     if (isEditMode) {
                         var headerRowHtml = '<tr class="bg-light">' +
                             '<td colspan="8" class="py-2 px-3 font-weight-bold text-dark text-left" style="font-size: 12.5px; border-bottom: 1px solid #dee2e6;">' +
-                                '📁 Project: ' + row.projectName +
+                                '<div class="d-flex justify-content-between align-items-center">' +
+                                    '<div>&#128193; Project: ' + row.projectName + '</div>' +
+                                    '<button type="button" class="btn btn-outline-info btn-sm py-0 px-2 btn-guard-project-rollover" data-group-id="' + row.rosterGroupId + '" title="Rollover Project"><i class="fa fa-copy mr-1"></i>Rollover</button>' +
+                                '</div>' +
                             '</td>' +
                         '</tr>';
                         tbody.append(headerRowHtml);
@@ -2410,5 +2470,120 @@
         if (!str) return "";
         if (str.length <= num) return str;
         return str.slice(0, num) + '..';
+    }
+
+    // Guard Roster Rollover Logic
+    var guardRolloverTargetGroupId = null;
+
+    $(document).on('click', '.btn-guard-project-rollover', function() {
+        var groupId = $(this).data('group-id');
+        if (!groupId) {
+            alert('Cannot rollover: No group ID found for this project.');
+            return;
+        }
+        guardRolloverTargetGroupId = groupId;
+        $('#guardRolloverStep1').show();
+        $('#guardRolloverStep2').hide();
+        $('#btnConfirmGuardRollover').show();
+        $('#btnExecuteGuardRollover').hide();
+        $('#btnConfirmGuardRollover').prop('disabled', false).text('Confirm Rollover');
+        $('#guardRolloverModal').modal('show');
+    });
+
+    var guardRolloverHasSourceData = true;
+
+    $('#btnConfirmGuardRollover').on('click', function() {
+        var option = $('input[name="guardRolloverOption"]:checked').val();
+        var btn = $(this);
+
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Checking...');
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '/roster/Booking?handler=CheckFutureData',
+            type: 'POST',
+            headers: { "RequestVerificationToken": token },
+            data: {
+                groupId: guardRolloverTargetGroupId,
+                startDate: guardRosterStartDate,
+                option: option
+            },
+            success: function (res) {
+                if (res.success) {
+                    guardRolloverHasSourceData = res.hasSourceData;
+
+                    if (res.hasData) {
+                        $('#guardRolloverStep1').hide();
+                        $('#guardRolloverStep2').show();
+                        btn.hide();
+                        $('#btnExecuteGuardRollover').show().prop('disabled', false).text('Execute Rollover');
+                    } else {
+                        if (!res.hasSourceData) {
+                            btn.prop('disabled', false).text('Confirm Rollover');
+                            alert('Both the current week and the target period are empty. No shifts to copy or clear.');
+                            return;
+                        }
+                        // No future data, proceed with rollover normally (Erase = false)
+                        executeGuardRollover(option, false);
+                    }
+                } else {
+                    btn.prop('disabled', false).text('Confirm Rollover');
+                    alert(res.message || 'An error occurred.');
+                }
+            },
+            error: function() {
+                btn.prop('disabled', false).text('Confirm Rollover');
+                alert('An error occurred checking future data.');
+            }
+        });
+    });
+
+    $('#btnExecuteGuardRollover').on('click', function() {
+        var option = $('input[name="guardRolloverOption"]:checked').val();
+        var conflictOption = $('input[name="guardRolloverConflictOption"]:checked').val();
+        executeGuardRollover(option, conflictOption === 'Erase');
+    });
+
+    function executeGuardRollover(option, eraseFuture) {
+        if (!guardRolloverHasSourceData && eraseFuture) {
+            if (!confirm('The current week is empty. Clicking "OK" will CLEAR all existing future shifts for the selected period. Do you want to proceed?')) {
+                var executeBtn = $('#btnExecuteGuardRollover').is(':visible') ? $('#btnExecuteGuardRollover') : $('#btnConfirmGuardRollover');
+                executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
+                return;
+            }
+        }
+
+        var executeBtn = $('#btnExecuteGuardRollover').is(':visible') ? $('#btnExecuteGuardRollover') : $('#btnConfirmGuardRollover');
+        executeBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '/roster/Booking?handler=RolloverRoster',
+            type: 'POST',
+            headers: { "RequestVerificationToken": token },
+            data: {
+                groupId: guardRolloverTargetGroupId,
+                startDate: guardRosterStartDate,
+                option: option,
+                eraseFuture: eraseFuture,
+                clearNames: $('#guardOptClearNames').is(':checked')
+            },
+            success: function (res) {
+                executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
+                if (res.success) {
+                    $('#guardRolloverModal').modal('hide');
+                    alert('Roster operation completed successfully.');
+                    loadGuardRoster();
+                } else {
+                    alert(res.message);
+                }
+            },
+            error: function() {
+                executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
+                alert('An error occurred during rollover.');
+            }
+        });
     }
 </script>
