@@ -239,7 +239,29 @@ namespace CityWatch.Web.Services
                         // 2a. Project Cover
                         if (!string.IsNullOrEmpty(bp.RosterGroup.CoverFileName))
                         {
-                            AddFileToMerger(merger, "Projects", bp.RosterGroup.CoverFileName);
+                            bool isDuplicate = false;
+                            if (!string.IsNullOrEmpty(binder.CoverFileName))
+                            {
+                                string groupCoverPath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Groups", binder.CoverFileName);
+                                string projectCoverPath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Projects", bp.RosterGroup.CoverFileName);
+                                
+                                if (File.Exists(groupCoverPath) && File.Exists(projectCoverPath))
+                                {
+                                    var groupInfo = new FileInfo(groupCoverPath);
+                                    var projectInfo = new FileInfo(projectCoverPath);
+                                    
+                                    // If the files are the exact same size, they are almost certainly the exact same uploaded file
+                                    if (groupInfo.Length == projectInfo.Length)
+                                    {
+                                        isDuplicate = true;
+                                    }
+                                }
+                            }
+
+                            if (!isDuplicate)
+                            {
+                                AddFileToMerger(merger, "Projects", bp.RosterGroup.CoverFileName);
+                            }
                         }
 
                         // 2b. Project Roster
