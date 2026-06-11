@@ -2657,6 +2657,7 @@ $(function () {
         if (ucaTree === undefined) {
             ucaTree = $('#ucaTreeView').tree({
                 uiLibrary: 'bootstrap4',
+                iconsLibrary: 'fontawesome',
                 checkboxes: true,
                 primaryKey: 'id',
                 dataSource: '/Admin/Settings?handler=ClientAccessByUserId',
@@ -6992,6 +6993,7 @@ $('#tbl_hr1_settings,#tbl_hr2_settings,#tbl_hr3_settings tbody').on('click', '#b
 
         ucaTreeLock = $('#ucaTreeViewlock').tree({
             uiLibrary: 'bootstrap4',
+            iconsLibrary: 'fontawesome',
             checkboxes: true,
             primaryKey: 'id',
             dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
@@ -7010,6 +7012,7 @@ $('#tbl_hr1_settings,#tbl_hr2_settings,#tbl_hr3_settings tbody').on('click', '#b
 
         ucaTreeLock = $('#ucaTreeViewlock').tree({
             uiLibrary: 'bootstrap4',
+            iconsLibrary: 'fontawesome',
             checkboxes: true,
             primaryKey: 'id',
             dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
@@ -7164,6 +7167,7 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnLock', function 
 
         ucaTreeLock = $('#ucaTreeViewlock').tree({
             uiLibrary: 'bootstrap4',
+            iconsLibrary: 'fontawesome',
             checkboxes: true,
             primaryKey: 'id',
             dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
@@ -7182,6 +7186,7 @@ $('#tbl_hr_settings_with_CourseLibrary tbody').on('click', '#btnLock', function 
 
         ucaTreeLock = $('#ucaTreeViewlock').tree({
             uiLibrary: 'bootstrap4',
+            iconsLibrary: 'fontawesome',
             checkboxes: true,
             primaryKey: 'id',
             dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
