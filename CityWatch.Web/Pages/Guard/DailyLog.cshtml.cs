@@ -1597,15 +1597,19 @@ namespace CityWatch.Web.Pages.Guard
             {
                 return new JsonResult(new { 
                     patrolFqForDayOrHour = detail.PatrolFqForDayOrHour,
-                    haswandtags = detail.haswandtags 
+                    haswandtags = detail.haswandtags,
+                    completedRounds = detail.CompletedRounds
                 });
             }
-            return new JsonResult(null);
+            
+            // Fallback for sites that don't have active guards (like Boat Ops)
+            var fqData = _guardLogDataProvider.GetClientSiteFrequencyData(clientSiteId);
+            return new JsonResult(fqData);
         }
 
         public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, int guardId)
         {
-            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificGuard(clientSiteId, guardId));
+            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificClientSite(clientSiteId, DateTime.Now.Date, DateTime.Now.Date.AddDays(1).AddTicks(-1)));
         }
     }
 

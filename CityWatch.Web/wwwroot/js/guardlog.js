@@ -10028,14 +10028,14 @@ $(function () {
             success: function(data) {
                 if (data) {
                     var bgcolr = '#A9A9A9';
-                    if (data.haswandtags > 0)
+                    if (data.completedRounds > 0)
                         bgcolr = '#FFD580';
                         
-                    var fqHtml = (data.patrolFqForDayOrHour || '0 PD') + ' <span class="p-1" style="background: ' + bgcolr + ';">' + data.haswandtags + '</span> ' +
+                    var fqHtml = (data.patrolFqForDayOrHour || '0 PD') + ' <span class="p-1" style="background: ' + bgcolr + ';">' + data.completedRounds + '</span> ' +
                         '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
                         'data-client="' + currentClientSiteId + '" ' +
                         'data-guard="' + currentGuardId + '" ' +
-                        'data-value="' + data.haswandtags + '">?</a>]';
+                        'data-value="' + data.completedRounds + '">?</a>]';
                         
                     $('#guardFqDisplay').html(fqHtml);
                 } else {
