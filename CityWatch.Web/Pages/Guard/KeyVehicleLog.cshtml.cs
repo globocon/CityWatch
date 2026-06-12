@@ -2307,7 +2307,7 @@ namespace CityWatch.Web.Pages.Guard
         public IActionResult OnGetGuardFqData(int guardId, int clientSiteId)
         {
             var detail = _guardLogDataProvider.GetActiveGuardDetails()
-                .FirstOrDefault(g => g.GuardId == guardId && g.ClientSiteId == clientSiteId);
+                .FirstOrDefault(g => g.ClientSiteId == clientSiteId);
             
             if (detail != null)
             {
@@ -2321,7 +2321,7 @@ namespace CityWatch.Web.Pages.Guard
 
         public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, int guardId)
         {
-            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificGuard(clientSiteId, guardId));
+            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificClientSite(clientSiteId, DateTime.Now.Date, DateTime.Now.Date.AddDays(1).AddTicks(-1)));
         }
     }
 }
