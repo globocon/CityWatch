@@ -10038,7 +10038,17 @@ $(function () {
                         'data-value="' + data.haswandtags + '">?</a>]';
                         
                     $('#guardFqDisplay').html(fqHtml);
+                } else {
+                    var emptyHtml = '0 PD <span class="p-1" style="background: #A9A9A9;">0</span> ' +
+                        '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                        'data-client="' + currentClientSiteId + '" ' +
+                        'data-guard="' + currentGuardId + '" ' +
+                        'data-value="0">?</a>]';
+                    $('#guardFqDisplay').html(emptyHtml);
                 }
+            },
+            error: function() {
+                $('#guardFqDisplay').html('Error loading data');
             }
         });
     }
