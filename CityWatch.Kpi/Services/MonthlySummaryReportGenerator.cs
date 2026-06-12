@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 using IO = System.IO;
 
 namespace CityWatch.Kpi.Services
@@ -116,7 +117,10 @@ namespace CityWatch.Kpi.Services
                         
             var tableLegend = CreateLegend();
             doc.Add(tableLegend);
-
+            //p2-184-hr-charts start
+            var pyramidChart = CreatePyramidImage();//replacing the pyramid image
+            doc.Add(pyramidChart);
+            //p2-184-hr-charts end
             if (!(string.IsNullOrEmpty(schedule.SummaryNote1) && string.IsNullOrEmpty(schedule.SummaryNote2)))
             {
                 var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
@@ -127,6 +131,15 @@ namespace CityWatch.Kpi.Services
             {                
                 doc.Add(new AreaBreak());
                 doc.Add(tableReportHeader);
+                //p2-184-hr-charts-start
+                PatrolRequest ReportRequest = new PatrolRequest();
+                ReportRequest.FromDate = fromDate;
+                ReportRequest.ToDate = toDate ;
+                ReportRequest.ClientSites= schedule.KpiSendScheduleClientSites.Select(z=>z.ClientSite.Name).ToArray();
+                ReportRequest.ClientTypes= schedule.KpiSendScheduleClientSites.Select(z => z.ClientSite.ClientType.Name).ToArray();
+                var hrGraphsTable = CreateHRGraphsTables(ReportRequest);// create hr charts
+                doc.Add(hrGraphsTable);
+                //p2-184-hr-charts- end
                 var graphsTable = CreateGraphsTables(patrolDataReport);
                 doc.Add(graphsTable);
             }
@@ -135,12 +148,298 @@ namespace CityWatch.Kpi.Services
             pdfDoc.Close();
             return reportFileName;
         }
+        //p2-184-hr-charts-start
+        private Table CreatePyramidImage()
+        {
 
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 70, 30 })).UseAllAvailableWidth().SetMarginTop(5);
+
+           
+            var PyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg"))).SetHorizontalAlignment(HorizontalAlignment.CENTER).SetHeight(250).SetMarginTop(20);
+            chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
+            return chartDataTable;
+        }
+        
+        // create hr graphs monthly for all sites
+        private Table CreateHRGraphsTables(PatrolRequest ReportRequest) 
+        {
+            int[]? guardIds = null;
+            var clientsites = _viewDataService.GetGuardLoginsWithClientTypesAndSites(ReportRequest);
+
+            if (clientsites.Count() > 0)
+            {
+                guardIds = clientsites.Select(x => x.GuardId).Distinct().ToArray();
+            }
+            var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
+                .SetMarginTop(5)
+                .SetKeepTogether(true);
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateHRGraphsTable1(guardIds)));
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateHRGraphsTable2(guardIds)));
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateHRGraphsTable3(guardIds)));
+            return graphTable;
+        }
+        private Table CreateHRGraphsTable1(int[]? guardIds)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            var activeAndInActive = GetActiveAndInactiveGuardHrReport(guardIds).ToList();
+            chartDataTable.AddCell(GetChartHeaderCell("Active Guard Vs Inactive Guard", " (Count: " + activeAndInActive.Count() + ")"));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var genderReport = GetGenderBasedGuardHrReport(guardIds).ToList();
+
+            chartDataTable.AddCell(GetChartHeaderCell("Gender", "(Count: " + genderReport.Count() + ")"));
+
+            // row 1 blank cell
+            //chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            //chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+            var hrChartData1 = activeAndInActive.Cast<dynamic>()
+    .Select(x => new KeyValuePair<string, double>(
+        (string)x.Status,
+        (double)x.Percentage))
+    .OrderByDescending(x => x.Key)
+    .ToArray();
+
+            var hrChartData1PieChartImage = GetChartImage(hrChartData1);
+            chartDataTable.AddCell(GetChartImageCell(hrChartData1PieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+            var hrChartData2 = genderReport.Cast<dynamic>()
+    .Select(x => new KeyValuePair<string, double>(
+        (string)x.Key,
+        (double)x.Value))
+    .OrderByDescending(x => x.Key)
+    .ToArray();
+
+            var hrChartData2PieChartImage = GetChartImage(hrChartData2);
+            chartDataTable.AddCell(GetChartImageCell(hrChartData2PieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            //var colorCodeChartImage = GetChartImage(patrolDataReport.ColorCodePercentage.OrderByDescending(z => z.Value).ToArray());
+            //chartDataTable.AddCell(GetChartImageCell(colorCodeChartImage));
+
+            return chartDataTable;
+        }
+        private Table CreateHRGraphsTable2(int[]? guardIds)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart(guardIds).ToList();
+            chartDataTable.AddCell(GetChartHeaderCell("Year of Onboarding", " (Count: " + yearOfOnBoradingBarChart.Count() + ")"));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var attributionReport = GetGuardAttributionPerAnnumReport(guardIds).ToList();
+
+            chartDataTable.AddCell(GetChartHeaderCell("Attrition Per Annum", "(Count: " + attributionReport.Count() + ")"));
+
+            // row 1 blank cell
+            //chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            //chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+            var hrChartData1 = yearOfOnBoradingBarChart.Cast<dynamic>()
+    .Select(x => new KeyValuePair<string, double>(
+        (string)x.Status,
+        (double)x.Percentage))
+    .OrderByDescending(x => x.Key)
+    .ToArray();
+
+            var hrChartData1BarChartImage = GetChartImage(hrChartData1, ChartType.Bar);
+            chartDataTable.AddCell(GetChartImageCell(hrChartData1BarChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+            var hrChartData2 = attributionReport.Cast<dynamic>()
+    .Select(x => new KeyValuePair<string, double>(
+        (string)x.Year,
+        (double)x.Percentage))
+    .OrderByDescending(x => x.Key)
+    .ToArray();
+
+            var hrChartData2PieChartImage = GetChartImage(hrChartData2);
+            chartDataTable.AddCell(GetChartImageCell(hrChartData2PieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+
+            return chartDataTable;
+        }
+        private Table CreateHRGraphsTable3(int[]? guardIds)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 51 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            var languageReport = GetGuardLanguagesHrReport(guardIds).ToList();
+            chartDataTable.AddCell(GetChartHeaderCell("LOTE", " (Count: " + languageReport.Count() + ")"));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+
+            // row 1 blank cell
+            //chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            //chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+            var hrChartData1 = languageReport
+                .Cast<dynamic>()
+    .Select(x => new KeyValuePair<string, double>(
+        (string)x.Language,
+        (double)x.Percentage))
+    .OrderByDescending(x => x.Key)
+    .ToArray();
+
+            var hrChartData1PieChartImage = GetChartImage(hrChartData1);
+            chartDataTable.AddCell(GetChartImageCell(hrChartData1PieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+
+
+
+            return chartDataTable;
+        }
+        public IEnumerable<object> GetActiveAndInactiveGuardHrReport(int[]? guardIds)
+        {
+
+            var guards = _viewDataService.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
+            int totalGuards = guards.Count();
+
+            if (totalGuards == 0)
+                return Enumerable.Empty<object>();
+
+            var groupedByStatus = guards
+                .GroupBy(g => g.IsActive ? "Active" : "Inactive")
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalGuards * 100, 2)
+                })
+                .OrderBy(x => x.Status);
+
+            return groupedByStatus;
+        }
+        public IEnumerable<KeyValuePair<string, double>> GetGenderBasedGuardHrReport(int[]? guardIds)
+        {
+
+            var guards = _viewDataService.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
+            int totalGuards = guards.Count();
+
+            if (totalGuards == 0)
+                return Enumerable.Empty<KeyValuePair<string, double>>();
+
+            // Group, count, and calculate percentages for each gender
+            var groupedByGender = guards
+                .GroupBy(g => g.Gender ?? "Unknown") // Use "Unknown" for null or unspecified gender
+                .Select(g => new KeyValuePair<string, double>(
+                    g.Key,
+                    Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
+                ))
+                .OrderBy(kvp => kvp.Key); // Sort alphabetically
+
+            return groupedByGender;
+        }
+        public IEnumerable<object> GetYearofOnBoardingGuardHrReportBarchart(int[]? guardIds)
+        {
+
+            var guards = _viewDataService.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
+
+            // Set all blank/null DateEnrolled to 01-Jan-2022
+            foreach (var guard in guards)
+            {
+                if (!guard.DateEnrolled.HasValue)
+                {
+                    guard.DateEnrolled = new DateTime(2022, 1, 1);
+                }
+            }
+            // Total count of guards
+            int totalGuards = guards.Count();
+
+            // Group, count, and return the number of guards for each year
+            var groupedByYear = guards
+                .GroupBy(g => g.DateEnrolled.Value.Year.ToString()) // Convert year to string
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalGuards * 100, 2) // Return count directly
+                })
+                .OrderBy(kvp => kvp.Status); // Sort by year (string representation)
+
+            return groupedByYear;
+        }
+        public IEnumerable<object> GetGuardAttributionPerAnnumReport(int[]? guardIds)
+        {
+
+            var inactiveGuards = _viewDataService.GetInActiveGuardDetails().Where(x =>
+            ((guardIds == null) || (guardIds.Contains(x.GuardId)))
+            //&& (x.LastWorkingDate >= ReportRequest.FromDate
+            //                && x.LastWorkingDate < ReportRequest.ToDate.AddDays(1))
+                            );
+
+            // Total count of guards
+            int totalInactiveGuardsCount = inactiveGuards.Count();
+
+            // Group, count, and calculate percentages for pie chart
+            var groupedByExpiredYears = inactiveGuards
+                .GroupBy(g => g.LastWorkingDate.Value.Year.ToString()) // Convert year to string
+                .Select(g => new
+                {
+                    Year = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalInactiveGuardsCount * 100, 2) // Calculate percentage and round to 2 decimals
+                })
+                .OrderBy(kvp => kvp.Year); // Sort by year (string representation)
+
+            return groupedByExpiredYears;
+        }
+        public IEnumerable<object> GetGuardLanguagesHrReport(int[]? guardIds)
+        {
+
+            var guards = _viewDataService.GetGuards().Where(x => (guardIds == null) || (guardIds.Contains(x.Id)));
+            //var guardsIds = _guardDataProvider.GetGuards().Select(x=>x.Id).ToArray();
+
+            var languages = _viewDataService.GetGuardLanguages(guards.Select(z => z.Id).ToArray()).ToList();
+            // Total count of guards
+            int totalLanguagesCount = languages.Count();
+
+            // Group, count, and calculate percentages for pie chart
+            var groupedByLanguage = languages
+                .GroupBy(g => g.LanguageMaster.Language.ToString()) // Convert year to string
+                .Select(g => new
+                {
+                    Language = g.Key,
+                    Count = g.Count(),
+                    Percentage = Math.Round((double)g.Count() / totalLanguagesCount * 100, 2) // Calculate percentage and round to 2 decimals
+                })
+                .OrderBy(kvp => kvp.Language); // Sort by year (string representation)
+
+            return groupedByLanguage;
+        }
+        //p2-184-hr-charts-end
         private Table CreateGraphsTables(PatrolDataReport patrolDataReport)
         {
             var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
                 .SetMarginTop(5)
                 .SetKeepTogether(true);
+           
             graphTable.AddCell(new Cell()
                 .SetPadding(0)
                 .SetBorder(Border.NO_BORDER)
@@ -151,7 +450,9 @@ namespace CityWatch.Kpi.Services
                 .Add(CreateGraphsTable2(patrolDataReport)));
             return graphTable;
         }
+       
 
+       
         private Table CreateGraphsTable1(PatrolDataReport patrolDataReport)
         {
             var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
@@ -198,9 +499,7 @@ namespace CityWatch.Kpi.Services
 
             var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
             chartDataTable.AddCell(GetChartImageCell(eventTypeBarChartImage).SetBorderLeft(Border.NO_BORDER));
-
-            var PyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg"))).SetHorizontalAlignment(HorizontalAlignment.CENTER).SetHeight(250).SetMarginTop(20);
-            chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
+            
 
             return chartDataTable;
         }
