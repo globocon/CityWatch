@@ -8519,7 +8519,7 @@ namespace CityWatch.Data.Providers
 
                 // Append (Bypass) manually if the tag is marked as FqBypass in the database
                 var bypassTags = _context.ClientSiteSmartWandTags
-                    .Where(t => t.ClientSiteId == clientId && t.FqBypass && !t.IsDeleted)
+                    .Where(t => t.ClientSiteId == clientId && t.FqBypass && !t.IsDeleted && t.LabelDescription != null)
                     .Select(t => t.LabelDescription.Trim().ToLower())
                     .ToList();
 
@@ -8560,11 +8560,17 @@ namespace CityWatch.Data.Providers
 
             var tags = GetTagStatusPendingForSpecificClientSite(clientSiteId, DateTime.Now.Date, DateTime.Now.Date.AddDays(1).AddTicks(-1));
             
-            // Assume 0 completed rounds if guard is completely inactive
+            int completedRounds = 0;
+            var requiredTags = tags.Where(t => t.LabelDescription != null && !t.LabelDescription.Contains("(Bypass)", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (requiredTags.Any())
+            {
+                completedRounds = requiredTags.Min(t => t.TodayScanCount);
+            }
+            
             return new {
                 patrolFqForDayOrHour = patrolFq,
                 haswandtags = tags.Any() ? 1 : 0,
-                completedRounds = 0 
+                completedRounds = completedRounds 
             };
         }
 
