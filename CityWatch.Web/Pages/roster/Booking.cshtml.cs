@@ -559,6 +559,7 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Missed") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Missed; }
                 else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
@@ -657,6 +658,7 @@ namespace CityWatch.Web.Pages.roster
                 if (shiftType == "RegularAccepted") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "AdhocAccepted") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Accepted; }
                 else if (shiftType == "Declined") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Declined; }
+                else if (shiftType == "Missed") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Missed; }
                 else if (shiftType == "Cancelled") { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Cancelled; }
                 else if (shiftType == "Adhoc") { finalShiftType = "Adhoc"; finalStatus = RosterShiftStatus.Pushed; }
                 else { finalShiftType = "Regular"; finalStatus = RosterShiftStatus.Pushed; }
@@ -1295,7 +1297,7 @@ namespace CityWatch.Web.Pages.roster
             }
         }
 
-        public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false)
+        public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false, bool clearNames = false)
         {
             try
             {
@@ -1372,12 +1374,15 @@ namespace CityWatch.Web.Pages.roster
                         }
 
                         // Check for duplicate or existing shift to update (for Merge support)
+                        var checkGuardId = clearNames ? null : source.GuardId;
+                        var checkProviderName = clearNames ? null : source.ProviderName;
+
                         var existingShift = await _context.RosterSchedules.FirstOrDefaultAsync(x =>
                             x.RosterGroupId == groupId &&
                             x.ClientSiteId == source.ClientSiteId &&
                             x.ShiftStart == newStart &&
-                            x.GuardId == source.GuardId &&
-                            x.ProviderName == source.ProviderName &&
+                            x.GuardId == checkGuardId &&
+                            x.ProviderName == checkProviderName &&
                             x.CallsignId == source.CallsignId &&
                             !x.IsDeleted);
 
@@ -1387,17 +1392,17 @@ namespace CityWatch.Web.Pages.roster
                             {
                                 RosterGroupId = groupId,
                                 ClientSiteId = source.ClientSiteId,
-                                GuardId = source.GuardId,
-                                ProviderName = source.ProviderName,
+                                GuardId = checkGuardId,
+                                ProviderName = checkProviderName,
                                 ShiftStart = newStart,
                                 ShiftEnd = newEnd,
                                 Status = RosterShiftStatus.Pushed, // Reset status to Pushed for new shifts
                                 PayRateId = source.PayRateId,
                                 CallsignId = source.CallsignId,
-                                ReliefGuardId = source.ReliefGuardId,
-                                ReliefProviderName = source.ReliefProviderName,
-                                ReliefReason = source.ReliefReason,
-                                ReliefReasonOther = source.ReliefReasonOther,
+                                ReliefGuardId = clearNames ? null : source.ReliefGuardId,
+                                ReliefProviderName = clearNames ? null : source.ReliefProviderName,
+                                ReliefReason = clearNames ? null : source.ReliefReason,
+                                ReliefReasonOther = clearNames ? null : source.ReliefReasonOther,
                                 ShiftType = source.ShiftType
                             });
                         }
@@ -1405,10 +1410,10 @@ namespace CityWatch.Web.Pages.roster
                         {
                             // Update existing shift with relief details and type (Support for Preserving Relief on Merge)
                             existingShift.ShiftEnd = newEnd; // Sync end time if it changed
-                            existingShift.ReliefGuardId = source.ReliefGuardId;
-                            existingShift.ReliefProviderName = source.ReliefProviderName;
-                            existingShift.ReliefReason = source.ReliefReason;
-                            existingShift.ReliefReasonOther = source.ReliefReasonOther;
+                            existingShift.ReliefGuardId = clearNames ? null : source.ReliefGuardId;
+                            existingShift.ReliefProviderName = clearNames ? null : source.ReliefProviderName;
+                            existingShift.ReliefReason = clearNames ? null : source.ReliefReason;
+                            existingShift.ReliefReasonOther = clearNames ? null : source.ReliefReasonOther;
                             existingShift.ShiftType = source.ShiftType;
                         }
                     }
@@ -1708,6 +1713,11 @@ namespace CityWatch.Web.Pages.roster
             {
                 nextType = "Regular";
                 nextStatus = RosterShiftStatus.Declined;
+            }
+            else if (currentType == "Regular" && currentStatus == RosterShiftStatus.Declined)
+            {
+                nextType = "Regular";
+                nextStatus = RosterShiftStatus.Missed;
             }
             else
             {

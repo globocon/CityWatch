@@ -124,7 +124,9 @@ namespace CityWatch.Data.Services
 
                 foreach (var item in strikeLogs)
                 {
-                    item.LabelDescription = smartwandtags?.FirstOrDefault(z => z.UId == item.TagUId)?.LabelDescription ?? item.LabelDescription;
+                    var LabelNotDeleted = smartwandtags?.OrderByDescending(x => x.Id)?.FirstOrDefault(z => z.UId == item.TagUId && z.IsDeleted == false)?.LabelDescription ?? null;
+                    var LabelDeleted = smartwandtags?.OrderByDescending(x => x.Id)?.FirstOrDefault(z => z.UId == item.TagUId && z.IsDeleted == true)?.LabelDescription ?? null;
+                    item.LabelDescription = LabelNotDeleted ?? LabelDeleted ?? item.LabelDescription;
                     item.LoggedInUser.Password = null; // Hide user password
 
                     if (item.SmartWandId.HasValue && item.SmartWandId.Value > 0)

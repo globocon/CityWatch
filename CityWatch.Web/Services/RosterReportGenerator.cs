@@ -239,7 +239,29 @@ namespace CityWatch.Web.Services
                         // 2a. Project Cover
                         if (!string.IsNullOrEmpty(bp.RosterGroup.CoverFileName))
                         {
-                            AddFileToMerger(merger, "Projects", bp.RosterGroup.CoverFileName);
+                            bool isDuplicate = false;
+                            if (!string.IsNullOrEmpty(binder.CoverFileName))
+                            {
+                                string groupCoverPath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Groups", binder.CoverFileName);
+                                string projectCoverPath = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RosterCovers", "Projects", bp.RosterGroup.CoverFileName);
+                                
+                                if (File.Exists(groupCoverPath) && File.Exists(projectCoverPath))
+                                {
+                                    var groupInfo = new FileInfo(groupCoverPath);
+                                    var projectInfo = new FileInfo(projectCoverPath);
+                                    
+                                    // If the files are the exact same size, they are almost certainly the exact same uploaded file
+                                    if (groupInfo.Length == projectInfo.Length)
+                                    {
+                                        isDuplicate = true;
+                                    }
+                                }
+                            }
+
+                            if (!isDuplicate)
+                            {
+                                AddFileToMerger(merger, "Projects", bp.RosterGroup.CoverFileName);
+                            }
                         }
 
                         // 2b. Project Roster
@@ -479,10 +501,10 @@ namespace CityWatch.Web.Services
                                     if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
                                     if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
                                 }
-                                if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined)
+                                if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Declined || shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Missed)
                                 {
                                     var gName = shift.Guard?.Name ?? shift.ProviderName ?? "Unassigned";
-                                    var key = $"{gName} - Declined";
+                                    var key = $"{gName} - {(shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Missed ? "Missed" : "Declined")}";
                                     
                                     if (!absenceDict.ContainsKey(key)) absenceDict[key] = new List<string>();
                                     if (!absenceDict[key].Contains(dateStr)) absenceDict[key].Add(dateStr);
@@ -503,12 +525,14 @@ namespace CityWatch.Web.Services
                                 legendTable.AddCell(colorCell);
                                 legendTable.AddCell(textCell);
                             }
+                            AddLegendRow("Unassigned - UNKNOWN", new DeviceRgb(189, 189, 189));
                             AddLegendRow("Unassigned - FIXED", new DeviceRgb(255, 183, 77));
                             AddLegendRow("Unassigned - ADHOC", new DeviceRgb(255, 143, 0));
                             AddLegendRow("Accepted - FIXED", new DeviceRgb(144, 238, 144));
                             AddLegendRow("Accepted - ADHOC", new DeviceRgb(50, 205, 50));
                             AddLegendRow("Relief Guard (Accepted)", new DeviceRgb(111, 66, 193));
                             AddLegendRow("DECLINED (OPEN)", ColorConstants.BLACK);
+                            AddLegendRow("MISSED (inc LATE)", new DeviceRgb(66, 66, 66));
                             AddLegendRow("CANCELLED (CLOSED)", ColorConstants.RED, true);
                             siteCell.Add(legendTable);
                             
@@ -556,8 +580,11 @@ namespace CityWatch.Web.Services
                                     var rate = (rateType == "sell") ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
                                     var value = includeFinancials ? (duration * (double)rate) : duration;
                                     
-                                    dailyTotals[i] += value;
-                                    projectWeeklyGrandTotal += value;
+                                    if (shift.Status != CityWatch.Data.Enums.RosterShiftStatus.Cancelled && shift.Status != CityWatch.Data.Enums.RosterShiftStatus.Missed)
+                                    {
+                                        dailyTotals[i] += value;
+                                        projectWeeklyGrandTotal += value;
+                                    }
 
                                     var isRelief = shift.ReliefGuardId.HasValue || !string.IsNullOrEmpty(shift.ReliefProviderName);
                                     var bgColor = GetStatusColor(shift.Status);
@@ -571,6 +598,12 @@ namespace CityWatch.Web.Services
                                             bgColor = new DeviceRgb(255, 143, 0); // Dark Orange (#FF8F00)
                                     }
 
+                                    // Contractor / Provider Color Override
+                                    if (!string.IsNullOrEmpty(shift.ProviderName) && (shift.GuardId == null || shift.Guard?.Name == "External"))
+                                    {
+                                        bgColor = new DeviceRgb(189, 189, 189); // Light Grey
+                                    }
+
                                     var borderColor = ColorConstants.BLACK;
                                     var fontColor = ColorConstants.BLACK;
 
@@ -578,6 +611,13 @@ namespace CityWatch.Web.Services
                                     {
                                         fontColor = ColorConstants.WHITE;
                                         borderColor = ColorConstants.WHITE;
+                                    }
+                                    
+                                    if (shift.Status == CityWatch.Data.Enums.RosterShiftStatus.Missed)
+                                    {
+                                        fontColor = ColorConstants.WHITE;
+                                        borderColor = ColorConstants.WHITE;
+                                        bgColor = new DeviceRgb(66, 66, 66);
                                     }
 
                                     if (isRelief)
@@ -812,6 +852,8 @@ namespace CityWatch.Web.Services
                     return new DeviceRgb(144, 238, 144); // Light Green
                 case CityWatch.Data.Enums.RosterShiftStatus.Declined:
                     return new DeviceRgb(67, 67, 67); // Dark Gray
+                case CityWatch.Data.Enums.RosterShiftStatus.Missed:
+                    return new DeviceRgb(66, 66, 66); // Dark Gray
                 case CityWatch.Data.Enums.RosterShiftStatus.Cancelled:
                     return ColorConstants.WHITE;
                 case CityWatch.Data.Enums.RosterShiftStatus.Pushed:
