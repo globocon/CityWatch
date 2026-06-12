@@ -1,4 +1,4 @@
-﻿using CityWatch.Common.Models;
+using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -2304,5 +2304,24 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
+        public IActionResult OnGetGuardFqData(int guardId, int clientSiteId)
+        {
+            var detail = _guardLogDataProvider.GetActiveGuardDetails()
+                .FirstOrDefault(g => g.GuardId == guardId && g.ClientSiteId == clientSiteId);
+            
+            if (detail != null)
+            {
+                return new JsonResult(new { 
+                    patrolFqForDayOrHour = detail.PatrolFqForDayOrHour,
+                    haswandtags = detail.haswandtags 
+                });
+            }
+            return new JsonResult(null);
+        }
+
+        public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, int guardId)
+        {
+            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificGuard(clientSiteId, guardId));
+        }
     }
 }
