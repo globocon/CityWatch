@@ -1591,7 +1591,7 @@ namespace CityWatch.Web.Pages.Guard
         public IActionResult OnGetGuardFqData(int guardId, int clientSiteId)
         {
             var detail = _guardLogDataProvider.GetActiveGuardDetails()
-                .FirstOrDefault(g => g.ClientSiteId == clientSiteId);
+                .FirstOrDefault(g => g.GuardId == guardId && g.ClientSiteId == clientSiteId);
             
             if (detail != null)
             {
