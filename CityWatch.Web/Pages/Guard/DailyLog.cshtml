@@ -180,7 +180,7 @@ else
                                     @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
                                 </li>
                                 <li class="d-flex flex-sm-row flex-column flex-sm-wrap mt-1">
-                                    <b class="mr-1">Fq: </b><span id="guardFqDisplay"></span>
+                                    <b class="mr-1">Fq: </b><span id="guardFqDisplay">Loading...</span>
                                 </li>
                             </ul>
                         </div>
@@ -1362,9 +1362,7 @@ else
                                 <tr>
                                     <th>Type</th>
                                     <th>Label</th>
-                                    <th>Pending Fq</th>
                                     <th>Scans</th>
-                                    <th id="th_GuardScansHeader"></th>
                                 </tr>
                             </thead>
                         </table>

@@ -9817,8 +9817,8 @@ $(function () {
         $('#lbl_GuardActivityHeaderSWTagsInfoModal').text('Wand Tag Scan Details');
         $('#currentFrequencyDisplay').text('Fq : ' + currentFrequencyValue);
 
-        if (clientSiteActiveGuardsSWTagsDetails !== null) {
-            clientSiteActiveGuardsSWTagsDetails.destroy();
+        if ($.fn.DataTable.isDataTable('#clientSiteActiveGuardsSWTagsDetails')) {
+            $('#clientSiteActiveGuardsSWTagsDetails').DataTable().clear().destroy();
         }
 
         clientSiteActiveGuardsSWTagsDetails = $('#clientSiteActiveGuardsSWTagsDetails').DataTable({
@@ -9843,10 +9843,8 @@ $(function () {
             },
             columns: [
                 { data: 'tagType', width: '10%' },
-                { data: 'labelDescription', width: '60%' },
-                { data: 'roundNumber', width: '10%', className: "text-center" },
-                { data: 'todayScanCount', width: '10%', className: "text-center" },
-                { data: 'myScans', width: '10%', className: "text-center" }
+                { data: 'labelDescription', width: '70%' },
+                { data: 'todayScanCount', width: '20%', className: "text-center" }
             ]
         });
 
