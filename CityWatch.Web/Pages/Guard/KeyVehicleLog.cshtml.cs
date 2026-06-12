@@ -2321,7 +2321,7 @@ namespace CityWatch.Web.Pages.Guard
 
         public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, int guardId)
         {
-            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificClientSite(clientSiteId, DateTime.Now.Date, DateTime.Now.Date.AddDays(1).AddTicks(-1)));
+            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificGuard(clientSiteId, guardId));
         }
     }
 }
