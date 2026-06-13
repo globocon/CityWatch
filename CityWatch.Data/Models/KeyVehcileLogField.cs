@@ -30,6 +30,8 @@ namespace CityWatch.Data.Models
         CRMActivity,
         [Display(Name = "Cars (Stock)")]
         CarsStock,
+        [Display(Name = "Vehicle Brand")]
+        VehicleBrand,
     }
 
     public class KeyVehcileLogField

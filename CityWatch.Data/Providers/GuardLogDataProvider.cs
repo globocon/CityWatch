@@ -271,6 +271,7 @@ namespace CityWatch.Data.Providers
         //P4-79 MENU CORRECTIONS END
 
         List<string> GetTrailerRegosForKVL(string regoStart = null);
+        List<string> GetTrailerCarsRegosForKVL(string brandStart = null);
 
         List<TrailerDeatilsViewModel> GetKeyVehicleLogProfileDetails(string pattern);
         public KeyVehicleLogProfile GetKeyVehicleLogVisitorProfileUsingTrailerRigo(
@@ -1038,6 +1039,45 @@ namespace CityWatch.Data.Providers
                     _context.SaveChanges();
                 }
 
+                if (keyVehicleLog.IsCarsStock.HasValue && keyVehicleLog.IsCarsStock.Value)
+                {
+                    List<string> CarBrands = new List<string>();
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer1Rego)) { CarBrands.Add(keyVehicleLog.Trailer1Rego.ToUpper().Trim()); }
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer2Rego)) { CarBrands.Add(keyVehicleLog.Trailer2Rego.ToUpper().Trim()); }
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer3Rego)) { CarBrands.Add(keyVehicleLog.Trailer3Rego.ToUpper().Trim()); }
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer4Rego)) { CarBrands.Add(keyVehicleLog.Trailer4Rego.ToUpper().Trim()); }
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer5Rego)) { CarBrands.Add(keyVehicleLog.Trailer5Rego.ToUpper().Trim()); }
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer6Rego)) { CarBrands.Add(keyVehicleLog.Trailer6Rego.ToUpper().Trim()); }
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer7Rego)) { CarBrands.Add(keyVehicleLog.Trailer7Rego.ToUpper().Trim()); }
+                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer8Rego)) { CarBrands.Add(keyVehicleLog.Trailer8Rego.ToUpper().Trim()); }
+
+                    if (CarBrands.Any())
+                    {
+                        foreach (var brand in CarBrands.Distinct().ToList())
+                        {
+                            var alreadyexists = _context.KeyVehcileLogFields.Where(x => x.TypeId == KvlFieldType.VehicleBrand && x.IsDeleted == false && x.Name.ToUpper() == brand.ToUpper()).FirstOrDefault();
+                            if (alreadyexists == null)
+                            {
+                                KeyVehcileLogField kvlf = new KeyVehcileLogField()
+                                {
+                                    TypeId = KvlFieldType.VehicleBrand,
+                                    IsDeleted = false,
+                                    Name = brand
+                                };
+                                _context.KeyVehcileLogFields.Add(kvlf);
+                            }
+                        }
+                        try
+                        {
+                            _context.SaveChanges();
+                        }
+                        catch (Exception)
+                        {
+
+                        }
+                    }
+                }
+
             }
             catch (Exception ex)
             {
@@ -1454,14 +1494,63 @@ namespace CityWatch.Data.Providers
                .OrderBy(z => z)
                .ToList();
 
+            var trailer5Rego = _context.KeyVehicleLogVisitorProfiles
+               .Where(z => string.IsNullOrEmpty(regoStart) ||
+                           (!string.IsNullOrEmpty(z.Trailer5Rego) &&
+                               z.Trailer5Rego.Contains(regoStart)))
+               .Select(z => z.Trailer5Rego)
+               .Distinct()
+               .OrderBy(z => z)
+               .ToList();
+
+            var trailer6Rego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer6Rego) &&
+                                z.Trailer6Rego.Contains(regoStart)))
+                .Select(z => z.Trailer6Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer7Rego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer7Rego) &&
+                                z.Trailer7Rego.Contains(regoStart)))
+                .Select(z => z.Trailer7Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer8Rego = _context.KeyVehicleLogVisitorProfiles
+               .Where(z => string.IsNullOrEmpty(regoStart) ||
+                           (!string.IsNullOrEmpty(z.Trailer8Rego) &&
+                               z.Trailer8Rego.Contains(regoStart)))
+               .Select(z => z.Trailer8Rego)
+               .Distinct()
+               .OrderBy(z => z)
+               .ToList();
+
             newList.AddRange(trailerRego);
             newList.AddRange(trailer1Rego);
             newList.AddRange(trailer2Rego);
             newList.AddRange(trailer3Rego);
-            newList.AddRange(trailer3Rego);
+            newList.AddRange(trailer4Rego);
+            newList.AddRange(trailer5Rego);
+            newList.AddRange(trailer6Rego);
+            newList.AddRange(trailer7Rego);
+            newList.AddRange(trailer8Rego);
             return newList.Distinct().OrderBy(s => s.FirstOrDefault()).ToList();
         }
         ////taliler changes New change for Add rigo without plate number 21032024 dileep end*//
+
+        public List<string> GetTrailerCarsRegosForKVL(string brandStart = null)
+        {
+            var newList = new List<string>();
+            var CarBrands = _context.KeyVehcileLogFields.Where(x => x.TypeId == KvlFieldType.VehicleBrand &&
+                            (string.IsNullOrEmpty(brandStart) || (!string.IsNullOrEmpty(x.Name) && x.Name.Contains(brandStart))) && x.IsDeleted == false)
+                            .Select(z => z.Name).ToList();
+            newList.AddRange(CarBrands);
+            return newList.Distinct().OrderBy(s => s.FirstOrDefault()).ToList();
+        }
+
         public List<string> GetCompanyNames(string companyNameStart)
         {
             return _context.KeyVehicleLogVisitorPersonalDetails

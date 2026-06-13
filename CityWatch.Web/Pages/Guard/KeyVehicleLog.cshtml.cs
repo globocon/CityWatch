@@ -1243,6 +1243,11 @@ namespace CityWatch.Web.Pages.Guard
 
         }
 
+        public JsonResult OnGetTrailerCarsRegos(string regoPart)
+        {            
+            return new JsonResult(_guardLogDataProvider.GetTrailerCarsRegosForKVL(regoPart).ToList());
+        }
+
         public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
         {
 

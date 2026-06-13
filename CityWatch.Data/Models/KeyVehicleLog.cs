@@ -103,7 +103,7 @@ namespace CityWatch.Data.Models
         public int? ClientSiteLocationId { get; set; }
 
         public int? ClientSitePocId { get; set; }
-        
+
         public string ClientSitePocIdsVehicleLog { get; set; }
         public decimal? Reels { get; set; }
 
@@ -220,7 +220,67 @@ namespace CityWatch.Data.Models
                 {
                     errors.Add(new ValidationResult("ID No or Vehicle Registration or Trailer Rego is required"));
                 }
+            }
 
+            if (IsCarsStock.HasValue && IsCarsStock.Value)
+            {
+                var msg = "Vehicle colour selection is required in Car Stock";
+                if (!string.IsNullOrEmpty(Trailer1Rego))
+                {
+                    if (Trailer1PlateId == null || Trailer1PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 1."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer2Rego))
+                {
+                    if (Trailer2PlateId == null || Trailer2PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 2."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer3Rego))
+                {
+                    if (Trailer3PlateId == null || Trailer3PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 3."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer4Rego))
+                {
+                    if (Trailer4PlateId == null || Trailer4PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 4."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer5Rego))
+                {
+                    if (Trailer5PlateId == null || Trailer5PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 5."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer6Rego))
+                {
+                    if (Trailer6PlateId == null || Trailer6PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 6."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer7Rego))
+                {
+                    if (Trailer7PlateId == null || Trailer7PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 7."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer8Rego))
+                {
+                    if (Trailer8PlateId == null || Trailer8PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 8."));
+                    }
+                }
             }
 
             if (!string.IsNullOrEmpty(Trailer1Rego)
