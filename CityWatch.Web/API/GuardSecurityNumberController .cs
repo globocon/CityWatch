@@ -1845,6 +1845,13 @@ namespace CityWatch.Web.API
 
 
 
+        [HttpGet("TestLogs/{clientSiteId}")]
+        public IActionResult TestLogs(int clientSiteId)
+        {
+            var logs = _context.GuardLogs.Where(x => x.ClientSiteLogBook.ClientSiteId == clientSiteId).OrderByDescending(x => x.Id).Take(10).Select(x => new { x.Id, x.ClientSiteLogBookId, x.Notes, x.EventDateTime, x.IsIRReportTypeEntry }).ToList();
+            return Ok(logs);
+        }
+
         [HttpPost("ProcessIrSubmit")]
         public IActionResult ProcessIrSubmit([FromQuery] string gps, [FromQuery] int UserId, [FromQuery] int IRguardId,
             [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report, [FromQuery] string RequestDeviceType = "")
@@ -3860,9 +3867,22 @@ namespace CityWatch.Web.API
                     if (report.ClientSiteId.HasValue)
                         CreateGuardLogEntry(report, IRguardId, UserId, gps);
 
-                    if (IRclientSiteId > 0 && report.ClientSiteId.HasValue && IRclientSiteId != report.ClientSiteId.Value)
+                    // Attempt to find the actual Patrol Car site the guard is currently logged into
+                    int actualPatrolSiteId = IRclientSiteId;
+                    var patrolLogin = _context.GuardLogins
+                        .Include(g => g.ClientSiteLogBook.ClientSite.ClientType)
+                        .Where(g => g.GuardId == IRguardId)
+                        .OrderByDescending(g => g.Id)
+                        .FirstOrDefault(g => g.ClientSiteLogBook.ClientSite.ClientType.Name.Contains("Patrol") && g.OnDuty >= DateTime.Now.AddHours(-16));
+
+                    if (patrolLogin != null)
                     {
-                        CreatePatrolCarGuardLogEntry(report, IRclientSiteId, IRguardId, UserId, gps);
+                        actualPatrolSiteId = patrolLogin.ClientSiteId;
+                    }
+
+                    if (actualPatrolSiteId > 0 && report.ClientSiteId.HasValue && actualPatrolSiteId != report.ClientSiteId.Value)
+                    {
+                        CreatePatrolCarGuardLogEntry(report, actualPatrolSiteId, IRguardId, UserId, gps);
                     }
 
                     CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
