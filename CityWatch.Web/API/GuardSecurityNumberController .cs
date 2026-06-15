@@ -167,7 +167,7 @@ namespace CityWatch.Web.API
             var LiveEventsNotExpired = _configDataProvider.GetBroadcastLiveEventsNotExpired();
             var LiveEventsNotExpiredUrls = _configDataProvider.GetUrlsInsideBroadcastLiveEventsNotExpired();
             var LiveEventsweblink = _configDataProvider.GetBroadcastLiveEventsWeblink();
-            
+
 
             //HRList Status start 
             var HR1 = "Grey";
@@ -185,7 +185,7 @@ namespace CityWatch.Web.API
 
                         // Group document statuses by GroupName for faster lookups
                         var statusLookup = hrGroupStatusesNew.ToLookup(x => x.GroupName.Trim());
-                       
+
 
                         // Set HR1Status
                         var HR1List = statusLookup["HR 1 (C4i)"];
@@ -225,7 +225,7 @@ namespace CityWatch.Web.API
                     }
                 }
 
-                
+
             }
 
             return Ok(new
@@ -398,10 +398,13 @@ namespace CityWatch.Web.API
             var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
 
             var message = new MimeMessage();
-            if (fromAddress.Length > 1) {
-                 message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-            } else {
-                 message.From.Add(new MailboxAddress(fromAddress[0], fromAddress[0]));
+            if (fromAddress.Length > 1)
+            {
+                message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            }
+            else
+            {
+                message.From.Add(new MailboxAddress(fromAddress[0], fromAddress[0]));
             }
 
             if (emailAddresses != null && emailAddresses != "")
@@ -719,12 +722,12 @@ namespace CityWatch.Web.API
                 // Metadata lists like ClientSites and FeedbackTemplates are served from RAM 
                 // to reduce SQL load during high-concurrency login events.
                 if (!_memoryCache.TryGetValue(cacheKey, out (
-                    List<DropdownItem> clientTypes, 
-                    List<ClientSiteDto> clientSites, 
-                    List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates, 
-                    List<string> notifiedByList, 
-                    List<SelectListItem> areas, 
-                    List<Mp3File> audio, 
+                    List<DropdownItem> clientTypes,
+                    List<ClientSiteDto> clientSites,
+                    List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates,
+                    List<string> notifiedByList,
+                    List<SelectListItem> areas,
+                    List<Mp3File> audio,
                     List<Mp3File> multimedia) cachedData))
                 {
                     List<DropdownItem> cache_clientTypes = new List<DropdownItem>();
@@ -2163,7 +2166,7 @@ namespace CityWatch.Web.API
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
             }
-            
+
             // Add CC from Position if not already added
             var clientSitePosition = _clientDataProvider?.GetClientSitePosition(Report?.Officer?.Position);
             if (clientSitePosition != null && !string.IsNullOrWhiteSpace(clientSitePosition.EmailTo))
@@ -3681,7 +3684,7 @@ namespace CityWatch.Web.API
                 var result = GetCoordinatesFromAddress(Report.DateLocation.ClientAddress);
                 Report.DateLocation.ClientSiteLiveGps = result.Latitude + "," + result.Longitude;
             }
-            else if(Report?.DateLocation ?.IsUnknownGpsLocationAddress == true && string.IsNullOrEmpty(Report?.DateLocation?.ClientSiteLiveGps ?? string.Empty))
+            else if (Report?.DateLocation?.IsUnknownGpsLocationAddress == true && string.IsNullOrEmpty(Report?.DateLocation?.ClientSiteLiveGps ?? string.Empty))
             {
                 Report.DateLocation.ClientSiteLiveGps = gps;
             }
@@ -3864,32 +3867,63 @@ namespace CityWatch.Web.API
 
                 try
                 {
+
                     if (report.ClientSiteId.HasValue)
                         CreateGuardLogEntry(report, IRguardId, UserId, gps);
+                        CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
 
-                    // Attempt to find the actual Patrol Car site the guard is currently logged into
-                    int actualPatrolSiteId = IRclientSiteId;
-                    var patrolLogin = _context.GuardLogins
-                        .Include(g => g.ClientSiteLogBook.ClientSite)
-                        .Where(g => g.GuardId == IRguardId && g.ClientSiteLogBook.ClientSite.PatrolTourMode == CityWatch.Data.Enums.PatrolTouringMode.PCAR)
-                        .OrderByDescending(g => g.Id)
-                        .FirstOrDefault(g => g.OnDuty >= DateTime.Now.AddHours(-16));
-
-                    if (patrolLogin != null)
+                    if (report.ClientSitePositionId.HasValue)
                     {
-                        actualPatrolSiteId = patrolLogin.ClientSiteId;
+                        //CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
+
+
+                        // Attempt to find the actual Patrol Car site the guard is currently logged into
+                        int actualPatrolSiteId = IRclientSiteId;
+                        var patrolLogin = _context.GuardLogins
+                            .Include(g => g.ClientSiteLogBook.ClientSite)
+                            .Where(g => g.GuardId == IRguardId && g.ClientSiteLogBook.ClientSite.PatrolTourMode == CityWatch.Data.Enums.PatrolTouringMode.PCAR)
+                            .OrderByDescending(g => g.Id)
+                            .FirstOrDefault(g => g.OnDuty >= DateTime.Now.AddHours(-16));
+
+                        if (patrolLogin != null)
+                        {
+                            actualPatrolSiteId = patrolLogin.ClientSiteId;
+                        }
+
+                        if (actualPatrolSiteId > 0 && report.ClientSiteId.HasValue && actualPatrolSiteId != report.ClientSiteId.Value)
+                        {
+                            CreatePatrolCarGuardLogEntry(report, actualPatrolSiteId, IRguardId, UserId, gps);
+                        }
                     }
 
-                    if (actualPatrolSiteId > 0 && report.ClientSiteId.HasValue && actualPatrolSiteId != report.ClientSiteId.Value)
-                    {
-                        CreatePatrolCarGuardLogEntry(report, actualPatrolSiteId, IRguardId, UserId, gps);
-                    }
+                    //if (report.ClientSiteId.HasValue)
+                    //    CreateGuardLogEntry(report, IRguardId, UserId, gps);
 
-                    CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
-                    if (report.ClientSitePositionId.HasValue && report.ClientSitePositionId.Value != report.ClientSiteId && report.ClientSitePositionId.Value != actualPatrolSiteId)
-                    {
-                        CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
-                    }
+                    //// Attempt to find the actual Patrol Car site the guard is currently logged into
+                    //int actualPatrolSiteId = IRclientSiteId;
+                    //var patrolLogin = _context.GuardLogins
+                    //    .Include(g => g.ClientSiteLogBook.ClientSite)
+                    //    .Where(g => g.GuardId == IRguardId && g.ClientSiteLogBook.ClientSite.PatrolTourMode == CityWatch.Data.Enums.PatrolTouringMode.PCAR)
+                    //    .OrderByDescending(g => g.Id)
+                    //    .FirstOrDefault(g => g.OnDuty >= DateTime.Now.AddHours(-16));
+
+                    //if (patrolLogin != null)
+                    //{
+                    //    actualPatrolSiteId = patrolLogin.ClientSiteId;
+                    //}
+
+                    //if (actualPatrolSiteId > 0 && report.ClientSiteId.HasValue && actualPatrolSiteId != report.ClientSiteId.Value)
+                    //{
+                    //    CreatePatrolCarGuardLogEntry(report, actualPatrolSiteId, IRguardId, UserId, gps);
+                    //}
+
+                    //CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
+
+
+                    //if (report.ClientSitePositionId.HasValue && report.ClientSitePositionId.Value != report.ClientSiteId && report.ClientSitePositionId.Value != actualPatrolSiteId)
+                    //{
+                    //    CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
+                    //}
 
 
                 }
@@ -4646,7 +4680,7 @@ namespace CityWatch.Web.API
 
                         shift.ReliefGuardId = model.CallingGuardId;
                         shift.Status = RosterShiftStatus.Accepted;
-                        
+
                         var callingGuard = await _context.Guards.FindAsync(model.CallingGuardId);
                         if (callingGuard != null)
                         {
@@ -4657,7 +4691,7 @@ namespace CityWatch.Web.API
                         // but we could append that it was picked up via mobile
                         if (string.IsNullOrEmpty(shift.ReliefReason))
                         {
-                             shift.ReliefReason = "Relief Guard assigned via Mobile";
+                            shift.ReliefReason = "Relief Guard assigned via Mobile";
                         }
                     }
                     else
@@ -4670,7 +4704,7 @@ namespace CityWatch.Web.API
                 {
                     bool canDecline = false;
                     string unauthorizedMessage = "You are not authorized to decline this shift.";
-                    
+
                     if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId > 0)
                     {
                         // If a relief guard is assigned, ONLY the relief guard can decline it
@@ -4692,7 +4726,7 @@ namespace CityWatch.Web.API
                     {
                         shift.Status = RosterShiftStatus.Declined;
                         shift.ReliefReason = model.Reason; // Save the guard's reason for cancellation
-                        
+
                         // If the cancelling guard is the relief guard, clear the relief guard details
                         // so the shift becomes open for other guards to accept.
                         if (shift.ReliefGuardId.HasValue && shift.ReliefGuardId == model.CallingGuardId)
@@ -4743,7 +4777,7 @@ namespace CityWatch.Web.API
                         details = $"Guard declined shift with reason: {model.Reason}";
                         if (shift.ReliefGuardId == null && model.NewStatus == RosterShiftStatus.Declined && oldStatus == (int)RosterShiftStatus.Accepted)
                         {
-                             // This is a bit tricky to detect after save, but we can infer
+                            // This is a bit tricky to detect after save, but we can infer
                         }
                     }
 
