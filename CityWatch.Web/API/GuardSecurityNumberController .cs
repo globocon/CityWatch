@@ -1464,16 +1464,23 @@ namespace CityWatch.Web.API
             var fields = _configDataProvider?.GetReportFields()?.ToList() ?? new List<IncidentReportField>();
 
 
-            void AddIfValid(string email)
+            void AddIfValid(string emailAddresses)
             {
-                if (!string.IsNullOrWhiteSpace(email) &&
-                    MailboxAddress.TryParse(email.Trim(), out var mailbox))
+                if (!string.IsNullOrWhiteSpace(emailAddresses))
                 {
-                    emailAddressList.Add(mailbox);
+                    foreach (var email in emailAddresses.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var trimmedEmail = email.Trim();
+                        if (!string.IsNullOrWhiteSpace(trimmedEmail))
+                        {
+                            emailAddressList.Add(new MailboxAddress(string.Empty, trimmedEmail));
+                        }
+                    }
                 }
             }
 
-            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.Position, Report?.Officer?.Position));
+            var positionEmailTo = GetFieldEmailAddress(fields, ReportFieldType.Position, Report?.Officer?.Position);
+            AddIfValid(positionEmailTo);
             AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.NotifiedBy, Report?.Officer?.NotifiedBy));
             AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report?.Officer?.CallSign));
             AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report?.DateLocation?.ClientArea));
@@ -1483,7 +1490,8 @@ namespace CityWatch.Web.API
 
         private static string GetFieldEmailAddress(List<IncidentReportField> fields, ReportFieldType type, string fieldValue)
         {
-            return fields.SingleOrDefault(x => x.TypeId == type && x.Name == fieldValue)?.EmailTo;
+            if (string.IsNullOrWhiteSpace(fieldValue)) return null;
+            return fields.FirstOrDefault(x => x.TypeId == type && string.Equals(x.Name?.Trim(), fieldValue.Trim(), StringComparison.OrdinalIgnoreCase))?.EmailTo;
         }
 
         [HttpGet("GetDuressStatus")]
@@ -2112,6 +2120,25 @@ namespace CityWatch.Web.API
                 {
                     if (CommonHelper.IsValidEmail(email))
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                }
+            }
+            
+            // Add CC from Position if not already added
+            var clientSitePosition = _clientDataProvider?.GetClientSitePosition(Report?.Officer?.Position);
+            if (clientSitePosition != null && !string.IsNullOrWhiteSpace(clientSitePosition.EmailTo))
+            {
+                foreach (var email in clientSitePosition.EmailTo.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var trimmedEmail = email.Trim();
+                    if (CommonHelper.IsValidEmail(trimmedEmail))
+                    {
+                        bool existsInTo = message.To.Mailboxes.Any(m => string.Equals(m.Address, trimmedEmail, StringComparison.OrdinalIgnoreCase));
+                        bool existsInCc = message.Cc.Mailboxes.Any(m => string.Equals(m.Address, trimmedEmail, StringComparison.OrdinalIgnoreCase));
+                        if (!existsInTo && !existsInCc)
+                        {
+                            message.Cc.Add(new MailboxAddress(string.Empty, trimmedEmail));
+                        }
+                    }
                 }
             }
             if (Report.SiteColourCodeId != 0 && Report.SiteColourCodeId != null)

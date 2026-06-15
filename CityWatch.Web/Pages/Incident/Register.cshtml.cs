@@ -704,6 +704,25 @@ namespace CityWatch.Web.Pages.Incident
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
             }
+            
+            // Add CC from Position if not already added
+            var clientSitePosition = _clientDataProvider?.GetClientSitePosition(Report?.Officer?.Position);
+            if (clientSitePosition != null && !string.IsNullOrWhiteSpace(clientSitePosition.EmailTo))
+            {
+                foreach (var email in clientSitePosition.EmailTo.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var trimmedEmail = email.Trim();
+                    if (CommonHelper.IsValidEmail(trimmedEmail))
+                    {
+                        bool existsInTo = message.To.Mailboxes.Any(m => string.Equals(m.Address, trimmedEmail, StringComparison.OrdinalIgnoreCase));
+                        bool existsInCc = message.Cc.Mailboxes.Any(m => string.Equals(m.Address, trimmedEmail, StringComparison.OrdinalIgnoreCase));
+                        if (!existsInTo && !existsInCc)
+                        {
+                            message.Cc.Add(new MailboxAddress(string.Empty, trimmedEmail));
+                        }
+                    }
+                }
+            }
 
             message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}";
 
@@ -862,6 +881,25 @@ namespace CityWatch.Web.Pages.Incident
                 {
                     if (CommonHelper.IsValidEmail(email))
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                }
+            }
+            
+            // Add CC from Position if not already added
+            var clientSitePosition = _clientDataProvider?.GetClientSitePosition(Report?.Officer?.Position);
+            if (clientSitePosition != null && !string.IsNullOrWhiteSpace(clientSitePosition.EmailTo))
+            {
+                foreach (var email in clientSitePosition.EmailTo.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var trimmedEmail = email.Trim();
+                    if (CommonHelper.IsValidEmail(trimmedEmail))
+                    {
+                        bool existsInTo = message.To.Mailboxes.Any(m => string.Equals(m.Address, trimmedEmail, StringComparison.OrdinalIgnoreCase));
+                        bool existsInCc = message.Cc.Mailboxes.Any(m => string.Equals(m.Address, trimmedEmail, StringComparison.OrdinalIgnoreCase));
+                        if (!existsInTo && !existsInCc)
+                        {
+                            message.Cc.Add(new MailboxAddress(string.Empty, trimmedEmail));
+                        }
+                    }
                 }
             }
             if (Report.SiteColourCodeId != 0  && Report.SiteColourCodeId!=null) {
@@ -1052,28 +1090,34 @@ namespace CityWatch.Web.Pages.Incident
             emailAddressList.Add(new MailboxAddress(toAddress[1], toAddress[0]));
             var fields = _configDataProvider.GetReportFields().ToList();
 
+            void AddIfValid(string emailAddresses)
+            {
+                if (!string.IsNullOrWhiteSpace(emailAddresses))
+                {
+                    foreach (var email in emailAddresses.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var trimmedEmail = email.Trim();
+                        if (!string.IsNullOrWhiteSpace(trimmedEmail))
+                        {
+                            emailAddressList.Add(new MailboxAddress(string.Empty, trimmedEmail));
+                        }
+                    }
+                }
+            }
+
             var positionEmailTo = GetFieldEmailAddress(fields, ReportFieldType.Position, Report.Officer.Position);
-            if (!string.IsNullOrEmpty(positionEmailTo))
-                emailAddressList.Add(new MailboxAddress(string.Empty, positionEmailTo));
-
-            var notifiedByEmailTo = GetFieldEmailAddress(fields, ReportFieldType.NotifiedBy, Report.Officer.NotifiedBy);
-            if (!string.IsNullOrEmpty(notifiedByEmailTo))
-                emailAddressList.Add(new MailboxAddress(string.Empty, notifiedByEmailTo));
-
-            var callSignEmailTo = GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report.Officer.CallSign);
-            if (!string.IsNullOrEmpty(callSignEmailTo))
-                emailAddressList.Add(new MailboxAddress(string.Empty, callSignEmailTo));
-            var areaEmailTo = GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report.DateLocation.ClientArea);
-            if (!string.IsNullOrEmpty(areaEmailTo))
-                emailAddressList.Add(new MailboxAddress(string.Empty, areaEmailTo));
-
+            AddIfValid(positionEmailTo);
+            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.NotifiedBy, Report.Officer.NotifiedBy));
+            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report.Officer.CallSign));
+            AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report.DateLocation.ClientArea));
 
             return emailAddressList;
         }
 
         private static string GetFieldEmailAddress(List<IncidentReportField> fields, ReportFieldType type, string fieldValue)
         {
-            return fields.SingleOrDefault(x => x.TypeId == type && x.Name == fieldValue)?.EmailTo;
+            if (string.IsNullOrWhiteSpace(fieldValue)) return null;
+            return fields.FirstOrDefault(x => x.TypeId == type && string.Equals(x.Name?.Trim(), fieldValue.Trim(), StringComparison.OrdinalIgnoreCase))?.EmailTo;
         }
 
         private string GetNextIrSequenceNumber()
