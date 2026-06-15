@@ -1845,11 +1845,11 @@ namespace CityWatch.Web.API
 
 
 
-        [HttpGet("TestLogs/{clientSiteId}")]
-        public IActionResult TestLogs(int clientSiteId)
+        [HttpGet("TestLogs")]
+        public IActionResult TestLogs()
         {
-            var logs = _context.GuardLogs.Where(x => x.ClientSiteLogBook.ClientSiteId == clientSiteId).OrderByDescending(x => x.Id).Take(10).Select(x => new { x.Id, x.ClientSiteLogBookId, x.Notes, x.EventDateTime, x.IsIRReportTypeEntry }).ToList();
-            return Ok(logs);
+            var sites = _context.ClientSites.Where(x => x.Name.Contains("Romeo") || x.Id == 10).Select(x => new { x.Id, x.Name, x.PatrolTourMode }).ToList();
+            return Ok(sites);
         }
 
         [HttpPost("ProcessIrSubmit")]
@@ -3870,10 +3870,10 @@ namespace CityWatch.Web.API
                     // Attempt to find the actual Patrol Car site the guard is currently logged into
                     int actualPatrolSiteId = IRclientSiteId;
                     var patrolLogin = _context.GuardLogins
-                        .Include(g => g.ClientSiteLogBook.ClientSite.ClientType)
-                        .Where(g => g.GuardId == IRguardId)
+                        .Include(g => g.ClientSiteLogBook.ClientSite)
+                        .Where(g => g.GuardId == IRguardId && g.ClientSiteLogBook.ClientSite.PatrolTourMode == CityWatch.Data.Enums.PatrolTouringMode.PCAR)
                         .OrderByDescending(g => g.Id)
-                        .FirstOrDefault(g => g.ClientSiteLogBook.ClientSite.ClientType.Name.Contains("Patrol") && g.OnDuty >= DateTime.Now.AddHours(-16));
+                        .FirstOrDefault(g => g.OnDuty >= DateTime.Now.AddHours(-16));
 
                     if (patrolLogin != null)
                     {
