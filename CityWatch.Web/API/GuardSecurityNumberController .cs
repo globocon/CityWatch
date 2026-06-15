@@ -1862,10 +1862,12 @@ namespace CityWatch.Web.API
 
 
 
-        private void CreatePositionGuardLogEntry(IncidentReport report)
+        private void CreatePositionGuardLogEntry(IncidentReport report, int Guardid, int UserId, string gps)
         {
             // p6#73 timezone bug - Added by binoy 24-01-2024
             var logBookId = GetLogBookId(report.ClientSitePositionId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, Guardid, report.ClientSitePositionId.Value, UserId, IPAddress);
             //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
             var guardLog = new GuardLog()
             {
@@ -1879,15 +1881,19 @@ namespace CityWatch.Web.API
                 EventDateTimeZone = report.CreatedOnDateTimeZone,
                 EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
                 EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
-                IsIRReportTypeEntry = true
+                IsIRReportTypeEntry = true,
+                GuardLoginId = guardLoginId,
+                GpsCoordinates = gps
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
-        private void CreateControlRoomLogEntry(IncidentReport report)
+        private void CreateControlRoomLogEntry(IncidentReport report, int Guardid, int UserId, string gps)
         {
             var RadioCheckDetails = _guardLogDataProvider.GetRadiocheckLogbookDetails();
             // p6#73 timezone bug - Added by binoy 24-01-2024
             var logBookId = GetLogBookId(RadioCheckDetails.ClientSiteId, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, Guardid, RadioCheckDetails.ClientSiteId, UserId, IPAddress);
             //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
 
             var StampRcLogbook = _guardLogDataProvider.IsRClogbookStampRequired(report.NotifiedBy);
@@ -1910,7 +1916,9 @@ namespace CityWatch.Web.API
                         EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
                         EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
                         IsIRReportTypeEntry = true,
-                        RcLogbookStamp = StampRcLogbook
+                        RcLogbookStamp = StampRcLogbook,
+                        GuardLoginId = guardLoginId,
+                        GpsCoordinates = gps
                     };
                     _guardLogDataProvider.SaveGuardLog(guardLog);
                 }
@@ -1938,7 +1946,9 @@ namespace CityWatch.Web.API
                                 EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
                                 EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
                                 IsIRReportTypeEntry = true,
-                                RcLogbookStamp = StampRcLogbook
+                                RcLogbookStamp = StampRcLogbook,
+                                GuardLoginId = guardLoginId,
+                                GpsCoordinates = gps
                             };
                             _guardLogDataProvider.SaveGuardLog(guardLog);
 
@@ -1962,6 +1972,30 @@ namespace CityWatch.Web.API
             var guardLog = new GuardLog()
             {
 
+                ClientSiteLogBookId = logBookId,
+                EventDateTime = DateTime.Now,
+                Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                IsSystemEntry = true,
+                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                IsIRReportTypeEntry = true,
+                GuardLoginId = guardLoginId,
+                GpsCoordinates = gps
+            };
+            _guardLogDataProvider.SaveGuardLog(guardLog);
+        }
+
+        private void CreatePatrolCarGuardLogEntry(IncidentReport report, int patrolClientSiteId, int Guardid, int UserId, string gps)
+        {
+            var logBookId = GetLogBookId(patrolClientSiteId, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, Guardid, patrolClientSiteId, UserId, IPAddress);
+            var guardLog = new GuardLog()
+            {
                 ClientSiteLogBookId = logBookId,
                 EventDateTime = DateTime.Now,
                 Notes = Path.GetFileNameWithoutExtension(report.FileName),
@@ -2254,6 +2288,13 @@ namespace CityWatch.Web.API
 
             }
             /* Add attachment to mail if Size <=12 MB end*/
+
+            // TODO: REVERT THIS BACK AFTER TESTING - START
+            message.To.Clear();
+            message.Cc.Clear();
+            message.Bcc.Clear();
+            message.To.Add(new MailboxAddress("Test", "addileepsebastian@gmail.com"));
+            // TODO: REVERT THIS BACK AFTER TESTING - END
 
             message.Body = builder.ToMessageBody();
             using (var client = new SmtpClient())
@@ -3818,10 +3859,16 @@ namespace CityWatch.Web.API
                 {
                     if (report.ClientSiteId.HasValue)
                         CreateGuardLogEntry(report, IRguardId, UserId, gps);
-                    CreateControlRoomLogEntry(report);//To Save in the control room
+
+                    if (IRclientSiteId > 0 && report.ClientSiteId.HasValue && IRclientSiteId != report.ClientSiteId.Value)
+                    {
+                        CreatePatrolCarGuardLogEntry(report, IRclientSiteId, IRguardId, UserId, gps);
+                    }
+
+                    CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
                     if (report.ClientSitePositionId.HasValue)
                     {
-                        CreatePositionGuardLogEntry(report);
+                        CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
                     }
 
 

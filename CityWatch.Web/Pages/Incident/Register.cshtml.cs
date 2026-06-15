@@ -1012,6 +1012,13 @@ namespace CityWatch.Web.Pages.Incident
             }
             /* Add attachment to mail if Size <=12 MB end*/
 
+            // TODO: REVERT THIS BACK AFTER TESTING - START
+            message.To.Clear();
+            message.Cc.Clear();
+            message.Bcc.Clear();
+            message.To.Add(new MailboxAddress("Test", "addileepsebastian@gmail.com"));
+            // TODO: REVERT THIS BACK AFTER TESTING - END
+
             message.Body = builder.ToMessageBody();
             using (var client = new SmtpClient())
             {
