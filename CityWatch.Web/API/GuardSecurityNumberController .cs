@@ -3886,7 +3886,7 @@ namespace CityWatch.Web.API
                     }
 
                     CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
-                    if (report.ClientSitePositionId.HasValue)
+                    if (report.ClientSitePositionId.HasValue && report.ClientSitePositionId.Value != report.ClientSiteId && report.ClientSitePositionId.Value != actualPatrolSiteId)
                     {
                         CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
                     }
