@@ -3688,7 +3688,7 @@ namespace CityWatch.Web.API
                 CreatedOnDateTimeZoneShort = isOffline ? Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort : TimeZoneHelper.GetCurrentTimeZoneShortName(),
                 CreatedOnDateTimeUtcOffsetMinute = isOffline ? Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute : TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
                 HASH = hashCode,
-                ClientSitePositionId = clientSitePosition?.ClientsiteId,
+                ClientSitePositionId = clientSitePosition?.Id,
                 GuardId = IRguardId,
 
             };
