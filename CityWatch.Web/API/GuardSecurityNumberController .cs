@@ -2091,6 +2091,15 @@ namespace CityWatch.Web.API
             var subject = _emailOptions.Subject;
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+
+            // =========================================================================
+            // TEST MODE FOR MOBILE APP
+            // We want to turn off live mail sending and forward to addileepsebastian@gmail.com
+            // TODO: REMEMBER TO REVERT THIS BACK TO LIVE AFTER TESTING IS FINISHED!
+            // =========================================================================
+            message.To.Add(new MimeKit.MailboxAddress(String.Empty, "addileepsebastian@gmail.com"));
+
+            /* --- COMMENTED OUT FOR TESTING ---
             foreach (var address in GetToEmailAddressListIr(toAddress, Report))
                 message.To.Add(address);
             if (Report.DateLocation.ReimbursementYes)
@@ -2099,10 +2108,10 @@ namespace CityWatch.Web.API
                     message.Cc.Add(new MimeKit.MailboxAddress(String.Empty, address));
             }
 
-            /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
+            // Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023)
             //message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
             // message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
-            /* Mail Id added Bcc globoconsoftware end */
+            // Mail Id added Bcc globoconsoftware end 
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
 
             if (clientSite != null && !string.IsNullOrEmpty(clientSite.Emails))
@@ -2113,6 +2122,7 @@ namespace CityWatch.Web.API
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
             }
+            --- END OF LIVE EMAIL RECIPIENTS --- */
             if (Report.SiteColourCodeId != 0 && Report.SiteColourCodeId != null)
             {
                 string colorcodes = _viewDataService.GetFeedbackTemplatesByTypeByColor(3, Convert.ToInt32(Report.SiteColourCodeId));
