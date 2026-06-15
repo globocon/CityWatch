@@ -5137,7 +5137,9 @@ namespace CityWatch.Web.API
             try
             {
                 var filter = isPatrolCar ? CityWatch.Web.Services.OfficerPositionFilter.PatrolOnly : CityWatch.Web.Services.OfficerPositionFilter.NonPatrolOnly;
-                var positions = _viewDataService.GetOfficerPositionsNew(filter);
+                var positions = _viewDataService.GetOfficerPositionsNew(filter)
+                    .Select(x => new { Id = int.TryParse(x.Value, out int id) ? id : 0, Name = x.Text })
+                    .ToList();
                 return Ok(positions);
             }
             catch (Exception ex)
