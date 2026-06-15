@@ -5132,11 +5132,12 @@ namespace CityWatch.Web.API
 
         // [FIX]: Added endpoint for Mobile App to retrieve Officer Positions
         [HttpGet("GetOfficerPositions")]
-        public IActionResult GetOfficerPositions()
+        public IActionResult GetOfficerPositions([FromQuery] bool isPatrolCar = false)
         {
             try
             {
-                var positions = _viewDataService.GetOfficerPositionsNew(CityWatch.Web.Services.OfficerPositionFilter.All);
+                var filter = isPatrolCar ? CityWatch.Web.Services.OfficerPositionFilter.PatrolOnly : CityWatch.Web.Services.OfficerPositionFilter.NonPatrolOnly;
+                var positions = _viewDataService.GetOfficerPositionsNew(filter);
                 return Ok(positions);
             }
             catch (Exception ex)
