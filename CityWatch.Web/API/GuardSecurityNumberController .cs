@@ -5158,6 +5158,22 @@ namespace CityWatch.Web.API
             return activity;
         }
 
+        [HttpGet("GetCallsigns")]
+        public IActionResult GetCallsigns()
+        {
+            try
+            {
+                var callsigns = _configDataProvider.GetReportFieldsByType(ReportFieldType.CallSign)
+                    .Select(x => new { Id = x.Id, Name = x.Name })
+                    .ToList();
+                return Ok(callsigns);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         // [FIX]: Added endpoint for Mobile App to retrieve Officer Positions
         [HttpGet("GetOfficerPositions")]
         public IActionResult GetOfficerPositions([FromQuery] bool isPatrolCar = false)
