@@ -3547,14 +3547,16 @@ namespace CityWatch.Web.API
                 LastName = lastName,
                 Gender = GuardDetails.Gender,
                 Phone = GuardDetails.Mobile,
-                Position = string.Empty,
+                // [FIX]: Preserve the Mobile App's selected Position
+                Position = Report.Officer?.Position ?? string.Empty,
                 Email = GuardDetails.Email,
                 LicenseNumber = GuardDetails.SecurityNo,
                 LicenseState = GuardDetails.State,
-                CallSign = string.Empty,
-                Billing = string.Empty,
-                GuardMonth = Report.Officer.GuardMonth,
-                NotifiedBy = Report.Officer.NotifiedBy
+                // [FIX]: Preserve the Mobile App's inputted Callsign
+                CallSign = Report.Officer?.CallSign ?? string.Empty,
+                Billing = Report.Officer?.Billing ?? string.Empty,
+                GuardMonth = Report.Officer?.GuardMonth,
+                NotifiedBy = Report.Officer?.NotifiedBy
             };
             /* specific for mobile app Android*/
             Report.WebVersion = false;
@@ -3594,7 +3596,7 @@ namespace CityWatch.Web.API
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
 
-            var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report.Officer.Position);
+            var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report?.Officer?.Position);
 
 
             //live map settings 
@@ -3654,7 +3656,8 @@ namespace CityWatch.Web.API
                          (Report?.EventType?.Emergency ?? false),
                 OccurNo = Report?.OccurrenceNo ?? string.Empty,
                 ActionTaken = Report?.Feedback ?? string.Empty,
-                IsPatrol = Report?.IsPositionPatrolCar ?? false,
+                // [FIX]: Automatically apply Patrol flag from DB config
+                IsPatrol = (Report?.IsPositionPatrolCar ?? false) || (clientSitePosition?.IsPatrolCar ?? false),
                 Position = Report?.Officer?.Position ?? string.Empty,
                 ClientArea = Report?.DateLocation?.ClientArea ?? string.Empty,
                 SerialNo = Report?.SerialNumber ?? string.Empty,
@@ -5125,6 +5128,21 @@ namespace CityWatch.Web.API
         {
             var activity = _viewDataService.GetDressAppFieldsAudio(type);
             return activity;
+        }
+
+        // [FIX]: Added endpoint for Mobile App to retrieve Officer Positions
+        [HttpGet("GetOfficerPositions")]
+        public IActionResult GetOfficerPositions()
+        {
+            try
+            {
+                var positions = _viewDataService.GetOfficerPositionsNew(CityWatch.Web.Services.OfficerPositionFilter.All);
+                return Ok(positions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
     }
