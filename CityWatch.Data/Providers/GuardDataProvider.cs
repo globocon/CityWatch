@@ -863,7 +863,8 @@ namespace CityWatch.Data.Providers
                         {
                             guardComplianceandlicense.HrSettingsId = guardComplianceToUpdate.HrSettingsId;
                         }
-                        else if (!string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
+                        
+                        if (guardComplianceandlicense.HrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
                         {
                             var cleanDesc = guardComplianceandlicense.Description.ToLower().Trim();
                             var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => cleanDesc == s.Description.ToLower().Trim() || cleanDesc.EndsWith(" " + s.Description.ToLower().Trim()));
