@@ -6409,6 +6409,8 @@ namespace CityWatch.Data.Providers
                 var hrSettingsToUpdate = _context.HrSettings.SingleOrDefault(x => x.Id == hrSettings.Id);
                 if (hrSettingsToUpdate != null)
                 {
+                    string oldDescription = hrSettingsToUpdate.Description?.ToLower().Trim();
+
                     hrSettingsToUpdate.HRGroupId = hrSettings.HRGroupId;
                     hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
                     hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
@@ -6426,6 +6428,24 @@ namespace CityWatch.Data.Providers
                     foreach (var rec in linkedGuardRecords)
                     {
                         rec.Description = updatedDescription;
+                    }
+
+                    // Cascade to legacy records without an ID that match the OLD description
+                    if (!string.IsNullOrEmpty(oldDescription))
+                    {
+                        var legacyRecords = _context.GuardComplianceLicense
+                            .Where(x => x.HrSettingsId == null)
+                            .ToList()
+                            .Where(x => !string.IsNullOrEmpty(x.Description) && 
+                                        (x.Description.ToLower().Trim() == oldDescription || 
+                                         x.Description.ToLower().Trim().EndsWith(" " + oldDescription)))
+                            .ToList();
+                            
+                        foreach(var legacy in legacyRecords)
+                        {
+                            legacy.HrSettingsId = hrSettings.Id; // Fix the broken link permanently!
+                            legacy.Description = updatedDescription;
+                        }
                     }
                 }
 
