@@ -10348,9 +10348,9 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
     primaryKey: 'id',
     inlineEditing: { mode: 'command' },
     columns: [
-        { field: 'notifications', title: 'Message', width: 290, editor: true },
+        { field: 'notifications', title: 'Message', width: 350, editor: true },
         {
-            field: 'fq', title: 'FQ', width: 50, type: 'dropdown',
+            field: 'fq', title: 'FQ', width: 70, type: 'dropdown',
             //editor: { dataSource: '/RadioCheckV2?handler=FQValues', valueField: 'value', textField: 'text' }
             editor: {
                 dataSource: [
@@ -10369,7 +10369,7 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
             }
         },
         {
-            width: 100, field: 'expiryDate', title: 'Expiry', align: 'center',
+            width: 110, field: 'expiryDate', title: 'Expiry', align: 'center',
             /*  type: 'date', format: 'dd-mmm-yyyy',*/
             editor: true, parseFormat: 'dd-MM-yyyy'
 
@@ -10378,7 +10378,8 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
 
     ],
     initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        $(e.target).find('thead tr th:last').css('width', '200px')
+            .css('min-width', '40px').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
 
     }
 });
