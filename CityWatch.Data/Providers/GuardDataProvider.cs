@@ -747,6 +747,7 @@ namespace CityWatch.Data.Providers
                           LicenseNo = x.Guard.SecurityNo,
                           DateType = x.DateType,
                           HRBanEdit = x.HRBanEdit,
+                          HrSettingsId = sub != null ? sub.Id : x.HrSettingsId,
                           MasterDateType = sub != null ? (int)sub.DateType : 0,
                           IsPending = x.IsPending,
                           IsLogin = (x.Guard.IsAdminGlobal == true || x.Guard.IsAdminPowerUser == true || x.Guard.IsAdminAuditorAccess == true) ? "Admin" : "Guard"
