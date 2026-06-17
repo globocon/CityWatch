@@ -1220,7 +1220,7 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                if (files.Count == 1 && RefrenceNoList != null)
+                if (files.Count == 1)
                 {
                     var file = files[0];
                     fileName = file.FileName;
