@@ -10434,6 +10434,7 @@ if (gridPendingTasks) {
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
         }).done(function () {
+            gridPendingTasks.clear();
             gridPendingTasks.reload();
 
 
