@@ -6079,6 +6079,8 @@ $(function () {
     function resetGuardLicenseandComplianceAddModal() {
         $('#GuardComplianceandlicense_Id').val('');
         $('#Description').val('');
+        // Clear HrSettingsId on reset to prevent associating new records with old ones
+        $('#HrSettingsId').val('');
         $('#LicanseTypeFilter').prop('checked', false);
         $('#ComplianceDate').text('Expiry Date (DOE)');
         $('#IsDateFilterEnabledHidden').val(false)
@@ -6165,6 +6167,9 @@ $(function () {
     $('#Description').editableSelect({
         //filter: false,
         effects: 'slide'
+    }).on('input keyup', function () {
+        // Clear the ID if the user manually types
+        $('#HrSettingsId').val('');
     }).on('select.editable-select', function (e, li) {
         var check = '';
         $('#GuardComplianceandlicense_FileName1').val('');
@@ -6182,6 +6187,8 @@ $(function () {
         if (config !== undefined) {
             updateDateVisibility(config);
         }
+        // Set the hidden field to the selected ID for Graceful Migration
+        $('#HrSettingsId').val(selectedId);
 
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
@@ -6450,6 +6457,8 @@ $(function () {
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
         $('#HRGroup').val(data.hrGroup).trigger('change');
         $('#Description').val(data.description);
+        // Map HrSettingsId for graceful migration
+        $('#HrSettingsId').val(data.hrSettingsId || '');
         $('#GuardComplianceandlicense_GuardId').val(data.guardId);
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');

@@ -2550,6 +2550,8 @@ $('#btnAddGuardLicenseKey,#btnAddGuardLicenseKey2').on('click', function () {
 function resetGuardLicenseandComplianceAddModal() {
     $('#GuardComplianceandlicense_Id').val('');
     $('#Description').val('');
+    // Clear HrSettingsId on reset to prevent associating new records with old ones
+    $('#HrSettingsId').val('');
     $('#LicanseTypeFilter').prop('checked', false).trigger('change');
     $('#doiToggleContainer').css('visibility', 'visible');
     $('#doiNoteContainer').css('visibility', 'visible');
@@ -2744,6 +2746,9 @@ $('#Description').attr('placeholder', 'Select');
 $('#Description').editableSelect({
     //filter: false,
     effects: 'slide'
+}).on('input keyup', function () {
+    // Clear the ID if the user manually types
+    $('#HrSettingsId').val('');
 }).on('select.editable-select', function (e, li) {
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#guardComplianceandlicense_fileName1').text('None');
@@ -2752,6 +2757,8 @@ $('#Description').editableSelect({
     if (hrDescriptionConfigs && hrDescriptionConfigs[selectedItem] !== undefined) {
         updateDateVisibility(hrDescriptionConfigs[selectedItem], true);
     }
+    // Set the hidden field to the selected ID for Graceful Migration
+    $('#HrSettingsId').val(selectedItem);
 });
 $('#HRGroup').on('change', function () {
     $('#Description').val('');
@@ -2976,6 +2983,8 @@ $('#tbl_guard_licensesAndComplianceKey tbody').on('click', 'button[name=btn_edit
     $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
     $('#HRGroup').val(data.hrGroup).trigger('change');
     $('#Description').val(data.description);
+    // Map HrSettingsId for graceful migration
+    $('#HrSettingsId').val(data.hrSettingsId || '');
     $('#GuardComplianceandlicense_GuardId').val(data.guardId);
     $('#GuardComplianceandlicense_FileName1').val(data.fileName);
     $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');

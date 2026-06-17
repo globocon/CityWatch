@@ -4214,7 +4214,9 @@ namespace CityWatch.Web.API
                     Reminder1 = guardComplianceAndLicenseDTO.Reminder1,
                     Reminder2 = guardComplianceAndLicenseDTO.Reminder2,
                     DateType = guardComplianceAndLicenseDTO.DateType,
-                    LicenseNo = guardComplianceAndLicenseDTO.LicenseNo
+                    LicenseNo = guardComplianceAndLicenseDTO.LicenseNo,
+                    // Mapping HrSettingsId for graceful migration
+                    HrSettingsId = guardComplianceAndLicenseDTO.HrSettingsId
 
                 };
 
@@ -5465,6 +5467,9 @@ namespace CityWatch.Web.API
         public DateTime? ExpiryDate { get; set; }
         public string FileName { get; set; }
         public string FileUrl { get; set; }
+
+        // Added for Graceful Migration
+        public int? HrSettingsId { get; set; }
 
         public HrGroup? HrGroup { get; set; }
         public string HrGroupText { get; set; }

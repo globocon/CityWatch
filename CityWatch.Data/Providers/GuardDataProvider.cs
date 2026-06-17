@@ -733,8 +733,7 @@ namespace CityWatch.Data.Providers
 
 
             result = (from x in _context.GuardComplianceLicense.Where(x => x.GuardId == guardId)
-                      join s in _context.HrSettings on x.Description.ToLower().Trim() equals s.Description.ToLower().Trim() into joined
-                      from sub in joined.DefaultIfEmpty()
+                      let sub = _context.HrSettings.FirstOrDefault(s => (x.HrSettingsId != null && s.Id == x.HrSettingsId) || (x.HrSettingsId == null && x.Description.ToLower().Trim() == s.Description.ToLower().Trim()))
                       select new GuardComplianceAndLicense
                       {
                           Id = x.Id,
@@ -845,7 +844,11 @@ namespace CityWatch.Data.Providers
         {
             if (guardComplianceandlicense.Id == 0)
             {
-
+                if (guardComplianceandlicense.HrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
+                {
+                    var matchingSetting = _context.HrSettings.FirstOrDefault(s => s.Description.ToLower().Trim() == guardComplianceandlicense.Description.ToLower().Trim());
+                    guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
+                }
                 _context.GuardComplianceLicense.Add(guardComplianceandlicense);
             }
             else
@@ -853,6 +856,18 @@ namespace CityWatch.Data.Providers
                 var guardComplianceToUpdate = _context.GuardComplianceLicense.SingleOrDefault(x => x.Id == guardComplianceandlicense.Id);
                 if (guardComplianceToUpdate != null)
                 {
+                    if (guardComplianceandlicense.HrSettingsId == null)
+                    {
+                        if (guardComplianceToUpdate.Description == guardComplianceandlicense.Description)
+                        {
+                            guardComplianceandlicense.HrSettingsId = guardComplianceToUpdate.HrSettingsId;
+                        }
+                        else if (!string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
+                        {
+                            var matchingSetting = _context.HrSettings.FirstOrDefault(s => s.Description.ToLower().Trim() == guardComplianceandlicense.Description.ToLower().Trim());
+                            guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
+                        }
+                    }
 
                     guardComplianceToUpdate.Description = guardComplianceandlicense.Description;
                     guardComplianceToUpdate.CurrentDateTime = guardComplianceandlicense.CurrentDateTime;
@@ -861,6 +876,8 @@ namespace CityWatch.Data.Providers
                     guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;
                     guardComplianceToUpdate.DateType = guardComplianceandlicense.DateType;
                     guardComplianceToUpdate.IsPending = guardComplianceandlicense.IsPending;
+                    // Map HrSettingsId for graceful migration
+                    guardComplianceToUpdate.HrSettingsId = guardComplianceandlicense.HrSettingsId;
                 }
             }
             _context.SaveChanges();

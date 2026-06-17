@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,11 @@ namespace CityWatch.Data.Models
 
         [Required]
         public string Description { get; set; }
+
+        // Added for Graceful Migration: Store the master ID instead of relying purely on Description
+        public int? HrSettingsId { get; set; }
+        [ForeignKey("HrSettingsId")]
+        public HrSettings HrSettings { get; set; }
         
         public DateTime? ExpiryDate { get; set; }
 
