@@ -1214,6 +1214,7 @@ namespace CityWatch.Web.Pages.Admin
             if (RefrenceNoList != null)
             {
                 RefNo = RefrenceNoList.ReferenceNo;
+                Description = RefrenceNoList.Description;
             }
 
 
