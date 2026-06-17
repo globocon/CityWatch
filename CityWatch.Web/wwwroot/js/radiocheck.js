@@ -2746,7 +2746,7 @@ $('#Description').attr('placeholder', 'Select');
 $('#Description').editableSelect({
     //filter: false,
     effects: 'slide'
-}).on('input keyup', function () {
+}).on('keyup', function () {
     // Clear the ID if the user manually types
     $('#HrSettingsId').val('');
 }).on('select.editable-select', function (e, li) {

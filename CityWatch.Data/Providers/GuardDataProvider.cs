@@ -846,7 +846,8 @@ namespace CityWatch.Data.Providers
             {
                 if (guardComplianceandlicense.HrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
                 {
-                    var matchingSetting = _context.HrSettings.FirstOrDefault(s => s.Description.ToLower().Trim() == guardComplianceandlicense.Description.ToLower().Trim());
+                    var cleanDesc = guardComplianceandlicense.Description.ToLower().Trim();
+                    var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => cleanDesc == s.Description.ToLower().Trim() || cleanDesc.EndsWith(" " + s.Description.ToLower().Trim()));
                     guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
                 }
                 _context.GuardComplianceLicense.Add(guardComplianceandlicense);
@@ -864,7 +865,8 @@ namespace CityWatch.Data.Providers
                         }
                         else if (!string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
                         {
-                            var matchingSetting = _context.HrSettings.FirstOrDefault(s => s.Description.ToLower().Trim() == guardComplianceandlicense.Description.ToLower().Trim());
+                            var cleanDesc = guardComplianceandlicense.Description.ToLower().Trim();
+                            var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => cleanDesc == s.Description.ToLower().Trim() || cleanDesc.EndsWith(" " + s.Description.ToLower().Trim()));
                             guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
                         }
                     }
