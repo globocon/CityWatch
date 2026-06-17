@@ -6416,6 +6416,17 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.DateType = hrSettings.DateType;
                     hrSettingsToUpdate.IsAllClientTypeEnabled = hrSettings.IsAllClientTypeEnabled;
                     hrSettingsToUpdate.IsAllStateEnabled = hrSettings.IsAllStateEnabled;
+
+                    // Cascade description change to all linked guard compliance records natively in the DB
+                    var refNumber = _context.ReferenceNoNumbers.FirstOrDefault(x => x.Id == hrSettings.ReferenceNoNumberId)?.Name ?? "";
+                    var refAlphabet = _context.ReferenceNoAlphabets.FirstOrDefault(x => x.Id == hrSettings.ReferenceNoAlphabetId)?.Name ?? "";
+                    string updatedDescription = string.IsNullOrEmpty(refNumber + refAlphabet) ? hrSettings.Description : (refNumber + refAlphabet + " " + hrSettings.Description);
+                    
+                    var linkedGuardRecords = _context.GuardComplianceLicense.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                    foreach (var rec in linkedGuardRecords)
+                    {
+                        rec.Description = updatedDescription;
+                    }
                 }
 
                 // Remove old sites & states
