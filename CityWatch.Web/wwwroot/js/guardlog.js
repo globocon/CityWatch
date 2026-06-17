@@ -6246,6 +6246,27 @@ $(function () {
                 }
 
             });
+            
+            // Auto-select updated description based on HrSettingsId for Edit Mode
+            var pendingId = $('#HRGroup').data('pending-hrSettingsId');
+            var pendingDesc = $('#HRGroup').data('pending-description');
+            if (pendingId) {
+                var matchingLi = ulClients.find('li[value="' + pendingId + '"]');
+                if (matchingLi.length > 0) {
+                    var newDesc = $.trim(matchingLi.find('.desc').text());
+                    if (newDesc) {
+                        $('#Description').val(newDesc);
+                        $('#HrSettingsId').val(pendingId);
+                    }
+                } else if (pendingDesc) {
+                    $('#Description').val(pendingDesc);
+                }
+            } else if (pendingDesc) {
+                $('#Description').val(pendingDesc);
+            }
+            $('#HRGroup').removeData('pending-hrSettingsId');
+            $('#HRGroup').removeData('pending-description');
+            
         })
 
 
@@ -6455,6 +6476,8 @@ $(function () {
         $('#chb_IsPending').prop('checked', data.isPending);
         $('#GuardComplianceandlicense_Id').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
+        $('#HRGroup').data('pending-hrSettingsId', data.hrSettingsId || '');
+        $('#HRGroup').data('pending-description', data.description || '');
         $('#HRGroup').val(data.hrGroup).trigger('change');
         $('#Description').val(data.description);
         // Map HrSettingsId for graceful migration
