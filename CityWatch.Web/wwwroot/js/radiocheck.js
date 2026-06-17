@@ -2592,6 +2592,7 @@ FileuploadFileChanged = function (allfile) {
     formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
     formData.append('Description', cleanText);
     formData.append('HRID', $('#HRGroup').val());
+    formData.append('HrSettingsId', $('#HrSettingsId').val());
     formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
     formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
     if (Desc == '') {

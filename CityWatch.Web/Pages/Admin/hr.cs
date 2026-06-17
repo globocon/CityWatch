@@ -1200,7 +1200,17 @@ namespace CityWatch.Web.Pages.Admin
                 hrIdInt = 0;
             }
             var RefNo = "";
-            var RefrenceNoList = _guardDataProvider.GetHRRefernceNo(hrIdInt, Description);
+            HrSettings RefrenceNoList = null;
+            var hrSettingsIdRaw = Request.Form["HrSettingsId"].ToString();
+            if (!string.IsNullOrEmpty(hrSettingsIdRaw) && int.TryParse(hrSettingsIdRaw, out int hrSettingsId))
+            {
+                RefrenceNoList = _guardDataProvider.GetHRSettingsById(hrSettingsId);
+            }
+            if (RefrenceNoList == null)
+            {
+                RefrenceNoList = _guardDataProvider.GetHRRefernceNo(hrIdInt, Description);
+            }
+
             if (RefrenceNoList != null)
             {
                 RefNo = RefrenceNoList.ReferenceNo;

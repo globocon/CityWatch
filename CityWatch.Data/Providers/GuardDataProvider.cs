@@ -38,6 +38,7 @@ namespace CityWatch.Data.Providers
         void DeleteGuardLicense(int id);
         List<GuardCompliance> GetAllGuardCompliances();
         List<GuardCompliance> GetGuardCompliances(int guardId);
+        HrSettings GetHRSettingsById(int id);
         HrSettings GetHRRefernceNo(int HRid, string Description);
         List<HrSettings> GetHRDesc(int HRid);
         Task<HrSettings> GetHRDescEditBanAsync(int DescriptionID);
@@ -988,6 +989,15 @@ namespace CityWatch.Data.Providers
             //.Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
             //.FirstOrDefault();
         }
+        public HrSettings GetHRSettingsById(int id)
+        {
+            return _context.HrSettings
+                .Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .FirstOrDefault(x => x.Id == id);
+        }
+
         public HrSettings GetHRRefernceNo(int HRid, string Description)
         {
             var result = _context.HrSettings
@@ -999,7 +1009,7 @@ namespace CityWatch.Data.Providers
     .OrderBy(x => x.HRGroups.Name)
     .ThenBy(x => x.ReferenceNoNumbers.Name)
     .ThenBy(x => x.ReferenceNoAlphabets.Name)
-    .FirstOrDefault(z => NormalizeDescription(z.Description) == Description);
+    .FirstOrDefault(z => NormalizeDescription(z.Description).ToLower().Trim() == Description.ToLower().Trim());
             return result;
 
             //return _context.HrSettings.Include(z => z.HRGroups)
