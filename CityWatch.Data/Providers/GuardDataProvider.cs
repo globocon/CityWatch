@@ -10,6 +10,7 @@ using System.Threading;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using System.Threading.Tasks;
 using iText.StyledXmlParser.Jsoup.Select;
+using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Providers
 {
@@ -849,7 +850,10 @@ namespace CityWatch.Data.Providers
                 if (guardComplianceandlicense.HrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
                 {
                     var cleanDesc = guardComplianceandlicense.Description.ToLower().Trim();
-                    var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => cleanDesc == s.Description.ToLower().Trim() || cleanDesc.EndsWith(" " + s.Description.ToLower().Trim()));
+                    var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => 
+                        cleanDesc == s.Description.ToLower().Trim() || 
+                        Regex.IsMatch(cleanDesc, $@"(?<=^|\s){Regex.Escape(s.Description.ToLower().Trim())}(?=\s|$)")
+                    );
                     guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
                 }
                 _context.GuardComplianceLicense.Add(guardComplianceandlicense);
@@ -869,7 +873,10 @@ namespace CityWatch.Data.Providers
                         if (guardComplianceandlicense.HrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
                         {
                             var cleanDesc = guardComplianceandlicense.Description.ToLower().Trim();
-                            var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => cleanDesc == s.Description.ToLower().Trim() || cleanDesc.EndsWith(" " + s.Description.ToLower().Trim()));
+                            var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => 
+                                cleanDesc == s.Description.ToLower().Trim() || 
+                                Regex.IsMatch(cleanDesc, $@"(?<=^|\s){Regex.Escape(s.Description.ToLower().Trim())}(?=\s|$)")
+                            );
                             guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
                         }
                     }
