@@ -10,6 +10,7 @@ using System.Threading;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using System.Threading.Tasks;
 using iText.StyledXmlParser.Jsoup.Select;
+using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Providers
 {
@@ -38,6 +39,7 @@ namespace CityWatch.Data.Providers
         void DeleteGuardLicense(int id);
         List<GuardCompliance> GetAllGuardCompliances();
         List<GuardCompliance> GetGuardCompliances(int guardId);
+        HrSettings GetHRSettingsById(int id);
         HrSettings GetHRRefernceNo(int HRid, string Description);
         List<HrSettings> GetHRDesc(int HRid);
         Task<HrSettings> GetHRDescEditBanAsync(int DescriptionID);
@@ -733,8 +735,7 @@ namespace CityWatch.Data.Providers
 
 
             result = (from x in _context.GuardComplianceLicense.Where(x => x.GuardId == guardId)
-                      join s in _context.HrSettings on x.Description.ToLower().Trim() equals s.Description.ToLower().Trim() into joined
-                      from sub in joined.DefaultIfEmpty()
+                      let sub = _context.HrSettings.FirstOrDefault(s => (x.HrSettingsId != null && s.Id == x.HrSettingsId) || (x.HrSettingsId == null && x.Description.ToLower().Trim() == s.Description.ToLower().Trim()))
                       select new GuardComplianceAndLicense
                       {
                           Id = x.Id,
@@ -747,6 +748,7 @@ namespace CityWatch.Data.Providers
                           LicenseNo = x.Guard.SecurityNo,
                           DateType = x.DateType,
                           HRBanEdit = x.HRBanEdit,
+                          HrSettingsId = sub != null ? sub.Id : x.HrSettingsId,
                           MasterDateType = sub != null ? (int)sub.DateType : 0,
                           IsPending = x.IsPending,
                           IsLogin = (x.Guard.IsAdminGlobal == true || x.Guard.IsAdminPowerUser == true || x.Guard.IsAdminAuditorAccess == true) ? "Admin" : "Guard"
@@ -845,7 +847,15 @@ namespace CityWatch.Data.Providers
         {
             if (guardComplianceandlicense.Id == 0)
             {
-
+                if (guardComplianceandlicense.HrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
+                {
+                    var cleanDesc = guardComplianceandlicense.Description.ToLower().Trim();
+                    var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => 
+                        cleanDesc == s.Description.ToLower().Trim() || 
+                        Regex.IsMatch(cleanDesc, $@"(?<=^|\s){Regex.Escape(s.Description.ToLower().Trim())}(?=\s|$)")
+                    );
+                    guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
+                }
                 _context.GuardComplianceLicense.Add(guardComplianceandlicense);
             }
             else
@@ -853,6 +863,23 @@ namespace CityWatch.Data.Providers
                 var guardComplianceToUpdate = _context.GuardComplianceLicense.SingleOrDefault(x => x.Id == guardComplianceandlicense.Id);
                 if (guardComplianceToUpdate != null)
                 {
+                    if (guardComplianceandlicense.HrSettingsId == null)
+                    {
+                        if (guardComplianceToUpdate.Description == guardComplianceandlicense.Description)
+                        {
+                            guardComplianceandlicense.HrSettingsId = guardComplianceToUpdate.HrSettingsId;
+                        }
+                        
+                        if (guardComplianceandlicense.HrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceandlicense.Description))
+                        {
+                            var cleanDesc = guardComplianceandlicense.Description.ToLower().Trim();
+                            var matchingSetting = _context.HrSettings.ToList().FirstOrDefault(s => 
+                                cleanDesc == s.Description.ToLower().Trim() || 
+                                Regex.IsMatch(cleanDesc, $@"(?<=^|\s){Regex.Escape(s.Description.ToLower().Trim())}(?=\s|$)")
+                            );
+                            guardComplianceandlicense.HrSettingsId = matchingSetting?.Id;
+                        }
+                    }
 
                     guardComplianceToUpdate.Description = guardComplianceandlicense.Description;
                     guardComplianceToUpdate.CurrentDateTime = guardComplianceandlicense.CurrentDateTime;
@@ -861,6 +888,8 @@ namespace CityWatch.Data.Providers
                     guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;
                     guardComplianceToUpdate.DateType = guardComplianceandlicense.DateType;
                     guardComplianceToUpdate.IsPending = guardComplianceandlicense.IsPending;
+                    // Map HrSettingsId for graceful migration
+                    guardComplianceToUpdate.HrSettingsId = guardComplianceandlicense.HrSettingsId;
                 }
             }
             _context.SaveChanges();
@@ -968,6 +997,15 @@ namespace CityWatch.Data.Providers
             //.Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
             //.FirstOrDefault();
         }
+        public HrSettings GetHRSettingsById(int id)
+        {
+            return _context.HrSettings
+                .Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .FirstOrDefault(x => x.Id == id);
+        }
+
         public HrSettings GetHRRefernceNo(int HRid, string Description)
         {
             var result = _context.HrSettings
@@ -979,7 +1017,7 @@ namespace CityWatch.Data.Providers
     .OrderBy(x => x.HRGroups.Name)
     .ThenBy(x => x.ReferenceNoNumbers.Name)
     .ThenBy(x => x.ReferenceNoAlphabets.Name)
-    .FirstOrDefault(z => NormalizeDescription(z.Description) == Description);
+    .FirstOrDefault(z => NormalizeDescription(z.Description).ToLower().Trim() == Description.ToLower().Trim());
             return result;
 
             //return _context.HrSettings.Include(z => z.HRGroups)

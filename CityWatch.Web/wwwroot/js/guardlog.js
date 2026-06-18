@@ -6101,6 +6101,8 @@ $(function () {
     function resetGuardLicenseandComplianceAddModal() {
         $('#GuardComplianceandlicense_Id').val('');
         $('#Description').val('');
+        // Clear HrSettingsId on reset to prevent associating new records with old ones
+        $('#HrSettingsId').val('');
         $('#LicanseTypeFilter').prop('checked', false);
         $('#ComplianceDate').text('Expiry Date (DOE)');
         $('#IsDateFilterEnabledHidden').val(false)
@@ -6187,6 +6189,9 @@ $(function () {
     $('#Description').editableSelect({
         //filter: false,
         effects: 'slide'
+    }).on('keyup', function () {
+        // Clear the ID if the user manually types
+        $('#HrSettingsId').val('');
     }).on('select.editable-select', function (e, li) {
         var check = '';
         $('#GuardComplianceandlicense_FileName1').val('');
@@ -6204,6 +6209,8 @@ $(function () {
         if (config !== undefined) {
             updateDateVisibility(config);
         }
+        // Set the hidden field to the selected ID for Graceful Migration
+        $('#HrSettingsId').val(selectedId);
 
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
@@ -6261,6 +6268,27 @@ $(function () {
                 }
 
             });
+            
+            // Auto-select updated description based on HrSettingsId for Edit Mode
+            var pendingId = $('#HRGroup').data('pending-hrSettingsId');
+            var pendingDesc = $('#HRGroup').data('pending-description');
+            if (pendingId) {
+                var matchingLi = ulClients.find('li[value="' + pendingId + '"]');
+                if (matchingLi.length > 0) {
+                    var newDesc = $.trim(matchingLi.find('.desc').text());
+                    if (newDesc) {
+                        $('#Description').val(newDesc);
+                        $('#HrSettingsId').val(pendingId);
+                    }
+                } else if (pendingDesc) {
+                    $('#Description').val(pendingDesc);
+                }
+            } else if (pendingDesc) {
+                $('#Description').val(pendingDesc);
+            }
+            $('#HRGroup').removeData('pending-hrSettingsId');
+            $('#HRGroup').removeData('pending-description');
+            
         })
 
 
@@ -6470,8 +6498,12 @@ $(function () {
         $('#chb_IsPending').prop('checked', data.isPending);
         $('#GuardComplianceandlicense_Id').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
+        $('#HRGroup').data('pending-hrSettingsId', data.hrSettingsId || '');
+        $('#HRGroup').data('pending-description', data.description || '');
         $('#HRGroup').val(data.hrGroup).trigger('change');
         $('#Description').val(data.description);
+        // Map HrSettingsId for graceful migration
+        $('#HrSettingsId').val(data.hrSettingsId || '');
         $('#GuardComplianceandlicense_GuardId').val(data.guardId);
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
@@ -6905,6 +6937,7 @@ $(function () {
         formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
         formData.append('Description', cleanText);
         formData.append('HRID', $('#HRGroup').val());
+        formData.append('HrSettingsId', $('#HrSettingsId').val());
         formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
         formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
         if (Desc == '') {
