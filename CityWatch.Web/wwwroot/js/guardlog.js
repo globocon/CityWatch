@@ -10100,7 +10100,16 @@ $(function () {
             },
             columns: [
                 { data: 'tagType', width: '10%' },
-                { data: 'labelDescription', width: '70%' },
+                { 
+                    data: 'labelDescription', 
+                    width: '70%',
+                    render: function (data, type, row) {
+                        if (data && data.indexOf('(Bypass)') !== -1) {
+                            return data.replace('(Bypass)', '<span style="color:red; font-weight:bold;">(Bypass)</span>');
+                        }
+                        return data;
+                    }
+                },
                 { data: 'todayScanCount', width: '20%', className: "text-center" }
             ]
         });
