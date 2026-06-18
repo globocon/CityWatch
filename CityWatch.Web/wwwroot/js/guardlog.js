@@ -582,25 +582,47 @@ $(function () {
                             $('#GuardLogin_ClientType').val($('#hiddenClientTypeId').val());
                             populateClientSites();
                         }
-                        const isPosition = lastLogin.smartWandId === null ? true : false;
-                        //const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
-                        const smartWandOrPositionName = isPosition
-                            ? (lastLogin?.position?.name ?? null)
-                            : (lastLogin?.smartWand?.smartWandId ?? null);
-                        if (smartWandOrPositionName != null) {
-                            getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
-                        }
-                        $('#GuardLogin_IsPosition').prop('checked', isPosition);
-                        $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.onDuty)));
 
-                        let isOffDutyDateToday = true;
-                        if (lastLogin.offDuty) {
-                            $('#GuardLogin_OffDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.offDuty)));
-                            isOffDutyDateToday = getDateFromDateTime(lastLogin.onDuty) > getDateFromDateTime(lastLogin.offDuty);
-                        }
+                            $.ajax({
+                                url: '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(lastLogin.clientSite.name) +
+                                    '&guardId=' + $('#GuardLogin_Guard_Id').val(),
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function (data) {
+                                    var smartwandcount = data.length;
+                                    let isPosition = false;
 
-                        $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
-                        onGuardLoginDutyTimeChange(isOffDutyDateToday);
+                                    if (lastLogin.smartWandId === null && smartwandcount === 0) {
+                                        isPosition = true;
+                                    } else {
+                                        isPosition = false;
+                                    }
+                                    //const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
+                                    const smartWandOrPositionName = isPosition
+                                        ? (lastLogin?.position?.name ?? null)
+                                        : (lastLogin?.smartWand?.smartWandId ?? null);
+                                    if (smartWandOrPositionName != null) {
+                                        getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
+                                    }
+                                    else {
+                                        getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name);
+                                    }
+                                    $('#GuardLogin_IsPosition').prop('checked', isPosition);
+                                    $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.onDuty)));
+
+                                    let isOffDutyDateToday = true;
+                                    if (lastLogin.offDuty) {
+                                        $('#GuardLogin_OffDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.offDuty)));
+                                        isOffDutyDateToday = getDateFromDateTime(lastLogin.onDuty) > getDateFromDateTime(lastLogin.offDuty);
+                                    }
+
+                                    $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
+                                    onGuardLoginDutyTimeChange(isOffDutyDateToday);
+                                }
+                            });
+
+                        
+                        
 
                     }
 
