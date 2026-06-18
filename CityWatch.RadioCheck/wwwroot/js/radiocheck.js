@@ -10348,9 +10348,9 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
     primaryKey: 'id',
     inlineEditing: { mode: 'command' },
     columns: [
-        { field: 'notifications', title: 'Message', width: 290, editor: true },
+        { field: 'notifications', title: 'Message', width: '100%', editor: true },
         {
-            field: 'fq', title: 'FQ', width: 50, type: 'dropdown',
+            field: 'fq', title: 'FQ', width: '20%', type: 'dropdown',
             //editor: { dataSource: '/RadioCheckV2?handler=FQValues', valueField: 'value', textField: 'text' }
             editor: {
                 dataSource: [
@@ -10369,16 +10369,52 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
             }
         },
         {
-            width: 100, field: 'expiryDate', title: 'Expiry', align: 'center',
-            /*  type: 'date', format: 'dd-mmm-yyyy',*/
-            editor: true, parseFormat: 'dd-MM-yyyy'
+            field: 'expiryDate',
+            title: 'Expiry',
+            width: '30%',
+            align: 'center',
+           
+            renderer: function (value) {
+                if (!value) return '';
 
+                const d = new Date(value);
 
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const mins = String(d.getMinutes()).padStart(2, '0');
+
+                return `${day}-${month}-${year}`;
+            },
+
+            editor: function ($container, value, record) {
+                let dt = '';
+
+                if (value) {
+                    const date = new Date(value);
+
+                    if (!isNaN(date)) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const mins = String(date.getMinutes()).padStart(2, '0');
+
+                        dt = `${year}-${month}-${day}T${hours}:${mins}`;
+                    }
+                }
+
+                $('<input type="datetime-local" class="form-control" value="' + dt + '">')
+                   
+                    .appendTo($container);
+            }
         },
 
     ],
     initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        $(e.target).find('thead tr th:last').css('width', '200px')
+            .css('min-width', '40px').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
 
     }
 });
@@ -10398,6 +10434,7 @@ if (gridPendingTasks) {
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
         }).done(function () {
+            gridPendingTasks.clear();
             gridPendingTasks.reload();
 
 

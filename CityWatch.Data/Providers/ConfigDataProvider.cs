@@ -2744,12 +2744,12 @@ namespace CityWatch.Data.Providers
             {
                 if (item.Radiofrequencystatus == "EveryDay")
                 {
-                    item.ExpiryDate = item.Endmessagetime?.ToString("dd-MMM-yyyy");
+                    item.ExpiryDate = item.Endmessagetime?.ToString("dd-MMM-yyyy  HH:mm:ss");
                     item.FQ = "E";
                 }
                 else
                 {
-                    item.ExpiryDate = item.messagetime?.ToString("dd-MMM-yyyy");
+                    item.ExpiryDate = item.messagetime?.ToString("dd-MMM-yyyy  HH:mm:ss");
                     item.FQ = "O";
                 }
 

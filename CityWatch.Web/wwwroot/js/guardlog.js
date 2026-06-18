@@ -582,25 +582,47 @@ $(function () {
                             $('#GuardLogin_ClientType').val($('#hiddenClientTypeId').val());
                             populateClientSites();
                         }
-                        const isPosition = lastLogin.smartWandId === null ? true : false;
-                        //const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
-                        const smartWandOrPositionName = isPosition
-                            ? (lastLogin?.position?.name ?? null)
-                            : (lastLogin?.smartWand?.smartWandId ?? null);
-                        if (smartWandOrPositionName != null) {
-                            getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
-                        }
-                        $('#GuardLogin_IsPosition').prop('checked', isPosition);
-                        $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.onDuty)));
 
-                        let isOffDutyDateToday = true;
-                        if (lastLogin.offDuty) {
-                            $('#GuardLogin_OffDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.offDuty)));
-                            isOffDutyDateToday = getDateFromDateTime(lastLogin.onDuty) > getDateFromDateTime(lastLogin.offDuty);
-                        }
+                            $.ajax({
+                                url: '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(lastLogin.clientSite.name) +
+                                    '&guardId=' + $('#GuardLogin_Guard_Id').val(),
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function (data) {
+                                    var smartwandcount = data.length;
+                                    let isPosition = false;
 
-                        $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
-                        onGuardLoginDutyTimeChange(isOffDutyDateToday);
+                                    if (lastLogin.smartWandId === null && smartwandcount === 0) {
+                                        isPosition = true;
+                                    } else {
+                                        isPosition = false;
+                                    }
+                                    //const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
+                                    const smartWandOrPositionName = isPosition
+                                        ? (lastLogin?.position?.name ?? null)
+                                        : (lastLogin?.smartWand?.smartWandId ?? null);
+                                    if (smartWandOrPositionName != null) {
+                                        getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
+                                    }
+                                    else {
+                                        getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name);
+                                    }
+                                    $('#GuardLogin_IsPosition').prop('checked', isPosition);
+                                    $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.onDuty)));
+
+                                    let isOffDutyDateToday = true;
+                                    if (lastLogin.offDuty) {
+                                        $('#GuardLogin_OffDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.offDuty)));
+                                        isOffDutyDateToday = getDateFromDateTime(lastLogin.onDuty) > getDateFromDateTime(lastLogin.offDuty);
+                                    }
+
+                                    $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
+                                    onGuardLoginDutyTimeChange(isOffDutyDateToday);
+                                }
+                            });
+
+                        
+                        
 
                     }
 
@@ -6079,6 +6101,8 @@ $(function () {
     function resetGuardLicenseandComplianceAddModal() {
         $('#GuardComplianceandlicense_Id').val('');
         $('#Description').val('');
+        // Clear HrSettingsId on reset to prevent associating new records with old ones
+        $('#HrSettingsId').val('');
         $('#LicanseTypeFilter').prop('checked', false);
         $('#ComplianceDate').text('Expiry Date (DOE)');
         $('#IsDateFilterEnabledHidden').val(false)
@@ -6165,6 +6189,9 @@ $(function () {
     $('#Description').editableSelect({
         //filter: false,
         effects: 'slide'
+    }).on('keyup', function () {
+        // Clear the ID if the user manually types
+        $('#HrSettingsId').val('');
     }).on('select.editable-select', function (e, li) {
         var check = '';
         $('#GuardComplianceandlicense_FileName1').val('');
@@ -6182,6 +6209,8 @@ $(function () {
         if (config !== undefined) {
             updateDateVisibility(config);
         }
+        // Set the hidden field to the selected ID for Graceful Migration
+        $('#HrSettingsId').val(selectedId);
 
     }).on(trig, function () {
         if ($(this).prop('selectedIndex') == 0)
@@ -6239,6 +6268,27 @@ $(function () {
                 }
 
             });
+            
+            // Auto-select updated description based on HrSettingsId for Edit Mode
+            var pendingId = $('#HRGroup').data('pending-hrSettingsId');
+            var pendingDesc = $('#HRGroup').data('pending-description');
+            if (pendingId) {
+                var matchingLi = ulClients.find('li[value="' + pendingId + '"]');
+                if (matchingLi.length > 0) {
+                    var newDesc = $.trim(matchingLi.find('.desc').text());
+                    if (newDesc) {
+                        $('#Description').val(newDesc);
+                        $('#HrSettingsId').val(pendingId);
+                    }
+                } else if (pendingDesc) {
+                    $('#Description').val(pendingDesc);
+                }
+            } else if (pendingDesc) {
+                $('#Description').val(pendingDesc);
+            }
+            $('#HRGroup').removeData('pending-hrSettingsId');
+            $('#HRGroup').removeData('pending-description');
+            
         })
 
 
@@ -6448,8 +6498,12 @@ $(function () {
         $('#chb_IsPending').prop('checked', data.isPending);
         $('#GuardComplianceandlicense_Id').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
+        $('#HRGroup').data('pending-hrSettingsId', data.hrSettingsId || '');
+        $('#HRGroup').data('pending-description', data.description || '');
         $('#HRGroup').val(data.hrGroup).trigger('change');
         $('#Description').val(data.description);
+        // Map HrSettingsId for graceful migration
+        $('#HrSettingsId').val(data.hrSettingsId || '');
         $('#GuardComplianceandlicense_GuardId').val(data.guardId);
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
@@ -6883,6 +6937,7 @@ $(function () {
         formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
         formData.append('Description', cleanText);
         formData.append('HRID', $('#HRGroup').val());
+        formData.append('HrSettingsId', $('#HrSettingsId').val());
         formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
         formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
         if (Desc == '') {
@@ -10009,5 +10064,111 @@ $(function () {
         }).always(function () {
             $('#loader').hide();
         });
+    });
+});
+
+// --- Fq Display Logic ---
+function loadGuardFqData() {
+    var currentGuardId = $('#GuardLog_GuardLogin_GuardId').val();
+    var currentClientSiteId = $('#ClientSiteID').val();
+    
+    if (currentGuardId && currentClientSiteId) {
+        $('#guardFqDisplay').html('<i class="fa fa-spinner fa-spin"></i>');
+        $.ajax({
+            url: '?handler=GuardFqData',
+            type: 'GET',
+            data: {
+                guardId: currentGuardId,
+                clientSiteId: currentClientSiteId
+            },
+            success: function(data) {
+                if (data) {
+                    var bgcolr = '#A9A9A9';
+                    if (data.completedRounds > 0)
+                        bgcolr = '#FFD580';
+                        
+                    var fqHtml = (data.patrolFqForDayOrHour || '0 PD') + ' <span class="p-1" style="background: ' + bgcolr + ';">' + data.completedRounds + '</span> ' +
+                        '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                        'data-client="' + currentClientSiteId + '" ' +
+                        'data-guard="' + currentGuardId + '" ' +
+                        'data-value="' + data.completedRounds + '">?</a>]';
+                        
+                    $('#guardFqDisplay').html(fqHtml);
+                } else {
+                    var emptyHtml = '0 PD <span class="p-1" style="background: #A9A9A9;">0</span> ' +
+                        '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                        'data-client="' + currentClientSiteId + '" ' +
+                        'data-guard="' + currentGuardId + '" ' +
+                        'data-value="0">?</a>]';
+                    $('#guardFqDisplay').html(emptyHtml);
+                }
+            },
+            error: function() {
+                $('#guardFqDisplay').html('Error loading data');
+            }
+        });
+    }
+}
+
+$(function () {
+    loadGuardFqData();
+    
+    $(document).on('click', '#btnRefreshFq', function(e) {
+        e.preventDefault();
+        loadGuardFqData();
+    });
+
+    var clientSiteActiveGuardsSWTagsDetails = null;
+
+    $(document).on('click', '#btnWandTagdetails', function (e) {
+        e.preventDefault();
+        var clientSiteId = $(this).attr('data-client');
+        var guardId = $(this).attr('data-guard');
+        var currentFrequencyValue = $(this).attr('data-value');
+
+        $('#lbl_GuardActivityHeaderSWTagsInfoModal').text('Wand Tag Scan Details');
+        $('#currentFrequencyDisplay').text('Fq : ' + currentFrequencyValue);
+
+        if ($.fn.DataTable.isDataTable('#clientSiteActiveGuardsSWTagsDetails')) {
+            $('#clientSiteActiveGuardsSWTagsDetails').DataTable().clear().destroy();
+        }
+
+        clientSiteActiveGuardsSWTagsDetails = $('#clientSiteActiveGuardsSWTagsDetails').DataTable({
+            lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+            ordering: true,
+            order: [[1, 'desc']],
+            info: false,
+            searching: false,
+            autoWidth: false,
+            fixedHeader: true,
+            "scrollY": "300px",
+            "paging": false,
+            "footer": true,
+            ajax: {
+                url: '?handler=ClientSiteSWTagsDetails',
+                datatype: 'json',
+                data: function (d) {
+                    d.clientSiteId = clientSiteId;
+                    d.guardId = guardId;
+                },
+                dataSrc: ''
+            },
+            columns: [
+                { data: 'tagType', width: '10%' },
+                { 
+                    data: 'labelDescription', 
+                    width: '70%',
+                    render: function (data, type, row) {
+                        if (data && data.indexOf('(Bypass)') !== -1) {
+                            return data.replace('(Bypass)', '<span style="color:red; font-weight:bold;">(Bypass)</span>');
+                        }
+                        return data;
+                    }
+                },
+                { data: 'todayScanCount', width: '20%', className: "text-center" }
+            ]
+        });
+
+        $('#guardSWTagsInfoModal').modal('show');
     });
 });

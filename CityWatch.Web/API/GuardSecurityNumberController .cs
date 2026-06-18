@@ -4700,6 +4700,21 @@ namespace CityWatch.Web.API
             {
                 var _guard = _guardDataProvider.GetGuardDetailsUsingId(guardComplianceAndLicenseDTO.GuardId).FirstOrDefault();
 
+                int? resolvedHrSettingsId = guardComplianceAndLicenseDTO.HrSettingsId > 0 ? guardComplianceAndLicenseDTO.HrSettingsId : null;
+                if (resolvedHrSettingsId == null && !string.IsNullOrWhiteSpace(guardComplianceAndLicenseDTO.Description))
+                {
+                    var cleanDesc = guardComplianceAndLicenseDTO.Description.ToLower().Trim();
+                    var hrSettingsList = _context.HrSettings.ToList();
+                    var matchingSetting = hrSettingsList.FirstOrDefault(s => 
+                        cleanDesc == s.Description.ToLower().Trim() || 
+                        Regex.IsMatch(cleanDesc, $@"(?<=^|\s){Regex.Escape(s.Description.ToLower().Trim())}(?=\s|$)")
+                    );
+                    if (matchingSetting != null)
+                    {
+                        resolvedHrSettingsId = matchingSetting.Id;
+                    }
+                }
+
                 var guardComplianceAndLicense = new GuardComplianceAndLicense
                 {
                     Id = guardComplianceAndLicenseDTO.Id,
@@ -4713,7 +4728,9 @@ namespace CityWatch.Web.API
                     Reminder1 = guardComplianceAndLicenseDTO.Reminder1,
                     Reminder2 = guardComplianceAndLicenseDTO.Reminder2,
                     DateType = guardComplianceAndLicenseDTO.DateType,
-                    LicenseNo = guardComplianceAndLicenseDTO.LicenseNo
+                    LicenseNo = guardComplianceAndLicenseDTO.LicenseNo,
+                    // Mapping HrSettingsId for graceful migration
+                    HrSettingsId = resolvedHrSettingsId
 
                 };
 
@@ -5972,6 +5989,9 @@ namespace CityWatch.Web.API
         public DateTime? ExpiryDate { get; set; }
         public string FileName { get; set; }
         public string FileUrl { get; set; }
+
+        // Added for Graceful Migration
+        public int? HrSettingsId { get; set; }
 
         public HrGroup? HrGroup { get; set; }
         public string HrGroupText { get; set; }
