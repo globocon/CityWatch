@@ -9776,11 +9776,12 @@ function GetToggles(siteId, toggleId) {
 
 
 // --- Fq Display Logic ---
-$(function () {
+function loadGuardFqData() {
     var currentGuardId = $('#GuardLog_GuardLogin_GuardId').val();
     var currentClientSiteId = $('#ClientSiteID').val();
     
     if (currentGuardId && currentClientSiteId) {
+        $('#guardFqDisplay').html('<i class="fa fa-spinner fa-spin"></i>');
         $.ajax({
             url: '?handler=GuardFqData',
             type: 'GET',
@@ -9815,6 +9816,15 @@ $(function () {
             }
         });
     }
+}
+
+$(function () {
+    loadGuardFqData();
+    
+    $(document).on('click', '#btnRefreshFq', function(e) {
+        e.preventDefault();
+        loadGuardFqData();
+    });
 
     var clientSiteActiveGuardsSWTagsDetails = null;
 
