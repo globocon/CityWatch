@@ -1590,19 +1590,7 @@ namespace CityWatch.Web.Pages.Guard
 
         public IActionResult OnGetGuardFqData(int guardId, int clientSiteId)
         {
-            var detail = _guardLogDataProvider.GetActiveGuardDetails()
-                .FirstOrDefault(g => g.GuardId == guardId && g.ClientSiteId == clientSiteId);
-            
-            if (detail != null)
-            {
-                return new JsonResult(new { 
-                    patrolFqForDayOrHour = detail.PatrolFqForDayOrHour,
-                    haswandtags = detail.haswandtags,
-                    completedRounds = detail.CompletedRounds
-                });
-            }
-            
-            // Fallback for sites that don't have active guards (like Boat Ops)
+            // Fetch the fast, site-specific frequency and completion data
             var fqData = _guardLogDataProvider.GetClientSiteFrequencyData(clientSiteId);
             return new JsonResult(fqData);
         }
