@@ -34,5 +34,11 @@ namespace CityWatch.Data.Models
         public DateTime CreatedAt { get; set; }
 
         public bool IsProcessed { get; set; }
+
+        public bool IsReliefAssigned { get; set; }
+        public int? ReliefGuardId { get; set; }
+        
+        [StringLength(255)]
+        public string ReliefGuardName { get; set; }
     }
 }

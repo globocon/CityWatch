@@ -588,6 +588,18 @@ namespace CityWatch.Web.Pages.roster
                         _logger.LogError(ex, "Failed to queue web shift cancellation email.");
                     }
                 }
+                else if ((reliefGuardId.HasValue && oldReliefGuardId != reliefGuardId) || (!string.IsNullOrEmpty(reliefProviderName) && oldReliefGuardId == null))
+                {
+                    try
+                    {
+                        var userName = HttpContext.User.Identity?.Name ?? "Admin";
+                        await _alertEmailServices.QueueReliefGuardAssigned(existing, userName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to queue relief guard email.");
+                    }
+                }
                 else
                 {
                     try { await _alertEmailServices.RemoveFromQueue(existing); } catch { }
@@ -1474,7 +1486,10 @@ namespace CityWatch.Web.Pages.roster
                     x.Id,
                     x.Name,
                     x.CoverFileName,
-                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null,
+                    x.AlertEmailRecipients,
+                    x.AlertOnRejectedShift,
+                    x.AlertOnReliefGuard
                 })
                 .OrderBy(x => x.Name)
                 .ToListAsync();
@@ -1491,7 +1506,10 @@ namespace CityWatch.Web.Pages.roster
                     x.Name,
                     x.CoverFileName,
                     x.AccessKey,
-                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null,
+                    x.AlertEmailRecipients,
+                    x.AlertOnRejectedShift,
+                    x.AlertOnReliefGuard
                 })
                 .OrderBy(x => x.Name)
                 .ToListAsync();
@@ -1842,3 +1860,4 @@ namespace CityWatch.Web.Pages.roster
         }
     }
 }
+
