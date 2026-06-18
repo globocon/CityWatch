@@ -1587,6 +1587,18 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { success, message });
         }
+
+        public IActionResult OnGetGuardFqData(int guardId, int clientSiteId)
+        {
+            // Fetch the fast, site-specific frequency and completion data
+            var fqData = _guardLogDataProvider.GetClientSiteFrequencyData(clientSiteId);
+            return new JsonResult(fqData);
+        }
+
+        public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, int guardId)
+        {
+            return new JsonResult(_guardLogDataProvider.GetTagStatusPendingForSpecificClientSite(clientSiteId, DateTime.Now.Date, DateTime.Now.Date.AddDays(1).AddTicks(-1)));
+        }
     }
 
 

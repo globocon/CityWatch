@@ -10066,3 +10066,109 @@ $(function () {
         });
     });
 });
+
+// --- Fq Display Logic ---
+function loadGuardFqData() {
+    var currentGuardId = $('#GuardLog_GuardLogin_GuardId').val();
+    var currentClientSiteId = $('#ClientSiteID').val();
+    
+    if (currentGuardId && currentClientSiteId) {
+        $('#guardFqDisplay').html('<i class="fa fa-spinner fa-spin"></i>');
+        $.ajax({
+            url: '?handler=GuardFqData',
+            type: 'GET',
+            data: {
+                guardId: currentGuardId,
+                clientSiteId: currentClientSiteId
+            },
+            success: function(data) {
+                if (data) {
+                    var bgcolr = '#A9A9A9';
+                    if (data.completedRounds > 0)
+                        bgcolr = '#FFD580';
+                        
+                    var fqHtml = (data.patrolFqForDayOrHour || '0 PD') + ' <span class="p-1" style="background: ' + bgcolr + ';">' + data.completedRounds + '</span> ' +
+                        '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                        'data-client="' + currentClientSiteId + '" ' +
+                        'data-guard="' + currentGuardId + '" ' +
+                        'data-value="' + data.completedRounds + '">?</a>]';
+                        
+                    $('#guardFqDisplay').html(fqHtml);
+                } else {
+                    var emptyHtml = '0 PD <span class="p-1" style="background: #A9A9A9;">0</span> ' +
+                        '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
+                        'data-client="' + currentClientSiteId + '" ' +
+                        'data-guard="' + currentGuardId + '" ' +
+                        'data-value="0">?</a>]';
+                    $('#guardFqDisplay').html(emptyHtml);
+                }
+            },
+            error: function() {
+                $('#guardFqDisplay').html('Error loading data');
+            }
+        });
+    }
+}
+
+$(function () {
+    loadGuardFqData();
+    
+    $(document).on('click', '#btnRefreshFq', function(e) {
+        e.preventDefault();
+        loadGuardFqData();
+    });
+
+    var clientSiteActiveGuardsSWTagsDetails = null;
+
+    $(document).on('click', '#btnWandTagdetails', function (e) {
+        e.preventDefault();
+        var clientSiteId = $(this).attr('data-client');
+        var guardId = $(this).attr('data-guard');
+        var currentFrequencyValue = $(this).attr('data-value');
+
+        $('#lbl_GuardActivityHeaderSWTagsInfoModal').text('Wand Tag Scan Details');
+        $('#currentFrequencyDisplay').text('Fq : ' + currentFrequencyValue);
+
+        if ($.fn.DataTable.isDataTable('#clientSiteActiveGuardsSWTagsDetails')) {
+            $('#clientSiteActiveGuardsSWTagsDetails').DataTable().clear().destroy();
+        }
+
+        clientSiteActiveGuardsSWTagsDetails = $('#clientSiteActiveGuardsSWTagsDetails').DataTable({
+            lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+            ordering: true,
+            order: [[1, 'desc']],
+            info: false,
+            searching: false,
+            autoWidth: false,
+            fixedHeader: true,
+            "scrollY": "300px",
+            "paging": false,
+            "footer": true,
+            ajax: {
+                url: '?handler=ClientSiteSWTagsDetails',
+                datatype: 'json',
+                data: function (d) {
+                    d.clientSiteId = clientSiteId;
+                    d.guardId = guardId;
+                },
+                dataSrc: ''
+            },
+            columns: [
+                { data: 'tagType', width: '10%' },
+                { 
+                    data: 'labelDescription', 
+                    width: '70%',
+                    render: function (data, type, row) {
+                        if (data && data.indexOf('(Bypass)') !== -1) {
+                            return data.replace('(Bypass)', '<span style="color:red; font-weight:bold;">(Bypass)</span>');
+                        }
+                        return data;
+                    }
+                },
+                { data: 'todayScanCount', width: '20%', className: "text-center" }
+            ]
+        });
+
+        $('#guardSWTagsInfoModal').modal('show');
+    });
+});
