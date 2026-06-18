@@ -29,6 +29,10 @@ namespace CityWatch.Data.Models
         public Guid FileGroupId { get; set; }
         public string DeviceId { get; set; }
         public string DeviceName { get; set; }
+        public int? LogbookclientsiteId { get; set; }
+        public bool IsEntryByPCAR { get; set; } = false;
+        public int? CallSignId { get; set; }
+        public int? PositionId { get; set; }
 
     }
     

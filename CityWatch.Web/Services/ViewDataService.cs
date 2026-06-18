@@ -4,6 +4,7 @@ using CityWatch.Common.Services;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Models.DTO;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Web.API;
@@ -242,6 +243,7 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPax(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<SelectListItem> GetClientSitePatrolCarIds(int[] clientSiteIds);
         public List<SelectListItem> GetAllPatrolCars();
+        public List<ActivityModelDTO> GetPreDefinedActivitesFields();
     }
 
 
@@ -2440,6 +2442,12 @@ namespace CityWatch.Web.Services
             }).ToList();
         }
 
+        public List<ActivityModelDTO> GetPreDefinedActivitesFields()
+        {
+            var hrGroups = _guardLogDataProvider.GetActivityModels();
+            return hrGroups;
+        }
+
 
         //public List<Mp3File> GetDressAppFieldsAudio(int type)
         //{
@@ -3658,7 +3666,7 @@ namespace CityWatch.Web.Services
         public string Name { get; set; }
 
         public string Label { get; set; }
-    }
+    }   
 
     public class Mp3File
     {

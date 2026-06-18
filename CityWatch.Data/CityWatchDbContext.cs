@@ -421,6 +421,7 @@ namespace CityWatch.Data
         public DbSet<RosterScheduleAuditLog> RosterScheduleAuditLogs { get; set; }
         public DbSet<OnBoardUsersTrainingAndAssessment> OnBoardUsersTrainingAndAssessment { get; set; }
         public DbSet<ShiftCancellationEmailQueue> ShiftCancellationEmailQueues { get; set; }
+        public DbSet<GuardLogsLinked> GuardLogsLinked { get; set; }
     }
 
 
