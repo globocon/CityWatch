@@ -3211,8 +3211,9 @@ namespace CityWatch.RadioCheck.Pages.Radio
             if (clientsite != null)
             {
                 clientsiteIds = clientsite.Split(",").Select(int.Parse).ToArray();
-                ActionListIds = _configDataProvider.GetRCActionListMessagesClientSites().Where(x => clientsiteIds.Contains(x.ClientSiteId)).Select(x => x.RCActionListMessagesId).ToArray();
             }
+            ActionListIds = _configDataProvider.GetRCActionListMessagesClientSites().Where(x => clientsiteIds.Contains(x.ClientSiteId)).Select(x => x.RCActionListMessagesId).ToArray();
+
             var result = _configDataProvider.GetRCActionListMessages(ActionListIds);
 
             return new JsonResult(result);
