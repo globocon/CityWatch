@@ -10350,7 +10350,7 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
     columns: [
         { field: 'notifications', title: 'Message', width: '100%', editor: true },
         {
-            field: 'fq', title: 'FQ', width: '50%', type: 'dropdown',
+            field: 'fq', title: 'FQ', width: '20%', type: 'dropdown',
             //editor: { dataSource: '/RadioCheckV2?handler=FQValues', valueField: 'value', textField: 'text' }
             editor: {
                 dataSource: [
@@ -10371,7 +10371,7 @@ let gridPendingTasks = $('#tblPendingTasks').grid({
         {
             field: 'expiryDate',
             title: 'Expiry',
-            width: '50%',
+            width: '30%',
             align: 'center',
            
             renderer: function (value) {
