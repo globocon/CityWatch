@@ -75,7 +75,7 @@ namespace CityWatch.Data.Models
         public int? TagScanHitLogRefId { get; set; }
         public DateTime? EventMobileUtcDateTime { get; set; }
         public int? EntryPassedByPCARclientsiteId { get; set; }
-        public bool? IsEntryByPCAR { get; set; } = false;
+        public bool IsEntryByPCAR { get; set; } = false;
         public int? CallSignId { get; set; }
         public int? PositionId { get; set; }
 

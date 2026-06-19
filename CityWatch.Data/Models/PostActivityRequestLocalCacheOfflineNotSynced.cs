@@ -31,7 +31,7 @@ namespace CityWatch.Data.Models
         public DateTime SyncTime { get; set; } = DateTime.Now;
         public string NotSyncError { get; set; }
         public int? LogbookclientsiteId { get; set; }
-        public bool? IsEntryByPCAR { get; set; } = false;
+        public bool IsEntryByPCAR { get; set; } = false;
         public int? CallSignId { get; set; }
         public int? PositionId { get; set; }
 
