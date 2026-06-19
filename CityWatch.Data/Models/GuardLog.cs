@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -75,7 +75,7 @@ namespace CityWatch.Data.Models
         public int? TagScanHitLogRefId { get; set; }
         public DateTime? EventMobileUtcDateTime { get; set; }
         public int? EntryPassedByPCARclientsiteId { get; set; }
-        public bool IsEntryByPCAR { get; set; } = false;
+        public bool? IsEntryByPCAR { get; set; } = false;
         public int? CallSignId { get; set; }
         public int? PositionId { get; set; }
 
