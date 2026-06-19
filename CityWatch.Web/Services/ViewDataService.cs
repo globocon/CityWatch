@@ -1110,7 +1110,10 @@ namespace CityWatch.Web.Services
                     // Compare expiry date with today's date
                     if (expiryDate < today)
                     {
-                        if (firstItem.IsPending && daysAfterExpiry <= 60)
+                        // EXPLANATION: If the record is expired but marked as "Pending" (toggle ON), 
+                        // it will show an ORANGE clock to indicate a grace period.
+                        // After 99 days past the expiry date, this grace period expires and it forcefully turns RED.
+                        if (firstItem.IsPending && daysAfterExpiry <= 99)
                         {
                             return "Orange";
                         }

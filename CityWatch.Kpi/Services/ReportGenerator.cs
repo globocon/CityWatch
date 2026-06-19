@@ -1158,7 +1158,10 @@ namespace CityWatch.Kpi.Services
                         else if (expiryDate < DateTime.Today)
                         {
                             var daysAfterExpiry = (DateTime.Today.Date - expiryDate.Value.Date).TotalDays;
-                            if (matchingDescription.IsPending && daysAfterExpiry <= 60)
+                            // EXPLANATION: If the record is expired but marked as "Pending" (toggle ON), 
+                            // it will show an ORANGE clock to indicate a grace period.
+                            // After 99 days past the expiry date, this grace period expires and it forcefully turns RED.
+                            if (matchingDescription.IsPending && daysAfterExpiry <= 99)
                             {
                                 cellColor = CELL_BG_ORANGE;
                                 int digits = daysAfterExpiry.ToString().Length;
