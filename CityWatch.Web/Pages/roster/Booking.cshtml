@@ -3933,93 +3933,124 @@
 
         });
     </script>
+
+    <script>
+    $(document).ready(function() {
+        $(document).on('click', '.btn-configure-alerts', function() {
+            var btn = $(this);
+            $('#alertTargetId').val(btn.data('id'));
+            $('#alertTargetType').val(btn.data('type'));
+            $('#txtAlertEmailRecipients').val(btn.data('emails'));
+            $('#chkAlertOnRejectedShift').prop('checked', btn.data('rejected') == 1);
+            $('#chkAlertOnReliefGuard').prop('checked', btn.data('relief') == 1);
+            $('#modalAlertSettings').modal('show');
+        });
+
+        $('#btnSaveAlertSettings').click(function() {
+            var id = $('#alertTargetId').val();
+            var type = $('#alertTargetType').val();
+            var emails = $('#txtAlertEmailRecipients').val();
+            var rejected = $('#chkAlertOnRejectedShift').is(':checked');
+            var relief = $('#chkAlertOnReliefGuard').is(':checked');
+
+            var handler = type === 'project' ? 'SaveProjectAlerts' : 'SaveGroupAlerts';
+            var dataPayload = { alertEmailRecipients: emails, alertOnRejectedShift: rejected, alertOnReliefGuard: relief };
+            if (type === 'project') dataPayload.projectId = id;
+            else dataPayload.groupId = id;
+
+            $.ajax({
+                url: '/roster/Booking?handler=' + handler,
+                type: 'POST',
+                headers: getHeaders(),
+                data: dataPayload,
+                success: function(res) {
+                    if (res.success) {
+                        $('#modalAlertSettings').modal('hide');
+                        if (type === 'project') {
+                            // We need to re-fetch the data to reflect the new state in the DOM
+                            $('#settings-project-tab').trigger('click');
+                        } else {
+                            $('#settings-group-tab').trigger('click');
+                        }
+                    } else {
+                        $('#genericAlertMessage').text(res.message || 'Error saving settings.');
+                        $('#genericAlertModal').modal('show');
+                    }
+                },
+                error: function() {
+                    $('#genericAlertMessage').text('Error connecting to server.');
+                    $('#genericAlertModal').modal('show');
+                }
+            });
+        });
+    });
+    </script>
 }
 
-
-
-
-<!-- Alert Settings Modal -->
-<div class="modal fade" id="modalAlertSettings" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Configure Alerts</h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="alertTargetId" />
-                <input type="hidden" id="alertTargetType" />
-                <div class="form-group">
-                    <label>Alert Email Recipients (comma separated)</label>
-                    <input type="text" id="txtAlertEmailRecipients" class="form-control" placeholder="email1@test.com, email2@test.com" />
-                </div>
-                <div class="form-group">
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" id="chkAlertOnRejectedShift">
-                        <label class="custom-control-label" for="chkAlertOnRejectedShift">Alert when shift cancelled/rejected</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" id="chkAlertOnReliefGuard">
-                        <label class="custom-control-label" for="chkAlertOnReliefGuard">Alert when relief guard assigned</label>
-                    </div>
+<!-- Generic Alert Modal -->
+<div class="modal fade" id="genericAlertModal" tabindex="-1" role="dialog" style="z-index: 9999;">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: none;">
+            <div class="modal-header border-0 pb-0 justify-content-center position-relative">
+                <div style="background: #fff; border-radius: 50%; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; position: absolute; top: -32px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 4px solid #fff;">
+                    <i class="fa fa-info-circle text-primary" style="font-size: 36px;"></i>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="btnSaveAlertSettings">Save</button>
+            <div class="modal-body text-center pt-5 pb-3">
+                <h6 class="font-weight-bold mb-2" style="color: #2c3e50;">Notification</h6>
+                <p id="genericAlertMessage" class="text-muted mb-0" style="font-size: 0.95rem; line-height: 1.5;"></p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
+                <button type="button" class="btn btn-primary px-5" data-dismiss="modal" style="border-radius: 24px; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);">OK</button>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    $(document).on('click', '.btn-configure-alerts', function() {
-        var btn = $(this);
-        $('#alertTargetId').val(btn.data('id'));
-        $('#alertTargetType').val(btn.data('type'));
-        $('#txtAlertEmailRecipients').val(btn.data('emails'));
-        $('#chkAlertOnRejectedShift').prop('checked', btn.data('rejected') == 1);
-        $('#chkAlertOnReliefGuard').prop('checked', btn.data('relief') == 1);
-        $('#modalAlertSettings').modal('show');
-    });
+<!-- Alert Settings Modal -->
+<div class="modal fade" id="modalAlertSettings" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 800px;">
+        <div class="modal-content" style="border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title font-weight-bold" style="color: #000;"><i class="fa fa-cog mr-2"></i> Mail Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-5">
+                <input type="hidden" id="alertTargetId" />
+                <input type="hidden" id="alertTargetType" />
+                
+                <div class="row mb-4">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-9 d-flex">
+                        <div class="custom-control custom-checkbox mr-5">
+                            <input type="checkbox" class="custom-control-input" id="chkAlertOnRejectedShift">
+                            <label class="custom-control-label font-weight-bold" for="chkAlertOnRejectedShift" style="color: #333; cursor: pointer; padding-top: 2px;">Rejected Shift</label>
+                        </div>
+                        <div class="custom-control custom-checkbox ml-2">
+                            <input type="checkbox" class="custom-control-input" id="chkAlertOnReliefGuard">
+                            <label class="custom-control-label font-weight-bold" for="chkAlertOnReliefGuard" style="color: #333; cursor: pointer; padding-top: 2px;">Relief Guard</label>
+                        </div>
+                    </div>
+                </div>
 
-    $('#btnSaveAlertSettings').click(function() {
-        var id = $('#alertTargetId').val();
-        var type = $('#alertTargetType').val();
-        var emails = $('#txtAlertEmailRecipients').val();
-        var rejected = $('#chkAlertOnRejectedShift').is(':checked');
-        var relief = $('#chkAlertOnReliefGuard').is(':checked');
+                <div class="row mb-5 align-items-center">
+                    <div class="col-md-3 text-md-right pr-4">
+                        <label class="font-weight-bold mb-0 text-secondary" style="font-size: 1rem; color: #666;">Email Recipients</label>
+                    </div>
+                    <div class="col-md-9">
+                        <input type="text" id="txtAlertEmailRecipients" class="form-control" style="border-radius: 4px; border: 1px solid #ddd;" />
+                        <small class="form-text mt-2 font-italic" style="color: #777; font-size: 0.9rem;">Designated Account Manager will automatically be on CC</small>
+                    </div>
+                </div>
 
-        var handler = type === 'project' ? 'SaveProjectAlerts' : 'SaveGroupAlerts';
-        var dataPayload = { alertEmailRecipients: emails, alertOnRejectedShift: rejected, alertOnReliefGuard: relief };
-        if (type === 'project') dataPayload.projectId = id;
-        else dataPayload.groupId = id;
-
-        $.ajax({
-            url: '/roster/Booking?handler=' + handler,
-            type: 'POST',
-            headers: getHeaders(),
-            data: dataPayload,
-            success: function(res) {
-                if (res.success) {
-                    $('#modalAlertSettings').modal('hide');
-                    if (type === 'project') {
-                        // We need to re-fetch the data to reflect the new state in the DOM
-                        $('#settings-project-tab').trigger('click');
-                    } else {
-                        $('#settings-group-tab').trigger('click');
-                    }
-                } else {
-                    alert(res.message || 'Error saving settings.');
-                }
-            },
-            error: function() {
-                alert('Error connecting to server.');
-            }
-        });
-    });
-});
-</script>
+                <div class="row mt-2">
+                    <div class="col-md-12 pl-4">
+                        <button type="button" class="btn btn-success px-4 py-2" id="btnSaveAlertSettings" style="font-size: 1rem; border-radius: 4px; background-color: #28a745; border-color: #28a745;">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
