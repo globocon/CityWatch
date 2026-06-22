@@ -255,7 +255,7 @@ namespace CityWatch.Web.Pages.roster
 
             var siteIds = new List<int>();
 
-            if (type == "group")
+            if (type == "project") // UI "Project" maps to RosterGroup
             {
                 var projectLinks = _context.RosterBinderProjects.Where(bp => bp.RosterGroupId == id).ToList();
                 foreach (var link in projectLinks)
@@ -270,9 +270,11 @@ namespace CityWatch.Web.Pages.roster
                 }
                 
                 var groupSites = _context.RosterGroupSites.Where(gs => gs.RosterGroupId == id).Select(gs => gs.ClientSiteId).ToList();
+                var scheduleSites = _context.RosterSchedules.Where(s => s.RosterGroupId == id && !s.IsDeleted).Select(s => s.ClientSiteId).ToList();
                 siteIds.AddRange(groupSites);
+                siteIds.AddRange(scheduleSites);
             }
-            else if (type == "project")
+            else if (type == "group") // UI "Group" maps to RosterBinder
             {
                 var groupLinks = _context.RosterBinderProjects.Where(bp => bp.RosterBinderId == id).ToList();
                 foreach (var link in groupLinks)
@@ -286,7 +288,9 @@ namespace CityWatch.Web.Pages.roster
                     }
                     
                     var groupSites = _context.RosterGroupSites.Where(gs => gs.RosterGroupId == link.RosterGroupId).Select(gs => gs.ClientSiteId).ToList();
+                    var scheduleSites = _context.RosterSchedules.Where(s => s.RosterGroupId == link.RosterGroupId && !s.IsDeleted).Select(s => s.ClientSiteId).ToList();
                     siteIds.AddRange(groupSites);
+                    siteIds.AddRange(scheduleSites);
                 }
             }
 
@@ -304,18 +308,8 @@ namespace CityWatch.Web.Pages.roster
                         }
                     }
                 }
-                catch (Exception ex) 
-                { 
-                    toAddresses.Add($"Error on site {siteId}: {ex.Message}");
-                }
+                catch { }
             }
-
-            // Diagnostic info
-            if (!siteIds.Any()) toAddresses.Add($"[Debug] No sites found for {type} {id}");
-            else toAddresses.Add($"[Debug] Found {siteIds.Distinct().Count()} sites");
-
-            if (companyDetails == null) toAddresses.Add("[Debug] CompanyDetails is null");
-            else if (string.IsNullOrEmpty(companyDetails.ROMail)) toAddresses.Add("[Debug] ROMail is empty");
 
             return new JsonResult(new { success = true, emails = string.Join(", ", toAddresses) });
         }
@@ -1921,9 +1915,9 @@ namespace CityWatch.Web.Pages.roster
 
             return new JsonResult(new { success = true });
         }
-        public async Task<IActionResult> OnPostSaveProjectAlerts(int projectId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        public async Task<IActionResult> OnPostSaveProjectAlerts(int id, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
         {
-            var project = await _context.RosterBinders.FirstOrDefaultAsync(b => b.Id == projectId);
+            var project = await _context.RosterGroups.FirstOrDefaultAsync(b => b.Id == id);
             if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
 
             project.AlertEmailRecipients = alertEmailRecipients;
@@ -1934,9 +1928,9 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true });
         }
 
-        public async Task<IActionResult> OnPostSaveGroupAlerts(int groupId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        public async Task<IActionResult> OnPostSaveGroupAlerts(int id, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
         {
-            var group = await _context.RosterGroups.FirstOrDefaultAsync(g => g.Id == groupId);
+            var group = await _context.RosterBinders.FirstOrDefaultAsync(g => g.Id == id);
             if (group == null) return new JsonResult(new { success = false, message = "Group not found." });
 
             group.AlertEmailRecipients = alertEmailRecipients;
