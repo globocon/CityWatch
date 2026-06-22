@@ -3935,7 +3935,13 @@
     </script>
 
     <script>
-    $(document).ready(function() {
+    function initBookingAlerts() {
+        if (typeof jQuery === 'undefined') {
+            setTimeout(initBookingAlerts, 50);
+            return;
+        }
+        var $ = jQuery;
+
         $(document).on('click', '.btn-configure-alerts', function() {
             var btn = $(this);
             $('#alertTargetId').val(btn.data('id'));
@@ -3983,7 +3989,8 @@
                 }
             });
         });
-    });
+    }
+    initBookingAlerts();
     </script>
 }
 
