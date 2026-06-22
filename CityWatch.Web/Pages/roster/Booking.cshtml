@@ -3983,10 +3983,24 @@
                     success: function(res) {
                         if (res.success) {
                             $('#modalAlertSettings').modal('hide');
+                            
+                            // Show success modal
+                            var $icon = $('#genericAlertModal .fa');
+                            $icon.removeClass('fa-info-circle text-primary').addClass('fa-check-circle text-success');
+                            $('#genericAlertModal h6').text('Success');
+                            $('#genericAlertMessage').text('Settings saved successfully!');
+                            $('#genericAlertModal').modal('show');
+                            
+                            $('#genericAlertModal').one('hidden.bs.modal', function() {
+                                $icon.removeClass('fa-check-circle text-success').addClass('fa-info-circle text-primary');
+                                $('#genericAlertModal h6').text('Notification');
+                            });
+
+                            // Directly reload the data
                             if (type === 'project') {
-                                $('#settings-project-tab').trigger('click');
+                                loadSettingsProjects();
                             } else {
-                                $('#settings-group-tab').trigger('click');
+                                loadSettingsGroups();
                             }
                         } else {
                             $('#genericAlertMessage').text(res.message || 'Error saving settings.');
@@ -4059,8 +4073,8 @@
                     <div class="col-md-9">
                         <input type="text" id="txtAlertEmailRecipients" class="form-control" style="border-radius: 4px; border: 1px solid #ddd;" />
                         <small class="form-text mt-2 font-italic" style="color: #777; font-size: 0.9rem;">Designated Account Manager will automatically be on CC</small>
-                        <div id="implicitEmailsContainer" class="mt-2 text-success font-weight-bold" style="font-size: 0.95rem; display: none;">
-                            Inherited Emails: <span id="lblImplicitEmails"></span>
+                        <div id="implicitEmailsContainer" class="mt-2 text-primary font-weight-bold" style="font-size: 0.95rem; display: none;">
+                            Also sending to: <span id="lblImplicitEmails"></span>
                         </div>
                     </div>
                 </div>
