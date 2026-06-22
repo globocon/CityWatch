@@ -239,6 +239,77 @@ namespace CityWatch.Web.Pages.roster
             return reasons;
         }
 
+        public JsonResult OnGetAlertRecipientsPreview(int id, string type)
+        {
+            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+
+            var companyDetails = _context.CompanyDetails.FirstOrDefault();
+            if (companyDetails != null && !string.IsNullOrEmpty(companyDetails.ROMail))
+            {
+                var splitRO = companyDetails.ROMail.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var em in splitRO)
+                {
+                    if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                }
+            }
+
+            var siteIds = new List<int>();
+
+            if (type == "group")
+            {
+                var projectLinks = _context.RosterBinderProjects.Where(bp => bp.RosterGroupId == id).ToList();
+                foreach (var link in projectLinks)
+                {
+                    var project = _context.RosterBinders.FirstOrDefault(b => b.Id == link.RosterBinderId);
+                    if (project != null && !string.IsNullOrEmpty(project.AlertEmailRecipients))
+                    {
+                        var splits = project.AlertEmailRecipients.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var em in splits)
+                            if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                    }
+                }
+                
+                var groupSites = _context.RosterGroupSites.Where(gs => gs.RosterGroupId == id).Select(gs => gs.ClientSiteId).ToList();
+                siteIds.AddRange(groupSites);
+            }
+            else if (type == "project")
+            {
+                var groupLinks = _context.RosterBinderProjects.Where(bp => bp.RosterBinderId == id).ToList();
+                foreach (var link in groupLinks)
+                {
+                    var group = _context.RosterGroups.FirstOrDefault(g => g.Id == link.RosterGroupId);
+                    if (group != null && !string.IsNullOrEmpty(group.AlertEmailRecipients))
+                    {
+                        var splits = group.AlertEmailRecipients.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var em in splits)
+                            if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                    }
+                    
+                    var groupSites = _context.RosterGroupSites.Where(gs => gs.RosterGroupId == link.RosterGroupId).Select(gs => gs.ClientSiteId).ToList();
+                    siteIds.AddRange(groupSites);
+                }
+            }
+
+            foreach (var siteId in siteIds.Distinct())
+            {
+                try
+                {
+                    var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+                    if (kpiSetting != null && kpiSetting.KPITelematicsFieldID.HasValue)
+                    {
+                        var manager = _clientDataProvider.GetKPITelematicsDetails(kpiSetting.KPITelematicsFieldID.Value);
+                        if (manager != null && !string.IsNullOrEmpty(manager.Email) && !toAddresses.Contains(manager.Email.Trim()))
+                        {
+                            toAddresses.Add(manager.Email.Trim());
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            return new JsonResult(new { success = true, emails = string.Join(", ", toAddresses) });
+        }
+
         public JsonResult OnGetSearchProjects(string search)
         {
             var projects = _context.RosterGroups
