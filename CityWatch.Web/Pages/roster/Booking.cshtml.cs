@@ -1915,9 +1915,9 @@ namespace CityWatch.Web.Pages.roster
 
             return new JsonResult(new { success = true });
         }
-        public async Task<IActionResult> OnPostSaveProjectAlerts(int id, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        public async Task<IActionResult> OnPostSaveProjectAlerts(int projectId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
         {
-            var project = await _context.RosterGroups.FirstOrDefaultAsync(b => b.Id == id);
+            var project = await _context.RosterGroups.FirstOrDefaultAsync(b => b.Id == projectId);
             if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
 
             project.AlertEmailRecipients = alertEmailRecipients;
@@ -1928,9 +1928,9 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = true });
         }
 
-        public async Task<IActionResult> OnPostSaveGroupAlerts(int id, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        public async Task<IActionResult> OnPostSaveGroupAlerts(int groupId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
         {
-            var group = await _context.RosterBinders.FirstOrDefaultAsync(g => g.Id == id);
+            var group = await _context.RosterBinders.FirstOrDefaultAsync(g => g.Id == groupId);
             if (group == null) return new JsonResult(new { success = false, message = "Group not found." });
 
             group.AlertEmailRecipients = alertEmailRecipients;
