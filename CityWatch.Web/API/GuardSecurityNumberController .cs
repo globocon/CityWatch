@@ -2847,21 +2847,10 @@ namespace CityWatch.Web.API
 
 
         [HttpPost("UploadMultiple")]
-        public async Task<IActionResult> UploadMultiple(
-            [FromForm] List<IFormFile> files,
-            [FromForm] List<string> types,   // <-- multiple types aligned with files
-            [FromForm] int guardId,
-            [FromForm] int clientsiteId,
-            [FromForm] int userId,
-            [FromForm] string gps,
-            [FromForm] DateTime? eventDateTimeLocal,
-            [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset,
-            [FromForm] string? eventDateTimeZone,
-            [FromForm] string? eventDateTimeZoneShort,
-            [FromForm] int? eventDateTimeUtcOffsetMinute,
-            [FromForm] int? logbookclientsiteId,
-            [FromForm] bool? isEntryByPCAR,
-            [FromForm] int? callSignId,
+        public async Task<IActionResult> UploadMultiple([FromForm] List<IFormFile> files, [FromForm] List<string> types, [FromForm] int guardId, 
+            [FromForm] int clientsiteId, [FromForm] int userId, [FromForm] string gps, [FromForm] DateTime? eventDateTimeLocal, 
+            [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset, [FromForm] string? eventDateTimeZone, [FromForm] string? eventDateTimeZoneShort, 
+            [FromForm] int? eventDateTimeUtcOffsetMinute, [FromForm] int? logbookclientsiteId, [FromForm] bool? isEntryByPCAR, [FromForm] int? callSignId, 
             [FromForm] int? positionId
         )
         {
@@ -3016,7 +3005,24 @@ namespace CityWatch.Web.API
                         finalFileName = Path.GetFileName(newPath);
                     }
 
-                    var publicPath = $"https://cws-ir.com/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
+                    var publicUrl = "https://cws-ir.com"; // Production Url                    
+                    string baseUrl;
+                    baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    if (_WebHostEnvironment.IsDevelopment())
+                    {
+                        publicUrl = baseUrl; // Local Url
+                    }
+                    else
+                    {
+                        // If test url
+                        if (baseUrl.Contains("test."))
+                        {
+                            publicUrl = baseUrl;
+                        }
+                    }
+
+
+                    var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
 
                     var logImage = new GuardLogsDocumentImages
                     {
@@ -3053,7 +3059,7 @@ namespace CityWatch.Web.API
                             finalFileName2 = Path.GetFileName(newPath2);
                         }
 
-                        var publicPath2 = $"https://cws-ir.com/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
+                        var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
                         var logImage2 = new GuardLogsDocumentImages
                         {
                             GuardLogId = newNonPcarGuardLogId,
@@ -3259,7 +3265,22 @@ namespace CityWatch.Web.API
                                 finalFileName = Path.GetFileName(newPath);
                             }
 
-                            var publicPath = $"https://cws-ir.com/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
+                            var publicUrl = "https://cws-ir.com"; // Production Url                    
+                            string baseUrl;
+                            baseUrl = $"{Request.Scheme}://{Request.Host}";
+                            if (_WebHostEnvironment.IsDevelopment())
+                            {
+                                publicUrl = baseUrl; // Local Url
+                            }
+                            else
+                            {
+                                // If test url
+                                if (baseUrl.Contains("test."))
+                                {
+                                    publicUrl = baseUrl;
+                                }
+                            }
+                            var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
 
                             var logImage = new GuardLogsDocumentImages
                             {
@@ -3295,7 +3316,7 @@ namespace CityWatch.Web.API
                                     finalFileName2 = Path.GetFileName(newPath2);
                                 }
 
-                                var publicPath2 = $"https://cws-ir.com/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
+                                var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
                                 var logImage2 = new GuardLogsDocumentImages
                                 {
                                     GuardLogId = newNonPcarGuardLogId,
@@ -3412,7 +3433,22 @@ namespace CityWatch.Web.API
                         finalFileName = Path.GetFileName(newPath);
                     }
 
-                    var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
+                    var publicUrl = "https://cws-ir.com"; // Production Url
+                    string baseUrl;
+                    baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    if (_WebHostEnvironment.IsDevelopment())
+                    {
+                        publicUrl = baseUrl; // Local Url
+                    }
+                    else
+                    {
+                        // If test url
+                        if (baseUrl.Contains("test."))
+                        {
+                            publicUrl = baseUrl;
+                        }
+                    }
+                    var publicPath = $"{publicUrl}/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
 
                     var logImage = new GuardLogsDocumentImages
                     {
@@ -3449,7 +3485,7 @@ namespace CityWatch.Web.API
                             finalFileName2 = Path.GetFileName(newPath2);
                         }
 
-                        var publicPath2 = $"https://cws-ir.com/DglUploads/{linkedGuardLogId}/{folderName}/{finalFileName2}";
+                        var publicPath2 = $"{publicUrl}/DglUploads/{linkedGuardLogId}/{folderName}/{finalFileName2}";
 
                         _guardLogDataProvider.SaveGuardLogDocumentImages(
                             new GuardLogsDocumentImages
@@ -3477,21 +3513,10 @@ namespace CityWatch.Web.API
 
 
         [HttpPost("UploadMultipleVideos")]
-        public async Task<IActionResult> UploadMultipleVideos(
-            [FromForm] List<IFormFile> files,
-            [FromForm] int guardId,
-            [FromForm] int clientsiteId,
-            [FromForm] int userId,
-            [FromForm] string gps,
-            [FromForm] DateTime? eventDateTimeLocal,
-            [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset,
-            [FromForm] string? eventDateTimeZone,
-            [FromForm] string? eventDateTimeZoneShort,
-            [FromForm] int? eventDateTimeUtcOffsetMinute,
-            [FromForm] int? logbookclientsiteId,
-            [FromForm] bool? isEntryByPCAR,
-            [FromForm] int? callSignId,
-            [FromForm] int? positionId
+        public async Task<IActionResult> UploadMultipleVideos([FromForm] List<IFormFile> files, [FromForm] int guardId, [FromForm] int clientsiteId,
+            [FromForm] int userId, [FromForm] string gps, [FromForm] DateTime? eventDateTimeLocal, [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset,
+            [FromForm] string? eventDateTimeZone, [FromForm] string? eventDateTimeZoneShort, [FromForm] int? eventDateTimeUtcOffsetMinute,
+            [FromForm] int? logbookclientsiteId, [FromForm] bool? isEntryByPCAR, [FromForm] int? callSignId, [FromForm] int? positionId
         )
         {
             bool success = false;
@@ -3611,7 +3636,22 @@ namespace CityWatch.Web.API
                     // Save first copy
                     await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
 
-                    var publicPath = $"https://cws-ir.com/DglUploads/{newPcarGuardLogId}/{folderName}/{uploadFileName}";
+                    var publicUrl = "https://cws-ir.com"; // Production Url
+                    string baseUrl;
+                    baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    if (_WebHostEnvironment.IsDevelopment())
+                    {
+                        publicUrl = baseUrl; // Local Url
+                    }
+                    else
+                    {
+                        // If test url
+                        if (baseUrl.Contains("test."))
+                        {
+                            publicUrl = baseUrl;
+                        }
+                    }
+                    var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{uploadFileName}";
 
                     // Save record in the same table
                     var logFile = new GuardLogsDocumentImages
@@ -3637,7 +3677,7 @@ namespace CityWatch.Web.API
 
                         // Save second copy
                         await System.IO.File.WriteAllBytesAsync(fullPath2, fileBytes);
-                        var publicPath2 = $"https://cws-ir.com/DglUploads/{newNonPcarGuardLogId}/{folderName}/{uploadFileName}";
+                        var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{uploadFileName}";
                         var logFile2 = new GuardLogsDocumentImages
                         {
                             GuardLogId = newNonPcarGuardLogId,
@@ -4708,8 +4748,8 @@ namespace CityWatch.Web.API
                 {
                     var cleanDesc = guardComplianceAndLicenseDTO.Description.ToLower().Trim();
                     var hrSettingsList = _context.HrSettings.ToList();
-                    var matchingSetting = hrSettingsList.FirstOrDefault(s => 
-                        cleanDesc == s.Description.ToLower().Trim() || 
+                    var matchingSetting = hrSettingsList.FirstOrDefault(s =>
+                        cleanDesc == s.Description.ToLower().Trim() ||
                         Regex.IsMatch(cleanDesc, $@"(?<=^|\s){Regex.Escape(s.Description.ToLower().Trim())}(?=\s|$)")
                     );
                     if (matchingSetting != null)
