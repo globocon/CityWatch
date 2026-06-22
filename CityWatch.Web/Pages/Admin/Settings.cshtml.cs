@@ -2950,7 +2950,7 @@ namespace CityWatch.Web.Pages.Admin
                 // If specific attempt limits are defined, enforce them
                 if (trainingSettings != null && trainingSettings.Attempts != null)
                 {
-                    if (result.Attempts < Convert.ToInt32(trainingSettings.Attempts.Name))
+                    if (result.Attempts <= Convert.ToInt32(trainingSettings.Attempts.Name))
                     {
                         _configDataProvider.SaveGuardTrainingAndAssessmentTab(new GuardTrainingAndAssessment()
                         {
