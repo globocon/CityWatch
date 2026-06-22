@@ -3970,6 +3970,15 @@
                 var rejected = $('#chkAlertOnRejectedShift').is(':checked');
                 var relief = $('#chkAlertOnReliefGuard').is(':checked');
 
+                if (!rejected && !relief) {
+                    var $icon = $('#genericAlertModal .fa');
+                    $icon.removeClass('fa-check-circle text-success').addClass('fa-info-circle text-primary');
+                    $('#genericAlertModal h6').text('Validation Error');
+                    $('#genericAlertMessage').text('Please select at least one alert type (Rejected Shift or Relief Guard) before saving.');
+                    $('#genericAlertModal').modal('show');
+                    return;
+                }
+
                 var handler = type === 'project' ? 'SaveProjectAlerts' : 'SaveGroupAlerts';
                 var dataPayload = { alertEmailRecipients: emails, alertOnRejectedShift: rejected, alertOnReliefGuard: relief };
                 if (type === 'project') dataPayload.projectId = id;
