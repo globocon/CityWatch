@@ -304,8 +304,18 @@ namespace CityWatch.Web.Pages.roster
                         }
                     }
                 }
-                catch { }
+                catch (Exception ex) 
+                { 
+                    toAddresses.Add($"Error on site {siteId}: {ex.Message}");
+                }
             }
+
+            // Diagnostic info
+            if (!siteIds.Any()) toAddresses.Add($"[Debug] No sites found for {type} {id}");
+            else toAddresses.Add($"[Debug] Found {siteIds.Distinct().Count()} sites");
+
+            if (companyDetails == null) toAddresses.Add("[Debug] CompanyDetails is null");
+            else if (string.IsNullOrEmpty(companyDetails.ROMail)) toAddresses.Add("[Debug] ROMail is empty");
 
             return new JsonResult(new { success = true, emails = string.Join(", ", toAddresses) });
         }
@@ -1911,6 +1921,32 @@ namespace CityWatch.Web.Pages.roster
 
             return new JsonResult(new { success = true });
         }
+        public async Task<IActionResult> OnPostSaveProjectAlerts(int projectId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        {
+            var project = await _context.RosterBinders.FirstOrDefaultAsync(b => b.Id == projectId);
+            if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
+
+            project.AlertEmailRecipients = alertEmailRecipients;
+            project.AlertOnRejectedShift = alertOnRejectedShift;
+            project.AlertOnReliefGuard = alertOnReliefGuard;
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostSaveGroupAlerts(int groupId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        {
+            var group = await _context.RosterGroups.FirstOrDefaultAsync(g => g.Id == groupId);
+            if (group == null) return new JsonResult(new { success = false, message = "Group not found." });
+
+            group.AlertEmailRecipients = alertEmailRecipients;
+            group.AlertOnRejectedShift = alertOnRejectedShift;
+            group.AlertOnReliefGuard = alertOnReliefGuard;
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
+        }
+
         private DayOfWeek GetFirstDayOfWeek()
         {
             var timesheet = _clientDataProvider.GetTimesheetDetails();
