@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,11 @@ namespace CityWatch.Data.Models
 
         [Required]
         public string Description { get; set; }
+
+        // Added for Graceful Migration: Store the master ID instead of relying purely on Description
+        public int? HrSettingsId { get; set; }
+        [ForeignKey("HrSettingsId")]
+        public HrSettings HrSettings { get; set; }
         
         public DateTime? ExpiryDate { get; set; }
 
@@ -102,7 +107,10 @@ namespace CityWatch.Data.Models
                     // Expired
                     if (expiryDate < currentDate)
                     {
-                        if (IsPending && daysAfterExpiry <= 60)
+                        // EXPLANATION: If the record is expired but marked as "Pending" (toggle ON), 
+                        // it will show an ORANGE clock to indicate a grace period.
+                        // After 99 days past the expiry date, this grace period expires and it forcefully turns RED.
+                        if (IsPending && daysAfterExpiry <= 99)
                         {
                             statusColor = "orange";
                         }

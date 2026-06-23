@@ -1016,6 +1016,25 @@ namespace CityWatch.Web.Pages.Admin
             {
                 guardComplianceandlicense.Description = Regex.Replace(guardComplianceandlicense.Description, "[✔️❌]", "").Trim();
             }
+
+            // OVERRIDE frontend Description with pristine master Description from DB
+            HrSettings masterSetting = null;
+            if (guardComplianceandlicense.HrSettingsId.HasValue && guardComplianceandlicense.HrSettingsId.Value > 0)
+            {
+                masterSetting = _guardDataProvider.GetHRSettingsById(guardComplianceandlicense.HrSettingsId.Value);
+            }
+            if (masterSetting == null && guardComplianceandlicense.HrGroup != null && !string.IsNullOrEmpty(guardComplianceandlicense.Description))
+            {
+                var hrIdInt = Convert.ToInt16(guardComplianceandlicense.HrGroup.Value);
+                masterSetting = _guardDataProvider.GetHRRefernceNo(hrIdInt, guardComplianceandlicense.Description);
+            }
+            if (masterSetting != null)
+            {
+                guardComplianceandlicense.Description = !string.IsNullOrEmpty(masterSetting.ReferenceNo) 
+                    ? masterSetting.ReferenceNo + " " + masterSetting.Description 
+                    : masterSetting.Description;
+            }
+
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
@@ -1200,10 +1219,21 @@ namespace CityWatch.Web.Pages.Admin
                 hrIdInt = 0;
             }
             var RefNo = "";
-            var RefrenceNoList = _guardDataProvider.GetHRRefernceNo(hrIdInt, Description);
+            HrSettings RefrenceNoList = null;
+            var hrSettingsIdRaw = Request.Form["HrSettingsId"].ToString();
+            if (!string.IsNullOrEmpty(hrSettingsIdRaw) && int.TryParse(hrSettingsIdRaw, out int hrSettingsId))
+            {
+                RefrenceNoList = _guardDataProvider.GetHRSettingsById(hrSettingsId);
+            }
+            if (RefrenceNoList == null)
+            {
+                RefrenceNoList = _guardDataProvider.GetHRRefernceNo(hrIdInt, Description);
+            }
+
             if (RefrenceNoList != null)
             {
                 RefNo = RefrenceNoList.ReferenceNo;
+                Description = RefrenceNoList.Description;
             }
 
 

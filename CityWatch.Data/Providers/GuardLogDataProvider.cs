@@ -440,6 +440,7 @@ namespace CityWatch.Data.Providers
 
         public void DeleteKeyVehicleLogPax(int id);
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
+        object GetClientSiteFrequencyData(int clientSiteId);
         public void DeleteOnBoardUsersCourseByAdmin(int Id);
         string GetTagScanGpsFromLogBook(int RecordId);
     }
@@ -6526,6 +6527,8 @@ namespace CityWatch.Data.Providers
                 var hrSettingsToUpdate = _context.HrSettings.SingleOrDefault(x => x.Id == hrSettings.Id);
                 if (hrSettingsToUpdate != null)
                 {
+                    string oldDescription = hrSettingsToUpdate.Description?.ToLower().Trim();
+
                     hrSettingsToUpdate.HRGroupId = hrSettings.HRGroupId;
                     hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
                     hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
@@ -6533,6 +6536,35 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.DateType = hrSettings.DateType;
                     hrSettingsToUpdate.IsAllClientTypeEnabled = hrSettings.IsAllClientTypeEnabled;
                     hrSettingsToUpdate.IsAllStateEnabled = hrSettings.IsAllStateEnabled;
+
+                    // Cascade description change to all linked guard compliance records natively in the DB
+                    var refNumber = _context.ReferenceNoNumbers.FirstOrDefault(x => x.Id == hrSettings.ReferenceNoNumberId)?.Name ?? "";
+                    var refAlphabet = _context.ReferenceNoAlphabets.FirstOrDefault(x => x.Id == hrSettings.ReferenceNoAlphabetId)?.Name ?? "";
+                    string updatedDescription = string.IsNullOrEmpty(refNumber + refAlphabet) ? hrSettings.Description : (refNumber + refAlphabet + " " + hrSettings.Description);
+                    
+                    var linkedGuardRecords = _context.GuardComplianceLicense.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                    foreach (var rec in linkedGuardRecords)
+                    {
+                        rec.Description = updatedDescription;
+                    }
+
+                    // Cascade to legacy records without an ID that match the OLD description
+                    if (!string.IsNullOrEmpty(oldDescription))
+                    {
+                        var legacyRecords = _context.GuardComplianceLicense
+                            .Where(x => x.HrSettingsId == null)
+                            .ToList()
+                            .Where(x => !string.IsNullOrEmpty(x.Description) && 
+                                        (x.Description.ToLower().Trim() == oldDescription || 
+                                         x.Description.ToLower().Trim().EndsWith(" " + oldDescription)))
+                            .ToList();
+                            
+                        foreach(var legacy in legacyRecords)
+                        {
+                            legacy.HrSettingsId = hrSettings.Id; // Fix the broken link permanently!
+                            legacy.Description = updatedDescription;
+                        }
+                    }
                 }
 
                 // Remove old sites & states
@@ -8629,15 +8661,65 @@ namespace CityWatch.Data.Providers
         {
             try
             {
-                return _context.Set<SiteTagStatusPendingNew>()
+                var tags = _context.Set<SiteTagStatusPendingNew>()
                     .FromSqlRaw("EXEC Sp_GetClientSiteTagScanSummary @ClientId = {0}, @FromDate = {1}, @ToDate = {2}", clientId, fromDate, ToDate)
                     .ToList();
+
+                // Append (Bypass) manually if the tag is marked as FqBypass in the database
+                var bypassTags = _context.ClientSiteSmartWandTags
+                    .Where(t => t.ClientSiteId == clientId && t.FqBypass && !t.IsDeleted && t.LabelDescription != null)
+                    .Select(t => t.LabelDescription.Trim().ToLower())
+                    .ToList();
+
+                foreach (var tag in tags)
+                {
+                    if (tag.LabelDescription != null)
+                    {
+                        var rawLabel = tag.LabelDescription.Trim().ToLower();
+                        if (bypassTags.Contains(rawLabel) && !tag.LabelDescription.Contains("(Bypass)", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tag.LabelDescription = tag.LabelDescription + " (Bypass)";
+                        }
+                    }
+                }
+
+                return tags;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching site tag status: {ex.Message}");
                 return new List<SiteTagStatusPendingNew>();
             }
+        }
+
+        public object GetClientSiteFrequencyData(int clientSiteId)
+        {
+            var weekOfToday = DateTime.Now.DayOfWeek;
+            var kpisettingsday = _context.ClientSiteDayKpiSettings
+                .Include(x => x.ClientSiteKpiSetting)
+                .Where(x => x.WeekDay == weekOfToday && x.ClientSiteKpiSetting.ClientSiteId == clientSiteId)
+                .FirstOrDefault();
+
+            string patrolFq = "0 PD&nbsp;&nbsp;&nbsp;&nbsp | &nbsp;&nbsp;&nbsp;&nbsp";
+            if (kpisettingsday != null && kpisettingsday.NoOfPatrols != null)
+            {
+                patrolFq = $"{kpisettingsday.NoOfPatrols} P{(kpisettingsday.PatrolFrequency == 1 ? "D" : "H")}&nbsp;&nbsp;&nbsp;&nbsp | &nbsp;&nbsp;&nbsp;&nbsp";
+            }
+
+            var tags = GetTagStatusPendingForSpecificClientSite(clientSiteId, DateTime.Now.Date, DateTime.Now.Date.AddDays(1).AddTicks(-1));
+            
+            int completedRounds = 0;
+            var requiredTags = tags.Where(t => t.LabelDescription != null && !t.LabelDescription.Contains("(Bypass)", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (requiredTags.Any())
+            {
+                completedRounds = requiredTags.Min(t => t.TodayScanCount);
+            }
+            
+            return new {
+                patrolFqForDayOrHour = patrolFq,
+                haswandtags = tags.Any() ? 1 : 0,
+                completedRounds = completedRounds 
+            };
         }
 
         public void DeleteOnBoardUsersCourseByAdmin(int Id)
