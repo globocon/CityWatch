@@ -255,7 +255,7 @@ namespace CityWatch.Web.Helpers
                     {
                         if (AuthUserHelper.IsOnboardingUserLoggedIn)
                         {
-                            menuHtml.AppendLine(@"<a href=""/WelcomePack/DataPack.zip"" download id=""TrainingAndAssessmentBtnSettings"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Data Pack</a>");
+                            menuHtml.AppendLine(@"<a href=""/WelcomePack/DataPack.zip"" download id=""btnDataPackDownload"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Data Pack</a>");
                         }
                         else
                         {
@@ -297,7 +297,7 @@ namespace CityWatch.Web.Helpers
                         menuHtml.AppendLine("<div>");
                         if (AuthUserHelper.IsOnboardingUserLoggedIn)
                         {
-                            menuHtml.AppendLine(@"<a href=""/WelcomePack/DataPack.zip"" download id=""TrainingAndAssessmentBtnSettings"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Data Pack</a>");
+                            menuHtml.AppendLine(@"<a href=""/WelcomePack/DataPack.zip"" download id=""btnDataPackDownload"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Data Pack</a>");
                         }
                         else
                         {
