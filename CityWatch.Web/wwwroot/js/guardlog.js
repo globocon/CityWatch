@@ -6266,12 +6266,14 @@ $(function () {
         const token = $('input[name="__RequestVerificationToken"]').val();
         const ulClients = $('#Description').siblings('ul.es-list');
         ulClients.html('');
+        var isOnboardingUserFlag = typeof isOnboardingUser !== 'undefined' ? isOnboardingUser : false;
         $.ajax({
             url: '/Admin/GuardSettings?handler=HRDescription',
             type: 'GET',
             data: {
                 HRid: Descriptionval,
-                GuardID: GuardID
+                GuardID: GuardID,
+                isOnboardingUser: isOnboardingUserFlag
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function (DescVal) {

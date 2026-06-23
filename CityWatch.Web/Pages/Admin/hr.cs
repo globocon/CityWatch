@@ -896,24 +896,37 @@ namespace CityWatch.Web.Pages.Admin
             
             if (isOnboardingUser)
             {
-                var onboardingUser = _userDataProvider.GetUsers().FirstOrDefault(x => string.Equals(x.UserName, "onboarding", StringComparison.OrdinalIgnoreCase));
+                var onboardingUser = _userDataProvider.GetUsers(true).FirstOrDefault(x => string.Equals(x.UserName, "onboarding", StringComparison.OrdinalIgnoreCase));
                 if (onboardingUser != null)
                 {
+                    var allowedDescIds = new HashSet<int>();
                     var allUserAccess = _userDataProvider.GetUserClientSiteAccess(onboardingUser.Id);
-                    var firstClientSiteId = allUserAccess.FirstOrDefault()?.ClientSiteId ?? 0;
-                    if (firstClientSiteId != 0)
+                    
+                    foreach (var access in allUserAccess)
                     {
-                        var criticalDocs = _configDataProvider.GetCriticalDocsByClientSiteId(firstClientSiteId)?.FirstOrDefault();
-                        if (criticalDocs != null)
+                        var criticalDocsForSite = _configDataProvider.GetCriticalDocsByClientSiteId(access.ClientSiteId);
+                        if (criticalDocsForSite != null)
                         {
-                            var document = _configDataProvider.GetCriticalDocById(criticalDocs.Id);
-                            if (document != null && document.CriticalDocumentDescriptions != null)
+                            foreach (var cDoc in criticalDocsForSite)
                             {
-                                var allowedDescIds = document.CriticalDocumentDescriptions.Select(d => d.DescriptionID).ToList();
-                                combinedDataList = combinedDataList.Where(x => allowedDescIds.Contains(x.ID)).ToList();
+                                var document = _configDataProvider.GetCriticalDocById(cDoc.Id);
+                                if (document?.CriticalDocumentDescriptions != null)
+                                {
+                                    foreach (var desc in document.CriticalDocumentDescriptions)
+                                    {
+                                        allowedDescIds.Add(desc.DescriptionID);
+                                    }
+                                }
                             }
                         }
                     }
+                    
+                    combinedDataList = combinedDataList.Where(x => allowedDescIds.Contains(x.ID)).ToList();
+                }
+                else
+                {
+                    // If onboarding user not found, they have no allocated documents
+                    combinedDataList.Clear();
                 }
             }
 
