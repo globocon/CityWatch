@@ -391,6 +391,7 @@ namespace CityWatch.Web.Pages.Guard
                 success,
                 message,
                 LogBookType,
+                guardId = GuardLogin.Guard.Id,
                 initalsChangedMessage = (GuardLogin.IsNewGuard && initalsUsed != guardInitals) ? $"Guard with initials '{guardInitals}' already exists. So initals changed to '{initalsUsed}'" : string.Empty
             });
         }

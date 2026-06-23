@@ -988,6 +988,9 @@ $(function () {
                             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                         }).done(function (result) {
                             if (result.success) {
+                                if (result.guardId) {
+                                    $('#GuardLogin_Guard_Id').val(result.guardId);
+                                }
                                 if (result.initalsChangedMessage !== '')
                                     alert(result.initalsChangedMessage);
                                 confirmDialogLogin(message, function () {
@@ -1047,6 +1050,9 @@ $(function () {
                             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                         }).done(function (result) {
                             if (result.success) {
+                                if (result.guardId) {
+                                    $('#GuardLogin_Guard_Id').val(result.guardId);
+                                }
                                 if (result.initalsChangedMessage !== '')
                                     alert(result.initalsChangedMessage);
 
