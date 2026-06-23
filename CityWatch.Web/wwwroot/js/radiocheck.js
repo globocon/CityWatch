@@ -1884,6 +1884,9 @@ $('#btnGuardHrUpdate').on('click', function () {
 
             if (result.accessPermission) {
 
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
                 $('#modelGuardLoginForHrUpdate').modal('hide');
                 $('#loginHrEditGuard').modal('hide');
 
