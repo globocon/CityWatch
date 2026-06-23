@@ -2427,9 +2427,11 @@ $('#btnAddGuardCourse,#btnAddGuardCourse1').on('click', function (e) {
     
 })
 function loadTrainingCourses() {
+    var isOnboardingUserFlag = typeof isOnboardingUser !== 'undefined' ? isOnboardingUser : false;
     $.ajax({
         url: '/Admin/Settings?handler=TrainingCourses',
         type: 'GET',
+        data: { isOnboardingUser: isOnboardingUserFlag },
         success: function (data) {
             let courseList = $('#courseList');
             courseList.empty(); // Clear existing content

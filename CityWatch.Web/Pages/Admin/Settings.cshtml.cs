@@ -3426,13 +3426,27 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetTrainingCourses()
+        public JsonResult OnGetTrainingCourses(bool isOnboardingUser = false)
         {
             var hrGroups = ConfigDataProiver.GetHRGroupsDropDown();
+
+            List<int> allowedCourseIds = null;
+            if (isOnboardingUser)
+            {
+                var onboardingUser = _userDataProvider.GetUsers().FirstOrDefault(x => string.Equals(x.UserName, "onboarding", StringComparison.OrdinalIgnoreCase));
+                if (onboardingUser != null)
+                {
+                    allowedCourseIds = _guardDataProvider.GetOnBoardUsersTrainingAndAssessment(onboardingUser.Id)
+                        .Select(c => c.TrainingCourseId)
+                        .ToList();
+                }
+            }
+
             var result = hrGroups.Select(group => new
             {
                 GroupId = group.Value,
                 Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+                    .Where(course => allowedCourseIds == null || allowedCourseIds.Contains(course.Id))
                     .Select(course => new
                     {
                         course.Id,

@@ -48,6 +48,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IConfigDataProvider _configDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly IUserDataProvider _userDataProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IDropboxService _dropboxUploadService;
         private readonly Settings _settings;
@@ -62,6 +63,7 @@ namespace CityWatch.Web.Pages.Admin
              IConfigDataProvider configDataProvider,
              IGuardLogDataProvider guardLogDataProvider,
              IGuardSettingsDataProvider guardSettingsDataProvider,
+             IUserDataProvider userDataProvider,
              IWebHostEnvironment webHostEnvironment,
              IDropboxService dropboxUploadService,
              IOptions<Settings> settings,
@@ -77,6 +79,7 @@ namespace CityWatch.Web.Pages.Admin
             _configDataProvider = configDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _guardSettingsDataProvider = guardSettingsDataProvider;
+            _userDataProvider = userDataProvider;
             _webHostEnvironment = webHostEnvironment;
             _dropboxUploadService = dropboxUploadService;
             _settings = settings.Value;
@@ -887,9 +890,33 @@ namespace CityWatch.Web.Pages.Admin
             var DescVal = await _viewDataService.GetHRDescriptionBanDetailsAsync(DescriptionID);
             return new JsonResult(DescVal);
         }
-        public JsonResult OnGetHRDescription(int HRid, int GuardID)
+        public JsonResult OnGetHRDescription(int HRid, int GuardID, bool isOnboardingUser = false)
         {            
             var combinedDataList = _viewDataService.GetHRDescription(HRid, GuardID);
+            
+            if (isOnboardingUser)
+            {
+                var onboardingUser = _userDataProvider.GetUsers().FirstOrDefault(x => string.Equals(x.UserName, "onboarding", StringComparison.OrdinalIgnoreCase));
+                if (onboardingUser != null)
+                {
+                    var allUserAccess = _userDataProvider.GetUserClientSiteAccess(onboardingUser.Id);
+                    var firstClientSiteId = allUserAccess.FirstOrDefault()?.ClientSiteId ?? 0;
+                    if (firstClientSiteId != 0)
+                    {
+                        var criticalDocs = _configDataProvider.GetCriticalDocsByClientSiteId(firstClientSiteId)?.FirstOrDefault();
+                        if (criticalDocs != null)
+                        {
+                            var document = _configDataProvider.GetCriticalDocById(criticalDocs.Id);
+                            if (document != null && document.CriticalDocumentDescriptions != null)
+                            {
+                                var allowedDescIds = document.CriticalDocumentDescriptions.Select(d => d.DescriptionID).ToList();
+                                combinedDataList = combinedDataList.Where(x => allowedDescIds.Contains(x.ID)).ToList();
+                            }
+                        }
+                    }
+                }
+            }
+
             return new JsonResult(combinedDataList);
         }
         private string RemoveBrackets(string input)
