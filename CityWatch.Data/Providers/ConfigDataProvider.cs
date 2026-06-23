@@ -1396,7 +1396,7 @@ namespace CityWatch.Data.Providers
        .Include(z => z.ReferenceNoNumbers)
        .Include(z => z.ReferenceNoAlphabets)
        .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-       ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRGroupId).ToList();
+       ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRGroupId && z.IsDeleted == false).ToList();
             var mapping = _context.HrSettings.Where(x => x.HRGroupId == HRGroupId).ToList();
             foreach (var item in descriptions)
             {
