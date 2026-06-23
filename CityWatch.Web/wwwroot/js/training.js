@@ -572,7 +572,10 @@ let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataT
     ajax: {
         url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
         data: function (d) {
-            d.guardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#Guard_Id').val();
+            var gId = $('#GuardLog_GuardLogin_GuardId').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#GuardLogin_Guard_Id').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#Guard_Id').val();
+            d.guardId = gId;
         },
         dataSrc: ''
     },

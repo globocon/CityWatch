@@ -1942,6 +1942,7 @@ $('#btnGuardHrUpdate').on('click', function () {
                     gridGuardLicensesLogDaily.ajax.reload();
                     gridGuardCompliancesLogDaily.ajax.reload();
                     gridGuardTrainingAndAssessment.ajax.reload();
+                    gridGuardLicensesAndLicenceKey.ajax.reload();
                     $("#Guard_Access1").multiselect();
                     $("#Guard_Access1").val(selectedValues);
                     $("#Guard_Access1").multiselect("refresh");
@@ -2611,7 +2612,10 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
     ajax: {
         url: '/Admin/GuardSettings?handler=GuardLicenseAndComplianceData',
         data: function (d) {
-            d.guardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#Guard_Id').val();
+            var gId = $('#GuardLog_GuardLogin_GuardId').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#GuardLogin_Guard_Id').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#Guard_Id').val();
+            d.guardId = gId;
         },
         dataSrc: ''
     },
