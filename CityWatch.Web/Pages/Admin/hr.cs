@@ -909,10 +909,9 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             foreach (var cDoc in criticalDocsForSite)
                             {
-                                var document = _configDataProvider.GetCriticalDocById(cDoc.Id);
-                                if (document?.CriticalDocumentDescriptions != null)
+                                if (cDoc?.CriticalDocumentDescriptions != null)
                                 {
-                                    foreach (var desc in document.CriticalDocumentDescriptions)
+                                    foreach (var desc in cDoc.CriticalDocumentDescriptions)
                                     {
                                         allowedDescIds.Add(desc.DescriptionID);
                                     }
