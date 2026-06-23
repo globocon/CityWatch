@@ -8070,7 +8070,9 @@ $('#clientTypeNameDoc').on('change', function () {
     }).done(function (data) {
 
         data.map(function (site) {
-            clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            if (site.name !== 'Onboarding') {
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            }
         });
         clientSiteControl.multiselect('rebuild');
 
@@ -8619,7 +8621,9 @@ $('#clientTypeNameDocHrDoc').on('change', function () {
         },
     }).done(function (data) {
         data.map(function (site) {
-            $('#clientSitesDocHrDoc').append('<option value="' + site.id + '">' + site.name + '</option>');
+            if (site.name !== 'Onboarding') {
+                $('#clientSitesDocHrDoc').append('<option value="' + site.id + '">' + site.name + '</option>');
+            }
         });
         if (isAllClientTypeEnabled === true) {            
             $('#clientSitesDocHrDoc').multiselect('selectAll', false);
