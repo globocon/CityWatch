@@ -118,6 +118,8 @@ namespace CityWatch.Data.Providers
 
         List<CriticalDocuments> GetCriticalDocsByClientSiteId(int clientSiteId);
 
+        List<int> GetCriticalDocDescriptionIdsForClientSiteIds(int[] clientSiteIds);
+
         public void SaveTrainingCourses(TrainingCourses trainingCourses);
         int GetLastTQNumber(int hrsettingsid);
         List<TrainingTestQuestionSettings> GetTQSettings(int hrSettingsId);
@@ -1697,6 +1699,18 @@ namespace CityWatch.Data.Providers
 
             return sortedDocuments;
 
+        }
+
+        public List<int> GetCriticalDocDescriptionIdsForClientSiteIds(int[] clientSiteIds)
+        {
+            if (clientSiteIds == null || clientSiteIds.Length == 0)
+                return new List<int>();
+
+            return _context.CriticalDocumentDescriptions
+                .Where(desc => desc.CriticalDocument.CriticalDocumentsClientSites.Any(cs => clientSiteIds.Contains(cs.ClientSiteId)))
+                .Select(desc => desc.DescriptionID)
+                .Distinct()
+                .ToList();
         }
 
         public void SaveTrainingCourses(TrainingCourses trainingCourses)

@@ -905,28 +905,17 @@ namespace CityWatch.Web.Pages.Admin
                 var onboardingUser = _userDataProvider.GetUsers(true).FirstOrDefault(x => string.Equals(x.UserName, "onboarding", StringComparison.OrdinalIgnoreCase));
                 if (onboardingUser != null)
                 {
-                    var allowedDescIds = new HashSet<int>();
                     var allUserAccess = _userDataProvider.GetUserClientSiteAccess(onboardingUser.Id);
-                    
-                    foreach (var access in allUserAccess)
+                    if (allUserAccess != null && allUserAccess.Any())
                     {
-                        var criticalDocsForSite = _configDataProvider.GetCriticalDocsByClientSiteId(access.ClientSiteId);
-                        if (criticalDocsForSite != null)
-                        {
-                            foreach (var cDoc in criticalDocsForSite)
-                            {
-                                if (cDoc?.CriticalDocumentDescriptions != null)
-                                {
-                                    foreach (var desc in cDoc.CriticalDocumentDescriptions)
-                                    {
-                                        allowedDescIds.Add(desc.DescriptionID);
-                                    }
-                                }
-                            }
-                        }
+                        var clientSiteIds = allUserAccess.Select(x => x.ClientSiteId).ToArray();
+                        var allowedDescIds = new HashSet<int>(_configDataProvider.GetCriticalDocDescriptionIdsForClientSiteIds(clientSiteIds));
+                        combinedDataList = combinedDataList.Where(x => allowedDescIds.Contains(x.ID)).ToList();
                     }
-                    
-                    combinedDataList = combinedDataList.Where(x => allowedDescIds.Contains(x.ID)).ToList();
+                    else
+                    {
+                        combinedDataList.Clear();
+                    }
                 }
                 else
                 {
