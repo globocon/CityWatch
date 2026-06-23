@@ -1814,8 +1814,9 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
     clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
 
     const securityLicenseNo = $('#txt_guardKeyNewPIN').val();
-    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#hidden_rosterguardId').val();
-    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#hidden_rosterguardId').val();
+    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#GuardLogin_Guard_Id').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#hidden_rosterguardId').val();
 
     // Validate the length of securityLicenseNo
     if (securityLicenseNo.length >= 4 && securityLicenseNo.length <= 6) {
@@ -1863,8 +1864,9 @@ $('#txt_guardKey').on('keypress', function (e) {
 $('#btnGuardHrUpdate').on('click', function () {
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
     const securityLicenseNo = $('#txt_guardKey').val();
-    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#hidden_rosterguardId').val();
-    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#hidden_rosterguardId').val();
+    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#GuardLogin_Guard_Id').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#hidden_rosterguardId').val();
 
     if (securityLicenseNo === '') {
         displayGuardValidationSummary('GuardLoginValidationSummaryHR', 'Please enter PIN ');
