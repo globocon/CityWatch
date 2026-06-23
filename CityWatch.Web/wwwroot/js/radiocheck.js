@@ -2824,7 +2824,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
     let selectedItem = $('.es-visible').val();
     var HRBan = false;
     $('#complianceValidationDiv').show();
-    if (LoginVal == 'GuardLogin') {
+    if (LoginVal == 'GuardLogin' || !LoginVal) {
         $.ajax({
             url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
             type: 'GET',
@@ -2844,6 +2844,8 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
             }
 
         });
+    } else {
+        processFormSubmission();
     }
 
     function processFormSubmission() {
