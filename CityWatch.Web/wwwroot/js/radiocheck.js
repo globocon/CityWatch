@@ -1838,8 +1838,41 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                     return;
                 }
 
-                $('#txt_guardKey').val('');
-                $('#loginHrEditGuard').modal('show');
+                $.ajax({
+                    type: 'GET',
+                    url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
+                    data: { guardId: hrGuardId },
+                }).done(function (response) {
+                    $('#loginHrEditGuard').modal('hide');
+                    $('#addGuardModalnew').modal('show');
+                    $('#Guard_Id').val(response[0].id);
+                    isPaused = true;
+                    $('.btn-add-guard-addl-details').show();
+                    $('#addGuardModal1').modal('show');
+                    $('#GuardLicense_GuardId1').val(response[0].id);
+                    $('#GuardCompliance_GuardId1').val(response[0].id);
+                    $('#GuardComplianceandlicense_GuardId').val(response[0].id);
+                    $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+                    $('#Guard_Id1').val(response[0].id);
+                    $('#guardName').val(response[0].name);
+                    $('#licenseNo').val(response[0].securityNo);
+                    $('#mobile').val(response[0].mobile);
+                    $('#email').val(response[0].email);
+                    updateLanguagesDropdown();
+
+                    var selectedValues = [];
+                    if (response[0].languageId != null && response[0].languageId.includes(",")) {
+                        selectedValues = response[0].languageId.split(",");
+                    } else {
+                        selectedValues.push(response[0].languageId);
+                    }
+                    $('#language').val(selectedValues);
+                    $('#language').trigger('change');
+                    getDocDetails();
+                    loadTrainingCourses();
+                    BindCoursesForGuard();
+                    $('#txt_guardKey').val(''); // Reset PIN input
+                });
 
             } else {
                 displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', result.successMessage);
