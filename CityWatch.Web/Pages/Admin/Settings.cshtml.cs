@@ -4483,6 +4483,27 @@ namespace CityWatch.Web.Pages.Admin
                 return new JsonResult(ex);
             }
         }
+
+        public async Task<IActionResult> OnPostUploadWelcomePackZipAsync(IFormFile welcomePackZipFile)
+        {
+            if (welcomePackZipFile != null && welcomePackZipFile.Length > 0)
+            {
+                var webRootPath = _webHostEnvironment.WebRootPath;
+                var folderPath = Path.Combine(webRootPath, "WelcomePack");
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                var filePath = Path.Combine(folderPath, "DataPack.zip");
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await welcomePackZipFile.CopyToAsync(fileStream);
+                }
+            }
+
+            return RedirectToPage();
+        }
     }
     public class helpDocttype
     {

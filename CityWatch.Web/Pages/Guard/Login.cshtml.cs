@@ -61,9 +61,15 @@ namespace CityWatch.Web.Pages.Guard
         public string ClientTypeName { get; set; }
         public IViewDataService ViewDataService { get { return _viewDataService; } }
         public string ClientNameTitle { get; set; }
+        public bool IsOnboardingUser { get; set; }
 
         public void OnGet(string t)
         {
+            if (HttpContext.User != null && HttpContext.User.Identity != null && HttpContext.User.Identity.Name == "onboarding")
+            {
+                IsOnboardingUser = true;
+            }
+
             LogBookType = t switch
             {
                 "gl" => LogBookType.DailyGuardLog,

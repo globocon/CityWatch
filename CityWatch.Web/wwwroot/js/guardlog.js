@@ -991,11 +991,30 @@ $(function () {
                                 if (result.initalsChangedMessage !== '')
                                     alert(result.initalsChangedMessage);
                                 confirmDialogLogin(message, function () {
-                                    let toUrl = getTargetUrl(result.logBookType);
-                                    if (toUrl === '') alert('Invalid logbook type');
-                                    else {
-                                        window.location.replace(toUrl);
-                                        $('#btnGuardLogin').prop('disabled', true);
+                                    if (typeof isOnboardingUser !== 'undefined' && isOnboardingUser === true) {
+                                        $.ajax({
+                                            url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+                                            type: 'POST',
+                                            data: {
+                                                guardId: $('#GuardLogin_Guard_Id').val()
+                                            },
+                                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                                        }).done(function (res) {
+                                            if (res.accessPermission) {
+                                                $('#loginHrNewPasswordSetGuard').modal('show');
+                                                $('#loginHrEditGuard').modal('hide');
+                                            } else {
+                                                $('#loginHrNewPasswordSetGuard').modal('hide');
+                                                $('#loginHrEditGuard').modal('show');
+                                            }
+                                        });
+                                    } else {
+                                        let toUrl = getTargetUrl(result.logBookType);
+                                        if (toUrl === '') alert('Invalid logbook type');
+                                        else {
+                                            window.location.replace(toUrl);
+                                            $('#btnGuardLogin').prop('disabled', true);
+                                        }
                                     }
                                 });
                             } else {
@@ -1031,11 +1050,30 @@ $(function () {
                                 if (result.initalsChangedMessage !== '')
                                     alert(result.initalsChangedMessage);
 
-                                let toUrl = getTargetUrl(result.logBookType);
-                                if (toUrl === '') alert('Invalid logbook type');
-                                else {
-                                    window.location.replace(toUrl);
-                                    $('#btnGuardLogin').prop('disabled', true);
+                                if (typeof isOnboardingUser !== 'undefined' && isOnboardingUser === true) {
+                                    $.ajax({
+                                        url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+                                        type: 'POST',
+                                        data: {
+                                            guardId: $('#GuardLogin_Guard_Id').val()
+                                        },
+                                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                                    }).done(function (res) {
+                                        if (res.accessPermission) {
+                                            $('#loginHrNewPasswordSetGuard').modal('show');
+                                            $('#loginHrEditGuard').modal('hide');
+                                        } else {
+                                            $('#loginHrNewPasswordSetGuard').modal('hide');
+                                            $('#loginHrEditGuard').modal('show');
+                                        }
+                                    });
+                                } else {
+                                    let toUrl = getTargetUrl(result.logBookType);
+                                    if (toUrl === '') alert('Invalid logbook type');
+                                    else {
+                                        window.location.replace(toUrl);
+                                        $('#btnGuardLogin').prop('disabled', true);
+                                    }
                                 }
                             } else {
                                 if (result.errors)

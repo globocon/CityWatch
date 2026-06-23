@@ -6580,7 +6580,7 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                     }).done(function (data) {
                         if (data.success) {
                             
-                            gridCriticalDocument.reload();
+                            gridHrSettingswithOnboardingHRWelcomePack.reload();
                         } 
                     });
                     
@@ -6609,7 +6609,7 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                     }).done(function (data) {
                         if (data.success) {
 
-                            gridCriticalDocument.reload();
+                            gridHrSettingswithOnboardingHRWelcomePack.reload();
                         }
                     });
                     

@@ -1442,6 +1442,23 @@
                                     Users who access this profile will have limited access to the C4i System, and no access to any sites.
                                     It is designed for new hires and new starters.
                                 </p>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Upload Data Pack (Zip File)</h5>
+                                        <form method="post" enctype="multipart/form-data" asp-page-handler="UploadWelcomePackZip">
+                                            <div class="input-group">
+                                                <div class="custom-file">
+                                                    <input type="file" class="custom-file-input" id="welcomePackZipFile" name="welcomePackZipFile" accept=".zip" onchange="this.nextElementSibling.innerText = this.files[0].name">
+                                                    <label class="custom-file-label" for="welcomePackZipFile">Choose Zip file...</label>
+                                                </div>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-primary" type="submit">Upload</button>
+                                                </div>
+                                            </div>
+                                            <small class="form-text text-muted">This zip file will be available for Onboarding users to download via the "Data Pack" footer link.</small>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-12">
                             @*     <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
