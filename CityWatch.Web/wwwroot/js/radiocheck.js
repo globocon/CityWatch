@@ -1845,15 +1845,15 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                 }).done(function (response) {
                     $('#loginHrEditGuard').modal('hide');
                     $('#addGuardModalnew').modal('show');
-                    $('#Guard_Id').val(hrGuardId);
+                    $('#Guard_Id').val(response[0].id);
                     isPaused = true;
                     $('.btn-add-guard-addl-details').show();
                     $('#addGuardModal1').modal('show');
-                    $('#GuardLicense_GuardId1').val(hrGuardId);
-                    $('#GuardCompliance_GuardId1').val(hrGuardId);
-                    $('#GuardComplianceandlicense_GuardId').val(hrGuardId);
+                    $('#GuardLicense_GuardId1').val(response[0].id);
+                    $('#GuardCompliance_GuardId1').val(response[0].id);
+                    $('#GuardComplianceandlicense_GuardId').val(response[0].id);
                     $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
-                    $('#Guard_Id1').val(hrGuardId);
+                    $('#Guard_Id1').val(response[0].id);
                     $('#guardName').val(response[0].name);
                     $('#licenseNo').val(response[0].securityNo);
                     $('#mobile').val(response[0].mobile);
@@ -1861,16 +1861,26 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                     updateLanguagesDropdown();
 
                     var selectedValues = [];
-                    if (response[0].languageId != null && response[0].languageId.includes(",")) {
-                        selectedValues = response[0].languageId.split(",");
-                    } else {
-                        selectedValues.push(response[0].languageId);
+                    if (response[0].isRCAccess) {
+                        selectedValues.push(4);
                     }
-                    $('#language').val(selectedValues);
-                    $('#language').trigger('change');
-                    getDocDetails();
-                    loadTrainingCourses();
-                    BindCoursesForGuard();
+                    if (response[0].isKPIAccess) {
+                        selectedValues.push(3);
+                    }
+                    if (response[0].isLB_KV_IR) {
+                        selectedValues.push(1);
+                    }
+                    if (response[0].isSTATS) {
+                        selectedValues.push(2);
+                    }
+
+                    gridGuardLicensesLogDaily.ajax.reload();
+                    gridGuardCompliancesLogDaily.ajax.reload();
+                    gridGuardTrainingAndAssessment.ajax.reload();
+                    gridGuardLicensesAndLicenceKey.ajax.reload();
+                    $("#Guard_Access1").multiselect();
+                    $("#Guard_Access1").val(selectedValues);
+                    $("#Guard_Access1").multiselect("refresh");
                     $('#txt_guardKey').val(''); // Reset PIN input
                 });
 
@@ -2940,7 +2950,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
                     } else {
                         const messageHtml = '';
                         $('#schRunStatusNew').html(messageHtml);
-                        displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
+                        displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message || result.msg);
                     }
                 }).always(function () {
                     $('#loader').hide();
@@ -2969,7 +2979,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
                 } else {
                     const messageHtml = '';
                     $('#schRunStatusNew').html(messageHtml);
-                    displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
+                    displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message || result.msg);
                 }
             }).always(function () {
                 $('#loader').hide();

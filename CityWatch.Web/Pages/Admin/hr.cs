@@ -802,6 +802,12 @@ namespace CityWatch.Web.Pages.Admin
             ModelState.Remove("guardLicense.Id");
             ModelState.Remove("guardLicense.LicenseTypeText");
             ModelState.Remove("guardLicense.LicenseType");
+            ModelState.Remove("GuardLicense.Id");
+            ModelState.Remove("GuardLicense.LicenseTypeText");
+            ModelState.Remove("GuardLicense.LicenseType");
+            ModelState.Remove("Id");
+            ModelState.Remove("LicenseTypeText");
+            ModelState.Remove("LicenseType");
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -1040,7 +1046,25 @@ namespace CityWatch.Web.Pages.Admin
             ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
             ModelState.Remove("guardComplianceandlicense.LicenseNo");
             ModelState.Remove("guardComplianceandlicense.DataType");
+            ModelState.Remove("guardComplianceandlicense.DateType");
             ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("guardComplianceandlicense.ExpiryDate");
+
+            ModelState.Remove("GuardComplianceAndLicense.Id");
+            ModelState.Remove("GuardComplianceAndLicense.CurrentDateTime");
+            ModelState.Remove("GuardComplianceAndLicense.LicenseNo");
+            ModelState.Remove("GuardComplianceAndLicense.DataType");
+            ModelState.Remove("GuardComplianceAndLicense.DateType");
+            ModelState.Remove("GuardComplianceAndLicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("GuardComplianceAndLicense.ExpiryDate");
+
+            ModelState.Remove("Id");
+            ModelState.Remove("CurrentDateTime");
+            ModelState.Remove("LicenseNo");
+            ModelState.Remove("DataType");
+            ModelState.Remove("DateType");
+            ModelState.Remove("IsDateFilterEnabledHidden");
+            ModelState.Remove("ExpiryDate");
             guardComplianceandlicense.IsLogin = AuthUserHelper.IsAdminUserLoggedIn ? "Admin" : "Guard";
             if (!ModelState.IsValid)
             {
@@ -1127,9 +1151,25 @@ namespace CityWatch.Web.Pages.Admin
             ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
             ModelState.Remove("guardComplianceandlicense.LicenseNo");
             ModelState.Remove("guardComplianceandlicense.DataType");
-            ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("guardComplianceandlicense.DateType");
             ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
             ModelState.Remove("guardComplianceandlicense.ExpiryDate");
+
+            ModelState.Remove("GuardComplianceAndLicense.Id");
+            ModelState.Remove("GuardComplianceAndLicense.CurrentDateTime");
+            ModelState.Remove("GuardComplianceAndLicense.LicenseNo");
+            ModelState.Remove("GuardComplianceAndLicense.DataType");
+            ModelState.Remove("GuardComplianceAndLicense.DateType");
+            ModelState.Remove("GuardComplianceAndLicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("GuardComplianceAndLicense.ExpiryDate");
+
+            ModelState.Remove("Id");
+            ModelState.Remove("CurrentDateTime");
+            ModelState.Remove("LicenseNo");
+            ModelState.Remove("DataType");
+            ModelState.Remove("DateType");
+            ModelState.Remove("IsDateFilterEnabledHidden");
+            ModelState.Remove("ExpiryDate");
 
             if (!ModelState.IsValid)
             {
@@ -1191,6 +1231,8 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnPostSaveGuardCompliance(GuardCompliance guardCompliance)
         {
             ModelState.Remove("guardCompliance.Id");
+            ModelState.Remove("GuardCompliance.Id");
+            ModelState.Remove("Id");
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
