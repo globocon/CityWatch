@@ -2743,7 +2743,7 @@ $('#Description').editableSelect({
     // Set the hidden field to the selected ID for Graceful Migration
     $('#HrSettingsId').val(selectedItem);
 });
-$('#HRGroup').on('change', function () {
+$('#HRGroup').off('change').on('change', function () {
     $('#Description').val('');
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#guardComplianceandlicense_fileName1').text('None');

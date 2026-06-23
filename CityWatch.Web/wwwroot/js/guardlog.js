@@ -6257,7 +6257,7 @@ $(function () {
         sel.replaceWith($('#Description').data('cur_val'));
         $(this).prop('selectedIndex', 0);
     });
-    $('#HRGroup').on('change', function () {
+    $('#HRGroup').off('change').on('change', function () {
         $('#Description').val('');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
