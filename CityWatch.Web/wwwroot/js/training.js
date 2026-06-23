@@ -1,4 +1,4 @@
-﻿$(function () {
+$(function () {
     
 });
 //p5-Issue3-start
@@ -572,7 +572,7 @@ let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataT
     ajax: {
         url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
         data: function (d) {
-            d.guardId = $('#GuardLog_GuardLogin_GuardId').val();
+            d.guardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#Guard_Id').val();
         },
         dataSrc: ''
     },

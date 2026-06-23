@@ -1913,6 +1913,12 @@ $('#btnGuardHrUpdate').on('click', function () {
                     $('#GuardCompliance_GuardId1').val(response[0].id);
                     $('#GuardComplianceandlicense_GuardId').val(response[0].id);
                     $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+                    $('#Guard_Id1').val(response[0].id);
+                    $('#guardName').val(response[0].name);
+                    $('#licenseNo').val(response[0].securityNo);
+                    $('#mobile').val(response[0].mobile);
+                    $('#email').val(response[0].email);
+                    updateLanguagesDropdown();
 
                     // ;
                     var selectedValues = [];
@@ -2605,7 +2611,7 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
     ajax: {
         url: '/Admin/GuardSettings?handler=GuardLicenseAndComplianceData',
         data: function (d) {
-            d.guardId = $('#GuardLog_GuardLogin_GuardId').val();
+            d.guardId = $('#GuardLog_GuardLogin_GuardId').val() || $('#GuardLogin_Guard_Id').val() || $('#Guard_Id').val();
         },
         dataSrc: ''
     },
