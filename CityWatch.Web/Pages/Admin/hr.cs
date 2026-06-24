@@ -902,12 +902,20 @@ namespace CityWatch.Web.Pages.Admin
             
             if (isOnboardingUser)
             {
-                var lastLogin = _guardDataProvider.GetGuardLastLogin(GuardID);
-                if (lastLogin != null)
+                var onboardingUser = _userDataProvider.GetUsers(true).FirstOrDefault(x => string.Equals(x.UserName, "onboarding", StringComparison.OrdinalIgnoreCase));
+                if (onboardingUser != null)
                 {
-                    var clientSiteId = lastLogin.ClientSiteId;
-                    var allowedDescIds = new HashSet<int>(_configDataProvider.GetCriticalDocDescriptionIdsForClientSiteIds(new[] { clientSiteId }));
-                    combinedDataList = combinedDataList.Where(x => allowedDescIds.Contains(x.ID)).ToList();
+                    var allUserAccess = _userDataProvider.GetUserClientSiteAccess(onboardingUser.Id);
+                    if (allUserAccess != null && allUserAccess.Any())
+                    {
+                        var clientSiteIds = allUserAccess.Select(x => x.ClientSiteId).ToArray();
+                        var allowedDescIds = new HashSet<int>(_configDataProvider.GetCriticalDocDescriptionIdsForClientSiteIds(clientSiteIds));
+                        combinedDataList = combinedDataList.Where(x => allowedDescIds.Contains(x.ID)).ToList();
+                    }
+                    else
+                    {
+                        combinedDataList.Clear();
+                    }
                 }
                 else
                 {
