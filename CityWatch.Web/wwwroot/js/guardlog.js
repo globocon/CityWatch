@@ -731,7 +731,7 @@ $(function () {
         const isChecked = $('#GuardLogin_IsNewGuard').is(':checked');
         var userId = $('#GuardLogin_UserID').val();
         if (isChecked && userId !=74) {
-            $('#GuardLogin_Guard_SecurityNo').val('');
+            //$('#GuardLogin_Guard_SecurityNo').val('');
             showGuardSearchResult('Enter Security License No of New Guard');
             $('#divNewGuard').show();
             $('#GuardLogin_ClientSiteName').prop('disabled', false);
@@ -747,7 +747,7 @@ $(function () {
             $("#divGuardMobile").show();
         }
         else if (isChecked ) {
-            $('#GuardLogin_Guard_SecurityNo').val('');
+            //$('#GuardLogin_Guard_SecurityNo').val('');
             showGuardSearchResult('Enter Security License No of New Guard');
             $('#divNewGuard').show();
             $('#GuardLogin_ClientType').closest('.form-row').hide();
@@ -988,14 +988,36 @@ $(function () {
                             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                         }).done(function (result) {
                             if (result.success) {
+                                if (result.guardId) {
+                                    $('#GuardLogin_Guard_Id').val(result.guardId);
+                                }
                                 if (result.initalsChangedMessage !== '')
                                     alert(result.initalsChangedMessage);
                                 confirmDialogLogin(message, function () {
-                                    let toUrl = getTargetUrl(result.logBookType);
-                                    if (toUrl === '') alert('Invalid logbook type');
-                                    else {
-                                        window.location.replace(toUrl);
-                                        $('#btnGuardLogin').prop('disabled', true);
+                                    if (typeof isOnboardingUser !== 'undefined' && isOnboardingUser === true) {
+                                        $.ajax({
+                                            url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+                                            type: 'POST',
+                                            data: {
+                                                guardId: $('#GuardLogin_Guard_Id').val()
+                                            },
+                                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                                        }).done(function (res) {
+                                            if (res.accessPermission) {
+                                                $('#loginHrNewPasswordSetGuard').modal('show');
+                                                $('#loginHrEditGuard').modal('hide');
+                                            } else {
+                                                $('#loginHrNewPasswordSetGuard').modal('hide');
+                                                $('#loginHrEditGuard').modal('show');
+                                            }
+                                        });
+                                    } else {
+                                        let toUrl = getTargetUrl(result.logBookType);
+                                        if (toUrl === '') alert('Invalid logbook type');
+                                        else {
+                                            window.location.replace(toUrl);
+                                            $('#btnGuardLogin').prop('disabled', true);
+                                        }
                                     }
                                 });
                             } else {
@@ -1028,14 +1050,36 @@ $(function () {
                             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                         }).done(function (result) {
                             if (result.success) {
+                                if (result.guardId) {
+                                    $('#GuardLogin_Guard_Id').val(result.guardId);
+                                }
                                 if (result.initalsChangedMessage !== '')
                                     alert(result.initalsChangedMessage);
 
-                                let toUrl = getTargetUrl(result.logBookType);
-                                if (toUrl === '') alert('Invalid logbook type');
-                                else {
-                                    window.location.replace(toUrl);
-                                    $('#btnGuardLogin').prop('disabled', true);
+                                if (typeof isOnboardingUser !== 'undefined' && isOnboardingUser === true) {
+                                    $.ajax({
+                                        url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+                                        type: 'POST',
+                                        data: {
+                                            guardId: $('#GuardLogin_Guard_Id').val()
+                                        },
+                                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                                    }).done(function (res) {
+                                        if (res.accessPermission) {
+                                            $('#loginHrNewPasswordSetGuard').modal('show');
+                                            $('#loginHrEditGuard').modal('hide');
+                                        } else {
+                                            $('#loginHrNewPasswordSetGuard').modal('hide');
+                                            $('#loginHrEditGuard').modal('show');
+                                        }
+                                    });
+                                } else {
+                                    let toUrl = getTargetUrl(result.logBookType);
+                                    if (toUrl === '') alert('Invalid logbook type');
+                                    else {
+                                        window.location.replace(toUrl);
+                                        $('#btnGuardLogin').prop('disabled', true);
+                                    }
                                 }
                             } else {
                                 if (result.errors)
@@ -6219,7 +6263,7 @@ $(function () {
         sel.replaceWith($('#Description').data('cur_val'));
         $(this).prop('selectedIndex', 0);
     });
-    $('#HRGroup').on('change', function () {
+    $('#HRGroup').off('change').on('change', function () {
         $('#Description').val('');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
@@ -6228,12 +6272,14 @@ $(function () {
         const token = $('input[name="__RequestVerificationToken"]').val();
         const ulClients = $('#Description').siblings('ul.es-list');
         ulClients.html('');
+        var isOnboardingUserFlag = typeof isOnboardingUser !== 'undefined' ? isOnboardingUser : false;
         $.ajax({
             url: '/Admin/GuardSettings?handler=HRDescription',
             type: 'GET',
             data: {
                 HRid: Descriptionval,
-                GuardID: GuardID
+                GuardID: GuardID,
+                isOnboardingUser: isOnboardingUserFlag
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function (DescVal) {

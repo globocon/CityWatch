@@ -97,5 +97,16 @@ namespace CityWatch.Web.Helpers
             set => _httpContextAccessor.HttpContext?.Session?.SetString("DoseGuardHaveRcClientSitesControl", value ? "true" : "false");
         }
 
+        public static bool IsOnboardingUserLoggedIn
+        {
+            get
+            {
+                if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.User != null && _httpContextAccessor.HttpContext.User.Identity != null)
+                {
+                    return _httpContextAccessor.HttpContext.User.Identity.Name == "onboarding";
+                }
+                return false;
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿$(function () {
+$(function () {
     
 });
 //p5-Issue3-start
@@ -572,7 +572,10 @@ let gridGuardTrainingAndAssessment = $('#tbl_guard_trainingAndAssessment').DataT
     ajax: {
         url: '/Admin/GuardSettings?handler=GuardTrainingAndAssessmentTab',
         data: function (d) {
-            d.guardId = $('#GuardLog_GuardLogin_GuardId').val();
+            var gId = $('#GuardLog_GuardLogin_GuardId').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#GuardLogin_Guard_Id').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#Guard_Id').val();
+            d.guardId = gId;
         },
         dataSrc: ''
     },
@@ -2424,9 +2427,11 @@ $('#btnAddGuardCourse,#btnAddGuardCourse1').on('click', function (e) {
     
 })
 function loadTrainingCourses() {
+    var isOnboardingUserFlag = typeof isOnboardingUser !== 'undefined' ? isOnboardingUser : false;
     $.ajax({
         url: '/Admin/Settings?handler=TrainingCourses',
         type: 'GET',
+        data: { isOnboardingUser: isOnboardingUserFlag },
         success: function (data) {
             let courseList = $('#courseList');
             courseList.empty(); // Clear existing content
