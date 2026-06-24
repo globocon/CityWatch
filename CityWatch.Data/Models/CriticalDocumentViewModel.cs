@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -24,6 +24,7 @@ namespace CityWatch.Data.Models
         public int HRGroupID { get; set; }
         public string HRGroupName { get; set; }
         public string ReferenceNO { get; set; }
+        [Required(ErrorMessage = "Group Name is required.")]
         public string GroupName { get; set; }
         public bool IsCriticalDocumentDownselect { get; set; }
         public static CriticalDocuments ToDataModel(CriticalDocumentViewModel viewModel)
