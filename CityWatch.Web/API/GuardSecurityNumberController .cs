@@ -2860,6 +2860,27 @@ namespace CityWatch.Web.API
                     // Default GPS coordinates (should be replaced with actual values if available)
                     var gpsCoordinates = g.FirstOrDefault().gps;
 
+                    // [Fix Date: 24-Jun-2026, Developer: Dileep]
+                    // Pre-check if there are any valid files in this group before creating the blank logbook entry
+                    bool hasValidFiles = false;
+                    string[] allowedExtensionsPrecheck = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
+                    foreach (var o in g)
+                    {
+                        var file = files.Where(x => x.FileName == o.FileNameCache).FirstOrDefault();
+                        if (file != null && file.Length > 0 && allowedExtensionsPrecheck.Contains(Path.GetExtension(file.FileName).ToLower()))
+                        {
+                            hasValidFiles = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasValidFiles)
+                    {
+                        // Mark all as synced so the mobile app doesn't keep retrying this broken batch forever
+                        foreach (var o in g) o.IsSynced = true;
+                        continue; // Skip creating the logbook entry completely!
+                    }
+
                     var signInEntry = new GuardLog
                     {
                         ClientSiteLogBookId = logBookId,
@@ -2889,7 +2910,11 @@ namespace CityWatch.Web.API
                         var file = files.Where(x => x.FileName == o.FileNameCache).FirstOrDefault();
                         var type = o.FileType;
 
-                        if (file.Length == 0) continue;
+                        // [Fix Date: 24-Jun-2026, Developer: Dileep]
+                        // Exact Reason: Mobile app may send metadata but not the physical file (e.g., if deleted from device cache), making 'file' null.
+                        // How it's fixed: Added a null check 'file == null' before accessing 'file.Length'. Without this, a NullReferenceException 
+                        // crashes the loop, leaving a text-only log book entry "Mob app image upload" with no images saved.
+                        if (file == null || file.Length == 0) continue;
 
                         var ext = Path.GetExtension(file.FileName).ToLower();
                         if (!allowedExtensions.Contains(ext))
@@ -4391,7 +4416,11 @@ namespace CityWatch.Web.API
             foreach (var r in offlineIrAttachmentRecords)
             {
                 var file = files.Where(x => x.FileName == r.FileNameCache).FirstOrDefault();
-                if (file.Length == 0) continue;
+                
+                // [Fix Date: 24-Jun-2026, Developer: Dileep]
+                // Exact Reason: If the physical file isn't uploaded by the mobile app, 'file' is null.
+                // How it's fixed: Added 'file == null' to prevent NullReferenceException crash during offline IR attachment sync.
+                if (file == null || file.Length == 0) continue;
 
                 var (rtn, msg, _filename) = await UploadIrFilesAndReturnName(r.IrId, file);
                 r.IsSynced = true;
