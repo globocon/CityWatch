@@ -25,6 +25,10 @@ namespace CityWatch.Web.Models
         public DateTime? OfflineRecordSyncDateTime { get; set; }
         public int TagScanHitLogRefId { get; set; } = 0;
         public DateTime EventMobileUtcDateTime { get; set; }
+        public int? LogbookclientsiteId { get; set; }
+        public bool IsEntryByPCAR { get; set; } = false;
+        public int? CallSignId { get; set; }
+        public int? PositionId { get; set; }
     }
 
     public class PostActivityRequestLocalCacheOffline
@@ -50,6 +54,10 @@ namespace CityWatch.Web.Models
         public string DeviceName { get; set; }
         public int TagScanHitLogRefId { get; set; } = 0;
         public DateTime EventMobileUtcDateTime { get; set; }
+        public int? LogbookclientsiteId { get; set; }
+        public bool IsEntryByPCAR { get; set; } = false;
+        public int? CallSignId { get; set; }
+        public int? PositionId { get; set; }
 
     }
 

@@ -340,10 +340,38 @@ namespace CityWatch.Web.Services
                 IsOfflineRecord = request.IsOfflineRecord,
                 OfflineRecordSyncDateTime = request.OfflineRecordSyncDateTime,
                 TagScanHitLogRefId = request.TagScanHitLogRefId,
-                EventMobileUtcDateTime = request.EventMobileUtcDateTime
+                EventMobileUtcDateTime = request.EventMobileUtcDateTime,
+                IsEntryByPCAR = request.IsEntryByPCAR,
+                PositionId = request.PositionId,
+                CallSignId = request.CallSignId,
+                EntryPassedByPCARclientsiteId = request.IsEntryByPCAR ? request.clientsiteId : null,
             };
 
-            _guardLogDataProvider.SaveGuardLog(signInEntry);
+            var newPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(signInEntry);
+
+            if(request.IsEntryByPCAR && _scanningType == ScanningType.Normal && request.clientsiteId != request.LogbookclientsiteId)
+            {
+                // Make entry in corresponding non PCAR site logbook
+                GuardLog _NonPcarSiteLogEntry = signInEntry;
+
+                _NonPcarSiteLogEntry.Id = 0;
+                _NonPcarSiteLogEntry.EntryPassedByPCARclientsiteId = request.clientsiteId;
+                _NonPcarSiteLogEntry.ClientSiteLogBookId = 0;
+                _NonPcarSiteLogEntry.GuardLoginId = null;
+
+                var _NonPcarSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(request.LogbookclientsiteId.Value, logBookType);
+                guardLoginId = GetGuardLoginId(_NonPcarSitelogBookId, request.guardId, request.LogbookclientsiteId.Value, request.userId, IPAddress);
+
+                _NonPcarSiteLogEntry.ClientSiteLogBookId = _NonPcarSitelogBookId;
+                _NonPcarSiteLogEntry.GuardLoginId = guardLoginId;
+
+                if (_NonPcarSitelogBookId > 0 && guardLoginId > 0)
+                {
+                  var newNonPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(_NonPcarSiteLogEntry);
+                    // Link the GuardLog entries
+                    var linkid = _guardLogDataProvider.LinkGuardLogIds(newNonPcarGuardLogId, newPcarGuardLogId);
+                }
+            }
 
             //Check if tour mode is enabled for the site then log into corresponding tag attached site also
             var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
