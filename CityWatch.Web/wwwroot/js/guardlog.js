@@ -731,7 +731,7 @@ $(function () {
         const isChecked = $('#GuardLogin_IsNewGuard').is(':checked');
         var userId = $('#GuardLogin_UserID').val();
         if (isChecked && userId !=74) {
-            $('#GuardLogin_Guard_SecurityNo').val('');
+            //$('#GuardLogin_Guard_SecurityNo').val('');
             showGuardSearchResult('Enter Security License No of New Guard');
             $('#divNewGuard').show();
             $('#GuardLogin_ClientSiteName').prop('disabled', false);
@@ -747,7 +747,7 @@ $(function () {
             $("#divGuardMobile").show();
         }
         else if (isChecked ) {
-            $('#GuardLogin_Guard_SecurityNo').val('');
+            //$('#GuardLogin_Guard_SecurityNo').val('');
             showGuardSearchResult('Enter Security License No of New Guard');
             $('#divNewGuard').show();
             $('#GuardLogin_ClientType').closest('.form-row').hide();
