@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Models
@@ -283,37 +284,20 @@ namespace CityWatch.Data.Models
                 }
             }
 
-            if (!string.IsNullOrEmpty(Trailer1Rego)
-                || !string.IsNullOrEmpty(Trailer2Rego)
-                    || !string.IsNullOrEmpty(Trailer3Rego)
-                    || !string.IsNullOrEmpty(Trailer4Rego)
-                    || !string.IsNullOrEmpty(Trailer5Rego)
-                    || !string.IsNullOrEmpty(Trailer6Rego)
-                    || !string.IsNullOrEmpty(Trailer7Rego)
-                    || !string.IsNullOrEmpty(Trailer8Rego)
-                    || !string.IsNullOrEmpty(VehicleRego))
+            if (IsCarsStock != true)
             {
-                bool sameValue = false;
-                string[] strings = { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, Trailer5Rego, Trailer6Rego, Trailer7Rego, Trailer8Rego, VehicleRego };
+                var duplicates = new[] { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, Trailer5Rego, Trailer6Rego, Trailer7Rego, Trailer8Rego, VehicleRego }
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .GroupBy(x => x, StringComparer.OrdinalIgnoreCase)
+                            .Where(g => g.Count() > 1);
 
-                // Loop through each string and compare it with the others
-                for (int i = 0; i < strings.Length; i++)
+                foreach (var duplicate in duplicates)
                 {
-                    for (int j = i + 1; j < strings.Length; j++)
-                    {
-                        if (!string.IsNullOrEmpty((strings[i])) && !string.IsNullOrEmpty((strings[j])))
-                        {
-                            if (strings[i] == strings[j])
-                            {
-                                errors.Add(new ValidationResult("The same Trailer Rego or Vehicle Rego (" + strings[i] + ") not allowed. "));
-                                sameValue = true;
-                                break;
-                            }
-                        }
-                    }
+                    errors.Add(new ValidationResult(
+                        $"The same Trailer Rego or Vehicle Rego ({duplicate.Key}) is not allowed."));
                 }
-
             }
+
 
             if (RegoStatus)
             {

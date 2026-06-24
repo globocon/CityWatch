@@ -578,6 +578,33 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
         background-color: #333 !important;
     }
 
+    .dark-mode table.dataTable tbody > tr td.initial-call-colour,
+    .dark-mode table.dataTable tbody tr.initial-call-colour,
+    .dark-mode td.initial-call-colour,
+    .dark-mode tr.initial-call-colour,
+    .dark-mode .initial-call-colour {
+        background-color: #FCF3CF !important;
+        color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody > tr td.entry-time-colour,
+    .dark-mode table.dataTable tbody tr.entry-time-colour,
+    .dark-mode td.entry-time-colour,
+    .dark-mode tr.entry-time-colour,
+    .dark-mode .entry-time-colour {
+        background-color: #A9DFBF !important;
+        color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody > tr td.exit-time-colour,
+    .dark-mode table.dataTable tbody tr.exit-time-colour,
+    .dark-mode td.exit-time-colour,
+    .dark-mode tr.exit-time-colour,
+    .dark-mode .exit-time-colour {
+        background-color: #F5B7B1 !important;
+        color: #333 !important;
+    }
+
     .dark-mode .table-bordered {
         color: #fff;
     }
