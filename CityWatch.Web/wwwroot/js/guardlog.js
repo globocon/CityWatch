@@ -102,6 +102,16 @@ $(function () {
 
                 if (selectedSiteName) {
                     $('#GuardLogin_ClientSiteName').val(selectedSiteName);
+                    const isNewGuard = $('#GuardLogin_IsNewGuard').is(':checked');
+                    if (selectedSiteName === 'Onboarding' && !isNewGuard) {
+                        $('#GuardLogin_ClientType').closest('.form-row').hide();
+                        $('#GuardLogin_SmartWandOrPosition').closest('.form-row').hide();
+                        $('#guardShiftDayTime').parent().hide();
+                    } else if (!isNewGuard) {
+                        $('#GuardLogin_ClientType').closest('.form-row').show();
+                        $('#GuardLogin_SmartWandOrPosition').closest('.form-row').show();
+                        $('#guardShiftDayTime').parent().show();
+                    }
                 } else {
                     $('#GuardLogin_ClientSiteName').val('');
                 }
@@ -658,6 +668,17 @@ $(function () {
         var clientSiteName = $(this).val();
         $('#GuardLogin_IsPosition').prop('checked', false);
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+
+        const isNewGuard = $('#GuardLogin_IsNewGuard').is(':checked');
+        if (clientSiteName === 'Onboarding' && !isNewGuard) {
+             $('#GuardLogin_ClientType').closest('.form-row').hide();
+             $('#GuardLogin_SmartWandOrPosition').closest('.form-row').hide();
+             $('#guardShiftDayTime').parent().hide();
+        } else if (!isNewGuard) {
+             $('#GuardLogin_ClientType').closest('.form-row').show();
+             $('#GuardLogin_SmartWandOrPosition').closest('.form-row').show();
+             $('#guardShiftDayTime').parent().show();
+        }
 
         getsmartwandcount(isPosition, clientSiteName);
 
