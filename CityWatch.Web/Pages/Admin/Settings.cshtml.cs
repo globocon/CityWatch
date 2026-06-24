@@ -4514,9 +4514,10 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     await welcomePackZipFile.CopyToAsync(fileStream);
                 }
+                return new JsonResult(new { success = true });
             }
 
-            return RedirectToPage();
+            return new JsonResult(new { success = false, message = "No file selected." });
         }
     }
     public class helpDocttype

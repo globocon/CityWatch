@@ -1452,24 +1452,62 @@
                                 <div class="card mb-3">
                                     <div class="card-body">
                                         <h5 class="card-title">Upload Data Pack (Zip File)</h5>
-                                        <form method="post" enctype="multipart/form-data" asp-page-handler="UploadWelcomePackZip">
+                                        <form id="welcomePackForm" enctype="multipart/form-data">
+                                            @Html.AntiForgeryToken()
                                             <div class="input-group">
                                                 <div class="custom-file">
                                                     <input type="file" class="custom-file-input" id="welcomePackZipFile" name="welcomePackZipFile" accept=".zip" onchange="this.nextElementSibling.innerText = this.files[0].name">
                                                     <label class="custom-file-label" for="welcomePackZipFile">Choose Zip file...</label>
                                                 </div>
                                                 <div class="input-group-append">
-                                                    <button class="btn btn-primary" type="submit">Upload</button>
+                                                    <button class="btn btn-primary" type="button" id="btnUploadWelcomePack">Upload</button>
                                                 </div>
                                             </div>
                                             <small class="form-text text-muted">This zip file will be available for Onboarding users to download via the "Data Pack" footer link.</small>
-                                            @if (System.IO.File.Exists(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "WelcomePack", "DataPack.zip")))
-                                            {
-                                                <div class="mt-2">
-                                                    <a href="/WelcomePack/DataPack.zip" download class="btn btn-sm btn-outline-info"><i class="fa fa-download mr-1"></i>Download Current Data Pack</a>
-                                                </div>
-                                            }
+                                            
+                                            <div id="welcomePackDownloadContainer" class="mt-2" style="@(System.IO.File.Exists(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "WelcomePack", "DataPack.zip")) ? "" : "display:none;")">
+                                                <a href="/WelcomePack/DataPack.zip" download class="btn btn-sm btn-outline-info"><i class="fa fa-download mr-1"></i><span id="welcomePackDownloadText">Download Current Data Pack</span></a>
+                                            </div>
                                         </form>
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function () {
+                                                $('#btnUploadWelcomePack').click(function () {
+                                                    var fileInput = $('#welcomePackZipFile')[0];
+                                                    if (fileInput.files.length === 0) {
+                                                        alert('Please choose a file to upload first.');
+                                                        return;
+                                                    }
+
+                                                    var formData = new FormData();
+                                                    formData.append('welcomePackZipFile', fileInput.files[0]);
+
+                                                    $.ajax({
+                                                        url: '/Admin/Settings?handler=UploadWelcomePackZip',
+                                                        type: 'POST',
+                                                        data: formData,
+                                                        processData: false,
+                                                        contentType: false,
+                                                        headers: {
+                                                            RequestVerificationToken: $('input:hidden[name="__RequestVerificationToken"]').val()
+                                                        },
+                                                        success: function (result) {
+                                                            if (result.success) {
+                                                                alert('File uploaded successfully!');
+                                                                $('#welcomePackDownloadContainer').show();
+                                                                $('#welcomePackDownloadText').text('Download ' + fileInput.files[0].name);
+                                                                $('#welcomePackZipFile').val('');
+                                                                $('.custom-file-label[for="welcomePackZipFile"]').text('Choose Zip file...');
+                                                            } else {
+                                                                alert('Error uploading file: ' + result.message);
+                                                            }
+                                                        },
+                                                        error: function () {
+                                                            alert('Error uploading file.');
+                                                        }
+                                                    });
+                                                });
+                                            });
+                                        </script>
                                     </div>
                                 </div>
                             </div>
