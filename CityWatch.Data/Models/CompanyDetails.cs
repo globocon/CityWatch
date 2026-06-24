@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -51,5 +51,6 @@ namespace CityWatch.Data.Models
         public string TimesheetsMail { get; set; }
         public string ApiProviderIR { get; set; }
         public string ApiSecretkeyIR { get; set; }
+        public string ROMail { get; set; }
     }
 }

@@ -3967,6 +3967,7 @@ $(function () {
                 $("#txt_IR").val(data[i].irMail);
                 $("#txt_Fusion").val(data[i].fusionMail);
                 $("#txt_Timesheet").val(data[i].timesheetsMail);
+                $("#txt_RO").val(data[i].roMail);
                 $("#txt_APIProviderForIR").val(data[i].apiProviderIR);
                 $("#txt_APIsecretkeyForIR").val(data[i].apiSecretkeyIR)
 
@@ -4136,6 +4137,7 @@ $(function () {
             KPIMail: $("#txt_KPI").val(),
             FusionMail: $("#txt_Fusion").val(),
             TimesheetsMail: $("#txt_Timesheet").val(),
+            ROMail: $("#txt_RO").val(),
         };
 
         $.ajax({

@@ -18,6 +18,7 @@ namespace CityWatch.Web.Services
         Task<bool> SendShiftCancelledAlertMail(RosterSchedule shift, string guardName, string licenseNo, string siteName, string reason);
         Task<bool> QueueMobileShiftCancellation(RosterSchedule shift, string reason);
         Task<bool> QueueWebShiftCancellation(RosterSchedule shift, string reason, string cancelledByAdminName);
+        Task<bool> QueueReliefGuardAssigned(RosterSchedule shift, string assignedByAdminName);
         Task<bool> RemoveFromQueue(RosterSchedule shift);
         Task<bool> SendAggregatedShiftCancelledAlertMail(Guard guard, string licenseNo, string cancelledBy, string source, List<ShiftCancellationEmailQueue> cancellations);
     }
@@ -123,7 +124,8 @@ namespace CityWatch.Web.Services
                 CancelledBy = "Guard",
                 Source = "Mobile",
                 CreatedAt = DateTime.Now,
-                IsProcessed = false
+                IsProcessed = false,
+                IsReliefAssigned = false
             };
             
             _context.ShiftCancellationEmailQueues.Add(queueItem);
@@ -145,7 +147,37 @@ namespace CityWatch.Web.Services
                 CancelledBy = string.IsNullOrEmpty(cancelledByAdminName) ? "Admin" : cancelledByAdminName,
                 Source = "Web",
                 CreatedAt = DateTime.Now,
-                IsProcessed = false
+                IsProcessed = false,
+                IsReliefAssigned = false
+            };
+            
+            _context.ShiftCancellationEmailQueues.Add(queueItem);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> QueueReliefGuardAssigned(RosterSchedule shift, string assignedByAdminName)
+        {
+            if (shift.GuardId == null && shift.ReliefGuardId == null) return false;
+
+            // If the shift doesn't have an original guard, we use ReliefGuardId as the GuardId for grouping purposes
+            var guardId = shift.GuardId ?? shift.ReliefGuardId.Value;
+            var reliefGuardName = shift.ReliefGuard != null ? shift.ReliefGuard.Name : shift.ReliefProviderName;
+
+            var queueItem = new ShiftCancellationEmailQueue
+            {
+                GuardId = guardId,
+                ClientSiteId = shift.ClientSiteId,
+                ShiftStart = shift.ShiftStart,
+                ShiftEnd = shift.ShiftEnd,
+                Reason = "Relief Guard Assigned",
+                CancelledBy = string.IsNullOrEmpty(assignedByAdminName) ? "Admin" : assignedByAdminName,
+                Source = "Web",
+                CreatedAt = DateTime.Now,
+                IsProcessed = false,
+                IsReliefAssigned = true,
+                ReliefGuardId = shift.ReliefGuardId,
+                ReliefGuardName = reliefGuardName
             };
             
             _context.ShiftCancellationEmailQueues.Add(queueItem);
@@ -173,79 +205,106 @@ namespace CityWatch.Web.Services
             return true;
         }
 
-        public async Task<bool> SendAggregatedShiftCancelledAlertMail(Guard guard, string licenseNo, string cancelledBy, string source, List<ShiftCancellationEmailQueue> cancellations)
+                public async Task<bool> SendAggregatedShiftCancelledAlertMail(Guard guard, string licenseNo, string cancelledBy, string source, List<ShiftCancellationEmailQueue> cancellations)
         {
             if (cancellations == null || !cancellations.Any()) return false;
             
             string guardName = guard?.Name ?? "Unknown Guard";
-            
-            var subject = $"Shift Cancelled Alert - {guardName}";
-            
-            string whoCancelledText = "An Admin";
-            if (cancelledBy == "Guard") 
-            {
-                whoCancelledText = "A guard";
-            }
-            else if (cancelledBy != null && cancelledBy.StartsWith("Guard|"))
-            {
-                whoCancelledText = $"A guard ({cancelledBy.Substring(6)})";
-            }
-            else 
-            {
-                whoCancelledText = $"An Admin ({cancelledBy})";
-            }
-            
-            var mailBodyHtml = $"<h2>Shift Cancelled Alert</h2>" +
-                               $"<p>{whoCancelledText} has cancelled a shift with the following details:</p>" +
-                               $"<p><strong>Guard:</strong> {guardName}</p>" +
-                               $"<p><strong>License No:</strong> {licenseNo}</p><br/>";
+            var subject = "Shift Roster Update Alert - " + guardName;
+            var mailBodyHtml = "<h2>Shift Roster Update Alert</h2>" +
+                               "<p>The following shift updates have been recorded for:</p>" +
+                               "<p><strong>Guard:</strong> " + guardName + "</p>" +
+                               "<p><strong>License No:</strong> " + licenseNo + "</p><br/>";
 
+            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+            var companyDetails = _context.CompanyDetails.FirstOrDefault();
+            if (companyDetails != null && !string.IsNullOrEmpty(companyDetails.ROMail))
+            {
+                var splitRO = companyDetails.ROMail.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var em in splitRO)
+                {
+                    if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                }
+            }
+            
+            // We want to fetch RosterSchedule data to find the group and project alert emails
             var siteGrouped = cancellations.GroupBy(c => c.ClientSite);
             foreach (var siteGroup in siteGrouped)
             {
                 string siteName = siteGroup.Key?.Name ?? "Unknown Site";
-                mailBodyHtml += $"<p><strong>Site:</strong> {siteName}</p>";
+                mailBodyHtml += "<p><strong>Site:</strong> " + siteName + "</p>";
                 
                 foreach (var item in siteGroup.OrderBy(x => x.ShiftStart))
                 {
-                    mailBodyHtml += $"<p><strong>Date (s):</strong> {item.ShiftStart:dd-MM-yyyy}</p>" +
-                                    $"<p><strong>Time (s) :</strong> {item.ShiftStart:HH:mm} - {item.ShiftEnd:HH:mm}</p>" +
-                                    $"<p><strong>Reason (s):</strong> {item.Reason}</p><br/>";
+                    string actionText = item.IsReliefAssigned ? "Assigned as Relief Guard" : "Cancelled";
+                    string whoText = item.IsReliefAssigned ? "Admin" : (item.CancelledBy == "Guard" ? "A guard" : (item.CancelledBy != null && item.CancelledBy.StartsWith("Guard|") ? "A guard (" + item.CancelledBy.Substring(6) + ")" : "An Admin (" + item.CancelledBy + ")"));
+                    if (item.IsReliefAssigned && !string.IsNullOrEmpty(item.CancelledBy) && item.CancelledBy != "Admin") whoText = "An Admin (" + item.CancelledBy + ")";
+
+                    mailBodyHtml += "<p><strong>Date (s):</strong> " + item.ShiftStart.ToString("dd-MM-yyyy") + "</p>" +
+                                    "<p><strong>Time (s) :</strong> " + item.ShiftStart.ToString("HH:mm") + " - " + item.ShiftEnd.ToString("HH:mm") + "</p>" +
+                                    "<p><strong>Action:</strong> " + actionText + " (by " + whoText + ")</p>" +
+                                    "<p><strong>Reason (s):</strong> " + item.Reason + "</p><br/>";
+
+                    // Add KPI
+                    try
+                    {
+                        var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(item.ClientSiteId);
+                        if (kpiSetting != null && kpiSetting.KPITelematicsFieldID.HasValue)
+                        {
+                            var manager = _clientDataProvider.GetKPITelematicsDetails(kpiSetting.KPITelematicsFieldID.Value);
+                            if (manager != null && !string.IsNullOrEmpty(manager.Email) && !toAddresses.Contains(manager.Email.Trim()))
+                            {
+                                toAddresses.Add(manager.Email.Trim());
+                            }
+                        }
+                    }
+                    catch { }
+
+                    // Look up schedule to find Group/Project configured emails
+                    var schedule = _context.RosterSchedules
+                        .Where(s => s.ClientSiteId == item.ClientSiteId && s.ShiftStart == item.ShiftStart && s.ShiftEnd == item.ShiftEnd)
+                        .FirstOrDefault();
+                    if (schedule != null)
+                    {
+                        var group = _context.RosterGroups.FirstOrDefault(g => g.Id == schedule.RosterGroupId);
+                        if (group != null)
+                        {
+                            bool shouldSendGroup = (item.IsReliefAssigned && group.AlertOnReliefGuard) || (!item.IsReliefAssigned && group.AlertOnRejectedShift);
+                            if (shouldSendGroup && !string.IsNullOrEmpty(group.AlertEmailRecipients))
+                            {
+                                var splits = group.AlertEmailRecipients.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                                foreach (var em in splits)
+                                    if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                            }
+
+                            var projectLinks = _context.RosterBinderProjects.Where(bp => bp.RosterGroupId == group.Id).ToList();
+                            foreach (var link in projectLinks)
+                            {
+                                var project = _context.RosterBinders.FirstOrDefault(b => b.Id == link.RosterBinderId);
+                                if (project != null)
+                                {
+                                    bool shouldSendProj = (item.IsReliefAssigned && project.AlertOnReliefGuard) || (!item.IsReliefAssigned && project.AlertOnRejectedShift);
+                                    if (shouldSendProj && !string.IsNullOrEmpty(project.AlertEmailRecipients))
+                                    {
+                                        var splits = project.AlertEmailRecipients.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                                        foreach (var em in splits)
+                                            if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var FromAddress = new MailboxAddress(fromAddress[1], fromAddress[0]);
-
-            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
-            
-            // Collect unique KPI managers for all sites involved
-            var distinctSiteIds = cancellations.Select(c => c.ClientSiteId).Distinct();
-            foreach (var siteId in distinctSiteIds)
-            {
-                try
-                {
-                    var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
-                    if (kpiSetting != null && kpiSetting.KPITelematicsFieldID.HasValue)
-                    {
-                        var manager = _clientDataProvider.GetKPITelematicsDetails(kpiSetting.KPITelematicsFieldID.Value);
-                        if (manager != null && !string.IsNullOrEmpty(manager.Email) && !toAddresses.Contains(manager.Email))
-                        {
-                            toAddresses.Add(manager.Email);
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Ignore individual KPI fetch errors
-                }
-            }
-
             var _toAddressList = GetToEmailAddressList(toAddresses.ToArray());
 
             await SendEmail(mailBodyHtml, subject, _toAddressList, FromAddress);
             return true;
         }
+
 
 
         private async Task SendEmail(string mailBodyHtml, string subject, List<MailboxAddress> ToAddress, MailboxAddress FromAddress)
@@ -290,3 +349,4 @@ namespace CityWatch.Web.Services
         }
     }
 }
+

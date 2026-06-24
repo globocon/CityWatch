@@ -3617,7 +3617,7 @@
                             '<button class="btn btn-outline-success btn-sm btn-upload-cover" data-type="project" data-id="' + p.id + '" title="Upload/Replace PDF"><i class="fa fa-upload mr-1"></i>Replace</button>' +
                             (p.coverFileName ? '<button class="btn btn-outline-primary btn-sm btn-preview-cover" data-type="project" data-id="' + p.id + '" title="Preview Demo"><i class="fa fa-eye mr-1"></i>Preview</button>' : '') +
                             (p.coverFileName ? '<button class="btn btn-outline-info btn-sm btn-download-cover" data-type="project" data-id="' + p.id + '" title="Download PDF"><i class="fa fa-download mr-1"></i>Download</button>' : '') +
-                            (p.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="project" data-id="' + p.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') +
+                            (p.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="project" data-id="' + p.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') + '<button class="btn btn-outline-warning btn-sm btn-configure-alerts" data-type="project" data-id="' + p.id + '" data-emails="' + (p.alertEmailRecipients || '') + '" data-rejected="' + (p.alertOnRejectedShift ? 1 : 0) + '" data-relief="' + (p.alertOnReliefGuard ? 1 : 0) + '" title="Configure Alerts"><i class="fa fa-envelope mr-1"></i>Alerts</button>' +
                             '</div>' +
                             '</td>' +
                             '</tr>';
@@ -3640,7 +3640,7 @@
                             '<button class="btn btn-outline-success btn-sm btn-upload-cover" data-type="group" data-id="' + g.id + '" title="Upload/Replace PDF"><i class="fa fa-upload mr-1"></i>Replace</button>' +
                             (g.coverFileName ? '<button class="btn btn-outline-primary btn-sm btn-preview-cover" data-type="group" data-id="' + g.id + '" title="Preview Demo"><i class="fa fa-eye mr-1"></i>Preview</button>' : '') +
                             (g.coverFileName ? '<button class="btn btn-outline-info btn-sm btn-download-cover" data-type="group" data-id="' + g.id + '" title="Download PDF"><i class="fa fa-download mr-1"></i>Download</button>' : '') +
-                            (g.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="group" data-id="' + g.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') +
+                            (g.coverFileName ? '<button class="btn btn-outline-danger btn-sm btn-delete-cover" data-type="group" data-id="' + g.id + '" title="Delete PDF"><i class="fa fa-trash mr-1"></i>Delete</button>' : '') + '<button class="btn btn-outline-warning btn-sm btn-configure-alerts" data-type="group" data-id="' + g.id + '" data-emails="' + (g.alertEmailRecipients || '') + '" data-rejected="' + (g.alertOnRejectedShift ? 1 : 0) + '" data-relief="' + (g.alertOnReliefGuard ? 1 : 0) + '" title="Configure Alerts"><i class="fa fa-envelope mr-1"></i>Alerts</button>' +
                             '<button class="btn btn-outline-dark btn-sm btn-copy-external-link" data-access-key="' + g.accessKey + '" title="Copy External View Link"><i class="fa fa-link mr-1"></i>Link</button>' +
                             '</div>' +
                             '</td>' +
@@ -3931,6 +3931,170 @@
                 });
             }
 
+            $(document).on('click', '.btn-configure-alerts', function() {
+                var btn = $(this);
+                var targetId = btn.data('id');
+                var targetType = btn.data('type');
+                
+                $('#alertTargetId').val(targetId);
+                $('#alertTargetType').val(targetType);
+                $('#txtAlertEmailRecipients').val(btn.data('emails'));
+                $('#chkAlertOnRejectedShift').prop('checked', btn.data('rejected') == 1);
+                $('#chkAlertOnReliefGuard').prop('checked', btn.data('relief') == 1);
+                
+                $('#lblImplicitEmails').text('Loading...');
+                $('#implicitEmailsContainer').show();
+                
+                $.ajax({
+                    url: '/roster/Booking?handler=AlertRecipientsPreview&id=' + targetId + '&type=' + targetType,
+                    type: 'GET',
+                    success: function(res) {
+                        if (res.success && res.emails) {
+                            $('#lblImplicitEmails').text(res.emails);
+                        } else {
+                            $('#lblImplicitEmails').text('None');
+                        }
+                    },
+                    error: function() {
+                        $('#lblImplicitEmails').text('Failed to load.');
+                    }
+                });
+
+                $('#modalAlertSettings').modal('show');
+            });
+
+            $('#btnSaveAlertSettings').click(function() {
+                var id = $('#alertTargetId').val();
+                var type = $('#alertTargetType').val();
+                var emails = $('#txtAlertEmailRecipients').val();
+                var rejected = $('#chkAlertOnRejectedShift').is(':checked');
+                var relief = $('#chkAlertOnReliefGuard').is(':checked');
+
+                if (!rejected && !relief) {
+                    var $icon = $('#genericAlertModal .fa');
+                    $icon.removeClass('fa-check-circle text-success').addClass('fa-info-circle text-primary');
+                    $('#genericAlertModal h6').text('Validation Error');
+                    $('#genericAlertMessage').text('Please select at least one alert type (Rejected Shift or Relief Guard) before saving.');
+                    $('#genericAlertModal').modal('show');
+                    return;
+                }
+
+                var handler = type === 'project' ? 'SaveProjectAlerts' : 'SaveGroupAlerts';
+                var dataPayload = { alertEmailRecipients: emails, alertOnRejectedShift: rejected, alertOnReliefGuard: relief };
+                if (type === 'project') dataPayload.projectId = id;
+                else dataPayload.groupId = id;
+
+                $.ajax({
+                    url: '/roster/Booking?handler=' + handler,
+                    type: 'POST',
+                    headers: getHeaders(),
+                    data: dataPayload,
+                    success: function(res) {
+                        if (res.success) {
+                            $('#modalAlertSettings').modal('hide');
+                            
+                            // Show success modal
+                            var $icon = $('#genericAlertModal .fa');
+                            $icon.removeClass('fa-info-circle text-primary').addClass('fa-check-circle text-success');
+                            $('#genericAlertModal h6').text('Success');
+                            $('#genericAlertMessage').text('Settings saved successfully!');
+                            $('#genericAlertModal').modal('show');
+                            
+                            $('#genericAlertModal').one('hidden.bs.modal', function() {
+                                $icon.removeClass('fa-check-circle text-success').addClass('fa-info-circle text-primary');
+                                $('#genericAlertModal h6').text('Notification');
+                            });
+
+                            // Directly reload the data
+                            if (type === 'project') {
+                                loadSettingsProjects();
+                            } else {
+                                loadSettingsGroups();
+                            }
+                        } else {
+                            $('#genericAlertMessage').text(res.message || 'Error saving settings.');
+                            $('#genericAlertModal').modal('show');
+                        }
+                    },
+                    error: function() {
+                        $('#genericAlertMessage').text('Error connecting to server.');
+                        $('#genericAlertModal').modal('show');
+                    }
+                });
+            });
+
         });
     </script>
 }
+
+<!-- Generic Alert Modal -->
+<div class="modal fade" id="genericAlertModal" tabindex="-1" role="dialog" style="z-index: 9999;">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: none;">
+            <div class="modal-header border-0 pb-0 justify-content-center position-relative">
+                <div style="background: #fff; border-radius: 50%; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; position: absolute; top: -32px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 4px solid #fff;">
+                    <i class="fa fa-info-circle text-primary" style="font-size: 36px;"></i>
+                </div>
+            </div>
+            <div class="modal-body text-center pt-5 pb-3">
+                <h6 class="font-weight-bold mb-2" style="color: #2c3e50;">Notification</h6>
+                <p id="genericAlertMessage" class="text-muted mb-0" style="font-size: 0.95rem; line-height: 1.5;"></p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
+                <button type="button" class="btn btn-primary px-5" data-dismiss="modal" style="border-radius: 24px; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Settings Modal -->
+<div class="modal fade" id="modalAlertSettings" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 800px;">
+        <div class="modal-content" style="border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title font-weight-bold" style="color: #000;"><i class="fa fa-cog mr-2"></i> Mail Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-5">
+                <input type="hidden" id="alertTargetId" />
+                <input type="hidden" id="alertTargetType" />
+                
+                <div class="row mb-4">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-9 d-flex">
+                        <div class="custom-control custom-checkbox mr-5">
+                            <input type="checkbox" class="custom-control-input" id="chkAlertOnRejectedShift">
+                            <label class="custom-control-label font-weight-bold" for="chkAlertOnRejectedShift" style="color: #333; cursor: pointer; padding-top: 2px;">Rejected Shift</label>
+                        </div>
+                        <div class="custom-control custom-checkbox ml-2">
+                            <input type="checkbox" class="custom-control-input" id="chkAlertOnReliefGuard">
+                            <label class="custom-control-label font-weight-bold" for="chkAlertOnReliefGuard" style="color: #333; cursor: pointer; padding-top: 2px;">Relief Guard</label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row mb-5 align-items-center">
+                    <div class="col-md-3 text-md-right pr-4">
+                        <label class="font-weight-bold mb-0 text-secondary" style="font-size: 1rem; color: #666;">Email Recipients</label>
+                    </div>
+                    <div class="col-md-9">
+                        <input type="text" id="txtAlertEmailRecipients" class="form-control" style="border-radius: 4px; border: 1px solid #ddd;" />
+                        <small class="form-text mt-2 font-italic" style="color: #777; font-size: 0.9rem;">Designated Account Manager will automatically be on CC</small>
+                        <div id="implicitEmailsContainer" class="mt-2 text-primary font-weight-bold" style="font-size: 0.95rem; display: none;">
+                            Also sending to: <span id="lblImplicitEmails"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-12 pl-4">
+                        <button type="button" class="btn btn-success px-4 py-2" id="btnSaveAlertSettings" style="font-size: 1rem; border-radius: 4px; background-color: #28a745; border-color: #28a745;">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
