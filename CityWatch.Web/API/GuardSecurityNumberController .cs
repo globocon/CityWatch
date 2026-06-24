@@ -3,6 +3,7 @@ using Azure.Storage.Blobs.Models;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Models.DTO;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Web.Helpers;
@@ -51,6 +52,7 @@ using System.Web;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using CityWatch.Data;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 
 namespace CityWatch.Web.API
@@ -608,6 +610,7 @@ namespace CityWatch.Web.API
             }
         }
 
+        //This to be removed after ios update
         [HttpPost("EnterGuardLogin")]
         public IActionResult EnterGuardLogin([FromBody] PostActivityRequest request)
         {
@@ -808,59 +811,205 @@ namespace CityWatch.Web.API
 
         }
 
-        //[HttpGet("EnterGuardLogin")]
-        //public IActionResult EnterGuardLogin(int guardId, int clientsiteId, int userId, string gps)
-        //{
-        //    try
-        //    {
+        [HttpPost("EnterGuardLoginNew")]
+        public IActionResult EnterGuardLoginNew([FromBody] PostActivityRequest request)
+        {
+            try
+            {
 
-        //        if (guardId <= 0 || clientsiteId <= 0)
-        //            return BadRequest(new { message = "Invalid guard ID or client site ID." });
+                if (request.guardId <= 0 || request.clientsiteId <= 0)
+                    return BadRequest(new { message = "Invalid guard ID or client site ID." });
 
-        //        var logBookType = LogBookType.DailyGuardLog;
-        //        var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientsiteId, logBookType);
+                var logBookType = LogBookType.DailyGuardLog;
+                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(request.clientsiteId, logBookType);
 
-        //        if (logBookId <= 0)
-        //            return BadRequest(new { message = "Failed to retrieve logbook ID." });
+                if (logBookId <= 0)
+                    return BadRequest(new { message = "Failed to retrieve logbook ID." });
 
-        //        // Get Guard Login ID
-        //        var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-        //        var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, guardId, clientsiteId, userId, IPAddress);
+                // Get Guard Login ID
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var guardLoginId = _mobileAppDataServices.GetGuardLoginId(logBookId, request.guardId, request.clientsiteId, request.userId, IPAddress);
 
-        //        if (guardLoginId <= 0)
-        //            return BadRequest(new { message = "Guard login failed." });
+                if (guardLoginId <= 0)
+                    return BadRequest(new { message = "Guard login failed." });
 
-        //        // Default GPS coordinates (should be replaced with actual values if available)
-        //        var gpsCoordinates = gps;
+                // Default GPS coordinates (should be replaced with actual values if available)
+                var gpsCoordinates = request.gps;
 
-        //        // Create a log entry
-        //        var signInEntry = new GuardLog
-        //        {
-        //            ClientSiteLogBookId = logBookId,
-        //            GuardLoginId = guardLoginId,
-        //            EventDateTime = DateTime.Now,
-        //            Notes = "Logbook Logged In (Mob App)",
-        //            IsSystemEntry = true,
-        //            EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
-        //            EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
-        //            EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
-        //            EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
-        //            EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-        //            GpsCoordinates = gpsCoordinates
-        //        };
+                // Create a log entry
+                var signInEntry = new GuardLog
+                {
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    Notes = request.activityString ?? "Logbook Logged In (Mob App)",
+                    IsSystemEntry = request.systemEntry,
+                    EventDateTimeLocal = request.EventDateTimeLocal ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = request.EventDateTimeLocalWithOffset ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = request.EventDateTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = request.EventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = request.EventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    GpsCoordinates = gpsCoordinates,
+                    EventMobileUtcDateTime = request.EventMobileUtcDateTime
+                };
 
-        //        _guardLogDataProvider.SaveGuardLog(signInEntry);
+                _guardLogDataProvider.SaveGuardLog(signInEntry);
 
-        //        var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(clientsiteId).FirstOrDefault();
+                //Predefined Activity for client site refer GetActivities in this page if this is modified
+                // ################### Start ################
+                List<ActivityModelDTO>? activity = new();
+                try
+                {
+                    activity = _viewDataService.GetPreDefinedActivitesFields();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred while fetching activities: " + ex.Message);
+                }
+                // ################### End ################
 
-        //        return Ok(new { message = "Guard successfully logged in.", guardLoginId, TourMode = (int)clientsiteDetails.PatrolTourMode });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "An error occurred", error = ex.Message });
-        //    }
+                //GetPatrolCarLogs for client site
+                // ################### Start ################
+                List<PatrolCarLog> patrolCarLogs = new();
+                try
+                {
+                    patrolCarLogs = _viewDataService.GetPatrolCarLogs(logBookId, request.clientsiteId);
+                }
+                catch (Exception ex)
+                {
 
-        //}
+                    Console.WriteLine("An error occurred while fetching patrolCarLogs: " + ex.Message);
+                }
+                // ################### End ################
+
+                //GetCustomFieldLogs for client site
+                // ################### Start ################
+                List<Dictionary<string, string>> customFieldLogs = new();
+                try
+                {
+                    customFieldLogs = _viewDataService.GetCustomFieldLogs(logBookId, request.clientsiteId);
+                }
+                catch (Exception ex)
+                {
+
+                    Console.WriteLine("An error occurred while fetching customFieldLogs: " + ex.Message);
+                }
+                // ################### End ################
+
+                //RCLinkedDuressClientSites for client site
+                // ################### Start ################
+                List<RCLinkedDuressClientSites> _rcLinkedClientSites = new();
+                try
+                {
+                    var getallRCLinkedDuressMaster = _guardLogDataProvider.getallRCLinkedDuressMaster();
+                    _rcLinkedClientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(request.clientsiteId);
+                    var _check = getallRCLinkedDuressMaster.Where(x => x.Id == _rcLinkedClientSites?.FirstOrDefault()?.RCLinkedId)?.FirstOrDefault();
+                    if (_check != null)
+                    {
+                        if (!_check.IsSW)
+                        {
+                            //allow only if smartwand is enabled in linked sites
+                            _rcLinkedClientSites = new List<RCLinkedDuressClientSites>();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred while fetching Rc Linked ClientSites: " + ex.Message);
+                }
+                // ################### End ##################
+
+
+                // Data for Offline IR creation
+                // ################### Start ################
+                string cacheKey = $"OfflineData_{request.userId}_{request.clientsiteId}";
+
+                // [Optimization]: Memory Cache Pattern
+                // Metadata lists like ClientSites and FeedbackTemplates are served from RAM 
+                // to reduce SQL load during high-concurrency login events.
+                if (!_memoryCache.TryGetValue(cacheKey, out (
+                    List<DropdownItem> clientTypes,
+                    List<ClientSiteDto> clientSites,
+                    List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates,
+                    List<string> notifiedByList,
+                    List<SelectListItem> areas,
+                    List<Mp3File> audio,
+                    List<Mp3File> multimedia) cachedData))
+                {
+                    List<DropdownItem> cache_clientTypes = new List<DropdownItem>();
+                    try { cache_clientTypes = GetUserClientTypesWithId(request.userId); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<ClientSiteDto> cache_clientSites = new List<ClientSiteDto>();
+                    try { var unFilteredClientSites = GetClientSitesForIR(); cache_clientSites = unFilteredClientSites.Where(cs => cache_clientTypes.Any(ct => ct.Id == cs.TypeId)).ToList(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Data.Providers.FeedbackTemplateViewModel> cache_feedbackTemplates = new List<Data.Providers.FeedbackTemplateViewModel>();
+                    try { cache_feedbackTemplates = GetAndReturnFeedbackTemplates(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<string> cache_notifiedByList = new List<string>();
+                    try { cache_notifiedByList = GetNotifiedReportFieldsByType(); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<SelectListItem> cache_areas = new List<SelectListItem>();
+                    try { cache_areas = GetClientSiteArea(-1); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Mp3File> cache_audio = new List<Mp3File>();
+                    try { cache_audio = GetAudioForMobileApp(1); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    List<Mp3File> cache_multimedia = new List<Mp3File>();
+                    try { cache_multimedia = GetAudioForMobileApp(3); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+
+                    cachedData = (cache_clientTypes, cache_clientSites, cache_feedbackTemplates, cache_notifiedByList, cache_areas, cache_audio, cache_multimedia);
+                    _memoryCache.Set(cacheKey, cachedData, TimeSpan.FromMinutes(10));
+                }
+
+                List<DropdownItem> clientTypes = cachedData.clientTypes;
+                List<ClientSiteDto> clientSites = cachedData.clientSites;
+                List<Data.Providers.FeedbackTemplateViewModel> feedbackTemplates = cachedData.feedbackTemplates;
+                List<string> notifiedByList = cachedData.notifiedByList;
+                List<SelectListItem> areas = cachedData.areas;
+                List<Mp3File> audio = cachedData.audio;
+                List<Mp3File> multimedia = cachedData.multimedia;
+                // ################### End ##################
+
+
+                var clientsiteDetails = _clientDataProvider.GetClientSiteDetailsWithId(request.clientsiteId).FirstOrDefault();
+
+                try
+                {
+                    if (request.IsNewGuard)
+                    {
+                        var _nwGuard = _guardDataProvider.GetGuardDetailsUsingId(request.guardId).FirstOrDefault();
+                        _alertEmailServices.SendNewGuardRegisterAlertMail(_nwGuard, clientsiteDetails.Name);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error sending new guard registration email: " + ex.Message);
+                }
+
+                return Ok(new
+                {
+                    message = "Guard successfully logged in.",
+                    guardLoginId,
+                    TourMode = (int)clientsiteDetails.PatrolTourMode,
+                    Activity = activity,
+                    PatrolCarLog = patrolCarLogs,
+                    CustomFieldLog = customFieldLogs.ToArray(),
+                    rcLinkedClientSites = _rcLinkedClientSites,
+                    irClientTypes = clientTypes,
+                    irClientSites = clientSites,
+                    irFeedbackTemplates = feedbackTemplates,
+                    irNotifiedByList = notifiedByList,
+                    irAreas = areas,
+                    audioList = audio,
+                    multimediaList = multimedia
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+
+        }
 
 
         [HttpGet("GetActivities")]
@@ -956,7 +1105,7 @@ namespace CityWatch.Web.API
         //    return _guardDataProvider.SaveGuardLogin(newGuardLogin);
         //}
 
-
+        // To be deleted after ios update
         [HttpPost("PostActivity")]
         public IActionResult PostActivity([FromBody] PostActivityRequest request, int guardId, int clientsiteId, int userId, string activityString, string gps, bool systemEntry = true,
             int scanningType = 0, string tagUID = "NA")
@@ -977,7 +1126,27 @@ namespace CityWatch.Web.API
             {
                 return StatusCode(500, new { message = "An error occurred", error = ex.Message });
             }
+        }
 
+        [HttpPost("PostActivityNew")]
+        public IActionResult PostActivityNew([FromBody] PostActivityRequest request)
+        {
+            try
+            {
+                var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var (IsSuccessR, msgR, guardLoginIdR) = _mobileAppDataServices.PostMobileLogActivity(request, IPAddress);
+
+                if (!IsSuccessR)
+                {
+                    return BadRequest(new { message = msgR });
+                }
+
+                return Ok(new { message = msgR, guardLoginId = guardLoginIdR });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
         }
 
         [HttpPost("SyncOfflinePostActivityLogData")]
@@ -1025,7 +1194,12 @@ namespace CityWatch.Web.API
                             IsOfflineRecord = true,
                             OfflineRecordSyncDateTime = DateTime.Now,
                             TagScanHitLogRefId = offlineRecord.TagScanHitLogRefId,
-                            EventMobileUtcDateTime = offlineRecord.EventMobileUtcDateTime
+                            EventMobileUtcDateTime = offlineRecord.EventMobileUtcDateTime,
+                            LogbookclientsiteId = offlineRecord.LogbookclientsiteId,
+                            IsEntryByPCAR = offlineRecord.IsEntryByPCAR,
+                            CallSignId = offlineRecord.CallSignId,
+                            PositionId = offlineRecord.PositionId
+
                         };
 
                         //Create Logbook entries 
@@ -2673,18 +2847,20 @@ namespace CityWatch.Web.API
 
 
         [HttpPost("UploadMultiple")]
-        public async Task<IActionResult> UploadMultiple(
-    [FromForm] List<IFormFile> files,
-    [FromForm] List<string> types,   // <-- multiple types aligned with files
-    [FromForm] int guardId,
-    [FromForm] int clientsiteId,
-    [FromForm] int userId,
-    [FromForm] string gps
-    )
+        public async Task<IActionResult> UploadMultiple([FromForm] List<IFormFile> files, [FromForm] List<string> types, [FromForm] int guardId, 
+            [FromForm] int clientsiteId, [FromForm] int userId, [FromForm] string gps, [FromForm] DateTime? eventDateTimeLocal, 
+            [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset, [FromForm] string? eventDateTimeZone, [FromForm] string? eventDateTimeZoneShort, 
+            [FromForm] int? eventDateTimeUtcOffsetMinute, [FromForm] int? logbookclientsiteId, [FromForm] bool? isEntryByPCAR, [FromForm] int? callSignId, 
+            [FromForm] int? positionId
+        )
         {
             bool success = false;
             string message = "Uploaded successfully";
             var uploadedFiles = new List<string>();
+
+            int newPcarGuardLogId = 0;
+            int newNonPcarGuardLogId = 0;
+            bool addNonPcarGuardLogEntry = false;
 
             try
             {
@@ -2717,7 +2893,7 @@ namespace CityWatch.Web.API
 
                 string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
 
-
+                bool IsEntryByPCAR = isEntryByPCAR ?? false;
                 var signInEntry = new GuardLog
                 {
                     ClientSiteLogBookId = logBookId,
@@ -2726,15 +2902,57 @@ namespace CityWatch.Web.API
                     /*your message */
                     Notes = "Mob app image upload",
                     IsSystemEntry = false,
-                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
-                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
-                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
-                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
-                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-                    GpsCoordinates = gpsCoordinates
+                    EventDateTimeLocal = eventDateTimeLocal ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = eventDateTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = eventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    GpsCoordinates = gpsCoordinates,
+                    IsEntryByPCAR = IsEntryByPCAR,
+                    PositionId = positionId,
+                    CallSignId = callSignId,
+                    EntryPassedByPCARclientsiteId = IsEntryByPCAR ? clientsiteId : null,
                 };
 
-                int GuardLogId = _guardLogDataProvider.SaveGuardLogandReturnId(signInEntry);
+                newPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(signInEntry);
+
+                if (IsEntryByPCAR && logbookclientsiteId.HasValue && clientsiteId != logbookclientsiteId)
+                {
+                    // Make entry in corresponding non PCAR site logbook                    
+                    var _NonPcarSiteLogEntry = new GuardLog
+                    {
+                        Id = 0,
+                        ClientSiteLogBookId = 0,
+                        GuardLoginId = null,
+                        EventDateTime = signInEntry.EventDateTime,
+                        Notes = signInEntry.Notes,
+                        IsSystemEntry = signInEntry.IsSystemEntry,
+                        EventDateTimeLocal = signInEntry.EventDateTimeLocal,
+                        EventDateTimeLocalWithOffset = signInEntry.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = signInEntry.EventDateTimeZone,
+                        EventDateTimeZoneShort = signInEntry.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = signInEntry.EventDateTimeUtcOffsetMinute,
+                        GpsCoordinates = signInEntry.GpsCoordinates,
+                        IsEntryByPCAR = signInEntry.IsEntryByPCAR,
+                        PositionId = signInEntry.PositionId,
+                        CallSignId = signInEntry.CallSignId,
+                        EntryPassedByPCARclientsiteId = clientsiteId
+                    };
+
+                    var _NonPcarSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(logbookclientsiteId.Value, logBookType);
+                    guardLoginId = _mobileAppDataServices.GetGuardLoginId(_NonPcarSitelogBookId, guardId, logbookclientsiteId.Value, userId, IPAddress);
+
+                    _NonPcarSiteLogEntry.ClientSiteLogBookId = _NonPcarSitelogBookId;
+                    _NonPcarSiteLogEntry.GuardLoginId = guardLoginId;
+
+                    if (_NonPcarSitelogBookId > 0 && guardLoginId > 0)
+                    {
+                        newNonPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(_NonPcarSiteLogEntry);
+                        // Link the GuardLog entries
+                        var linkid = _guardLogDataProvider.LinkGuardLogIds(newNonPcarGuardLogId, newPcarGuardLogId);
+                        addNonPcarGuardLogEntry = true;
+                    }
+                }
 
                 for (int i = 0; i < files.Count; i++)
                 {
@@ -2754,16 +2972,27 @@ namespace CityWatch.Web.API
                         _ => "OtherFiles"
                     };
 
-                    string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", GuardLogId.ToString(), folderName);
+                    string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newPcarGuardLogId.ToString(), folderName);
                     if (!Directory.Exists(folderPath))
                         Directory.CreateDirectory(folderPath);
+
+
 
                     var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
                     var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ext;
                     var fullPath = Path.Combine(folderPath, uploadFileName);
 
-                    using (var stream = System.IO.File.Create(fullPath))
-                        await file.CopyToAsync(stream);
+                    // Read uploaded file once
+                    byte[] fileBytes;
+
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await file.CopyToAsync(memoryStream);
+                        fileBytes = memoryStream.ToArray();
+                    }
+
+                    // Save first copy
+                    await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
 
                     var finalFileName = uploadFileName;
 
@@ -2776,11 +3005,28 @@ namespace CityWatch.Web.API
                         finalFileName = Path.GetFileName(newPath);
                     }
 
-                    var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
+                    var publicUrl = "https://cws-ir.com"; // Production Url                    
+                    string baseUrl;
+                    baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    if (_WebHostEnvironment.IsDevelopment())
+                    {
+                        publicUrl = baseUrl; // Local Url
+                    }
+                    else
+                    {
+                        // If test url
+                        if (baseUrl.Contains("test."))
+                        {
+                            publicUrl = baseUrl;
+                        }
+                    }
+
+
+                    var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
 
                     var logImage = new GuardLogsDocumentImages
                     {
-                        GuardLogId = GuardLogId,
+                        GuardLogId = newPcarGuardLogId,
                         ImagePath = publicPath,
                         IsRearfile = type?.ToLower() == "rear",
                         IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
@@ -2789,6 +3035,41 @@ namespace CityWatch.Web.API
                     _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
 
                     uploadedFiles.Add(publicPath);
+
+
+                    if (addNonPcarGuardLogEntry)
+                    {
+                        string folderPath2 = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newNonPcarGuardLogId.ToString(), folderName);
+                        if (!Directory.Exists(folderPath2))
+                            Directory.CreateDirectory(folderPath2);
+
+                        var fullPath2 = Path.Combine(folderPath2, uploadFileName);
+
+                        // Save second copy
+                        await System.IO.File.WriteAllBytesAsync(fullPath2, fileBytes);
+
+                        var finalFileName2 = uploadFileName;
+
+                        // HEIC conversion
+                        if (ext == ".heic")
+                        {
+                            var newPath2 = Path.Combine(folderPath2, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
+                            await ConvertHeicToJpgAsync(fullPath2, folderPath2);
+                            System.IO.File.Delete(fullPath2);
+                            finalFileName2 = Path.GetFileName(newPath2);
+                        }
+
+                        var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
+                        var logImage2 = new GuardLogsDocumentImages
+                        {
+                            GuardLogId = newNonPcarGuardLogId,
+                            ImagePath = publicPath2,
+                            IsRearfile = type?.ToLower() == "rear",
+                            IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
+                        };
+
+                        _guardLogDataProvider.SaveGuardLogDocumentImages(logImage2);
+                    }
                 }
 
                 success = true;
@@ -2856,6 +3137,9 @@ namespace CityWatch.Web.API
                         continue;
                     }
 
+                    int newPcarGuardLogId = 0;
+                    int newNonPcarGuardLogId = 0;
+                    bool addNonPcarGuardLogEntry = false;
 
                     // Default GPS coordinates (should be replaced with actual values if available)
                     var gpsCoordinates = g.FirstOrDefault().gps;
@@ -2875,79 +3159,180 @@ namespace CityWatch.Web.API
                         EventDateTimeUtcOffsetMinute = g.FirstOrDefault().EventDateTimeUtcOffsetMinute.Value,
                         GpsCoordinates = gpsCoordinates,
                         IsOfflineRecord = true,
-                        OfflineRecordSyncDateTime = DateTime.Now
+                        OfflineRecordSyncDateTime = DateTime.Now,
+                        IsEntryByPCAR = g.FirstOrDefault().IsEntryByPCAR,
+                        PositionId = g.FirstOrDefault().PositionId,
+                        CallSignId = g.FirstOrDefault().CallSignId,
+                        EntryPassedByPCARclientsiteId = g.FirstOrDefault().IsEntryByPCAR ? g.FirstOrDefault().clientsiteId : null,
                     };
 
-                    int GuardLogId = _guardLogDataProvider.SaveGuardLogandReturnId(signInEntry);
+                    newPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(signInEntry);
 
-                    foreach (var o in g)
+
+                    if (g.FirstOrDefault().IsEntryByPCAR && g.FirstOrDefault().LogbookclientsiteId.HasValue && g.FirstOrDefault().clientsiteId != g.FirstOrDefault().LogbookclientsiteId)
                     {
-                        o.IsSynced = true; // Marking file as sysnced
-
-                        string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
-
-                        var file = files.Where(x => x.FileName == o.FileNameCache).FirstOrDefault();
-                        var type = o.FileType;
-
-                        if (file.Length == 0) continue;
-
-                        var ext = Path.GetExtension(file.FileName).ToLower();
-                        if (!allowedExtensions.Contains(ext))
+                        // Make entry in corresponding non PCAR site logbook
+                        var _NonPcarSiteLogEntry = new GuardLog
                         {
-                            Console.WriteLine($"Unsupported file type: {ext}");
-                            SaveOfflineFilesRecordsError(o, $"Unsupported file type: {ext}");
-                            continue;
-                        }
-
-                        string folderName = type?.ToLower() switch
-                        {
-                            "rear" => "RearFiles",
-                            "twentyfive" => "TwentyfivePercentFiles",
-                            _ => "OtherFiles"
+                            Id = 0,
+                            ClientSiteLogBookId = 0,
+                            GuardLoginId = null,
+                            EventDateTime = signInEntry.EventDateTime,
+                            Notes = signInEntry.Notes,
+                            IsSystemEntry = signInEntry.IsSystemEntry,
+                            EventDateTimeLocal = signInEntry.EventDateTimeLocal,
+                            EventDateTimeLocalWithOffset = signInEntry.EventDateTimeLocalWithOffset,
+                            EventDateTimeZone = signInEntry.EventDateTimeZone,
+                            EventDateTimeZoneShort = signInEntry.EventDateTimeZoneShort,
+                            EventDateTimeUtcOffsetMinute = signInEntry.EventDateTimeUtcOffsetMinute,
+                            GpsCoordinates = signInEntry.GpsCoordinates,
+                            IsEntryByPCAR = signInEntry.IsEntryByPCAR,
+                            PositionId = signInEntry.PositionId,
+                            CallSignId = signInEntry.CallSignId,
+                            EntryPassedByPCARclientsiteId = g.FirstOrDefault().clientsiteId
                         };
 
+                        var _NonPcarSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(g.FirstOrDefault().LogbookclientsiteId.Value, logBookType);
+                        guardLoginId = _mobileAppDataServices.GetGuardLoginId(_NonPcarSitelogBookId, g.FirstOrDefault().guardId, g.FirstOrDefault().LogbookclientsiteId.Value, g.FirstOrDefault().userId, IPAddress);
 
-                        string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", GuardLogId.ToString(), folderName);
-                        if (!Directory.Exists(folderPath))
-                            Directory.CreateDirectory(folderPath);
+                        _NonPcarSiteLogEntry.ClientSiteLogBookId = _NonPcarSitelogBookId;
+                        _NonPcarSiteLogEntry.GuardLoginId = guardLoginId;
 
-                        var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
-                        var uploadFileName = Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ext;
-                        var fullPath = Path.Combine(folderPath, uploadFileName);
 
-                        using (var stream = System.IO.File.Create(fullPath))
-                            await file.CopyToAsync(stream);
-
-                        var finalFileName = uploadFileName;
-
-                        // HEIC conversion
-                        if (ext == ".heic")
+                        if (_NonPcarSitelogBookId > 0 && guardLoginId > 0)
                         {
-                            var newPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ".jpg");
-                            await ConvertHeicToJpgAsync(fullPath, folderPath);
-                            System.IO.File.Delete(fullPath);
-                            finalFileName = Path.GetFileName(newPath);
+                            newNonPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(_NonPcarSiteLogEntry);
+                            // Link the GuardLog entries
+                            var linkid = _guardLogDataProvider.LinkGuardLogIds(newNonPcarGuardLogId, newPcarGuardLogId);
+                            addNonPcarGuardLogEntry = true;
                         }
 
-                        var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
-
-                        var logImage = new GuardLogsDocumentImages
+                        foreach (var o in g)
                         {
-                            GuardLogId = GuardLogId,
-                            ImagePath = publicPath,
-                            IsRearfile = type?.ToLower() == "rear",
-                            IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
-                        };
+                            o.IsSynced = true; // Marking file as sysnced
 
-                        _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
+                            string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
 
-                        uploadedFiles.Add(publicPath);
+                            var file = files.Where(x => x.FileName == o.FileNameCache).FirstOrDefault();
+                            var type = o.FileType;
+
+                            if (file.Length == 0) continue;
+
+                            var ext = Path.GetExtension(file.FileName).ToLower();
+                            if (!allowedExtensions.Contains(ext))
+                            {
+                                Console.WriteLine($"Unsupported file type: {ext}");
+                                SaveOfflineFilesRecordsError(o, $"Unsupported file type: {ext}");
+                                continue;
+                            }
+
+                            string folderName = type?.ToLower() switch
+                            {
+                                "rear" => "RearFiles",
+                                "twentyfive" => "TwentyfivePercentFiles",
+                                _ => "OtherFiles"
+                            };
 
 
+                            string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newPcarGuardLogId.ToString(), folderName);
+                            if (!Directory.Exists(folderPath))
+                                Directory.CreateDirectory(folderPath);
 
-                        success = true;
-                        message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
+                            var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
+                            var uploadFileName = Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ext;
+                            var fullPath = Path.Combine(folderPath, uploadFileName);
+
+                            // Read uploaded file once
+                            byte[] fileBytes;
+
+                            using (var memoryStream = new MemoryStream())
+                            {
+                                await file.CopyToAsync(memoryStream);
+                                fileBytes = memoryStream.ToArray();
+                            }
+
+                            // Save first copy
+                            await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
+
+                            var finalFileName = uploadFileName;
+
+                            // HEIC conversion
+                            if (ext == ".heic")
+                            {
+                                var newPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ".jpg");
+                                await ConvertHeicToJpgAsync(fullPath, folderPath);
+                                System.IO.File.Delete(fullPath);
+                                finalFileName = Path.GetFileName(newPath);
+                            }
+
+                            var publicUrl = "https://cws-ir.com"; // Production Url                    
+                            string baseUrl;
+                            baseUrl = $"{Request.Scheme}://{Request.Host}";
+                            if (_WebHostEnvironment.IsDevelopment())
+                            {
+                                publicUrl = baseUrl; // Local Url
+                            }
+                            else
+                            {
+                                // If test url
+                                if (baseUrl.Contains("test."))
+                                {
+                                    publicUrl = baseUrl;
+                                }
+                            }
+                            var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
+
+                            var logImage = new GuardLogsDocumentImages
+                            {
+                                GuardLogId = newPcarGuardLogId,
+                                ImagePath = publicPath,
+                                IsRearfile = type?.ToLower() == "rear",
+                                IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
+                            };
+
+                            _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
+
+                            uploadedFiles.Add(publicPath);
+
+                            if (addNonPcarGuardLogEntry)
+                            {
+                                string folderPath2 = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newNonPcarGuardLogId.ToString(), folderName);
+                                if (!Directory.Exists(folderPath2))
+                                    Directory.CreateDirectory(folderPath2);
+
+                                var fullPath2 = Path.Combine(folderPath2, uploadFileName);
+
+                                // Save second copy
+                                await System.IO.File.WriteAllBytesAsync(fullPath2, fileBytes);
+
+                                var finalFileName2 = uploadFileName;
+
+                                // HEIC conversion
+                                if (ext == ".heic")
+                                {
+                                    var newPath2 = Path.Combine(folderPath2, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
+                                    await ConvertHeicToJpgAsync(fullPath2, folderPath2);
+                                    System.IO.File.Delete(fullPath2);
+                                    finalFileName2 = Path.GetFileName(newPath2);
+                                }
+
+                                var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
+                                var logImage2 = new GuardLogsDocumentImages
+                                {
+                                    GuardLogId = newNonPcarGuardLogId,
+                                    ImagePath = publicPath2,
+                                    IsRearfile = type?.ToLower() == "rear",
+                                    IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
+                                };
+
+                                _guardLogDataProvider.SaveGuardLogDocumentImages(logImage2);
+                            }
+
+                            success = true;
+                            message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
+                        }
                     }
+
                 }
 
                 return Ok(offlineFilesRecords);
@@ -2970,11 +3355,10 @@ namespace CityWatch.Web.API
 
         [HttpPost("UploadMultipleEdit")]
         public async Task<IActionResult> UploadMultipleEdit(
- [FromForm] List<IFormFile> files,
- [FromForm] List<string> types,   // <-- multiple types aligned with files
- [FromForm] int logbookId
-
- )
+             [FromForm] List<IFormFile> files,
+             [FromForm] List<string> types,   // <-- multiple types aligned with files
+             [FromForm] int logbookId
+        )
         {
             bool success = false;
             string message = "Uploaded successfully";
@@ -2985,19 +3369,21 @@ namespace CityWatch.Web.API
                 if (files == null || files.Count == 0)
                     throw new Exception("No files uploaded");
 
-
-
-
-
                 if (types == null || types.Count != files.Count)
                     throw new Exception("Types count must match files count");
 
                 string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
 
-
-
-
                 int GuardLogId = logbookId;
+
+                // Get all linked GuardLogIds once
+                var linkedLogIds = _guardLogDataProvider
+                    .GetLinkGuardLogIds(GuardLogId)
+                    .Select(x => x.GuardLogId == GuardLogId
+                        ? x.LinkedGuardLogId
+                        : x.GuardLogId)
+                    .Distinct()
+                    .ToList();
 
                 for (int i = 0; i < files.Count; i++)
                 {
@@ -3025,8 +3411,16 @@ namespace CityWatch.Web.API
                     var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ext;
                     var fullPath = Path.Combine(folderPath, uploadFileName);
 
-                    using (var stream = System.IO.File.Create(fullPath))
-                        await file.CopyToAsync(stream);
+                    // Read file once
+                    byte[] fileBytes;
+
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await file.CopyToAsync(memoryStream);
+                        fileBytes = memoryStream.ToArray();
+                    }
+
+                    await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
 
                     var finalFileName = uploadFileName;
 
@@ -3039,7 +3433,22 @@ namespace CityWatch.Web.API
                         finalFileName = Path.GetFileName(newPath);
                     }
 
-                    var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
+                    var publicUrl = "https://cws-ir.com"; // Production Url
+                    string baseUrl;
+                    baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    if (_WebHostEnvironment.IsDevelopment())
+                    {
+                        publicUrl = baseUrl; // Local Url
+                    }
+                    else
+                    {
+                        // If test url
+                        if (baseUrl.Contains("test."))
+                        {
+                            publicUrl = baseUrl;
+                        }
+                    }
+                    var publicPath = $"{publicUrl}/DglUploads/{GuardLogId}/{folderName}/{finalFileName}";
 
                     var logImage = new GuardLogsDocumentImages
                     {
@@ -3052,6 +3461,42 @@ namespace CityWatch.Web.API
                     _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
 
                     uploadedFiles.Add(publicPath);
+
+                    // ==========================
+                    // SAVE TO LINKED GUARD LOGS
+                    // ==========================
+
+                    foreach (var linkedGuardLogId in linkedLogIds)
+                    {
+                        string folderPath2 = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", linkedGuardLogId.ToString(), folderName);
+
+                        Directory.CreateDirectory(folderPath2);
+
+                        string fullPath2 = Path.Combine(folderPath2, uploadFileName);
+
+                        await System.IO.File.WriteAllBytesAsync(fullPath2, fileBytes);
+
+                        string finalFileName2 = uploadFileName;
+                        if (ext == ".heic")
+                        {
+                            var newPath2 = Path.Combine(folderPath2, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
+                            await ConvertHeicToJpgAsync(fullPath2, folderPath2);
+                            System.IO.File.Delete(fullPath2);
+                            finalFileName2 = Path.GetFileName(newPath2);
+                        }
+
+                        var publicPath2 = $"{publicUrl}/DglUploads/{linkedGuardLogId}/{folderName}/{finalFileName2}";
+
+                        _guardLogDataProvider.SaveGuardLogDocumentImages(
+                            new GuardLogsDocumentImages
+                            {
+                                GuardLogId = linkedGuardLogId,
+                                ImagePath = publicPath2,
+                                IsRearfile = type?.ToLower() == "rear",
+                                IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
+                            });
+
+                    }
                 }
 
                 success = true;
@@ -3068,17 +3513,19 @@ namespace CityWatch.Web.API
 
 
         [HttpPost("UploadMultipleVideos")]
-        public async Task<IActionResult> UploadMultipleVideos(
-      [FromForm] List<IFormFile> files,
-      [FromForm] int guardId,
-      [FromForm] int clientsiteId,
-      [FromForm] int userId,
-      [FromForm] string gps
-  )
+        public async Task<IActionResult> UploadMultipleVideos([FromForm] List<IFormFile> files, [FromForm] int guardId, [FromForm] int clientsiteId,
+            [FromForm] int userId, [FromForm] string gps, [FromForm] DateTime? eventDateTimeLocal, [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset,
+            [FromForm] string? eventDateTimeZone, [FromForm] string? eventDateTimeZoneShort, [FromForm] int? eventDateTimeUtcOffsetMinute,
+            [FromForm] int? logbookclientsiteId, [FromForm] bool? isEntryByPCAR, [FromForm] int? callSignId, [FromForm] int? positionId
+        )
         {
             bool success = false;
             string message = "Uploaded successfully";
             var uploadedFiles = new List<string>();
+
+            int newPcarGuardLogId = 0;
+            int newNonPcarGuardLogId = 0;
+            bool addNonPcarGuardLogEntry = false;
 
             try
             {
@@ -3097,6 +3544,8 @@ namespace CityWatch.Web.API
                 if (guardLoginId <= 0)
                     return BadRequest(new { message = "Guard login failed." });
 
+
+                bool IsEntryByPCAR = isEntryByPCAR ?? false;
                 var signInEntry = new GuardLog
                 {
                     ClientSiteLogBookId = logBookId,
@@ -3104,18 +3553,61 @@ namespace CityWatch.Web.API
                     EventDateTime = DateTime.Now,
                     Notes = "Mob app video upload",
                     IsSystemEntry = false,
-                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
-                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
-                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
-                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
-                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
-                    GpsCoordinates = gps
+                    EventDateTimeLocal = eventDateTimeLocal ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = eventDateTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = eventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    GpsCoordinates = gps,
+                    IsEntryByPCAR = IsEntryByPCAR,
+                    PositionId = positionId,
+                    CallSignId = callSignId,
+                    EntryPassedByPCARclientsiteId = IsEntryByPCAR ? clientsiteId : null,
                 };
 
-                int GuardLogId = _guardLogDataProvider.SaveGuardLogandReturnId(signInEntry);
+                newPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(signInEntry);
 
                 string[] allowedExtensions = { ".mp4", ".mov", ".avi", ".mkv" };
 
+                if (IsEntryByPCAR && logbookclientsiteId.HasValue && clientsiteId != logbookclientsiteId)
+                {
+                    // Make entry in corresponding non PCAR site logbook                    
+                    var _NonPcarSiteLogEntry = new GuardLog
+                    {
+                        Id = 0,
+                        ClientSiteLogBookId = 0,
+                        GuardLoginId = null,
+                        EventDateTime = signInEntry.EventDateTime,
+                        Notes = signInEntry.Notes,
+                        IsSystemEntry = signInEntry.IsSystemEntry,
+                        EventDateTimeLocal = signInEntry.EventDateTimeLocal,
+                        EventDateTimeLocalWithOffset = signInEntry.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = signInEntry.EventDateTimeZone,
+                        EventDateTimeZoneShort = signInEntry.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = signInEntry.EventDateTimeUtcOffsetMinute,
+                        GpsCoordinates = signInEntry.GpsCoordinates,
+                        IsEntryByPCAR = signInEntry.IsEntryByPCAR,
+                        PositionId = signInEntry.PositionId,
+                        CallSignId = signInEntry.CallSignId,
+                        EntryPassedByPCARclientsiteId = clientsiteId
+                    };
+
+                    var _NonPcarSitelogBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(logbookclientsiteId.Value, LogBookType.DailyGuardLog);
+                    guardLoginId = _mobileAppDataServices.GetGuardLoginId(_NonPcarSitelogBookId, guardId, logbookclientsiteId.Value, userId, IPAddress);
+
+                    _NonPcarSiteLogEntry.ClientSiteLogBookId = _NonPcarSitelogBookId;
+                    _NonPcarSiteLogEntry.GuardLoginId = guardLoginId;
+
+                    if (_NonPcarSitelogBookId > 0 && guardLoginId > 0)
+                    {
+                        newNonPcarGuardLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(_NonPcarSiteLogEntry);
+                        // Link the GuardLog entries
+                        var linkid = _guardLogDataProvider.LinkGuardLogIds(newNonPcarGuardLogId, newPcarGuardLogId);
+                        addNonPcarGuardLogEntry = true;
+                    }
+                }
+
+                string folderName = "Videos";
                 foreach (var file in files)
                 {
                     if (file.Length == 0) continue;
@@ -3124,7 +3616,7 @@ namespace CityWatch.Web.API
                     if (!allowedExtensions.Contains(ext) || !file.ContentType.StartsWith("video"))
                         throw new Exception($"Unsupported video type: {file.FileName}");
 
-                    string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", GuardLogId.ToString(), "Videos");
+                    string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newPcarGuardLogId.ToString(), folderName);
                     if (!Directory.Exists(folderPath))
                         Directory.CreateDirectory(folderPath);
 
@@ -3132,15 +3624,39 @@ namespace CityWatch.Web.API
                     var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ext;
                     var fullPath = Path.Combine(folderPath, uploadFileName);
 
-                    using (var stream = System.IO.File.Create(fullPath))
-                        await file.CopyToAsync(stream);
+                    // Read uploaded file once
+                    byte[] fileBytes;
 
-                    var publicPath = $"https://cws-ir.com/DglUploads/{GuardLogId}/Videos/{uploadFileName}";
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await file.CopyToAsync(memoryStream);
+                        fileBytes = memoryStream.ToArray();
+                    }
+
+                    // Save first copy
+                    await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
+
+                    var publicUrl = "https://cws-ir.com"; // Production Url
+                    string baseUrl;
+                    baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    if (_WebHostEnvironment.IsDevelopment())
+                    {
+                        publicUrl = baseUrl; // Local Url
+                    }
+                    else
+                    {
+                        // If test url
+                        if (baseUrl.Contains("test."))
+                        {
+                            publicUrl = baseUrl;
+                        }
+                    }
+                    var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{uploadFileName}";
 
                     // Save record in the same table
                     var logFile = new GuardLogsDocumentImages
                     {
-                        GuardLogId = GuardLogId,
+                        GuardLogId = newPcarGuardLogId,
                         ImagePath = publicPath,
                         IsVideo = true,
                         IsRearfile = false,
@@ -3150,6 +3666,29 @@ namespace CityWatch.Web.API
                     _guardLogDataProvider.SaveGuardLogDocumentImages(logFile);
 
                     uploadedFiles.Add(publicPath);
+
+                    if (addNonPcarGuardLogEntry)
+                    {
+                        string folderPath2 = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newNonPcarGuardLogId.ToString(), folderName);
+                        if (!Directory.Exists(folderPath2))
+                            Directory.CreateDirectory(folderPath2);
+
+                        var fullPath2 = Path.Combine(folderPath2, uploadFileName);
+
+                        // Save second copy
+                        await System.IO.File.WriteAllBytesAsync(fullPath2, fileBytes);
+                        var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{uploadFileName}";
+                        var logFile2 = new GuardLogsDocumentImages
+                        {
+                            GuardLogId = newNonPcarGuardLogId,
+                            ImagePath = publicPath2,
+                            IsVideo = true,
+                            IsRearfile = false,
+                            IsTwentyfivePercentfile = false
+                        };
+
+                        _guardLogDataProvider.SaveGuardLogDocumentImages(logFile2);
+                    }
                 }
 
                 success = true;
@@ -3868,7 +4407,7 @@ namespace CityWatch.Web.API
 
                     if (report.ClientSiteId.HasValue)
                         CreateGuardLogEntry(report, IRguardId, UserId, gps);
-                        CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
+                    CreateControlRoomLogEntry(report, IRguardId, UserId, gps);//To Save in the control room
 
                     if (report.ClientSitePositionId.HasValue)
                     {
@@ -4209,8 +4748,8 @@ namespace CityWatch.Web.API
                 {
                     var cleanDesc = guardComplianceAndLicenseDTO.Description.ToLower().Trim();
                     var hrSettingsList = _context.HrSettings.ToList();
-                    var matchingSetting = hrSettingsList.FirstOrDefault(s => 
-                        cleanDesc == s.Description.ToLower().Trim() || 
+                    var matchingSetting = hrSettingsList.FirstOrDefault(s =>
+                        cleanDesc == s.Description.ToLower().Trim() ||
                         Regex.IsMatch(cleanDesc, $@"(?<=^|\s){Regex.Escape(s.Description.ToLower().Trim())}(?=\s|$)")
                     );
                     if (matchingSetting != null)
@@ -4872,7 +5411,11 @@ namespace CityWatch.Web.API
                 DeviceId = _oR.DeviceId,
                 DeviceName = _oR.DeviceName,
                 SyncTime = DateTime.Now,
-                NotSyncError = syncError
+                NotSyncError = syncError,
+                IsEntryByPCAR = _oR.IsEntryByPCAR,
+                LogbookclientsiteId = _oR.LogbookclientsiteId,
+                CallSignId = _oR.CallSignId,
+                PositionId = _oR.PositionId
             };
 
             try
@@ -4912,7 +5455,11 @@ namespace CityWatch.Web.API
                 DeviceId = _oR.DeviceId,
                 DeviceName = _oR.DeviceName,
                 SyncTime = DateTime.Now,
-                NotSyncError = syncError
+                NotSyncError = syncError,
+                LogbookclientsiteId = _oR.LogbookclientsiteId,
+                IsEntryByPCAR = _oR.IsEntryByPCAR,
+                CallSignId = _oR.CallSignId,
+                PositionId = _oR.PositionId
             };
 
             try
