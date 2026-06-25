@@ -1635,6 +1635,66 @@
             background-color: #1a1a1a !important;
             border-color: #333 !important;
         }
+
+        /* Protect thead gradient – dark mode must NOT override it */
+        body.dark-mode #roster_grid thead th,
+        body.dark-mode #binder_grid thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border: none !important;
+            outline: none !important;
+        }
+
+        /* Quick Tip alert (inline background: #f8faff) */
+        body.dark-mode .alert.alert-info {
+            background: #1a1e2e !important;
+            border-color: #667eea !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .alert.alert-info .text-dark,
+        body.dark-mode .alert.alert-info strong {
+            color: #e0e0e0 !important;
+        }
+
+        /* Alert-light (relief guard tab) */
+        body.dark-mode .alert.alert-light {
+            background-color: #1e1e1e !important;
+            border-color: #6f42c1 !important;
+            color: #e0e0e0 !important;
+        }
+
+        /* btn-link and text-secondary nav arrows (prev/next week) */
+        body.dark-mode .btn-link {
+            color: #7c9efd !important;
+        }
+        body.dark-mode .btn-link.text-secondary,
+        body.dark-mode #btnPrevWeek,
+        body.dark-mode #btnNextWeek,
+        body.dark-mode #btnPrevWeekBinder,
+        body.dark-mode #btnNextWeekBinder {
+            color: #aaa !important;
+        }
+
+        /* Settings tables thead bg-light */
+        body.dark-mode #tableSettingsProjects thead.bg-light,
+        body.dark-mode #tableSettingsGroups thead.bg-light {
+            background-color: #1e1e2e !important;
+        }
+        body.dark-mode #tableSettingsProjects thead.bg-light th,
+        body.dark-mode #tableSettingsGroups thead.bg-light th {
+            background-color: #1e1e2e !important;
+            color: #e0e0e0 !important;
+            border-color: #333 !important;
+        }
+
+        /* Settings sub-tab nav pills */
+        body.dark-mode #settingsSubTabs .nav-link {
+            color: #aaa !important;
+        }
+        body.dark-mode #settingsSubTabs .nav-link.active {
+            background-color: #667eea !important;
+            color: #fff !important;
+        }
     </style>
 </div>
 
