@@ -1439,6 +1439,8 @@
                 '#roster_grid,#binder_grid{border-color:#333!important;outline:none!important}',
                 '#roster_grid thead tr,#binder_grid thead tr{border:none!important;outline:none!important}',
                 '#roster_grid thead th,#binder_grid thead th{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;color:#fff!important;border:none!important;outline:none!important;box-shadow:none!important}',
+                /* Header date boxes: inner divs get .dark-mode on live toggle -> force transparent so the th gradient shows through */
+                '#roster_grid thead th div,#binder_grid thead th div,#roster_grid thead th span,#binder_grid thead th span{background-color:transparent!important;background:transparent!important;color:#fff!important}',
                 /* Footer */
                 '#roster_footer,#binder_footer{background:#1a1a1a!important;color:#ccc!important;border-top-color:#444!important}',
                 '#binder_footer{border-top-color:#667eea!important}',
