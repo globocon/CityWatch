@@ -32,5 +32,6 @@ namespace CityWatch.Data.Models
         public int? PlayDuressAlarm { get; set; }
         public string LoginTimeZone { get; set; }
         public string State { get; set; }
+        public string TourMode { get; set; }
     }
 }
