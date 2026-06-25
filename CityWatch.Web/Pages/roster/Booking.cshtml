@@ -1416,38 +1416,136 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
     <script>
-        /* ── Booking page: force CSS re-cascade on dark-mode live toggle ──
-           The global site.js adds dark-mode to body, but browsers sometimes
-           don't repaint plugin-owned elements (Select2, Bootstrap modal)
-           without an explicit reflow trigger. This forces it. ── */
+        /* ── Booking page dark-mode: dynamic style injection ──
+           CSS cascade order: dynamically-injected <style> tags are LAST,
+           so they beat every other !important rule without needing body.dark-mode prefix.
+           We inject when dark mode turns ON and remove when it turns OFF. ── */
         (function () {
-            function bookingDarkReflow() {
-                // Momentarily toggle a harmless attribute so the browser
-                // discards its style cache and re-applies body.dark-mode rules
-                document.body.setAttribute('data-booking-reflow', '1');
-                // eslint-disable-next-line no-unused-expressions
-                document.body.offsetHeight;          // read forces synchronous reflow
-                document.body.removeAttribute('data-booking-reflow');
+            var STYLE_ID = 'booking-dark-injected';
 
-                // Clear any inline background-color Select2 may have written
-                document.querySelectorAll(
-                    '.select2-selection, .select2-dropdown, .select2-results__option'
-                ).forEach(function (el) { el.style.backgroundColor = ''; });
+            var DARK_CSS = [
+                /* Table row backgrounds */
+                '#roster_grid tbody tr:nth-child(even),#binder_grid tbody tr:nth-child(even){background-color:#1e1e1e!important}',
+                '#roster_grid tbody tr:hover,#binder_grid tbody tr:hover{background-color:#2a2a2a!important}',
+                /* Cell backgrounds */
+                '#roster_grid tbody td:first-child,#binder_grid tbody td:first-child{background-color:#2a2a2a!important;color:#e0e0e0!important}',
+                '#roster_grid tbody td:nth-child(n+2):nth-child(-n+6),#binder_grid tbody td:nth-child(n+2):nth-child(-n+6){background-color:#121212!important}',
+                '#roster_grid tbody td:nth-child(7),#binder_grid tbody td:nth-child(7){background-color:#0d1a0d!important}',
+                '#roster_grid tbody td:nth-child(8),#binder_grid tbody td:nth-child(8){background-color:#1a0d0d!important}',
+                '#roster_grid tbody td,#binder_grid tbody td{border-color:#333!important}',
+                /* Public holiday */
+                '#roster_grid tbody td.day-cell.ph-highlight,#binder_grid tbody td.day-cell.ph-highlight,#roster_grid tbody td.ph-highlight:nth-child(7),#roster_grid tbody td.ph-highlight:nth-child(8),#binder_grid tbody td.ph-highlight:nth-child(7),#binder_grid tbody td.ph-highlight:nth-child(8){background:#2a2500!important;background-color:#2a2500!important;color:#ffe082!important}',
+                /* Thead – protect gradient */
+                '#roster_grid,#binder_grid{border-color:#333!important;outline:none!important}',
+                '#roster_grid thead tr,#binder_grid thead tr{border:none!important;outline:none!important}',
+                '#roster_grid thead th,#binder_grid thead th{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;color:#fff!important;border:none!important;outline:none!important;box-shadow:none!important}',
+                /* Footer */
+                '#roster_footer,#binder_footer{background:#1a1a1a!important;color:#ccc!important;border-top-color:#444!important}',
+                '#binder_footer{border-top-color:#667eea!important}',
+                '#binder_footer .grand-total-container{background:#1c1c2a!important}',
+                '#binder_grid tbody .project-total-row td,.project-total-row{background-color:#1a1a1a!important;border-top-color:#444!important;border-bottom-color:#667eea!important}',
+                '.grand-total-container{background:#222!important;border-right-color:#444!important}',
+                '.total-value{color:#e0e0e0!important}',
+                '.total-label{color:#999!important}',
+                /* Roster nav tabs */
+                '.custom-roster-tabs .nav-link{color:#aaa!important}',
+                '.custom-roster-tabs .nav-link.active{color:#a78bfa!important;background-color:#121212!important;border-color:#667eea #667eea #121212!important}',
+                /* Project header rows */
+                '#roster_grid tr.bg-light,#binder_grid tr.bg-light{background-color:#1a1a2e!important}',
+                '#roster_grid tr.bg-light td,#binder_grid tr.bg-light td{background-color:#1a1a2e!important;color:#e0e0e0!important}',
+                '#roster_grid tr.bg-light strong,#binder_grid tr.bg-light strong,#roster_grid tr.bg-light span,#binder_grid tr.bg-light span{color:#e0e0e0!important}',
+                '.project-status-select{background-color:#2a2a2a!important;color:#e0e0e0!important;border-color:#555!important}',
+                /* Legend inline color:#000 */
+                '#roster_grid tbody td:first-child [style*="color: #000"],#binder_grid tbody td:first-child [style*="color: #000"]{color:#e0e0e0!important}',
+                /* Date nav, pills, form controls */
+                '.header-status-container{background:#1e1e1e!important;border-color:#444!important}',
+                '.sort-btn-group{background:#1e1e1e!important;border-color:#444!important}',
+                '.sort-btn{color:#ccc!important}',
+                '.sort-btn:first-child{border-right-color:#444!important}',
+                '.bg-white.border.rounded.shadow-sm{background-color:#1e1e1e!important;border-color:#444!important}',
+                '.bg-light.rounded-pill,.bg-light.px-2.py-1.rounded-pill{background-color:#2a2a2a!important;border-color:#444!important}',
+                '#search_site,#roster_grid .form-control,#binder_grid .form-control{background-color:#1e1e1e!important;color:#e0e0e0!important;border-color:#444!important}',
+                '#roster-empty-state,#binder-empty-state{background:#1e1e1e!important;border-color:#444!important}',
+                /* Shift card popup */
+                '.shift-card-popup{background:#1e1e1e!important;color:#e0e0e0!important}',
+                '.shift-card-popup::before{border-right-color:#1e1e1e!important}',
+                '.popup-value{color:#ccc!important}',
+                /* Select2 */
+                '.select2-container--bootstrap4 .select2-selection--single,.select2-selection{background-color:#1e1e1e!important;border-color:#444!important}',
+                '.select2-selection__rendered{color:#e0e0e0!important}',
+                '.select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow b{border-top-color:#aaa!important}',
+                '.select2-dropdown{background-color:#1e1e1e!important;border-color:#444!important;color:#e0e0e0!important}',
+                '.select2-results__option{color:#e0e0e0!important;background-color:#1e1e1e!important}',
+                '.select2-results__option--highlighted[aria-selected]{background-color:#667eea!important;color:#fff!important}',
+                '.select2-search--dropdown .select2-search__field{background-color:#2a2a2a!important;color:#e0e0e0!important;border-color:#555!important}',
+                /* Alerts */
+                '.alert.alert-info{background:#1a1e2e!important;border-color:#667eea!important;color:#e0e0e0!important}',
+                '.alert.alert-info .text-dark,.alert.alert-info strong{color:#e0e0e0!important}',
+                '.alert.alert-light{background-color:#1e1e1e!important;border-color:#6f42c1!important;color:#e0e0e0!important}',
+                /* nav arrows */
+                '#btnPrevWeek,#btnNextWeek,#btnPrevWeekBinder,#btnNextWeekBinder{color:#aaa!important}',
+                '.btn-link{color:#7c9efd!important}',
+                /* Settings tables */
+                '#tableSettingsProjects thead.bg-light,#tableSettingsGroups thead.bg-light{background-color:#1e1e2e!important}',
+                '#tableSettingsProjects thead.bg-light th,#tableSettingsGroups thead.bg-light th{background-color:#1e1e2e!important;color:#e0e0e0!important;border-color:#333!important}',
+                '#settingsSubTabs .nav-link{color:#aaa!important}',
+                '#settingsSubTabs .nav-link.active{background-color:#667eea!important;color:#fff!important}',
+                '#tableSettingsProjects td,#tableSettingsGroups td,#tableSettingsProjects tbody tr,#tableSettingsGroups tbody tr{background-color:#1a1a1a!important;border-color:#333!important;color:#e0e0e0!important}',
+                '#tableSettingsProjects tbody tr:hover td,#tableSettingsGroups tbody tr:hover td{background-color:#2a2a2a!important}',
+                /* Card */
+                '.card-header.bg-white{background-color:#1e1e1e!important;border-color:#333!important}',
+                '.card{background-color:#1a1a1a!important;border-color:#333!important}',
+                /* Modal */
+                '.modal-content{background-color:#1e1e1e!important;border:1px solid #444!important;color:#e0e0e0!important}',
+                '.modal-header{background-color:#252525!important;border-bottom:1px solid #444!important;color:#e0e0e0!important}',
+                '.modal-header .modal-title,.modal-header h5{color:#e0e0e0!important}',
+                '.modal-header .close,.modal-header .close span{color:#aaa!important;text-shadow:none!important}',
+                '.modal-body{background-color:#1e1e1e!important;color:#e0e0e0!important}',
+                '.modal-footer{background-color:#252525!important;border-top:1px solid #444!important}',
+                '.modal-body label{color:#ccc!important}',
+                '.modal-content .form-control{background-color:#2a2a2a!important;color:#e0e0e0!important;border-color:#555!important}',
+                '.modal-content .form-control:disabled,.modal-content .form-control[readonly]{background-color:#222!important;color:#888!important}',
+                '.modal-content .input-group-text{background-color:#333!important;border-color:#555!important;color:#e0e0e0!important}',
+                '.modal-content .nav-tabs{border-bottom-color:#444!important}',
+                '.modal-content .nav-tabs .nav-link{color:#aaa!important;border-color:transparent!important;background-color:transparent!important}',
+                '.modal-content .nav-tabs .nav-link.active{background-color:#2a2a2a!important;color:#e0e0e0!important;border-color:#555 #555 #2a2a2a!important}',
+                '.modal-content hr{border-color:#444!important}',
+                '.modal-footer .btn-link{color:#7c9efd!important}',
+                '.modal-content .select2-container--bootstrap4 .select2-selection--single{background-color:#2a2a2a!important;border-color:#555!important}',
+                '.modal-content .select2-selection__rendered{color:#e0e0e0!important}',
+                '#uploadProcessingOverlay{background:#1e1e1e!important;color:#e0e0e0!important}'
+            ].join('\n');
+
+            function applyBookingDark(isDark) {
+                var existing = document.getElementById(STYLE_ID);
+                if (isDark) {
+                    if (!existing) {
+                        var style = document.createElement('style');
+                        style.id = STYLE_ID;
+                        style.textContent = DARK_CSS;
+                        document.head.appendChild(style);
+                    }
+                } else {
+                    if (existing) existing.parentNode.removeChild(existing);
+                }
             }
 
-            // Watch for body.dark-mode being added or removed by any mechanism
+            // Apply immediately on page load (before roster AJAX runs)
+            applyBookingDark(localStorage.getItem('darkMode') === 'true');
+
+            // Watch body.class for toggle changes (any mechanism: toggle, JS, etc.)
             if (window.MutationObserver) {
-                new MutationObserver(function (mutations) {
-                    for (var i = 0; i < mutations.length; i++) {
-                        if (mutations[i].attributeName === 'class') {
-                            bookingDarkReflow();
+                new MutationObserver(function (muts) {
+                    for (var i = 0; i < muts.length; i++) {
+                        if (muts[i].attributeName === 'class') {
+                            applyBookingDark(document.body.classList.contains('dark-mode'));
                             break;
                         }
                     }
                 }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
             }
         })();
-        /* ── end dark-mode sync ── */
+        /* ── end dark-mode injection ── */
 
         $(document).ready(function () {
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
