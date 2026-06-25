@@ -85,7 +85,7 @@ namespace CityWatch.Web.Services
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var FromAddress = new MailboxAddress(fromAddress[1], fromAddress[0]);
 
-            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+            var toAddresses = new List<string>();
 
             try
             {
@@ -216,7 +216,7 @@ namespace CityWatch.Web.Services
                                "<p><strong>Guard:</strong> " + guardName + "</p>" +
                                "<p><strong>License No:</strong> " + licenseNo + "</p><br/>";
 
-            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+            var toAddresses = new List<string>();
             var companyDetails = _context.CompanyDetails.FirstOrDefault();
             if (companyDetails != null && !string.IsNullOrEmpty(companyDetails.ROMail))
             {
