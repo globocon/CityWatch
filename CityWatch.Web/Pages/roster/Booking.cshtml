@@ -1636,13 +1636,24 @@
             border-color: #333 !important;
         }
 
-        /* Protect thead gradient – dark mode must NOT override it */
+        /* Protect thead gradient and kill the outer "box" border */
+        body.dark-mode #roster_grid,
+        body.dark-mode #binder_grid {
+            border-color: #333 !important;
+            outline: none !important;
+        }
+        body.dark-mode #roster_grid thead tr,
+        body.dark-mode #binder_grid thead tr {
+            border: none !important;
+            outline: none !important;
+        }
         body.dark-mode #roster_grid thead th,
         body.dark-mode #binder_grid thead th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
             color: white !important;
             border: none !important;
             outline: none !important;
+            box-shadow: none !important;
         }
 
         /* Quick Tip alert (inline background: #f8faff) */
@@ -1694,6 +1705,109 @@
         body.dark-mode #settingsSubTabs .nav-link.active {
             background-color: #667eea !important;
             color: #fff !important;
+        }
+
+        /* ── Modal / Popup overrides ── */
+        /* site.css sets border:1px solid #fff — kill it */
+        body.dark-mode .modal-content {
+            background-color: #1e1e1e !important;
+            border: 1px solid #444 !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .modal-header {
+            background-color: #252525 !important;
+            border-bottom: 1px solid #444 !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .modal-header .modal-title,
+        body.dark-mode .modal-header h5 {
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .modal-header .close,
+        body.dark-mode .modal-header .close span {
+            color: #aaa !important;
+            text-shadow: none !important;
+        }
+        body.dark-mode .modal-body {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .modal-footer {
+            background-color: #252525 !important;
+            border-top: 1px solid #444 !important;
+        }
+        /* Labels inside modal */
+        body.dark-mode .modal-body label {
+            color: #ccc !important;
+        }
+        /* Form controls inside modal */
+        body.dark-mode .modal-content .form-control {
+            background-color: #2a2a2a !important;
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+        body.dark-mode .modal-content .form-control:disabled,
+        body.dark-mode .modal-content .form-control[readonly] {
+            background-color: #222 !important;
+            color: #888 !important;
+        }
+        body.dark-mode .modal-content .form-control::placeholder {
+            color: #666 !important;
+        }
+        /* Input group $ prepend */
+        body.dark-mode .modal-content .input-group-text {
+            background-color: #333 !important;
+            border-color: #555 !important;
+            color: #e0e0e0 !important;
+        }
+        /* Nav tabs inside modal (Main Guard / Relief Guard) */
+        body.dark-mode .modal-content .nav-tabs {
+            border-bottom-color: #444 !important;
+        }
+        body.dark-mode .modal-content .nav-tabs .nav-link {
+            color: #aaa !important;
+            border-color: transparent !important;
+            background-color: transparent !important;
+        }
+        body.dark-mode .modal-content .nav-tabs .nav-link.active {
+            background-color: #2a2a2a !important;
+            color: #e0e0e0 !important;
+            border-color: #555 #555 #2a2a2a !important;
+        }
+        /* HR separator */
+        body.dark-mode .modal-content hr {
+            border-color: #444 !important;
+        }
+        /* Allowances btn-link text-dark inside modal footer */
+        body.dark-mode .modal-footer .btn-link.text-dark,
+        body.dark-mode .modal-footer .btn-link {
+            color: #7c9efd !important;
+        }
+        /* Select2 inside modal */
+        body.dark-mode .modal-content .select2-container--bootstrap4 .select2-selection--single {
+            background-color: #2a2a2a !important;
+            border-color: #555 !important;
+        }
+        body.dark-mode .modal-content .select2-selection__rendered {
+            color: #e0e0e0 !important;
+        }
+
+        /* Settings table body cells (Actions column white area) */
+        body.dark-mode #tableSettingsProjects td,
+        body.dark-mode #tableSettingsGroups td,
+        body.dark-mode #tableSettingsProjects tbody tr,
+        body.dark-mode #tableSettingsGroups tbody tr {
+            background-color: #1a1a1a !important;
+            border-color: #333 !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode #tableSettingsProjects tbody tr:hover td,
+        body.dark-mode #tableSettingsGroups tbody tr:hover td {
+            background-color: #2a2a2a !important;
+        }
+        body.dark-mode #tableSettingsProjects,
+        body.dark-mode #tableSettingsGroups {
+            border-color: #333 !important;
         }
     </style>
 </div>
