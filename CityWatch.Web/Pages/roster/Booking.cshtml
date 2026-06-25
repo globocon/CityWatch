@@ -1819,6 +1819,39 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
     <script>
+        /* ── Booking page: force CSS re-cascade on dark-mode live toggle ──
+           The global site.js adds dark-mode to body, but browsers sometimes
+           don't repaint plugin-owned elements (Select2, Bootstrap modal)
+           without an explicit reflow trigger. This forces it. ── */
+        (function () {
+            function bookingDarkReflow() {
+                // Momentarily toggle a harmless attribute so the browser
+                // discards its style cache and re-applies body.dark-mode rules
+                document.body.setAttribute('data-booking-reflow', '1');
+                // eslint-disable-next-line no-unused-expressions
+                document.body.offsetHeight;          // read forces synchronous reflow
+                document.body.removeAttribute('data-booking-reflow');
+
+                // Clear any inline background-color Select2 may have written
+                document.querySelectorAll(
+                    '.select2-selection, .select2-dropdown, .select2-results__option'
+                ).forEach(function (el) { el.style.backgroundColor = ''; });
+            }
+
+            // Watch for body.dark-mode being added or removed by any mechanism
+            if (window.MutationObserver) {
+                new MutationObserver(function (mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                        if (mutations[i].attributeName === 'class') {
+                            bookingDarkReflow();
+                            break;
+                        }
+                    }
+                }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+            }
+        })();
+        /* ── end dark-mode sync ── */
+
         $(document).ready(function () {
             var currentGroupId = @(Model.SelectedGroupId?.ToString() ?? "null");
             var currentBinderId = @(Model.SelectedBinderId?.ToString() ?? "null");
