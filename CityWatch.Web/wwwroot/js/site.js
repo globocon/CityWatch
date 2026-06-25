@@ -4276,6 +4276,11 @@ $(function () {
                 $(this).toggleClass("dark-mode", false);
             }
         });
+        // Apply dark-mode class to table rows too (matches the page-load path
+        // in setDarkModePreference) so live toggle behaves the same as a refresh.
+        $('table tbody tr').each(function () {
+            $(this).toggleClass("dark-mode", !darkModeEnabled);
+        });
         // Update the user's preference in local storage
         localStorage.setItem('darkMode', !darkModeEnabled);
 
