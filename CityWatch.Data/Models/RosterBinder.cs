@@ -21,6 +21,10 @@ namespace CityWatch.Data.Models
 
         public Guid AccessKey { get; set; } = Guid.NewGuid();
 
+        public string AlertEmailRecipients { get; set; }
+        public bool AlertOnRejectedShift { get; set; }
+        public bool AlertOnReliefGuard { get; set; }
+
         public virtual ICollection<RosterBinderProject> RosterBinderProjects { get; set; }
     }
 }

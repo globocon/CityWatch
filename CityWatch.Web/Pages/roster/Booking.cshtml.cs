@@ -239,6 +239,81 @@ namespace CityWatch.Web.Pages.roster
             return reasons;
         }
 
+        public JsonResult OnGetAlertRecipientsPreview(int id, string type)
+        {
+            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+
+            var companyDetails = _context.CompanyDetails.FirstOrDefault();
+            if (companyDetails != null && !string.IsNullOrEmpty(companyDetails.ROMail))
+            {
+                var splitRO = companyDetails.ROMail.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var em in splitRO)
+                {
+                    if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                }
+            }
+
+            var siteIds = new List<int>();
+
+            if (type == "project") // UI "Project" maps to RosterGroup
+            {
+                var projectLinks = _context.RosterBinderProjects.Where(bp => bp.RosterGroupId == id).ToList();
+                foreach (var link in projectLinks)
+                {
+                    var project = _context.RosterBinders.FirstOrDefault(b => b.Id == link.RosterBinderId);
+                    if (project != null && !string.IsNullOrEmpty(project.AlertEmailRecipients))
+                    {
+                        var splits = project.AlertEmailRecipients.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var em in splits)
+                            if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                    }
+                }
+                
+                var groupSites = _context.RosterGroupSites.Where(gs => gs.RosterGroupId == id).Select(gs => gs.ClientSiteId).ToList();
+                var scheduleSites = _context.RosterSchedules.Where(s => s.RosterGroupId == id && !s.IsDeleted).Select(s => s.ClientSiteId).ToList();
+                siteIds.AddRange(groupSites);
+                siteIds.AddRange(scheduleSites);
+            }
+            else if (type == "group") // UI "Group" maps to RosterBinder
+            {
+                var groupLinks = _context.RosterBinderProjects.Where(bp => bp.RosterBinderId == id).ToList();
+                foreach (var link in groupLinks)
+                {
+                    var group = _context.RosterGroups.FirstOrDefault(g => g.Id == link.RosterGroupId);
+                    if (group != null && !string.IsNullOrEmpty(group.AlertEmailRecipients))
+                    {
+                        var splits = group.AlertEmailRecipients.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var em in splits)
+                            if (!toAddresses.Contains(em.Trim())) toAddresses.Add(em.Trim());
+                    }
+                    
+                    var groupSites = _context.RosterGroupSites.Where(gs => gs.RosterGroupId == link.RosterGroupId).Select(gs => gs.ClientSiteId).ToList();
+                    var scheduleSites = _context.RosterSchedules.Where(s => s.RosterGroupId == link.RosterGroupId && !s.IsDeleted).Select(s => s.ClientSiteId).ToList();
+                    siteIds.AddRange(groupSites);
+                    siteIds.AddRange(scheduleSites);
+                }
+            }
+
+            foreach (var siteId in siteIds.Distinct())
+            {
+                try
+                {
+                    var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+                    if (kpiSetting != null && kpiSetting.KPITelematicsFieldID.HasValue)
+                    {
+                        var manager = _clientDataProvider.GetKPITelematicsDetails(kpiSetting.KPITelematicsFieldID.Value);
+                        if (manager != null && !string.IsNullOrEmpty(manager.Email) && !toAddresses.Contains(manager.Email.Trim()))
+                        {
+                            toAddresses.Add(manager.Email.Trim());
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            return new JsonResult(new { success = true, emails = string.Join(", ", toAddresses) });
+        }
+
         public JsonResult OnGetSearchProjects(string search)
         {
             var projects = _context.RosterGroups
@@ -586,6 +661,18 @@ namespace CityWatch.Web.Pages.roster
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed to queue web shift cancellation email.");
+                    }
+                }
+                else if ((reliefGuardId.HasValue && oldReliefGuardId != reliefGuardId) || (!string.IsNullOrEmpty(reliefProviderName) && oldReliefGuardId == null))
+                {
+                    try
+                    {
+                        var userName = HttpContext.User.Identity?.Name ?? "Admin";
+                        await _alertEmailServices.QueueReliefGuardAssigned(existing, userName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to queue relief guard email.");
                     }
                 }
                 else
@@ -1474,7 +1561,10 @@ namespace CityWatch.Web.Pages.roster
                     x.Id,
                     x.Name,
                     x.CoverFileName,
-                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null,
+                    x.AlertEmailRecipients,
+                    x.AlertOnRejectedShift,
+                    x.AlertOnReliefGuard
                 })
                 .OrderBy(x => x.Name)
                 .ToListAsync();
@@ -1491,7 +1581,10 @@ namespace CityWatch.Web.Pages.roster
                     x.Name,
                     x.CoverFileName,
                     x.AccessKey,
-                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null
+                    CoverFileDate = x.CoverFileDate.HasValue ? x.CoverFileDate.Value.ToString("dd MMM yyyy @ HH:mm") : null,
+                    x.AlertEmailRecipients,
+                    x.AlertOnRejectedShift,
+                    x.AlertOnReliefGuard
                 })
                 .OrderBy(x => x.Name)
                 .ToListAsync();
@@ -1822,6 +1915,32 @@ namespace CityWatch.Web.Pages.roster
 
             return new JsonResult(new { success = true });
         }
+        public async Task<IActionResult> OnPostSaveProjectAlerts(int projectId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        {
+            var project = await _context.RosterGroups.FirstOrDefaultAsync(b => b.Id == projectId);
+            if (project == null) return new JsonResult(new { success = false, message = "Project not found." });
+
+            project.AlertEmailRecipients = alertEmailRecipients;
+            project.AlertOnRejectedShift = alertOnRejectedShift;
+            project.AlertOnReliefGuard = alertOnReliefGuard;
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostSaveGroupAlerts(int groupId, string alertEmailRecipients, bool alertOnRejectedShift, bool alertOnReliefGuard)
+        {
+            var group = await _context.RosterBinders.FirstOrDefaultAsync(g => g.Id == groupId);
+            if (group == null) return new JsonResult(new { success = false, message = "Group not found." });
+
+            group.AlertEmailRecipients = alertEmailRecipients;
+            group.AlertOnRejectedShift = alertOnRejectedShift;
+            group.AlertOnReliefGuard = alertOnReliefGuard;
+
+            await _context.SaveChangesAsync();
+            return new JsonResult(new { success = true });
+        }
+
         private DayOfWeek GetFirstDayOfWeek()
         {
             var timesheet = _clientDataProvider.GetTimesheetDetails();
@@ -1842,3 +1961,4 @@ namespace CityWatch.Web.Pages.roster
         }
     }
 }
+

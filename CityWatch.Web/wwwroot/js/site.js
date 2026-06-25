@@ -3967,6 +3967,7 @@ $(function () {
                 $("#txt_IR").val(data[i].irMail);
                 $("#txt_Fusion").val(data[i].fusionMail);
                 $("#txt_Timesheet").val(data[i].timesheetsMail);
+                $("#txt_RO").val(data[i].roMail);
                 $("#txt_APIProviderForIR").val(data[i].apiProviderIR);
                 $("#txt_APIsecretkeyForIR").val(data[i].apiSecretkeyIR)
 
@@ -4136,6 +4137,7 @@ $(function () {
             KPIMail: $("#txt_KPI").val(),
             FusionMail: $("#txt_Fusion").val(),
             TimesheetsMail: $("#txt_Timesheet").val(),
+            ROMail: $("#txt_RO").val(),
         };
 
         $.ajax({
@@ -6580,7 +6582,7 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                     }).done(function (data) {
                         if (data.success) {
                             
-                            gridCriticalDocument.reload();
+                            gridHrSettingswithOnboardingHRWelcomePack.reload();
                         } 
                     });
                     
@@ -6609,7 +6611,7 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
                     }).done(function (data) {
                         if (data.success) {
 
-                            gridCriticalDocument.reload();
+                            gridHrSettingswithOnboardingHRWelcomePack.reload();
                         }
                     });
                     
@@ -8070,7 +8072,9 @@ $('#clientTypeNameDoc').on('change', function () {
     }).done(function (data) {
 
         data.map(function (site) {
-            clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            if (site.name !== 'Onboarding') {
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            }
         });
         clientSiteControl.multiselect('rebuild');
 
@@ -8619,7 +8623,9 @@ $('#clientTypeNameDocHrDoc').on('change', function () {
         },
     }).done(function (data) {
         data.map(function (site) {
-            $('#clientSitesDocHrDoc').append('<option value="' + site.id + '">' + site.name + '</option>');
+            if (site.name !== 'Onboarding') {
+                $('#clientSitesDocHrDoc').append('<option value="' + site.id + '">' + site.name + '</option>');
+            }
         });
         if (isAllClientTypeEnabled === true) {            
             $('#clientSitesDocHrDoc').multiselect('selectAll', false);

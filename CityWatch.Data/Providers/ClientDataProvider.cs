@@ -1182,6 +1182,7 @@ namespace CityWatch.Data.Providers
                     templateToUpdate.KPIMail = companyDetails.KPIMail;
                     templateToUpdate.FusionMail = companyDetails.FusionMail;
                     templateToUpdate.TimesheetsMail = companyDetails.TimesheetsMail;
+                    templateToUpdate.ROMail = companyDetails.ROMail;
 
                 }
             }

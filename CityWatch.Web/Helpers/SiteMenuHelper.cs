@@ -253,9 +253,14 @@ namespace CityWatch.Web.Helpers
                     menuHtml.AppendLine("<div>");
                     if (!AuthUserHelper.IsAdminUserLoggedIn)
                     {
-                        menuHtml.AppendLine(@"<a href=""{0}"" id=""TrainingAndAssessmentBtnSettings""class=""nav-link py-0""><i class=""fa fa-book mr-2""></i>Training & Assessment</a>");
-
-
+                        if (AuthUserHelper.IsOnboardingUserLoggedIn)
+                        {
+                            menuHtml.AppendLine(@"<a href=""/WelcomePack/DataPack.zip"" download id=""btnDataPackDownload"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Data Pack</a>");
+                        }
+                        else
+                        {
+                            menuHtml.AppendLine(@"<a href=""{0}"" id=""TrainingAndAssessmentBtnSettings""class=""nav-link py-0""><i class=""fa fa-book mr-2""></i>Training & Assessment</a>");
+                        }
 
                     }
 
@@ -290,7 +295,14 @@ namespace CityWatch.Web.Helpers
                     if (!AuthUserHelper.IsAdminUserLoggedIn)
                     {
                         menuHtml.AppendLine("<div>");
-                        menuHtml.AppendLine(@"<a href=""{0}"" id=""TrainingAndAssessmentBtnSettings""class=""nav-link py-0""><i class=""fa fa-book mr-2""></i>Training & Assessment</a>");
+                        if (AuthUserHelper.IsOnboardingUserLoggedIn)
+                        {
+                            menuHtml.AppendLine(@"<a href=""/WelcomePack/DataPack.zip"" download id=""btnDataPackDownload"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Data Pack</a>");
+                        }
+                        else
+                        {
+                            menuHtml.AppendLine(@"<a href=""{0}"" id=""TrainingAndAssessmentBtnSettings""class=""nav-link py-0""><i class=""fa fa-book mr-2""></i>Training & Assessment</a>");
+                        }
                         menuHtml.AppendLine("</div>");
 
 

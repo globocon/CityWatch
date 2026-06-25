@@ -1931,6 +1931,15 @@ namespace CityWatch.Kpi.Pages.Admin
             if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
                 return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
 
+            if (!string.IsNullOrWhiteSpace(CriticalDocModel.GroupName))
+            {
+                var existingDocs = _configDataProvider.GetCriticalDocs();
+                if (existingDocs.Any(x => !string.IsNullOrEmpty(x.GroupName) && x.GroupName.Trim().Equals(CriticalDocModel.GroupName.Trim(), StringComparison.OrdinalIgnoreCase) && x.Id != CriticalDocModel.Id))
+                {
+                    return new JsonResult(new { success = false, message = "Group name already exists. Please choose a different name." });
+                }
+            }
+
             var success = true;
             var message = "Saved successfully";
             try

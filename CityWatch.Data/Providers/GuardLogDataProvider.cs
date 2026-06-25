@@ -1,6 +1,7 @@
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Models.DTO;
 using CityWatch.Data.Services;
 using Dropbox.Api.Files;
 using Dropbox.Api.Users;
@@ -45,6 +46,9 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
         void SaveGuardLog(GuardLog guardLog);
+        int SaveGuardLogAndReturnId(GuardLog guardLog);
+        int LinkGuardLogIds(int GuardLogId, int LinkGuardLogId);
+        List<GuardLogsLinked> GetLinkGuardLogIds(int LogId);
         void DeleteGuardLog(int id);
         //logBookId delete for radio checklist-start
         void DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id);
@@ -406,7 +410,7 @@ namespace CityWatch.Data.Providers
         bool HasMessageBeenSentToday(int messageId, DateTime date);
         void MarkMessageSentToday(int messageId, DateTime date);
 
-        public int SaveGuardLogandReturnId(GuardLog guardLog);
+        //public int SaveGuardLogandReturnId(GuardLog guardLog);
         void DeleteRCActionListMessagesClientSites(int id);
         void DeleteRCActionListMessages(int id);
 
@@ -443,6 +447,7 @@ namespace CityWatch.Data.Providers
         object GetClientSiteFrequencyData(int clientSiteId);
         public void DeleteOnBoardUsersCourseByAdmin(int Id);
         string GetTagScanGpsFromLogBook(int RecordId);
+        List<ActivityModelDTO> GetActivityModels();
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -741,9 +746,74 @@ namespace CityWatch.Data.Providers
 
         public void SaveGuardLog(GuardLog guardLog)
         {
+            //if (guardLog.Id == 0)
+            //{
+            //    _context.GuardLogs.Add(new GuardLog()
+            //    {
+            //        ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
+            //        EventDateTime = guardLog.EventDateTime,
+            //        Notes = guardLog.Notes,
+            //        GuardLoginId = guardLog.GuardLoginId,
+            //        IsSystemEntry = guardLog.IsSystemEntry,
+            //        IrEntryType = guardLog.IrEntryType,
+            //        RcPushMessageId = guardLog.RcPushMessageId,
+            //        EventDateTimeLocal = guardLog.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+            //        EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+            //        EventDateTimeZone = guardLog.EventDateTimeZone,
+            //        EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
+            //        EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
+
+            //        PlayNotificationSound = guardLog.PlayNotificationSound,
+            //        GpsCoordinates = guardLog.GpsCoordinates,
+            //        IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
+            //        RcLogbookStamp = guardLog.RcLogbookStamp,
+            //        EventType = guardLog.EventType,
+            //        WAND_TAG_ENTRY_TYPE = guardLog.WAND_TAG_ENTRY_TYPE,
+            //        IsOfflineRecord = guardLog.IsOfflineRecord,
+            //        OfflineRecordSyncDateTime = guardLog.OfflineRecordSyncDateTime,
+            //        TagScanHitLogRefId = guardLog.TagScanHitLogRefId,
+            //        EventMobileUtcDateTime = guardLog.EventMobileUtcDateTime,
+            //        CallSignId = guardLog.CallSignId,
+            //        PositionId = guardLog.PositionId,
+            //        IsEntryByPCAR = guardLog.IsEntryByPCAR,
+            //        EntryPassedByPCARclientsiteId = guardLog.EntryPassedByPCARclientsiteId
+            //    });
+            //}
+            //else
+            //{
+            //    var guardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == guardLog.Id);
+            //    if (guardLogToUpdate == null)
+            //        throw new InvalidOperationException();
+
+            //    guardLogToUpdate.Notes = guardLog.Notes;
+
+            //    var linkedGuardLogs = _context.GuardLogsLinked.Where(x => x.GuardLogId == guardLog.Id).ToList();
+            //    if (linkedGuardLogs.Any())
+            //    {
+            //        foreach (var r in linkedGuardLogs)
+            //        {
+            //            var linkedguardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == r.LinkedGuardLogId);
+            //            if (linkedguardLogToUpdate != null)
+            //            {
+            //                linkedguardLogToUpdate.Notes = guardLog.Notes;
+            //            }
+
+            //        }
+            //    }
+            //}
+            //_context.SaveChanges();
+
+            // ####### Moved the logic to below function to return id in mobile app call (Binoy 17-06-2026) #####
+            var id = SaveGuardLogAndReturnId(guardLog);
+        }
+
+        public int SaveGuardLogAndReturnId(GuardLog guardLog)
+        {
+            int id;
+
             if (guardLog.Id == 0)
             {
-                _context.GuardLogs.Add(new GuardLog()
+                var newGuardLog = new GuardLog()
                 {
                     ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
                     EventDateTime = guardLog.EventDateTime,
@@ -752,12 +822,11 @@ namespace CityWatch.Data.Providers
                     IsSystemEntry = guardLog.IsSystemEntry,
                     IrEntryType = guardLog.IrEntryType,
                     RcPushMessageId = guardLog.RcPushMessageId,
-                    EventDateTimeLocal = guardLog.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                    EventDateTimeLocal = guardLog.EventDateTimeLocal,
                     EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
                     EventDateTimeZone = guardLog.EventDateTimeZone,
                     EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
-                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
-
+                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute,
                     PlayNotificationSound = guardLog.PlayNotificationSound,
                     GpsCoordinates = guardLog.GpsCoordinates,
                     IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
@@ -767,8 +836,17 @@ namespace CityWatch.Data.Providers
                     IsOfflineRecord = guardLog.IsOfflineRecord,
                     OfflineRecordSyncDateTime = guardLog.OfflineRecordSyncDateTime,
                     TagScanHitLogRefId = guardLog.TagScanHitLogRefId,
-                    EventMobileUtcDateTime = guardLog.EventMobileUtcDateTime
-                });
+                    EventMobileUtcDateTime = guardLog.EventMobileUtcDateTime,
+                    CallSignId = guardLog.CallSignId,
+                    PositionId = guardLog.PositionId,
+                    IsEntryByPCAR = guardLog.IsEntryByPCAR,
+                    EntryPassedByPCARclientsiteId = guardLog.EntryPassedByPCARclientsiteId
+                };
+
+                _context.GuardLogs.Add(newGuardLog);
+                _context.SaveChanges();
+
+                id = newGuardLog.Id; // EF populates identity after SaveChanges
             }
             else
             {
@@ -777,8 +855,37 @@ namespace CityWatch.Data.Providers
                     throw new InvalidOperationException();
 
                 guardLogToUpdate.Notes = guardLog.Notes;
+
+                // Updating if note is updated from normal site
+                var linkedGuardLogs = _context.GuardLogsLinked.Where(x => x.GuardLogId == guardLog.Id).ToList();
+                foreach (var r in linkedGuardLogs)
+                {
+                    var linkedguardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == r.LinkedGuardLogId);
+
+                    if (linkedguardLogToUpdate != null)
+                    {
+                        linkedguardLogToUpdate.Notes = guardLog.Notes;
+                    }
+                }
+
+                // Updating if note is updated from PCAR site
+                var reverseLinkedGuardLogs = _context.GuardLogsLinked.Where(x => x.LinkedGuardLogId == guardLog.Id).ToList();
+                foreach (var r in reverseLinkedGuardLogs)
+                {
+                    var reverselinkedguardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == r.GuardLogId);
+
+                    if (reverselinkedguardLogToUpdate != null)
+                    {
+                        reverselinkedguardLogToUpdate.Notes = guardLog.Notes;
+                    }
+                }
+
+                _context.SaveChanges();
+
+                id = guardLog.Id;
             }
-            _context.SaveChanges();
+
+            return id;
         }
 
         public void DeleteGuardLog(int id)
@@ -788,7 +895,57 @@ namespace CityWatch.Data.Providers
                 throw new InvalidOperationException();
 
             _context.Remove(guardLogToDelete);
+
+            var linkedGuardLogs = _context.GuardLogsLinked.Where(x => x.GuardLogId == id).ToList();
+            if (linkedGuardLogs.Any())
+            {
+                foreach (var r in linkedGuardLogs)
+                {
+                    var linkedguardLogToRemove = _context.GuardLogs.SingleOrDefault(x => x.Id == r.LinkedGuardLogId);
+                    if (linkedguardLogToRemove != null)
+                    {
+                        _context.Remove(linkedguardLogToRemove);
+                    }
+                }
+
+                _context.RemoveRange(linkedGuardLogs);
+            }
+
+            // Deleting if note is deleted from PCAR site
+            var reverselinkedGuardLogs = _context.GuardLogsLinked.Where(x => x.LinkedGuardLogId == id).ToList();
+            if (reverselinkedGuardLogs.Any())
+            {
+                foreach (var r in reverselinkedGuardLogs)
+                {
+                    var reverselinkedguardLogToRemove = _context.GuardLogs.SingleOrDefault(x => x.Id == r.GuardLogId);
+                    if (reverselinkedguardLogToRemove != null)
+                    {
+                        _context.Remove(reverselinkedguardLogToRemove);
+                    }
+                }
+                _context.RemoveRange(reverselinkedGuardLogs);
+            }
+
             _context.SaveChanges();
+        }
+
+        public int LinkGuardLogIds(int GuardLogId, int LinkGuardLogId)
+        {
+            GuardLogsLinked _guardLogsLinked = new GuardLogsLinked()
+            {
+                GuardLogId = GuardLogId,
+                LinkedGuardLogId = LinkGuardLogId
+            };
+
+            _context.GuardLogsLinked.Add(_guardLogsLinked);
+            _context.SaveChanges();
+
+            return _guardLogsLinked.Id;
+        }
+
+        public List<GuardLogsLinked> GetLinkGuardLogIds(int LogId)
+        {
+            return _context.GuardLogsLinked.Where(x => x.GuardLogId == LogId || x.LinkedGuardLogId == LogId).ToList();
         }
 
         public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego)
@@ -7022,6 +7179,40 @@ namespace CityWatch.Data.Providers
                 _context.GuardLogsDocumentImages.Remove(image);
                 _context.SaveChanges();
             }
+
+
+            //Also remove linked logid images
+            var linkedGuardLogs = _context.GuardLogsLinked.Where(x => x.GuardLogId == guardLogId).ToList();
+            if (linkedGuardLogs.Any())
+            {
+                foreach (var r in linkedGuardLogs)
+                {
+                    var linkedguardLogImageToRemove = _context.GuardLogsDocumentImages.FirstOrDefault(x => x.GuardLogId == r.LinkedGuardLogId &&
+                                     x.ImagePath.EndsWith(fileName));
+                    if (linkedguardLogImageToRemove != null)
+                    {
+                        _context.Remove(linkedguardLogImageToRemove);
+                    }
+                }
+            }
+
+            // Deleting if image is deleted from PCAR site
+            var reverselinkedGuardLogs = _context.GuardLogsLinked.Where(x => x.LinkedGuardLogId == guardLogId).ToList();
+            if (reverselinkedGuardLogs.Any())
+            {
+                foreach (var r in reverselinkedGuardLogs)
+                {
+                    var reverselinkedguardLogImageToRemove = _context.GuardLogsDocumentImages.FirstOrDefault(x => x.GuardLogId == r.GuardLogId &&
+                                     x.ImagePath.EndsWith(fileName));
+                    if (reverselinkedguardLogImageToRemove != null)
+                    {
+                        _context.Remove(reverselinkedguardLogImageToRemove);
+                    }
+                }                
+            }
+
+            _context.SaveChanges();
+
         }
         public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId)
         {
@@ -7051,9 +7242,45 @@ namespace CityWatch.Data.Providers
         public void DeleteGuardLogDocumentImaes(int id)
         {
             var guardLogDocumentImaes = _context.GuardLogsDocumentImages.SingleOrDefault(i => i.Id == id);
+            int GuardLogId = 0;
+            string fileName = "";
             if (guardLogDocumentImaes != null)
             {
+                GuardLogId = guardLogDocumentImaes.GuardLogId.HasValue ? guardLogDocumentImaes.GuardLogId.Value : 0;
+                fileName = Path.GetFileName(guardLogDocumentImaes.ImageFile.Replace('\\', '/')); ;
                 _context.Remove(guardLogDocumentImaes);
+                _context.SaveChanges();
+
+                //Also remove linked logid images
+                var linkedGuardLogs = _context.GuardLogsLinked.Where(x => x.GuardLogId == GuardLogId).ToList();
+                if (linkedGuardLogs.Any())
+                {
+                    foreach (var r in linkedGuardLogs)
+                    {
+                        var linkedguardLogImageToRemove = _context.GuardLogsDocumentImages.FirstOrDefault(x => x.GuardLogId == r.LinkedGuardLogId &&
+                                         x.ImagePath.EndsWith(fileName));
+                        if (linkedguardLogImageToRemove != null)
+                        {
+                            _context.Remove(linkedguardLogImageToRemove);
+                        }
+                    }
+                }
+
+                // Deleting if image is deleted from PCAR site
+                var reverselinkedGuardLogs = _context.GuardLogsLinked.Where(x => x.LinkedGuardLogId == GuardLogId).ToList();
+                if (reverselinkedGuardLogs.Any())
+                {
+                    foreach (var r in reverselinkedGuardLogs)
+                    {
+                        var reverselinkedguardLogImageToRemove = _context.GuardLogsDocumentImages.FirstOrDefault(x => x.GuardLogId == r.GuardLogId &&
+                                         x.ImagePath.EndsWith(fileName));
+                        if (reverselinkedguardLogImageToRemove != null)
+                        {
+                            _context.Remove(reverselinkedguardLogImageToRemove);
+                        }
+                    }
+                }
+
                 _context.SaveChanges();
             }
         }
@@ -7790,6 +8017,25 @@ namespace CityWatch.Data.Providers
                 return new List<DuressAppField>(); // Return an empty list on failure
             }
         }
+
+        public List<ActivityModelDTO> GetActivityModels()
+        {
+            return (from p in _context.DuressSettings.AsNoTracking()
+                    join f in _context.DuressAppField.AsNoTracking()
+                        on p.LogProfileId equals f.ProfileId
+                    where f.TypeId == 2
+                    select new ActivityModelDTO
+                    {
+                        Id = f.Id,
+                        ClienSiteId = p.ClientSiteId,
+                        Name = f.Name,
+                        Label = f.Label
+                    })
+                    .GroupBy(x => new { x.Id, x.ClienSiteId })
+                    .Select(g => g.First())
+                    .ToList();
+        }
+
         public void DeleteGuardCourseByAdmin(int Id)
         {
 
@@ -8077,48 +8323,48 @@ namespace CityWatch.Data.Providers
         }
 
 
-        public int SaveGuardLogandReturnId(GuardLog guardLog)
-        {
-            if (guardLog.Id == 0)
-            {
-                var newGuardLog = new GuardLog()
-                {
-                    ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
-                    EventDateTime = guardLog.EventDateTime,
-                    Notes = guardLog.Notes,
-                    GuardLoginId = guardLog.GuardLoginId,
-                    IsSystemEntry = guardLog.IsSystemEntry,
-                    IrEntryType = guardLog.IrEntryType,
-                    RcPushMessageId = guardLog.RcPushMessageId,
-                    EventDateTimeLocal = guardLog.EventDateTimeLocal,
-                    EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
-                    EventDateTimeZone = guardLog.EventDateTimeZone,
-                    EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
-                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute,
-                    PlayNotificationSound = guardLog.PlayNotificationSound,
-                    GpsCoordinates = guardLog.GpsCoordinates,
-                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
-                    RcLogbookStamp = guardLog.RcLogbookStamp,
-                    EventType = guardLog.EventType
-                };
+        //public int SaveGuardLogandReturnId(GuardLog guardLog)
+        //{
+        //    if (guardLog.Id == 0)
+        //    {
+        //        var newGuardLog = new GuardLog()
+        //        {
+        //            ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
+        //            EventDateTime = guardLog.EventDateTime,
+        //            Notes = guardLog.Notes,
+        //            GuardLoginId = guardLog.GuardLoginId,
+        //            IsSystemEntry = guardLog.IsSystemEntry,
+        //            IrEntryType = guardLog.IrEntryType,
+        //            RcPushMessageId = guardLog.RcPushMessageId,
+        //            EventDateTimeLocal = guardLog.EventDateTimeLocal,
+        //            EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+        //            EventDateTimeZone = guardLog.EventDateTimeZone,
+        //            EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
+        //            EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute,
+        //            PlayNotificationSound = guardLog.PlayNotificationSound,
+        //            GpsCoordinates = guardLog.GpsCoordinates,
+        //            IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
+        //            RcLogbookStamp = guardLog.RcLogbookStamp,
+        //            EventType = guardLog.EventType
+        //        };
 
-                _context.GuardLogs.Add(newGuardLog);
-                _context.SaveChanges();
+        //        _context.GuardLogs.Add(newGuardLog);
+        //        _context.SaveChanges();
 
-                return newGuardLog.Id;
-            }
-            else
-            {
-                var guardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == guardLog.Id);
-                if (guardLogToUpdate == null)
-                    throw new InvalidOperationException();
+        //        return newGuardLog.Id;
+        //    }
+        //    else
+        //    {
+        //        var guardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == guardLog.Id);
+        //        if (guardLogToUpdate == null)
+        //            throw new InvalidOperationException();
 
-                guardLogToUpdate.Notes = guardLog.Notes;
-                _context.SaveChanges();
+        //        guardLogToUpdate.Notes = guardLog.Notes;
+        //        _context.SaveChanges();
 
-                return guardLogToUpdate.Id; // return updated Id
-            }
-        }
+        //        return guardLogToUpdate.Id; // return updated Id
+        //    }
+        //}
         public void DeleteRCActionListMessagesClientSites(int id)
         {
 

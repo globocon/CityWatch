@@ -19,6 +19,10 @@ namespace CityWatch.Data.Models
         public string CoverFileName { get; set; }
         public DateTime? CoverFileDate { get; set; }
 
+        public string AlertEmailRecipients { get; set; }
+        public bool AlertOnRejectedShift { get; set; }
+        public bool AlertOnReliefGuard { get; set; }
+
         public virtual ICollection<RosterGroupSite> RosterGroupSites { get; set; }
         public virtual ICollection<RosterSchedule> RosterSchedules { get; set; }
     }

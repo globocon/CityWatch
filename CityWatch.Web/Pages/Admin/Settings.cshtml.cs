@@ -1564,6 +1564,15 @@ namespace CityWatch.Web.Pages.Admin
             if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
                 return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
 
+            if (!string.IsNullOrWhiteSpace(CriticalDocModel.GroupName))
+            {
+                var existingDocs = _configDataProvider.GetCriticalDocs();
+                if (existingDocs.Any(x => !string.IsNullOrEmpty(x.GroupName) && x.GroupName.Trim().Equals(CriticalDocModel.GroupName.Trim(), StringComparison.OrdinalIgnoreCase) && x.Id != CriticalDocModel.Id))
+                {
+                    return new JsonResult(new { success = false, message = "Group name already exists. Please choose a different name." });
+                }
+            }
+
             var success = true;
             var message = "Saved successfully";
             try
@@ -3426,13 +3435,27 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetTrainingCourses()
+        public JsonResult OnGetTrainingCourses(bool isOnboardingUser = false)
         {
             var hrGroups = ConfigDataProiver.GetHRGroupsDropDown();
+
+            List<int> allowedCourseIds = null;
+            if (isOnboardingUser)
+            {
+                var onboardingUser = _userDataProvider.GetUsers().FirstOrDefault(x => string.Equals(x.UserName, "onboarding", StringComparison.OrdinalIgnoreCase));
+                if (onboardingUser != null)
+                {
+                    allowedCourseIds = _guardDataProvider.GetOnBoardUsersTrainingAndAssessment(onboardingUser.Id)
+                        .Select(c => c.TrainingCourseId)
+                        .ToList();
+                }
+            }
+
             var result = hrGroups.Select(group => new
             {
                 GroupId = group.Value,
                 Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+                    .Where(course => allowedCourseIds == null || allowedCourseIds.Contains(course.Id))
                     .Select(course => new
                     {
                         course.Id,
@@ -4482,6 +4505,28 @@ namespace CityWatch.Web.Pages.Admin
             {
                 return new JsonResult(ex);
             }
+        }
+
+        public async Task<IActionResult> OnPostUploadWelcomePackZipAsync(IFormFile welcomePackZipFile)
+        {
+            if (welcomePackZipFile != null && welcomePackZipFile.Length > 0)
+            {
+                var webRootPath = _webHostEnvironment.WebRootPath;
+                var folderPath = Path.Combine(webRootPath, "WelcomePack");
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                var filePath = Path.Combine(folderPath, "DataPack.zip");
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await welcomePackZipFile.CopyToAsync(fileStream);
+                }
+                return new JsonResult(new { success = true });
+            }
+
+            return new JsonResult(new { success = false, message = "No file selected." });
         }
     }
     public class helpDocttype

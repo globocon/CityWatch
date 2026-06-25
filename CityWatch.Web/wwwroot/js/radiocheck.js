@@ -1814,6 +1814,9 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
     clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
 
     const securityLicenseNo = $('#txt_guardKeyNewPIN').val();
+    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#GuardLogin_Guard_Id').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#hidden_rosterguardId').val();
 
     // Validate the length of securityLicenseNo
     if (securityLicenseNo.length >= 4 && securityLicenseNo.length <= 6) {
@@ -1821,7 +1824,7 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
             url: '/Admin/GuardSettings?handler=SaveNewPINSetForTheGuard',
             type: 'POST',
             data: {
-                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                guardId: hrGuardId,
                 NewPIN: securityLicenseNo
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1831,17 +1834,18 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
 
                 if (guardPinPurpose === 'roster') {
                     var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), result.isROEditor || false, fromLogbook);
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', hrGuardId, result.isROEditor || false, fromLogbook);
                     return;
                 }
 
                 $.ajax({
                     type: 'GET',
                     url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
-                    data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
+                    data: { guardId: hrGuardId },
                 }).done(function (response) {
                     $('#loginHrEditGuard').modal('hide');
                     $('#addGuardModalnew').modal('show');
+                    $('#Guard_Id').val(response[0].id);
                     isPaused = true;
                     $('.btn-add-guard-addl-details').show();
                     $('#addGuardModal1').modal('show');
@@ -1849,6 +1853,12 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                     $('#GuardCompliance_GuardId1').val(response[0].id);
                     $('#GuardComplianceandlicense_GuardId').val(response[0].id);
                     $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+                    $('#Guard_Id1').val(response[0].id);
+                    $('#guardName').val(response[0].name);
+                    $('#licenseNo').val(response[0].securityNo);
+                    $('#mobile').val(response[0].mobile);
+                    $('#email').val(response[0].email);
+                    updateLanguagesDropdown();
 
                     var selectedValues = [];
                     if (response[0].isRCAccess) {
@@ -1863,17 +1873,15 @@ $('#btnGuardHrUpdateNewPIN').on('click', function () {
                     if (response[0].isSTATS) {
                         selectedValues.push(2);
                     }
-                    selectedValues.forEach(function (value) {
-                        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-                    });
 
                     gridGuardLicensesLogDaily.ajax.reload();
                     gridGuardCompliancesLogDaily.ajax.reload();
-                    gridGuardTrainingAndAssessment.clear().draw();
                     gridGuardTrainingAndAssessment.ajax.reload();
+                    gridGuardLicensesAndLicenceKey.ajax.reload();
                     $("#Guard_Access1").multiselect();
                     $("#Guard_Access1").val(selectedValues);
                     $("#Guard_Access1").multiselect("refresh");
+                    $('#txt_guardKey').val(''); // Reset PIN input
                 });
 
             } else {
@@ -1899,6 +1907,10 @@ $('#txt_guardKey').on('keypress', function (e) {
 $('#btnGuardHrUpdate').on('click', function () {
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
     const securityLicenseNo = $('#txt_guardKey').val();
+    var hrGuardId = $('#GuardLog_GuardLogin_GuardId').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#GuardLogin_Guard_Id').val();
+    if (!hrGuardId || hrGuardId === '0') hrGuardId = $('#hidden_rosterguardId').val();
+
     if (securityLicenseNo === '') {
         displayGuardValidationSummary('GuardLoginValidationSummaryHR', 'Please enter PIN ');
     }
@@ -1909,7 +1921,7 @@ $('#btnGuardHrUpdate').on('click', function () {
             url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
             type: 'POST',
             data: {
-                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                guardId: hrGuardId,
                 key: securityLicenseNo
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1917,19 +1929,22 @@ $('#btnGuardHrUpdate').on('click', function () {
 
             if (result.accessPermission) {
 
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
                 $('#modelGuardLoginForHrUpdate').modal('hide');
                 $('#loginHrEditGuard').modal('hide');
 
                 if (guardPinPurpose === 'roster') {
                     var fromLogbook = window.location.pathname.toLowerCase().indexOf('/incident/') > -1 || window.location.pathname.toLowerCase().indexOf('/guard/') > -1;
-                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', $('#GuardLog_GuardLogin_GuardId').val(), result.isROEditor || false, fromLogbook);
+                    openGuardRosterPortal($('#ClientSiteID').val(), $('#hdnIsAdminLoggedIn1').val() === 'AdminGlobal', hrGuardId, result.isROEditor || false, fromLogbook);
                     return;
                 }
 
                 $.ajax({
                     type: 'GET',
                     url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
-                    data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
+                    data: { guardId: hrGuardId },
                 }).done(function (response) {
                     $('#loginHrEditGuard').modal('hide');
                     $('#addGuardModalnew').modal('show');
@@ -1941,6 +1956,12 @@ $('#btnGuardHrUpdate').on('click', function () {
                     $('#GuardCompliance_GuardId1').val(response[0].id);
                     $('#GuardComplianceandlicense_GuardId').val(response[0].id);
                     $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+                    $('#Guard_Id1').val(response[0].id);
+                    $('#guardName').val(response[0].name);
+                    $('#licenseNo').val(response[0].securityNo);
+                    $('#mobile').val(response[0].mobile);
+                    $('#email').val(response[0].email);
+                    updateLanguagesDropdown();
 
                     // ;
                     var selectedValues = [];
@@ -1964,6 +1985,7 @@ $('#btnGuardHrUpdate').on('click', function () {
                     gridGuardLicensesLogDaily.ajax.reload();
                     gridGuardCompliancesLogDaily.ajax.reload();
                     gridGuardTrainingAndAssessment.ajax.reload();
+                    gridGuardLicensesAndLicenceKey.ajax.reload();
                     $("#Guard_Access1").multiselect();
                     $("#Guard_Access1").val(selectedValues);
                     $("#Guard_Access1").multiselect("refresh");
@@ -2031,7 +2053,7 @@ $('#forgotpassword').click(function (e) {
         url: '/Admin/GuardSettings?handler=ResetGaurdHrPin',
         type: 'POST',
         data: {
-            guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            guardId: hrGuardId,
             siteName: $('#hidden_guardKey').val()
 
         },
@@ -2058,7 +2080,7 @@ $('#forgotpassword').click(function (e) {
 //    $.ajax({
 //        type: 'GET',
 //        url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
-//        data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
+//        data: { guardId: hrGuardId },
 //    }).done(function (response) {
 //        $('#addGuardModalnew').modal('show');
 //        isPaused = true;
@@ -2633,7 +2655,10 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
     ajax: {
         url: '/Admin/GuardSettings?handler=GuardLicenseAndComplianceData',
         data: function (d) {
-            d.guardId = $('#GuardLog_GuardLogin_GuardId').val();
+            var gId = $('#GuardLog_GuardLogin_GuardId').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#GuardLogin_Guard_Id').val();
+            if (!gId || gId === "0" || gId === 0) gId = $('#Guard_Id').val();
+            d.guardId = gId;
         },
         dataSrc: ''
     },
@@ -2761,7 +2786,7 @@ $('#Description').editableSelect({
     // Set the hidden field to the selected ID for Graceful Migration
     $('#HrSettingsId').val(selectedItem);
 });
-$('#HRGroup').on('change', function () {
+$('#HRGroup').off('change').on('change', function () {
     $('#Description').val('');
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#guardComplianceandlicense_fileName1').text('None');
@@ -2770,12 +2795,16 @@ $('#HRGroup').on('change', function () {
     const token = $('input[name="__RequestVerificationToken"]').val();
     const ulClients = $('#Description').siblings('ul.es-list');
     ulClients.html('');
+    
+    var isOnboardingUserFlag = typeof isOnboardingUser !== 'undefined' ? isOnboardingUser : false;
+
     $.ajax({
         url: '/Admin/GuardSettings?handler=HRDescription',
         type: 'GET',
         data: {
             HRid: Descriptionval,
-            GuardID: GuardID
+            GuardID: GuardID,
+            isOnboardingUser: isOnboardingUserFlag
         },
         headers: { 'RequestVerificationToken': token }
     }).done(function (DescVal) {
@@ -2842,7 +2871,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
     let selectedItem = $('.es-visible').val();
     var HRBan = false;
     $('#complianceValidationDiv').show();
-    if (LoginVal == 'GuardLogin') {
+    if (LoginVal == 'GuardLogin' || !LoginVal) {
         $.ajax({
             url: '/Admin/GuardSettings?handler=HRDescriptionBanDetails',
             type: 'GET',
@@ -2862,6 +2891,8 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
             }
 
         });
+    } else {
+        processFormSubmission();
     }
 
     function processFormSubmission() {
@@ -2919,7 +2950,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
                     } else {
                         const messageHtml = '';
                         $('#schRunStatusNew').html(messageHtml);
-                        displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
+                        displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message || result.msg);
                     }
                 }).always(function () {
                     $('#loader').hide();
@@ -2948,7 +2979,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
                 } else {
                     const messageHtml = '';
                     $('#schRunStatusNew').html(messageHtml);
-                    displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
+                    displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message || result.msg);
                 }
             }).always(function () {
                 $('#loader').hide();
