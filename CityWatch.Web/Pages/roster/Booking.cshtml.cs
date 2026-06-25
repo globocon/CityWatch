@@ -241,7 +241,7 @@ namespace CityWatch.Web.Pages.roster
 
         public JsonResult OnGetAlertRecipientsPreview(int id, string type)
         {
-            var toAddresses = new List<string> { "cws-ir@citywatchsecurity.com.au" };
+            var toAddresses = new List<string>();
 
             var companyDetails = _context.CompanyDetails.FirstOrDefault();
             if (companyDetails != null && !string.IsNullOrEmpty(companyDetails.ROMail))
