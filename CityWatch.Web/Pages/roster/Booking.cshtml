@@ -1404,6 +1404,127 @@
         .guard-status-stamp.paid { color: #1b5e20; border-color: #1b5e20; }
         .guard-status-stamp.invoiced { color: #0d47a1; border-color: #0d47a1; }
         .guard-status-stamp.cancelled { color: #424242; border-color: #424242; }
+
+        /* ===== Dark Mode Overrides – Booking Page Only ===== */
+        /* Row backgrounds */
+        body.dark-mode #roster_grid tbody tr:nth-child(even),
+        body.dark-mode #binder_grid tbody tr:nth-child(even) {
+            background-color: #1e1e1e !important;
+        }
+        body.dark-mode #roster_grid tbody tr:hover,
+        body.dark-mode #binder_grid tbody tr:hover {
+            background-color: #2a2a2a !important;
+        }
+        /* Column cell backgrounds */
+        body.dark-mode #roster_grid tbody td:first-child,
+        body.dark-mode #binder_grid tbody td:first-child {
+            background-color: #2a2a2a !important;
+        }
+        body.dark-mode #roster_grid tbody td:nth-child(n+2):nth-child(-n+6),
+        body.dark-mode #binder_grid tbody td:nth-child(n+2):nth-child(-n+6) {
+            background-color: #121212 !important;
+        }
+        body.dark-mode #roster_grid tbody td:nth-child(7),
+        body.dark-mode #binder_grid tbody td:nth-child(7) {
+            background-color: #0d1a0d !important;
+        }
+        body.dark-mode #roster_grid tbody td:nth-child(8),
+        body.dark-mode #binder_grid tbody td:nth-child(8) {
+            background-color: #1a0d0d !important;
+        }
+        body.dark-mode #roster_grid tbody td,
+        body.dark-mode #binder_grid tbody td {
+            border-color: #333 !important;
+        }
+        /* Public holiday highlight */
+        body.dark-mode #roster_grid tbody td.day-cell.ph-highlight,
+        body.dark-mode #binder_grid tbody td.day-cell.ph-highlight,
+        body.dark-mode #roster_grid tbody td.ph-highlight:nth-child(7),
+        body.dark-mode #roster_grid tbody td.ph-highlight:nth-child(8),
+        body.dark-mode #binder_grid tbody td.ph-highlight:nth-child(7),
+        body.dark-mode #binder_grid tbody td.ph-highlight:nth-child(8) {
+            background: #2a2500 !important;
+            background-color: #2a2500 !important;
+            color: #ffe082 !important;
+        }
+        /* Footer */
+        body.dark-mode #roster_footer,
+        body.dark-mode #binder_footer {
+            background: #1a1a1a !important;
+            color: #ccc !important;
+            border-top-color: #444 !important;
+        }
+        body.dark-mode #binder_footer {
+            border-top-color: #667eea !important;
+        }
+        body.dark-mode #binder_footer .grand-total-container {
+            background: #1c1c2a !important;
+        }
+        body.dark-mode #binder_grid tbody .project-total-row td,
+        body.dark-mode .project-total-row {
+            background-color: #1a1a1a !important;
+            border-top-color: #444 !important;
+            border-bottom-color: #667eea !important;
+        }
+        body.dark-mode .grand-total-container {
+            background: #222 !important;
+            border-right-color: #444 !important;
+        }
+        body.dark-mode .total-value {
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .total-label {
+            color: #999 !important;
+        }
+        /* Nav tabs */
+        body.dark-mode .custom-roster-tabs .nav-link {
+            color: #aaa !important;
+        }
+        body.dark-mode .custom-roster-tabs .nav-link.active {
+            color: #a78bfa !important;
+            background-color: #121212 !important;
+            border-color: #667eea #667eea #121212 !important;
+        }
+        /* Header status container & sort buttons */
+        body.dark-mode .header-status-container {
+            background: #1e1e1e !important;
+            border-color: #444 !important;
+        }
+        body.dark-mode .sort-btn-group {
+            background: #1e1e1e !important;
+            border-color: #444 !important;
+        }
+        body.dark-mode .sort-btn {
+            color: #ccc !important;
+        }
+        body.dark-mode .sort-btn:hover {
+            background: #2a2a2a !important;
+            color: #a78bfa !important;
+        }
+        body.dark-mode .sort-btn:first-child {
+            border-right-color: #444 !important;
+        }
+        /* Empty state */
+        body.dark-mode #roster-empty-state {
+            background: #1e1e1e !important;
+            border-color: #444 !important;
+        }
+        /* Shift card hover popup */
+        body.dark-mode .shift-card-popup {
+            background: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+        }
+        body.dark-mode .shift-card-popup::before {
+            border-right-color: #1e1e1e !important;
+        }
+        body.dark-mode .popup-value {
+            color: #ccc !important;
+        }
+        /* Drag-over cell */
+        body.dark-mode .day-cell.drag-over {
+            background-color: rgba(102, 126, 234, 0.25) !important;
+        }
     </style>
 </div>
 
