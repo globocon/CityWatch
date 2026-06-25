@@ -1525,6 +1525,116 @@
         body.dark-mode .day-cell.drag-over {
             background-color: rgba(102, 126, 234, 0.25) !important;
         }
+
+        /* Project / Group header rows (tr.bg-light) */
+        body.dark-mode #roster_grid tr.bg-light,
+        body.dark-mode #binder_grid tr.bg-light {
+            background-color: #1a1a2e !important;
+        }
+        body.dark-mode #roster_grid tr.bg-light td,
+        body.dark-mode #binder_grid tr.bg-light td {
+            background-color: #1a1a2e !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode #roster_grid tr.bg-light strong,
+        body.dark-mode #binder_grid tr.bg-light strong,
+        body.dark-mode #roster_grid tr.bg-light span,
+        body.dark-mode #binder_grid tr.bg-light span {
+            color: #e0e0e0 !important;
+        }
+
+        /* Project status select inside header row */
+        body.dark-mode .project-status-select {
+            background-color: #2a2a2a !important;
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+
+        /* Legend – override hardcoded color:#000 inline styles in DNC section */
+        body.dark-mode #roster_grid tbody td:first-child [style*="color: #000"],
+        body.dark-mode #binder_grid tbody td:first-child [style*="color: #000"] {
+            color: #e0e0e0 !important;
+        }
+        /* General text color in the first (site name) column */
+        body.dark-mode #roster_grid tbody td:first-child,
+        body.dark-mode #binder_grid tbody td:first-child {
+            color: #e0e0e0;
+        }
+
+        /* Date nav container (bg-white pill) */
+        body.dark-mode .bg-white.border.rounded.shadow-sm {
+            background-color: #1e1e1e !important;
+            border-color: #444 !important;
+        }
+        body.dark-mode .bg-white.border.rounded.shadow-sm .text-dark,
+        body.dark-mode .bg-white.border.rounded.shadow-sm .text-secondary {
+            color: #ccc !important;
+        }
+
+        /* bg-light pill containers (financial toggle, etc.) */
+        body.dark-mode .bg-light.rounded-pill,
+        body.dark-mode .bg-light.px-2.py-1.rounded-pill {
+            background-color: #2a2a2a !important;
+            border-color: #444 !important;
+        }
+
+        /* Form controls on this page in dark mode */
+        body.dark-mode #search_site,
+        body.dark-mode .project-status-select,
+        body.dark-mode #roster_grid .form-control,
+        body.dark-mode #binder_grid .form-control {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border-color: #444 !important;
+        }
+
+        /* Select2 dropdowns (project_name, binder_name, search_site) */
+        body.dark-mode .select2-container--bootstrap4 .select2-selection--single,
+        body.dark-mode .select2-selection {
+            background-color: #1e1e1e !important;
+            border-color: #444 !important;
+        }
+        body.dark-mode .select2-selection__rendered,
+        body.dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow b {
+            border-top-color: #aaa !important;
+        }
+        body.dark-mode .select2-dropdown {
+            background-color: #1e1e1e !important;
+            border-color: #444 !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .select2-results__option {
+            color: #e0e0e0 !important;
+            background-color: #1e1e1e !important;
+        }
+        body.dark-mode .select2-results__option--highlighted[aria-selected] {
+            background-color: #667eea !important;
+            color: #fff !important;
+        }
+        body.dark-mode .select2-search--dropdown .select2-search__field {
+            background-color: #2a2a2a !important;
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+
+        /* Upload processing overlay */
+        body.dark-mode #uploadProcessingOverlay {
+            background: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+
+        /* Settings tab card header */
+        body.dark-mode .card-header.bg-white {
+            background-color: #1e1e1e !important;
+            border-color: #333 !important;
+        }
+        body.dark-mode .card {
+            background-color: #1a1a1a !important;
+            border-color: #333 !important;
+        }
     </style>
 </div>
 
