@@ -1523,7 +1523,11 @@
                         var style = document.createElement('style');
                         style.id = STYLE_ID;
                         style.textContent = DARK_CSS;
-                        document.head.appendChild(style);
+                        // Append to END of <body> (NOT <head>) so this style block
+                        // comes AFTER the page's own in-body <style> blocks in document
+                        // order. For equal-specificity !important rules the later one
+                        // wins, so this guarantees our dark rules override the page CSS.
+                        document.body.appendChild(style);
                     }
                 } else {
                     if (existing) existing.parentNode.removeChild(existing);
