@@ -153,3 +153,7 @@ INSERT INTO KeyVehcileLogFields VALUES
 (11,'Landwind',0),
 (11,'Dayun',0);
 
+ALTER TABLE [VehicleKeyLogs]
+ADD HasLoadVariation bit Default 0 Not Null,
+IsLoadVariationDuplicate bit Default 0 Not Null,
+CopiedFromKVLogId int Null

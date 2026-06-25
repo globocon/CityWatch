@@ -1177,6 +1177,10 @@ namespace CityWatch.Data.Providers
                     keyVehicleLogToUpdate.IsVin = keyVehicleLog.IsVin;
                     keyVehicleLogToUpdate.IsTrailerRego = keyVehicleLog.IsTrailerRego;
                     keyVehicleLogToUpdate.IsCarsStock = keyVehicleLog.IsCarsStock;
+                    keyVehicleLogToUpdate.HasLoadVariation = keyVehicleLog.HasLoadVariation;
+                    keyVehicleLogToUpdate.IsLoadVariationDuplicate = keyVehicleLog.IsLoadVariationDuplicate;
+                    if (keyVehicleLog.CopiedFromKVLogId.HasValue)
+                        keyVehicleLogToUpdate.CopiedFromKVLogId = keyVehicleLog.CopiedFromKVLogId;
 
                     keyVehicleLogToUpdate.Trailer1PlateId = keyVehicleLog.Trailer1PlateId;
                     keyVehicleLogToUpdate.Trailer2PlateId = keyVehicleLog.Trailer2PlateId;

@@ -547,6 +547,204 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
+        public JsonResult OnPostKeyVehicleLogQuickLV(int Id, GuardLog tmdata)
+        {
+            var status = true;
+            var message = "Success";
+            var newkvid = 0;
+            try
+            {
+                // ── Step 1: Load the original entry ──────────────────────────────────
+                var keyVehicleLogInExitTime = _guardLogDataProvider.GetKeyVehicleLogById(Id);
+                keyVehicleLogInExitTime.ActiveGuardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
+
+                // ── Step 2: Mark original as having a Load Variation and persist it ──
+                keyVehicleLogInExitTime.HasLoadVariation = true;
+                _guardLogDataProvider.SaveKeyVehicleLog(keyVehicleLogInExitTime);
+
+                // ── Step 3: Record audit history for the original entry ───────────────
+                var keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
+                keyVehicleLogAuditHistory.AuditMessage = "Load Variation entry";
+                /*21022024 modification for trailer dileep Start*/
+                var profileId = 0;
+                if (!string.IsNullOrEmpty(keyVehicleLogInExitTime.VehicleRego))
+                    profileId = GetKvlProfileId(keyVehicleLogInExitTime);
+                else
+                    profileId = GetKvlProfileIdWithOutVehicleRego(keyVehicleLogInExitTime);
+                /*21022024 modification for trailer dileep end*/
+                keyVehicleLogAuditHistory.ProfileId = profileId;
+                keyVehicleLogAuditHistory.KeyVehicleLogId = Id;
+                _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
+
+                // ── Step 4: Update radio checklist for the original entry ─────────────
+                var guardId = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(HttpContext.Session.GetInt32("GuardLoginId"))).Select(x => x.GuardId).FirstOrDefault();
+                var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
+                {
+                    ClientSiteId = keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId,
+                    GuardId = guardId,
+                    LastKVCreatedTime = DateTime.Now,
+                    KVId = Id,
+                    ActivityType = "KV",
+                    ActivityDescription = "KV Load Variation"
+                };
+                _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
+                var clientSiteRadioChecksOtherSites = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails()
+                    .Where(x => x.GuardId == guardId && x.ClientSiteId != keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId);
+                foreach (var item in clientSiteRadioChecksOtherSites)
+                {
+                    _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKV(item.Id);
+                }
+
+                // ── Step 5: Clone the original into a new duplicate entry ─────────────
+                var newEntry = new KeyVehicleLog
+                {
+                    Id = 0,   // forces INSERT
+                    ClientSiteLogBookId = keyVehicleLogInExitTime.ClientSiteLogBookId,
+                    GuardLoginId = HttpContext.Session.GetInt32("GuardLoginId") ?? keyVehicleLogInExitTime.GuardLoginId,
+                    VehicleRego = keyVehicleLogInExitTime.VehicleRego,
+                    Trailer1Rego = keyVehicleLogInExitTime.Trailer1Rego,
+                    Trailer2Rego = keyVehicleLogInExitTime.Trailer2Rego,
+                    Trailer3Rego = keyVehicleLogInExitTime.Trailer3Rego,
+                    Trailer4Rego = keyVehicleLogInExitTime.Trailer4Rego,
+                    Trailer5Rego = keyVehicleLogInExitTime.Trailer5Rego,
+                    Trailer6Rego = keyVehicleLogInExitTime.Trailer6Rego,
+                    Trailer7Rego = keyVehicleLogInExitTime.Trailer7Rego,
+                    Trailer8Rego = keyVehicleLogInExitTime.Trailer8Rego,
+                    Trailer1PlateId = keyVehicleLogInExitTime.Trailer1PlateId,
+                    Trailer2PlateId = keyVehicleLogInExitTime.Trailer2PlateId,
+                    Trailer3PlateId = keyVehicleLogInExitTime.Trailer3PlateId,
+                    Trailer4PlateId = keyVehicleLogInExitTime.Trailer4PlateId,
+                    Trailer5PlateId = keyVehicleLogInExitTime.Trailer5PlateId,
+                    Trailer6PlateId = keyVehicleLogInExitTime.Trailer6PlateId,
+                    Trailer7PlateId = keyVehicleLogInExitTime.Trailer7PlateId,
+                    Trailer8PlateId = keyVehicleLogInExitTime.Trailer8PlateId,
+                    PlateId = keyVehicleLogInExitTime.PlateId,
+                    CompanyName = keyVehicleLogInExitTime.CompanyName,
+                    PersonName = keyVehicleLogInExitTime.PersonName,
+                    PersonType = keyVehicleLogInExitTime.PersonType,
+                    MobileNumber = keyVehicleLogInExitTime.MobileNumber,
+                    TruckConfig = keyVehicleLogInExitTime.TruckConfig,
+                    TrailerType = keyVehicleLogInExitTime.TrailerType,
+                    Product = keyVehicleLogInExitTime.Product,
+                    InWeight = keyVehicleLogInExitTime.InWeight,
+                    OutWeight = keyVehicleLogInExitTime.OutWeight,
+                    TareWeight = keyVehicleLogInExitTime.TareWeight,
+                    MaxWeight = keyVehicleLogInExitTime.MaxWeight,
+                    Notes = keyVehicleLogInExitTime.Notes,
+                    KeyNo = keyVehicleLogInExitTime.KeyNo,
+                    TimeSlotNo = keyVehicleLogInExitTime.TimeSlotNo,
+                    EntryReason = keyVehicleLogInExitTime.EntryReason,
+                    ClientSitePocId = keyVehicleLogInExitTime.ClientSitePocId,
+                    ClientSiteLocationId = keyVehicleLogInExitTime.ClientSiteLocationId,
+                    ClientSitePocIdsVehicleLog = keyVehicleLogInExitTime.ClientSitePocIdsVehicleLog,
+                    MoistureDeduction = keyVehicleLogInExitTime.MoistureDeduction,
+                    RubbishDeduction = keyVehicleLogInExitTime.RubbishDeduction,
+                    DeductionPercentage = keyVehicleLogInExitTime.DeductionPercentage,
+                    Reels = keyVehicleLogInExitTime.Reels,
+                    CustomerRef = keyVehicleLogInExitTime.CustomerRef,
+                    Vwi = keyVehicleLogInExitTime.Vwi,
+                    IsSender = keyVehicleLogInExitTime.IsSender,
+                    Sender = keyVehicleLogInExitTime.Sender,
+                    IsBDM = keyVehicleLogInExitTime.IsBDM,
+                    IndividualTitle = keyVehicleLogInExitTime.IndividualTitle,
+                    Gender = keyVehicleLogInExitTime.Gender,
+                    CompanyABN = keyVehicleLogInExitTime.CompanyABN,
+                    CompanyLandline = keyVehicleLogInExitTime.CompanyLandline,
+                    Email = keyVehicleLogInExitTime.Email,
+                    Website = keyVehicleLogInExitTime.Website,
+                    CRMId = keyVehicleLogInExitTime.CRMId,
+                    BDMList = keyVehicleLogInExitTime.BDMList,
+                    IsTimeSlotNo = keyVehicleLogInExitTime.IsTimeSlotNo,
+                    IsDocketNo = keyVehicleLogInExitTime.IsDocketNo,
+                    LoaderName = keyVehicleLogInExitTime.LoaderName,
+                    DispatchName = keyVehicleLogInExitTime.DispatchName,
+                    IsReels = keyVehicleLogInExitTime.IsReels,
+                    IsVWI = keyVehicleLogInExitTime.IsVWI,
+                    IsISOVIN = keyVehicleLogInExitTime.IsISOVIN,
+                    IsISO = keyVehicleLogInExitTime.IsISO,
+                    IsVin = keyVehicleLogInExitTime.IsVin,
+                    IsTrailerRego = keyVehicleLogInExitTime.IsTrailerRego,
+                    IsCarsStock = keyVehicleLogInExitTime.IsCarsStock,
+                    PersonOfInterest = keyVehicleLogInExitTime.PersonOfInterest,
+                    ReportReference = keyVehicleLogInExitTime.ReportReference,
+                    EntryTime = keyVehicleLogInExitTime.EntryTime,
+                    ExitTime = null,
+                    SentInTime = keyVehicleLogInExitTime.SentInTime,
+                    InitialCallTime = keyVehicleLogInExitTime.InitialCallTime,
+                    POIImage = keyVehicleLogInExitTime.POIImage,
+                    EntryCreatedDateTimeLocal = keyVehicleLogInExitTime.EntryCreatedDateTimeLocal,
+                    EntryCreatedDateTimeLocalWithOffset = keyVehicleLogInExitTime.EntryCreatedDateTimeLocalWithOffset,
+                    EntryCreatedDateTimeUtcOffsetMinute = keyVehicleLogInExitTime.EntryCreatedDateTimeUtcOffsetMinute,
+                    EntryCreatedDateTimeZone = keyVehicleLogInExitTime.EntryCreatedDateTimeZone,
+                    EntryCreatedDateTimeZoneShort = keyVehicleLogInExitTime.EntryCreatedDateTimeZoneShort,
+                    // Load Variation linkage fields
+                    HasLoadVariation = false,
+                    IsLoadVariationDuplicate = true,
+                    CopiedFromKVLogId = keyVehicleLogInExitTime.Id,
+                };
+
+                // ── Step 6: Audit history for the new duplicate entry ─────────────────
+                var newEntryAuditHistory = GetKvlAuditHistory(newEntry);
+                newEntryAuditHistory.AuditMessage = "Load Variation duplicate entry created";
+
+                // ── Step 6: Create the log entry
+                _guardLogDataProvider.SaveKeyVehicleLog(newEntry);   // sets newEntry.Id via EF
+                newkvid = newEntry.Id;
+
+                
+                var newProfileId = 0;
+                if (!string.IsNullOrEmpty(newEntry.VehicleRego))
+                    newProfileId = GetKvlProfileId(newEntry);
+                else
+                    newProfileId = GetKvlProfileIdWithOutVehicleRego(newEntry);
+                newEntryAuditHistory.ProfileId = newProfileId;
+                newEntryAuditHistory.KeyVehicleLogId = newkvid;
+                _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(newEntryAuditHistory);
+
+                // ── Step 7: Copy ComplianceDocuments files to new entry's ID folder ───
+                CopyKvlFilesToIdFolder(newEntry, keyVehicleLogInExitTime.Id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status = status, message = message, newkvid = newkvid });
+        }
+
+        /// <summary>
+        /// Copies ComplianceDocuments files from KvlUploads/&lt;VehicleRego&gt;/ComplianceDocuments
+        /// into KvlUploads/&lt;kvl.Id&gt;/ComplianceDocuments for the given KV log entry.
+        /// Uses File.Copy (not Move) so the original vehicle-rego folder keeps its files intact.
+        /// </summary>
+        private void CopyKvlFilesToIdFolder(KeyVehicleLog kvl, int old_ID)
+        {
+            if (string.IsNullOrEmpty(kvl.VehicleRego) || kvl.Id == 0)
+                return;
+
+            var files = _viewDataService.GetKeyVehicleLogAttachments(
+                IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", kvl.VehicleRego),
+                "ComplianceDocuments").ToList();
+
+            if (files.Count == 0)
+                return;
+
+            var fromFolder = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", old_ID.ToString(), "ComplianceDocuments");
+            var toFolder   = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", kvl.Id.ToString(), "ComplianceDocuments");
+
+            if (!Directory.Exists(toFolder))
+                Directory.CreateDirectory(toFolder);
+
+            foreach (var file in files)
+            {
+                var src  = IO.Path.Combine(fromFolder, file);
+                var dest = IO.Path.Combine(toFolder, file);
+                if (IO.File.Exists(src))
+                    IO.File.Copy(src, dest, overwrite: true);
+            }
+        }
+
+
         public JsonResult OnGetProfileByRego(string truckRego)
         {
             //var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
@@ -638,7 +836,9 @@ namespace CityWatch.Web.Pages.Guard
             if (!string.IsNullOrEmpty(vehicleRego))
             {
                 //Old code 21032024 dileep
-                var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego);
+                var r = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).ToList();
+                //var f = r.Where(x => x.Detail.VehicleRego != null && x.Detail.VehicleRego.ToUpper() == vehicleRego.ToUpper()).FirstOrDefault();
+                var isOpenInThisSite = r.Any(x => x.Detail.VehicleRego != null && x.Detail.VehicleRego.ToUpper() == vehicleRego.ToUpper());
                 if (isOpenInThisSite)
                     return new JsonResult(new { status = 1 });
                 // New code 

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -426,5 +426,9 @@ namespace CityWatch.Data.Models
         public bool? IsTrailerRego { get; set; }
         [HiddenInput]
         public bool? IsCarsStock { get; set; }
+        public bool HasLoadVariation { get; set; } = false;
+        public bool IsLoadVariationDuplicate { get; set; } = false;
+        public int? CopiedFromKVLogId { get; set; }
+
     }
 }

@@ -422,7 +422,7 @@ $(function () {
                 if (data.detail.initialCallTime !== null) {
                     $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
                     /*to display the color yellow-start*/
-                    if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
+                    if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null && data.detail.hasLoadVariation == false && data.detail.isLoadVariationDuplicate == false) {
                         $('td', row).eq(1).addClass('initial-call-colour');
                         $('td', row).eq(2).addClass('initial-call-colour');
                         $('td', row).eq(3).addClass('initial-call-colour');
@@ -441,7 +441,7 @@ $(function () {
                 if (data.detail.entryTime !== null) {
                     $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
                     /*to display the color green for entry time-start*/
-                    if (data.detail.sentInTime == null && data.detail.exitTime == null) {
+                    if (data.detail.sentInTime == null && data.detail.exitTime == null && data.detail.hasLoadVariation == false && data.detail.isLoadVariationDuplicate == false) {
                         $('td', row).eq(1).addClass('entry-time-colour');
                         $('td', row).eq(2).addClass('entry-time-colour');
                         $('td', row).eq(3).addClass('entry-time-colour');
@@ -460,7 +460,7 @@ $(function () {
                 if (data.detail.sentInTime !== null) {
                     $('td', row).eq(3).html(convertDateTimeString(data.detail.sentInTime));
                     /*to display the color green for sent in time-start*/
-                    if (data.detail.exitTime == null) {
+                    if (data.detail.exitTime == null && data.detail.hasLoadVariation == false && data.detail.isLoadVariationDuplicate == false) {
                         $('td', row).eq(1).addClass('entry-time-colour');
                         $('td', row).eq(2).addClass('entry-time-colour');
                         $('td', row).eq(3).addClass('entry-time-colour');
@@ -480,23 +480,47 @@ $(function () {
                     $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
                     /*to display the color green for exit  time-start*/
 
-                    $('td', row).eq(1).addClass('exit-time-colour');
-                    $('td', row).eq(2).addClass('exit-time-colour');
-                    $('td', row).eq(3).addClass('exit-time-colour');
-                    $('td', row).eq(4).addClass('exit-time-colour');
-                    $('td', row).eq(5).addClass('exit-time-colour');
-                    $('td', row).eq(6).addClass('exit-time-colour');
-                    $('td', row).eq(7).addClass('exit-time-colour');
-                    $('td', row).eq(8).addClass('exit-time-colour');
-                    $('td', row).eq(9).addClass('exit-time-colour');
-                    $('td', row).eq(10).addClass('exit-time-colour');
-                    $('td', row).eq(11).addClass('exit-time-colour');
-                    $('td', row).eq(12).addClass('exit-time-colour');
-
+                    if (data.detail.hasLoadVariation == false && data.detail.isLoadVariationDuplicate == false) {
+                        $('td', row).eq(1).addClass('exit-time-colour');
+                        $('td', row).eq(2).addClass('exit-time-colour');
+                        $('td', row).eq(3).addClass('exit-time-colour');
+                        $('td', row).eq(4).addClass('exit-time-colour');
+                        $('td', row).eq(5).addClass('exit-time-colour');
+                        $('td', row).eq(6).addClass('exit-time-colour');
+                        $('td', row).eq(7).addClass('exit-time-colour');
+                        $('td', row).eq(8).addClass('exit-time-colour');
+                        $('td', row).eq(9).addClass('exit-time-colour');
+                        $('td', row).eq(10).addClass('exit-time-colour');
+                        $('td', row).eq(11).addClass('exit-time-colour');
+                        $('td', row).eq(12).addClass('exit-time-colour');
+                    }
                     /*to display the color green for exit  time-end*/
                 }
-                if (data.detail.exitTime == null) {
-                    $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> ');
+                if (data.detail.hasLoadVariation == true || data.detail.isLoadVariationDuplicate == true) {
+                    /*to display the color red for exit  time-start*/
+                    if (data.detail.hasLoadVariation == true) { $('td', row).eq(4).html('<strong>LV</strong>'); }
+
+                    $('td', row).eq(1).addClass('lv-time-colour');
+                    $('td', row).eq(2).addClass('lv-time-colour');
+                    $('td', row).eq(3).addClass('lv-time-colour');
+                    $('td', row).eq(4).addClass('lv-time-colour');
+                    $('td', row).eq(5).addClass('lv-time-colour');
+                    $('td', row).eq(6).addClass('lv-time-colour');
+                    $('td', row).eq(7).addClass('lv-time-colour');
+                    $('td', row).eq(8).addClass('lv-time-colour');
+                    $('td', row).eq(9).addClass('lv-time-colour');
+                    $('td', row).eq(10).addClass('lv-time-colour');
+                    $('td', row).eq(11).addClass('lv-time-colour');
+                    $('td', row).eq(12).addClass('lv-time-colour');
+
+                    /*to display the color red for exit  time-end*/
+                }
+                if (data.detail.exitTime == null && data.detail.hasLoadVariation == false) {
+                    $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> <br/> <button type="button" class="btn btn-warning btn-lv-quick-color btn-lv-quick mt-1 pr-2 pl-2 pt-1 pb-1">LV</button> ');
+                }
+                if (data.detail.isLoadVariationDuplicate == true) {
+                    if (data.detail.exitTime == null)
+                        $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button>');
                 }
             },
             'drawCallback': function (settings) {
@@ -755,9 +779,15 @@ $(function () {
         });
     });
 
+    $('#vehicle_key_daily_log tbody').on('click', '.btn-lv-quick', function () {        
+        var data = keyVehicleLog.row($(this).parents('tr')).data();
+        loadVariationId = data.detail.id;
+        isLoadVariationModal.showConfirmation();
+    });
+
     $('#vehicle_key_daily_log tbody').on('click', '#btnDeleteVkl', function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
-        if (confirm('Are you sure want to delete this vehicle key log entry?')) {
+        if (confirm('Are you sure to delete this vehicle key log entry?')) {
             $.ajax({
                 type: 'POST',
                 url: '/Guard/KeyVehicleLog?handler=DeleteKeyVehicleLog',
@@ -783,11 +813,13 @@ $(function () {
         }
     });
     /*for deselecting the common checkbox-end*/
+    let loadVariationId = null;
     let isKeyAllocatedModal;
     let isVehicleOnsiteModal
     let isVehicleInAnotherSiteModal;
     let isKeyAllocatedModalDesc;
     let isPOIOnsiteModal;
+    let isLoadVariationModal;
     if ($('#vehicle_key_daily_log').length === 1) {
         isVehicleOnsiteModal = new ConfirmationModal('vehicle-onsite', {
             message: 'This truck was already onsite today and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already onsite?',
@@ -810,6 +842,10 @@ $(function () {
         isPOIOnsiteModal = new ConfirmationModal('poi-onsite', {
             message: 'You are about to add a new POI entry to database with no name.This is ok, as C4i System will assign a system generated name. Please confirm you want to continue',
             onYes: function () { GetPOINumber(); }
+        });
+        isLoadVariationModal = new ConfirmationModal('load-variation', {
+            message: 'This truck is already onsite today and there is no exit time recorded.<br/><br/>By hitting "Load Variation" button, system will close of the incoming entry, duplicate it, so you can quickly exit the same truck with a variation to the load.<br/><br/>Do you wish to do this ?',
+            onYes: function () { SaveLV(loadVariationId); }
         });
     }
 
@@ -975,6 +1011,34 @@ $(function () {
             }
         }).always(function () {
             $('#loader').hide();
+        });
+    }
+
+    function SaveLV(kvid) {
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogQuickLV',
+            type: 'POST',
+            data: {
+                id: kvid,
+                tmdata: tmdata
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (r) {
+            if (r.status) {
+                loadVariationId = null;
+                //callback that runs after the table data has been reloaded
+                keyVehicleLog.ajax.reload(function () {
+                    loadVklPopup(r.newkvid, false);
+                }, false);
+            }
         });
     }
 
@@ -1989,13 +2053,21 @@ $(function () {
                 $('#new_log_initial_call, #new_log_entry_time, #new_log_sent_in_time').prop('readonly', previousDayEntry);
                 $('#clear_initialcall_time, #clear_entry_time, #clear_sentin_time').prop('hidden', previousDayEntry);
                 if (previousDayEntry) $('#kvl_status_pd').show();
-
-                if ($('#ExitTime').val() !== '') {
-                    $('#new_log_exit_time').val(getTimeFromDateTime(new Date($('#ExitTime').val())));
-                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date($('#ExitTime').val())));
+                                
+                if ($('#HasLoadVariation').val()?.toLowerCase() === 'true') {
+                    $('#new_log_exit_time').val('');
+                    $('#new_log_exit_date_disp').val('LV');
+                    $('#new_log_exit_time').prop('disabled', true);
+                    $('#new_log_exit_date_disp').prop('disabled', true);
                 }
                 else {
-                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
+                    if ($('#ExitTime').val() !== '') {
+                        $('#new_log_exit_time').val(getTimeFromDateTime(new Date($('#ExitTime').val())));
+                        $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date($('#ExitTime').val())));
+                    }
+                    else {
+                        $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
+                    }
                 }
                 $('#ActiveGuardLoginId').val($('#KeyVehicleLog_GuardLogin_Id').val());
                 //New Custome Product
@@ -2147,12 +2219,20 @@ $(function () {
                 $('#clear_initialcall_time, #clear_entry_time, #clear_sentin_time').prop('hidden', previousDayEntry);
                 if (previousDayEntry) $('#kvl_status_pd').show();
 
-                if ($('#ExitTime').val() !== '') {
-                    $('#new_log_exit_time').val(getTimeFromDateTime(new Date($('#ExitTime').val())));
-                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date($('#ExitTime').val())));
+                if ($('#HasLoadVariation').val()?.toLowerCase() === 'true') {
+                    $('#new_log_exit_time').val('');
+                    $('#new_log_exit_date_disp').val('LV');
+                    $('#new_log_exit_time').prop('disabled', true);
+                    $('#new_log_exit_date_disp').prop('disabled', true);
                 }
                 else {
-                    $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
+                    if ($('#ExitTime').val() !== '') {
+                        $('#new_log_exit_time').val(getTimeFromDateTime(new Date($('#ExitTime').val())));
+                        $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date($('#ExitTime').val())));
+                    }
+                    else {
+                        $('#new_log_exit_date_disp').val(formatDateWithWeekday(new Date()));
+                    }
                 }
 
                 $('#ActiveGuardLoginId').val($('#KeyVehicleLog_GuardLogin_Id').val());

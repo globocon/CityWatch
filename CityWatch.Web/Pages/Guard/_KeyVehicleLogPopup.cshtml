@@ -25,6 +25,9 @@
     <input type="hidden" asp-for="@Model.ActiveGuardLoginId" />
     <input type="hidden" asp-for="@Model.IsPreviousDayEntry" />
     <input type="hidden" asp-for="@Model.ClientSitePocIdsVehicleLog" />
+    <input type="hidden" asp-for="@Model.HasLoadVariation" />
+    <input type="hidden" asp-for="@Model.IsLoadVariationDuplicate" />
+    <input type="hidden" asp-for="@Model.CopiedFromKVLogId" />
     @{
         var kvlAttachments = ViewData["KeyVehicleLog_Attachments"] as List<string>;
         var kvlAttachmentsCount = kvlAttachments != null ? kvlAttachments.Count : 0;
