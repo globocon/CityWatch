@@ -699,6 +699,10 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
 
 /* Dark Mode Change 20/09/2023 End*/
+
+/* Dark Mode for roster/Booking is injected at runtime from Booking.cshtml
+   (scoped to that page only) so it never affects other pages. */
+
 /* for scroll events -start*/
 .marquee-style {
     background-color: dimgrey;
