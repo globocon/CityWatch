@@ -2847,10 +2847,10 @@ namespace CityWatch.Web.API
 
 
         [HttpPost("UploadMultiple")]
-        public async Task<IActionResult> UploadMultiple([FromForm] List<IFormFile> files, [FromForm] List<string> types, [FromForm] int guardId, 
-            [FromForm] int clientsiteId, [FromForm] int userId, [FromForm] string gps, [FromForm] DateTime? eventDateTimeLocal, 
-            [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset, [FromForm] string? eventDateTimeZone, [FromForm] string? eventDateTimeZoneShort, 
-            [FromForm] int? eventDateTimeUtcOffsetMinute, [FromForm] int? logbookclientsiteId, [FromForm] bool? isEntryByPCAR, [FromForm] int? callSignId, 
+        public async Task<IActionResult> UploadMultiple([FromForm] List<IFormFile> files, [FromForm] List<string> types, [FromForm] int guardId,
+            [FromForm] int clientsiteId, [FromForm] int userId, [FromForm] string gps, [FromForm] DateTime? eventDateTimeLocal,
+            [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset, [FromForm] string? eventDateTimeZone, [FromForm] string? eventDateTimeZoneShort,
+            [FromForm] int? eventDateTimeUtcOffsetMinute, [FromForm] int? logbookclientsiteId, [FromForm] bool? isEntryByPCAR, [FromForm] int? callSignId,
             [FromForm] int? positionId
         )
         {
@@ -3230,133 +3230,133 @@ namespace CityWatch.Web.API
                     }
 
                     foreach (var o in g)
+                    {
+                        o.IsSynced = true; // Marking file as sysnced
+
+                        string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
+
+                        var file = files.FirstOrDefault(x => string.Equals(Path.GetFileName(x.FileName).Trim(), Path.GetFileName(o.FileNameCache).Trim(), StringComparison.OrdinalIgnoreCase));                       
+                        var type = o.FileType;
+
+                        // [Fix Date: 24-Jun-2026, Developer: Dileep]
+                        // Exact Reason: Mobile app may send metadata but not the physical file (e.g., if deleted from device cache), making 'file' null.
+                        // How it's fixed: Added a null check 'file == null' before accessing 'file.Length'. Without this, a NullReferenceException 
+                        // crashes the loop, leaving a text-only log book entry "Mob app image upload" with no images saved.
+                        if (file == null || file.Length == 0) continue;
+
+                        var ext = Path.GetExtension(file.FileName).ToLower();
+                        if (!allowedExtensions.Contains(ext))
                         {
-                            o.IsSynced = true; // Marking file as sysnced
+                            Console.WriteLine($"Unsupported file type: {ext}");
+                            SaveOfflineFilesRecordsError(o, $"Unsupported file type: {ext}");
+                            continue;
+                        }
 
-                            string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
+                        string folderName = type?.ToLower() switch
+                        {
+                            "rear" => "RearFiles",
+                            "twentyfive" => "TwentyfivePercentFiles",
+                            _ => "OtherFiles"
+                        };
 
-                            var file = files.Where(x => x.FileName == o.FileNameCache).FirstOrDefault();
-                            var type = o.FileType;
 
-                            // [Fix Date: 24-Jun-2026, Developer: Dileep]
-                            // Exact Reason: Mobile app may send metadata but not the physical file (e.g., if deleted from device cache), making 'file' null.
-                            // How it's fixed: Added a null check 'file == null' before accessing 'file.Length'. Without this, a NullReferenceException 
-                            // crashes the loop, leaving a text-only log book entry "Mob app image upload" with no images saved.
-                            if (file == null || file.Length == 0) continue;
+                        string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newPcarGuardLogId.ToString(), folderName);
+                        if (!Directory.Exists(folderPath))
+                            Directory.CreateDirectory(folderPath);
 
-                            var ext = Path.GetExtension(file.FileName).ToLower();
-                            if (!allowedExtensions.Contains(ext))
+                        var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
+                        var uploadFileName = Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ext;
+                        var fullPath = Path.Combine(folderPath, uploadFileName);
+
+                        // Read uploaded file once
+                        byte[] fileBytes;
+
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            await file.CopyToAsync(memoryStream);
+                            fileBytes = memoryStream.ToArray();
+                        }
+
+                        // Save first copy
+                        await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
+
+                        var finalFileName = uploadFileName;
+
+                        // HEIC conversion
+                        if (ext == ".heic")
+                        {
+                            var newPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ".jpg");
+                            await ConvertHeicToJpgAsync(fullPath, folderPath);
+                            System.IO.File.Delete(fullPath);
+                            finalFileName = Path.GetFileName(newPath);
+                        }
+
+                        var publicUrl = "https://cws-ir.com"; // Production Url                    
+                        string baseUrl;
+                        baseUrl = $"{Request.Scheme}://{Request.Host}";
+                        if (_WebHostEnvironment.IsDevelopment())
+                        {
+                            publicUrl = baseUrl; // Local Url
+                        }
+                        else
+                        {
+                            // If test url
+                            if (baseUrl.Contains("test."))
                             {
-                                Console.WriteLine($"Unsupported file type: {ext}");
-                                SaveOfflineFilesRecordsError(o, $"Unsupported file type: {ext}");
-                                continue;
+                                publicUrl = baseUrl;
                             }
+                        }
+                        var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
 
-                            string folderName = type?.ToLower() switch
-                            {
-                                "rear" => "RearFiles",
-                                "twentyfive" => "TwentyfivePercentFiles",
-                                _ => "OtherFiles"
-                            };
+                        var logImage = new GuardLogsDocumentImages
+                        {
+                            GuardLogId = newPcarGuardLogId,
+                            ImagePath = publicPath,
+                            IsRearfile = type?.ToLower() == "rear",
+                            IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
+                        };
 
+                        _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
 
-                            string folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newPcarGuardLogId.ToString(), folderName);
-                            if (!Directory.Exists(folderPath))
-                                Directory.CreateDirectory(folderPath);
+                        uploadedFiles.Add(publicPath);
 
-                            var dateTick = DateTime.Now.Ticks.ToString().Substring(10);
-                            var uploadFileName = Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ext;
-                            var fullPath = Path.Combine(folderPath, uploadFileName);
+                        if (addNonPcarGuardLogEntry)
+                        {
+                            string folderPath2 = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newNonPcarGuardLogId.ToString(), folderName);
+                            if (!Directory.Exists(folderPath2))
+                                Directory.CreateDirectory(folderPath2);
 
-                            // Read uploaded file once
-                            byte[] fileBytes;
+                            var fullPath2 = Path.Combine(folderPath2, uploadFileName);
 
-                            using (var memoryStream = new MemoryStream())
-                            {
-                                await file.CopyToAsync(memoryStream);
-                                fileBytes = memoryStream.ToArray();
-                            }
+                            // Save second copy
+                            await System.IO.File.WriteAllBytesAsync(fullPath2, fileBytes);
 
-                            // Save first copy
-                            await System.IO.File.WriteAllBytesAsync(fullPath, fileBytes);
-
-                            var finalFileName = uploadFileName;
+                            var finalFileName2 = uploadFileName;
 
                             // HEIC conversion
                             if (ext == ".heic")
                             {
-                                var newPath = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(o.FileNameActual) + "_" + dateTick + ".jpg");
-                                await ConvertHeicToJpgAsync(fullPath, folderPath);
-                                System.IO.File.Delete(fullPath);
-                                finalFileName = Path.GetFileName(newPath);
+                                var newPath2 = Path.Combine(folderPath2, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
+                                await ConvertHeicToJpgAsync(fullPath2, folderPath2);
+                                System.IO.File.Delete(fullPath2);
+                                finalFileName2 = Path.GetFileName(newPath2);
                             }
 
-                            var publicUrl = "https://cws-ir.com"; // Production Url                    
-                            string baseUrl;
-                            baseUrl = $"{Request.Scheme}://{Request.Host}";
-                            if (_WebHostEnvironment.IsDevelopment())
+                            var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
+                            var logImage2 = new GuardLogsDocumentImages
                             {
-                                publicUrl = baseUrl; // Local Url
-                            }
-                            else
-                            {
-                                // If test url
-                                if (baseUrl.Contains("test."))
-                                {
-                                    publicUrl = baseUrl;
-                                }
-                            }
-                            var publicPath = $"{publicUrl}/DglUploads/{newPcarGuardLogId}/{folderName}/{finalFileName}";
-
-                            var logImage = new GuardLogsDocumentImages
-                            {
-                                GuardLogId = newPcarGuardLogId,
-                                ImagePath = publicPath,
+                                GuardLogId = newNonPcarGuardLogId,
+                                ImagePath = publicPath2,
                                 IsRearfile = type?.ToLower() == "rear",
                                 IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
                             };
 
-                            _guardLogDataProvider.SaveGuardLogDocumentImages(logImage);
-
-                            uploadedFiles.Add(publicPath);
-
-                            if (addNonPcarGuardLogEntry)
-                            {
-                                string folderPath2 = Path.Combine(_WebHostEnvironment.WebRootPath, "DglUploads", newNonPcarGuardLogId.ToString(), folderName);
-                                if (!Directory.Exists(folderPath2))
-                                    Directory.CreateDirectory(folderPath2);
-
-                                var fullPath2 = Path.Combine(folderPath2, uploadFileName);
-
-                                // Save second copy
-                                await System.IO.File.WriteAllBytesAsync(fullPath2, fileBytes);
-
-                                var finalFileName2 = uploadFileName;
-
-                                // HEIC conversion
-                                if (ext == ".heic")
-                                {
-                                    var newPath2 = Path.Combine(folderPath2, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
-                                    await ConvertHeicToJpgAsync(fullPath2, folderPath2);
-                                    System.IO.File.Delete(fullPath2);
-                                    finalFileName2 = Path.GetFileName(newPath2);
-                                }
-
-                                var publicPath2 = $"{publicUrl}/DglUploads/{newNonPcarGuardLogId}/{folderName}/{finalFileName2}";
-                                var logImage2 = new GuardLogsDocumentImages
-                                {
-                                    GuardLogId = newNonPcarGuardLogId,
-                                    ImagePath = publicPath2,
-                                    IsRearfile = type?.ToLower() == "rear",
-                                    IsTwentyfivePercentfile = type?.ToLower() == "twentyfive"
-                                };
-
-                                _guardLogDataProvider.SaveGuardLogDocumentImages(logImage2);
-                            }
-
-                            success = true;
-                            message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
+                            _guardLogDataProvider.SaveGuardLogDocumentImages(logImage2);
                         }
+
+                        success = true;
+                        message = $"{uploadedFiles.Count} file(s) uploaded successfully.";
+                    }
 
                 }
 
@@ -4955,7 +4955,7 @@ namespace CityWatch.Web.API
             foreach (var r in offlineIrAttachmentRecords)
             {
                 var file = files.Where(x => x.FileName == r.FileNameCache).FirstOrDefault();
-                
+
                 // [Fix Date: 24-Jun-2026, Developer: Dileep]
                 // Exact Reason: If the physical file isn't uploaded by the mobile app, 'file' is null.
                 // How it's fixed: Added 'file == null' to prevent NullReferenceException crash during offline IR attachment sync.
