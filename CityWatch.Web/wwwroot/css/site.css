@@ -699,6 +699,198 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
 
 /* Dark Mode Change 20/09/2023 End*/
+
+/* ===== Dark Mode – Booking / Roster Page (roster/Booking) ===== */
+/* Scoped to body.dark-mode so nothing here affects light mode or other pages */
+
+/* Row backgrounds */
+body.dark-mode #roster_grid tbody tr:nth-child(even),
+body.dark-mode #binder_grid tbody tr:nth-child(even) { background-color: #1e1e1e !important; }
+body.dark-mode #roster_grid tbody tr:hover,
+body.dark-mode #binder_grid tbody tr:hover { background-color: #2a2a2a !important; }
+
+/* Column cell backgrounds */
+body.dark-mode #roster_grid tbody td:first-child,
+body.dark-mode #binder_grid tbody td:first-child { background-color: #2a2a2a !important; color: #e0e0e0; }
+body.dark-mode #roster_grid tbody td:nth-child(n+2):nth-child(-n+6),
+body.dark-mode #binder_grid tbody td:nth-child(n+2):nth-child(-n+6) { background-color: #121212 !important; }
+body.dark-mode #roster_grid tbody td:nth-child(7),
+body.dark-mode #binder_grid tbody td:nth-child(7) { background-color: #0d1a0d !important; }
+body.dark-mode #roster_grid tbody td:nth-child(8),
+body.dark-mode #binder_grid tbody td:nth-child(8) { background-color: #1a0d0d !important; }
+body.dark-mode #roster_grid tbody td,
+body.dark-mode #binder_grid tbody td { border-color: #333 !important; }
+
+/* Public holiday highlight */
+body.dark-mode #roster_grid tbody td.day-cell.ph-highlight,
+body.dark-mode #binder_grid tbody td.day-cell.ph-highlight,
+body.dark-mode #roster_grid tbody td.ph-highlight:nth-child(7),
+body.dark-mode #roster_grid tbody td.ph-highlight:nth-child(8),
+body.dark-mode #binder_grid tbody td.ph-highlight:nth-child(7),
+body.dark-mode #binder_grid tbody td.ph-highlight:nth-child(8) {
+    background: #2a2500 !important;
+    background-color: #2a2500 !important;
+    color: #ffe082 !important;
+}
+
+/* Footer */
+body.dark-mode #roster_footer,
+body.dark-mode #binder_footer { background: #1a1a1a !important; color: #ccc !important; border-top-color: #444 !important; }
+body.dark-mode #binder_footer { border-top-color: #667eea !important; }
+body.dark-mode #binder_footer .grand-total-container { background: #1c1c2a !important; }
+body.dark-mode #binder_grid tbody .project-total-row td,
+body.dark-mode .project-total-row { background-color: #1a1a1a !important; border-top-color: #444 !important; border-bottom-color: #667eea !important; }
+body.dark-mode .grand-total-container { background: #222 !important; border-right-color: #444 !important; }
+body.dark-mode .total-value { color: #e0e0e0 !important; }
+body.dark-mode .total-label { color: #999 !important; }
+
+/* Roster nav tabs */
+body.dark-mode .custom-roster-tabs .nav-link { color: #aaa !important; }
+body.dark-mode .custom-roster-tabs .nav-link.active {
+    color: #a78bfa !important;
+    background-color: #121212 !important;
+    border-color: #667eea #667eea #121212 !important;
+}
+
+/* Header status container & sort buttons */
+body.dark-mode .header-status-container { background: #1e1e1e !important; border-color: #444 !important; }
+body.dark-mode .sort-btn-group { background: #1e1e1e !important; border-color: #444 !important; }
+body.dark-mode .sort-btn { color: #ccc !important; }
+body.dark-mode .sort-btn:hover { background: #2a2a2a !important; color: #a78bfa !important; }
+body.dark-mode .sort-btn:first-child { border-right-color: #444 !important; }
+
+/* Empty state */
+body.dark-mode #roster-empty-state,
+body.dark-mode #binder-empty-state { background: #1e1e1e !important; border-color: #444 !important; }
+
+/* Shift card hover popup */
+body.dark-mode .shift-card-popup { background: #1e1e1e !important; color: #e0e0e0 !important; box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important; }
+body.dark-mode .shift-card-popup::before { border-right-color: #1e1e1e !important; }
+body.dark-mode .popup-value { color: #ccc !important; }
+
+/* Drag-over cell */
+body.dark-mode .day-cell.drag-over { background-color: rgba(102,126,234,0.25) !important; }
+
+/* Project / Group header rows (tr.bg-light) */
+body.dark-mode #roster_grid tr.bg-light,
+body.dark-mode #binder_grid tr.bg-light { background-color: #1a1a2e !important; }
+body.dark-mode #roster_grid tr.bg-light td,
+body.dark-mode #binder_grid tr.bg-light td { background-color: #1a1a2e !important; color: #e0e0e0 !important; }
+body.dark-mode #roster_grid tr.bg-light strong,
+body.dark-mode #binder_grid tr.bg-light strong,
+body.dark-mode #roster_grid tr.bg-light span,
+body.dark-mode #binder_grid tr.bg-light span { color: #e0e0e0 !important; }
+
+/* Project status select */
+body.dark-mode .project-status-select { background-color: #2a2a2a !important; color: #e0e0e0 !important; border-color: #555 !important; }
+
+/* Legend DNC inline color:#000 override */
+body.dark-mode #roster_grid tbody td:first-child [style*="color: #000"],
+body.dark-mode #binder_grid tbody td:first-child [style*="color: #000"] { color: #e0e0e0 !important; }
+
+/* Date nav container */
+body.dark-mode .bg-white.border.rounded.shadow-sm { background-color: #1e1e1e !important; border-color: #444 !important; }
+body.dark-mode .bg-white.border.rounded.shadow-sm .text-dark,
+body.dark-mode .bg-white.border.rounded.shadow-sm .text-secondary { color: #ccc !important; }
+
+/* bg-light pill (financial toggle) */
+body.dark-mode .bg-light.rounded-pill,
+body.dark-mode .bg-light.px-2.py-1.rounded-pill { background-color: #2a2a2a !important; border-color: #444 !important; }
+
+/* Form controls (roster page) */
+body.dark-mode #search_site,
+body.dark-mode .project-status-select,
+body.dark-mode #roster_grid .form-control,
+body.dark-mode #binder_grid .form-control { background-color: #1e1e1e !important; color: #e0e0e0 !important; border-color: #444 !important; }
+
+/* Select2 dropdowns */
+body.dark-mode .select2-container--bootstrap4 .select2-selection--single,
+body.dark-mode .select2-selection { background-color: #1e1e1e !important; border-color: #444 !important; }
+body.dark-mode .select2-selection__rendered,
+body.dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered { color: #e0e0e0 !important; }
+body.dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow b { border-top-color: #aaa !important; }
+body.dark-mode .select2-dropdown { background-color: #1e1e1e !important; border-color: #444 !important; color: #e0e0e0 !important; }
+body.dark-mode .select2-results__option { color: #e0e0e0 !important; background-color: #1e1e1e !important; }
+body.dark-mode .select2-results__option--highlighted[aria-selected] { background-color: #667eea !important; color: #fff !important; }
+body.dark-mode .select2-search--dropdown .select2-search__field { background-color: #2a2a2a !important; color: #e0e0e0 !important; border-color: #555 !important; }
+
+/* Upload overlay */
+body.dark-mode #uploadProcessingOverlay { background: #1e1e1e !important; color: #e0e0e0 !important; }
+
+/* Settings card */
+body.dark-mode .card-header.bg-white { background-color: #1e1e1e !important; border-color: #333 !important; }
+body.dark-mode .card { background-color: #1a1a1a !important; border-color: #333 !important; }
+
+/* Thead gradient – protect from dark-mode overrides */
+body.dark-mode #roster_grid,
+body.dark-mode #binder_grid { border-color: #333 !important; outline: none !important; }
+body.dark-mode #roster_grid thead tr,
+body.dark-mode #binder_grid thead tr { border: none !important; outline: none !important; }
+body.dark-mode #roster_grid thead th,
+body.dark-mode #binder_grid thead th {
+    background: linear-gradient(135deg,#667eea 0%,#764ba2 100%) !important;
+    color: white !important; border: none !important; outline: none !important; box-shadow: none !important;
+}
+
+/* Quick Tip alert */
+body.dark-mode .alert.alert-info { background: #1a1e2e !important; border-color: #667eea !important; color: #e0e0e0 !important; }
+body.dark-mode .alert.alert-info .text-dark,
+body.dark-mode .alert.alert-info strong { color: #e0e0e0 !important; }
+
+/* Alert-light (relief guard tab) */
+body.dark-mode .alert.alert-light { background-color: #1e1e1e !important; border-color: #6f42c1 !important; color: #e0e0e0 !important; }
+
+/* btn-link / nav arrows */
+body.dark-mode .btn-link { color: #7c9efd !important; }
+body.dark-mode .btn-link.text-secondary,
+body.dark-mode #btnPrevWeek, body.dark-mode #btnNextWeek,
+body.dark-mode #btnPrevWeekBinder, body.dark-mode #btnNextWeekBinder { color: #aaa !important; }
+
+/* Settings thead */
+body.dark-mode #tableSettingsProjects thead.bg-light,
+body.dark-mode #tableSettingsGroups thead.bg-light { background-color: #1e1e2e !important; }
+body.dark-mode #tableSettingsProjects thead.bg-light th,
+body.dark-mode #tableSettingsGroups thead.bg-light th { background-color: #1e1e2e !important; color: #e0e0e0 !important; border-color: #333 !important; }
+
+/* Settings sub-tabs */
+body.dark-mode #settingsSubTabs .nav-link { color: #aaa !important; }
+body.dark-mode #settingsSubTabs .nav-link.active { background-color: #667eea !important; color: #fff !important; }
+
+/* Modal / Popup – override site.css border:1px solid #fff */
+body.dark-mode .modal-content { background-color: #1e1e1e !important; border: 1px solid #444 !important; color: #e0e0e0 !important; }
+body.dark-mode .modal-header { background-color: #252525 !important; border-bottom: 1px solid #444 !important; color: #e0e0e0 !important; }
+body.dark-mode .modal-header .modal-title,
+body.dark-mode .modal-header h5 { color: #e0e0e0 !important; }
+body.dark-mode .modal-header .close,
+body.dark-mode .modal-header .close span { color: #aaa !important; text-shadow: none !important; }
+body.dark-mode .modal-body { background-color: #1e1e1e !important; color: #e0e0e0 !important; }
+body.dark-mode .modal-footer { background-color: #252525 !important; border-top: 1px solid #444 !important; }
+body.dark-mode .modal-body label { color: #ccc !important; }
+body.dark-mode .modal-content .form-control { background-color: #2a2a2a !important; color: #e0e0e0 !important; border-color: #555 !important; }
+body.dark-mode .modal-content .form-control:disabled,
+body.dark-mode .modal-content .form-control[readonly] { background-color: #222 !important; color: #888 !important; }
+body.dark-mode .modal-content .form-control::placeholder { color: #666 !important; }
+body.dark-mode .modal-content .input-group-text { background-color: #333 !important; border-color: #555 !important; color: #e0e0e0 !important; }
+body.dark-mode .modal-content .nav-tabs { border-bottom-color: #444 !important; }
+body.dark-mode .modal-content .nav-tabs .nav-link { color: #aaa !important; border-color: transparent !important; background-color: transparent !important; }
+body.dark-mode .modal-content .nav-tabs .nav-link.active { background-color: #2a2a2a !important; color: #e0e0e0 !important; border-color: #555 #555 #2a2a2a !important; }
+body.dark-mode .modal-content hr { border-color: #444 !important; }
+body.dark-mode .modal-footer .btn-link { color: #7c9efd !important; }
+body.dark-mode .modal-content .select2-container--bootstrap4 .select2-selection--single { background-color: #2a2a2a !important; border-color: #555 !important; }
+body.dark-mode .modal-content .select2-selection__rendered { color: #e0e0e0 !important; }
+
+/* Settings table body */
+body.dark-mode #tableSettingsProjects td,
+body.dark-mode #tableSettingsGroups td,
+body.dark-mode #tableSettingsProjects tbody tr,
+body.dark-mode #tableSettingsGroups tbody tr { background-color: #1a1a1a !important; border-color: #333 !important; color: #e0e0e0 !important; }
+body.dark-mode #tableSettingsProjects tbody tr:hover td,
+body.dark-mode #tableSettingsGroups tbody tr:hover td { background-color: #2a2a2a !important; }
+body.dark-mode #tableSettingsProjects,
+body.dark-mode #tableSettingsGroups { border-color: #333 !important; }
+
+/* ===== End Dark Mode – Booking / Roster Page ===== */
+
 /* for scroll events -start*/
 .marquee-style {
     background-color: dimgrey;
