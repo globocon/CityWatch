@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
@@ -4319,7 +4319,7 @@ namespace CityWatch.Web.API
                 CreatedOnDateTimeZoneShort = isOffline ? Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort : TimeZoneHelper.GetCurrentTimeZoneShortName(),
                 CreatedOnDateTimeUtcOffsetMinute = isOffline ? Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute : TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
                 HASH = hashCode,
-                ClientSitePositionId = clientSitePosition?.Id,
+                ClientSitePositionId = clientSitePosition?.ClientsiteId,
                 GuardId = IRguardId,
 
             };
