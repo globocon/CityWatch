@@ -2238,10 +2238,16 @@ $(function () {
             { field: 'isPatrolCar', title: 'Patrol Car?', type: 'checkbox', align: 'center', width: 80, editor: true },
             { field: 'dropboxDir', title: 'Dropbox Directory', width: 250, editor: true },
             {
-                field: 'isLogbook', title: 'Logbook',
+                field: 'isLogbook', title: 'Stamp RC Logbook ?',
                 type: 'checkbox', align: 'center', width: 100, editor: true,
             },
-            { field: 'clientsiteName', title: 'Nominated logbook', width: 130, editor: false },
+            {
+                field: 'clientsiteName', title: 'Nominated logbook', width: 200, editor: false,
+                renderer: function (value, record) {
+                    var displayValue = record.clientsiteName ? record.clientsiteName : '';
+                    return '<div class="d-flex justify-content-between align-items-center"><span>' + displayValue + '</span> <button type="button" class="btn btn-sm btn-outline-primary btn-assign-logbook" data-id="' + record.id + '" data-clientsiteid="' + (record.clientsiteId || '') + '"><i class="fa fa-edit"></i></button></div>';
+                }
+            },
 
             {
                 field: 'isSmartwandbypass', title: 'Smart WAND Bypass',
@@ -2359,6 +2365,92 @@ $(function () {
                 });
             }
         });
+
+        $('#position_settings').on('click', '.btn-assign-logbook', function () {
+            var id = $(this).data('id');
+            var currentClientSiteId = $(this).data('clientsiteid');
+            $('#hdnLogbookPositionId').val(id);
+            
+            var typeDropdown = $('#logbook_client_type');
+            var siteDropdown = $('#logbook_client_site');
+            
+            typeDropdown.val('');
+            siteDropdown.empty().append(new Option('Select Site', '')).prop('disabled', true);
+            
+            if (currentClientSiteId && typeof globalSiteToTypeMap !== 'undefined' && globalSiteToTypeMap[currentClientSiteId]) {
+                var typeId = globalSiteToTypeMap[currentClientSiteId];
+                typeDropdown.val(typeId);
+                typeDropdown.trigger('change', [currentClientSiteId]);
+            }
+            
+            $('#logbook-assignment-modal').modal('show');
+        });
+
+        $('#logbook_client_type').on('change', function (e, autoSelectSiteId) {
+            const clientTypeId = $(this).val();
+            const clientSiteControl = $('#logbook_client_site');
+            clientSiteControl.html('<option value="">Select Site</option>').prop('disabled', true);
+            if (!clientTypeId) return;
+            
+            $.ajax({
+                url: '/Admin/Settings?handler=ClientSitesNew',
+                type: 'GET',
+                data: { typeId: clientTypeId },
+                dataType: 'json',
+                success: function (data) {
+                    data.map(function (site) {
+                        clientSiteControl.append(new Option(site.name, site.id, false, false));
+                    });
+                    clientSiteControl.prop('disabled', false);
+                    if (autoSelectSiteId) {
+                        clientSiteControl.val(autoSelectSiteId);
+                    }
+                }
+            });
+        });
+
+        $('#btnSaveLogbook').on('click', function () {
+            var positionId = $('#hdnLogbookPositionId').val();
+            var clientSiteId = $('#logbook_client_site').val();
+            
+            if (!clientSiteId) {
+                alert('Please select a client site.');
+                return;
+            }
+
+            var record = gridPositions.getById ? gridPositions.getById(positionId) : gridPositions.get(positionId);
+            if (record) {
+                record.clientsiteId = clientSiteId;
+                record.isLogbook = true;
+                savePositionRecord(record);
+            }
+        });
+        
+        $('#btnClearLogbook').on('click', function () {
+            var positionId = $('#hdnLogbookPositionId').val();
+            var record = gridPositions.getById ? gridPositions.getById(positionId) : gridPositions.get(positionId);
+            if (record) {
+                record.clientsiteId = null;
+                record.isLogbook = false;
+                savePositionRecord(record);
+            }
+        });
+        
+        function savePositionRecord(record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=SavePositions',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridPositions.reload();
+                $('#logbook-assignment-modal').modal('hide');
+            }).fail(function () {
+                alert('Error saving logbook assignment.');
+            });
+        }
     }
 
     let isPositionAdding = false;
