@@ -4451,10 +4451,15 @@ namespace CityWatch.Web.API
                         {
                             actualPatrolSiteId = patrolLogin.ClientSiteId;
                         }
-
+                        // main PatrolCar logbook enter ie mobile app login site id 
                         if (actualPatrolSiteId > 0 && report.ClientSiteId.HasValue && actualPatrolSiteId != report.ClientSiteId.Value)
                         {
                             CreatePatrolCarGuardLogEntry(report, actualPatrolSiteId, IRguardId, UserId, gps);
+                        }
+                        // Desinated  mail id (may be another sites )
+                        if (report.ClientSitePositionId.HasValue && report.ClientSitePositionId.Value != report.ClientSiteId && report.ClientSitePositionId.Value != actualPatrolSiteId)
+                        {
+                            CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
                         }
                     }
 
