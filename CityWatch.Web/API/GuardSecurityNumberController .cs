@@ -4456,7 +4456,7 @@ namespace CityWatch.Web.API
                         {
                             CreatePatrolCarGuardLogEntry(report, actualPatrolSiteId, IRguardId, UserId, gps);
                         }
-                        // Desinated  mail id (may be another sites )
+                        // Nominated logbook  site id (may be another sites )
                         if (report.ClientSitePositionId.HasValue && report.ClientSitePositionId.Value != report.ClientSiteId && report.ClientSitePositionId.Value != actualPatrolSiteId)
                         {
                             CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
