@@ -666,7 +666,7 @@ namespace CityWatch.Web.Pages.Guard
                     IsTrailerRego = keyVehicleLogInExitTime.IsTrailerRego,
                     IsCarsStock = keyVehicleLogInExitTime.IsCarsStock,
                     PersonOfInterest = keyVehicleLogInExitTime.PersonOfInterest,
-                    ReportReference = keyVehicleLogInExitTime.ReportReference,
+                    ReportReference = Guid.NewGuid(),
                     EntryTime = keyVehicleLogInExitTime.EntryTime,
                     ExitTime = null,
                     SentInTime = keyVehicleLogInExitTime.SentInTime,
