@@ -779,7 +779,8 @@ namespace CityWatch.Web.Services
                     company.FusionMail,
                     company.TimesheetsMail,
                     company.ApiProviderIR,
-                    company.ApiSecretkeyIR
+                    company.ApiSecretkeyIR,
+                    company.ROMail
 
 
                 });

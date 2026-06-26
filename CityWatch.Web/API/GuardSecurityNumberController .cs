@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
@@ -4347,7 +4347,7 @@ namespace CityWatch.Web.API
                 CreatedOnDateTimeZoneShort = isOffline ? Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort : TimeZoneHelper.GetCurrentTimeZoneShortName(),
                 CreatedOnDateTimeUtcOffsetMinute = isOffline ? Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute : TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
                 HASH = hashCode,
-                ClientSitePositionId = clientSitePosition?.Id,
+                ClientSitePositionId = clientSitePosition?.ClientsiteId,
                 GuardId = IRguardId,
 
             };
@@ -4479,10 +4479,15 @@ namespace CityWatch.Web.API
                         {
                             actualPatrolSiteId = patrolLogin.ClientSiteId;
                         }
-
+                        // main PatrolCar logbook enter ie mobile app login site id 
                         if (actualPatrolSiteId > 0 && report.ClientSiteId.HasValue && actualPatrolSiteId != report.ClientSiteId.Value)
                         {
                             CreatePatrolCarGuardLogEntry(report, actualPatrolSiteId, IRguardId, UserId, gps);
+                        }
+                        // Nominated logbook  site id (may be another sites )
+                        if (report.ClientSitePositionId.HasValue && report.ClientSitePositionId.Value != report.ClientSiteId && report.ClientSitePositionId.Value != actualPatrolSiteId)
+                        {
+                            CreatePositionGuardLogEntry(report, IRguardId, UserId, gps);
                         }
                     }
 
