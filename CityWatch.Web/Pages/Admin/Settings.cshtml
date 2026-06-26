@@ -6136,6 +6136,49 @@
     }
 </style>
 
+<!-- logbook assignment modal start-->
+<div class="modal fade bd-example-modal-lg" id="logbook-assignment-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbookAssignment" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Logbook</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="hdnLogbookPositionId" value="0" />
+                <div class="form-group row">
+                    <label class="col-md-3 col-form-label">Client Type</label>
+                    <div class="col-md-9">
+                        <select class="form-control" id="logbook_client_type">
+                            <option value="">Select Type</option>
+                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-3 col-form-label">Client Site</label>
+                    <div class="col-md-9">
+                        <select class="form-control" id="logbook_client_site" disabled>
+                            <option value="">Select Site</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" id="btnClearLogbook">Clear Logbook</button>
+                <button type="button" class="btn btn-primary" id="btnSaveLogbook">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- logbook assignment modal end-->
+
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
