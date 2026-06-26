@@ -2244,7 +2244,7 @@ $(function () {
             {
                 field: 'clientsiteName', title: 'Nominated logbook', width: 200, editor: false,
                 renderer: function (value, record) {
-                    var displayValue = record.clientsiteName ? record.clientsiteName : '<i>None</i>';
+                    var displayValue = record.clientsiteName ? record.clientsiteName : '';
                     return '<div class="d-flex justify-content-between align-items-center"><span>' + displayValue + '</span> <button type="button" class="btn btn-sm btn-outline-primary btn-assign-logbook" data-id="' + record.id + '" data-clientsiteid="' + (record.clientsiteId || '') + '"><i class="fa fa-edit"></i></button></div>';
                 }
             },
@@ -2370,16 +2370,23 @@ $(function () {
             var id = $(this).data('id');
             var currentClientSiteId = $(this).data('clientsiteid');
             $('#hdnLogbookPositionId').val(id);
-            $('#logbook_client_type').val('');
-            $('#logbook_client_site').empty().append(new Option('Select Site', '')).prop('disabled', true);
             
-            // Note: We are not auto-selecting the existing ClientType and ClientSite here to keep it simple,
-            // but the user can easily re-select or clear.
+            var typeDropdown = $('#logbook_client_type');
+            var siteDropdown = $('#logbook_client_site');
+            
+            typeDropdown.val('');
+            siteDropdown.empty().append(new Option('Select Site', '')).prop('disabled', true);
+            
+            if (currentClientSiteId && typeof globalSiteToTypeMap !== 'undefined' && globalSiteToTypeMap[currentClientSiteId]) {
+                var typeId = globalSiteToTypeMap[currentClientSiteId];
+                typeDropdown.val(typeId);
+                typeDropdown.trigger('change', [currentClientSiteId]);
+            }
             
             $('#logbook-assignment-modal').modal('show');
         });
 
-        $('#logbook_client_type').on('change', function () {
+        $('#logbook_client_type').on('change', function (e, autoSelectSiteId) {
             const clientTypeId = $(this).val();
             const clientSiteControl = $('#logbook_client_site');
             clientSiteControl.html('<option value="">Select Site</option>').prop('disabled', true);
@@ -2395,6 +2402,9 @@ $(function () {
                         clientSiteControl.append(new Option(site.name, site.id, false, false));
                     });
                     clientSiteControl.prop('disabled', false);
+                    if (autoSelectSiteId) {
+                        clientSiteControl.val(autoSelectSiteId);
+                    }
                 }
             });
         });

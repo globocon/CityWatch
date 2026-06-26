@@ -6179,6 +6179,17 @@
 </div>
 <!-- logbook assignment modal end-->
 
+<script>
+    var globalSiteToTypeMap = {
+        @foreach(var site in Model.ViewDataService.GetUserClientSitesHavingAccess(null, AuthUserHelper.LoggedInUserId, null, null))
+        {
+            <text>
+            '@site.Id': '@site.TypeId',
+            </text>
+        }
+    };
+</script>
+
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
