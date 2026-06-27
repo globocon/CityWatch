@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
+using CityWatch.Data.Models;
 
 namespace CityWatch.Data.Helpers
 {
@@ -113,6 +116,95 @@ namespace CityWatch.Data.Helpers
     }
 
     // Task p6#73_TimeZone issue -- added by Binoy - End
+
+
+    // ------------------------------------------------------------------------------------------
+    // Roster shift ordering inside a single day-cell.
+    //
+    // WHY THIS EXISTS (real roster example):
+    //   A guard can be split into several shifts in the same day because his POSITION changes,
+    //   even though he works one continuous stretch:
+    //       Shane  08:00 - 16:00  (COX)
+    //       Shane  16:00 - 20:00  (G1)     <- continuous handover: his end 16:00 == his start 16:00
+    //       Jesse  15:00 - 23:00  (G2)
+    //
+    //   A plain OrderBy(ShiftStart) sorts every card by its own start time and produces:
+    //       Shane 08:00,  Jesse 15:00,  Shane 16:00
+    //   i.e. Jesse gets "slammed" in BETWEEN Shane's two continuous shifts, only because 15:00 is
+    //   numerically before 16:00. The grid is not smart enough to know Shane actually started 08:00.
+    //
+    //   This sorter keeps back-to-back shifts of the SAME guard together as one block, anchored to
+    //   the block's earliest start, so the result is:
+    //       Shane 08:00 - 16:00,  Shane 16:00 - 20:00,  Jesse 15:00 - 23:00
+    //
+    //   Rule (from the requirement): "WHERE a guard finishes @ X time, and starts again @ X time,
+    //   then irrespective of times, the shifts should be next to each other."
+    //   Trigger = SAME guard AND previous.ShiftEnd == next.ShiftStart (exact continuous handover).
+    //
+    // Used by: Booking page (Projects + Groups grids), External Group view, and the Roster PDF
+    // generator, so the on-screen order and the printed order always match.
+    // ------------------------------------------------------------------------------------------
+    public static class RosterShiftSorter
+    {
+        /// <summary>
+        /// Orders the shifts of a single day-cell so that continuous (back-to-back) shifts of the
+        /// same guard stay adjacent instead of being interleaved with another guard's shift.
+        /// Behaviour is identical to OrderBy(ShiftStart) for cells where no guard has continuous
+        /// split shifts, so existing rosters are unaffected.
+        /// </summary>
+        public static IEnumerable<RosterSchedule> OrderByContinuousBlocks(IEnumerable<RosterSchedule> shifts)
+        {
+            var list = shifts as IList<RosterSchedule> ?? shifts.ToList();
+
+            // Identity for "the same guard". Falls back to provider name for external shifts that
+            // are not tied to a specific guard, so two back-to-back external shifts also chain.
+            // Returns null when neither is known -> such a shift never chains with anything.
+            string KeyOf(RosterSchedule s) =>
+                s.GuardId.HasValue ? "G:" + s.GuardId.Value
+                : (!string.IsNullOrEmpty(s.ProviderName) ? "P:" + s.ProviderName : null);
+
+            // anchorStart[shift] = earliest start time of the continuous block the shift belongs to.
+            var anchorStart = new Dictionary<RosterSchedule, DateTime>();
+
+            // Walk each guard/provider independently, in start-time order, chaining a shift onto the
+            // previous one whenever the previous shift ends exactly when this one starts.
+            foreach (var grp in list.GroupBy(KeyOf))
+            {
+                if (grp.Key == null)
+                {
+                    // Unknown guard/provider: never chains; each shift anchors to itself.
+                    foreach (var s in grp)
+                        anchorStart[s] = s.ShiftStart;
+                    continue;
+                }
+
+                DateTime blockAnchor = DateTime.MinValue;
+                DateTime prevEnd = DateTime.MinValue;
+                bool inBlock = false;
+
+                foreach (var s in grp.OrderBy(x => x.ShiftStart))
+                {
+                    if (!(inBlock && s.ShiftStart == prevEnd))
+                    {
+                        // Not a continuous handover -> this shift starts a brand new block.
+                        blockAnchor = s.ShiftStart;
+                        inBlock = true;
+                    }
+                    anchorStart[s] = blockAnchor;
+                    prevEnd = s.ShiftEnd;
+                }
+            }
+
+            // Final order: by block anchor first (so a whole continuous block moves as one unit),
+            // then by guard/provider key (keeps two blocks that share an anchor grouped together),
+            // then by the shift's own start time (orders the cards inside a block correctly).
+            return list
+                .OrderBy(s => anchorStart[s])
+                .ThenBy(s => KeyOf(s) ?? "~")
+                .ThenBy(s => s.ShiftStart)
+                .ToList();
+        }
+    }
 
 
     public static class TimeZoneHelper

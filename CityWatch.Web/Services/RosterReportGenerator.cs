@@ -551,7 +551,11 @@ namespace CityWatch.Web.Services
                             for (int i = 0; i < 7; i++)
                             {
                                 var loopDate = weekStart.AddDays(i).Date;
-                                var dayShifts = schedules.Where(s => s.ClientSiteId == site.ClientSiteId && s.ShiftStart.Date == loopDate).OrderBy(s => s.ShiftStart).ToList();
+                                // Match the on-screen Booking grid: keep a guard's continuous
+                                // (back-to-back) shifts together instead of letting another guard be
+                                // printed between them. See RosterShiftSorter.
+                                var dayShifts = RosterShiftSorter.OrderByContinuousBlocks(
+                                    schedules.Where(s => s.ClientSiteId == site.ClientSiteId && s.ShiftStart.Date == loopDate)).ToList();
                                 var dayCell = new Cell().SetPadding(2);
 
                                 // Background Highlighting Logic
