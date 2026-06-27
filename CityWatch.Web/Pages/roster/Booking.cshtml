@@ -169,6 +169,11 @@
                         <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
                         <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
                     </div>
+                    <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 ml-2" title="Jump to previous/next month">
+                        <a href="#" id="btnPrevMonth" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
+                        <span class="font-weight-bold text-danger px-2 text-uppercase" style="min-width: 44px; font-size: 0.9rem;">@Model.MonthLabel</span>
+                        <a href="#" id="btnNextMonth" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                    </div>
                 </div>
 
                 <!-- Add Site Selection -->
@@ -309,6 +314,11 @@
                             <a href="#" id="btnPrevWeekBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
                             <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
                             <a href="#" id="btnNextWeekBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                        </div>
+                        <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 ml-2" title="Jump to previous/next month">
+                            <a href="#" id="btnPrevMonthBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
+                            <span class="font-weight-bold text-danger px-2 text-uppercase" style="min-width: 44px; font-size: 0.9rem;">@Model.MonthLabel</span>
+                            <a href="#" id="btnNextMonthBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
                         </div>
                     </div>
 
@@ -1604,6 +1614,8 @@
             $('#binderToggle2').prop('checked', groupSupplierMode);
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
+            var previousMonthDate = '@Model.PreviousMonth.ToString("yyyy-MM-dd")';
+            var nextMonthDate = '@Model.NextMonth.ToString("yyyy-MM-dd")';
 
             function getHeaders() {
                 var token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
@@ -1715,6 +1727,23 @@
             $('#btnNextWeek, #btnNextWeekBinder').on('click', function(e) {
                 e.preventDefault();
                 var url = '/roster/Booking?startDate=' + nextWeekDate + '&tab=' + activeTab;
+                if (currentGroupId) url += '&groupId=' + currentGroupId;
+                if (currentBinderId) url += '&binderId=' + currentBinderId;
+                window.location.href = url;
+            });
+
+            // Month jump handlers - jump to the week containing the 1st of the prev/next month
+            $('#btnPrevMonth, #btnPrevMonthBinder').on('click', function(e) {
+                e.preventDefault();
+                var url = '/roster/Booking?startDate=' + previousMonthDate + '&tab=' + activeTab;
+                if (currentGroupId) url += '&groupId=' + currentGroupId;
+                if (currentBinderId) url += '&binderId=' + currentBinderId;
+                window.location.href = url;
+            });
+
+            $('#btnNextMonth, #btnNextMonthBinder').on('click', function(e) {
+                e.preventDefault();
+                var url = '/roster/Booking?startDate=' + nextMonthDate + '&tab=' + activeTab;
                 if (currentGroupId) url += '&groupId=' + currentGroupId;
                 if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
@@ -2271,6 +2300,7 @@
                                         '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">Mobile:</span><span class="popup-value">' + (s.guardMobile || 'N/A') + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
@@ -3581,6 +3611,7 @@
                                             '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">Mobile:</span><span class="popup-value">' + (s.guardMobile || 'N/A') + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +

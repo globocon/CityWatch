@@ -54,6 +54,9 @@ namespace CityWatch.Web.Pages.roster
         public string WeekRange { get; set; }
         public DateTime PreviousWeek { get; set; }
         public DateTime NextWeek { get; set; }
+        public string MonthLabel { get; set; }
+        public DateTime PreviousMonth { get; set; }
+        public DateTime NextMonth { get; set; }
         public int? SelectedGroupId { get; set; }
         public int? SelectedBinderId { get; set; }
         public List<PayRate> PayRatesList { get; set; }
@@ -92,6 +95,13 @@ namespace CityWatch.Web.Pages.roster
             WeekRange = $"{StartDate:dd MMM yyyy} - {EndDate:dd MMM yyyy}";
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
+
+            // Month jump navigation: shows the month of the current week and lets the user
+            // jump to the week containing the 1st of the previous/next month.
+            MonthLabel = StartDate.ToString("MMM").ToUpper();
+            var firstOfMonth = new DateTime(StartDate.Year, StartDate.Month, 1);
+            PreviousMonth = StartOfWeek(firstOfMonth.AddMonths(-1), firstDayOfWeek);
+            NextMonth = StartOfWeek(firstOfMonth.AddMonths(1), firstDayOfWeek);
             SelectedGroupId = groupId;
             SelectedBinderId = binderId;
             ActiveTab = tab ?? "projects";
@@ -387,6 +397,7 @@ namespace CityWatch.Web.Pages.roster
                             guardName = s.GuardId.HasValue ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
                             guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : (string.IsNullOrEmpty(s.ProviderName) ? "N/A" : "External"),
                             guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
+                            guardMobile = s.GuardId.HasValue ? (s.Guard.Mobile ?? "N/A") : "N/A",
                             guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
                             providerName = s.ProviderName,
                             payRateId = s.PayRateId,
@@ -1217,6 +1228,7 @@ namespace CityWatch.Web.Pages.roster
                                 guardName = s.GuardId.HasValue ? s.Guard.Name : (s.ProviderName ?? "Unassigned"),
                                 guardLicense = s.GuardId.HasValue ? (s.Guard.SecurityNo ?? "N/A") : "External",
                                 guardState = s.GuardId.HasValue ? (s.Guard.State ?? "N/A") : "N/A",
+                                guardMobile = s.GuardId.HasValue ? (s.Guard.Mobile ?? "N/A") : "N/A",
                                 guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.GuardId.HasValue ? (s.Guard.Provider ?? "N/A") : "N/A"),
                                 providerName = s.ProviderName,
                                 payRateId = s.PayRateId,
