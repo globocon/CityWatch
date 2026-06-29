@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Utilities;
 using System;
@@ -43,6 +44,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteSmartWandTags> GetAllSmartwandTags();
         List<IncidentReportPosition> GetPatrolCars();
         List<IncidentReportPosition> GetPatrolCarsForSite(int[] clientsiteid);
+        List<PcarRoutesForClients> GetPatrolGroupAllocations(int clientSiteId);
 
     }
 
@@ -538,6 +540,115 @@ namespace CityWatch.Data.Providers
 
             return _dbContext.IncidentReportPositions.Where(x => PatrolCarIds.Contains(x.Id)).ToList();
 
+        }
+        public List<PcarRoutesForClients> GetPatrolGroupAllocations(int clientSiteId)
+        {
+            var today = DateTime.Today.DayOfWeek;
+            var now = DateTime.Now.TimeOfDay;
+
+            var details = _dbContext.PcarRouteDetails
+    .Include(x => x.ClientSite)
+    .Include(x => x.PcarRoute)
+        .ThenInclude(r => r.SmartWand)
+    .Where(x => x.PcarRoute.SmartWand.ClientSiteId== clientSiteId
+             && x.PcarRoute.SmartWand.PatrolCarId != 0 &&
+        (
+            (today == DayOfWeek.Monday && x.VisitMon > 0) ||
+            (today == DayOfWeek.Tuesday && x.VisitTue > 0) ||
+            (today == DayOfWeek.Wednesday && x.VisitWed > 0) ||
+            (today == DayOfWeek.Thursday && x.VisitThu > 0) ||
+            (today == DayOfWeek.Friday && x.VisitFri > 0) ||
+            (today == DayOfWeek.Saturday && x.VisitSat > 0) ||
+            (today == DayOfWeek.Sunday && x.VisitSun > 0)
+        ))
+    .ToList();      // Executes the SQL query
+
+            var result = details
+    .GroupBy(x => x.PcarRouteId)
+    .Select(g =>
+    {
+        var orderedSites = g
+            .OrderBy(x => x.Id) // or your ordering field
+            .ToList();
+
+        return new PcarRoutesForClients
+        {
+            PcarRouteId = g.Key,
+           
+            RouteName = g.First().PcarRoute.Pcarroutename,
+
+            StartTime = GetStartTime(orderedSites.First()),
+            EndTime = GetEndTime(orderedSites.First()),
+
+            Sites = orderedSites.Select(x => new RouteSiteDto
+            {
+                ClientSiteId = x.ClientSiteId,
+                SiteName = x.ClientSite.Name,
+                Gps = x.ClientSite.Gps,
+                Visits = GetVisits(x)
+            }).ToList()
+        };
+    }).Where(x=>x.StartTime !=null && x.EndTime!=null)
+    .ToList();
+
+            return result;
+        }
+        private TimeSpan? GetStartTime(PcarRouteDetails detail)
+        {
+            var time = DateTime.Today.DayOfWeek switch
+            {
+                DayOfWeek.Monday => detail.StartMon,
+                DayOfWeek.Tuesday => detail.StartTue,
+                DayOfWeek.Wednesday => detail.StartWed,
+                DayOfWeek.Thursday => detail.StartThu,
+                DayOfWeek.Friday => detail.StartFri,
+                DayOfWeek.Saturday => detail.StartSat,
+                DayOfWeek.Sunday => detail.StartSun,
+                _ => null
+            };
+
+            if (string.IsNullOrWhiteSpace(time))
+                return null;
+
+            return TimeSpan.TryParse(time, out var result) ? result : null;
+        }
+
+        private TimeSpan? GetEndTime(PcarRouteDetails detail)
+        {
+            var time = DateTime.Today.DayOfWeek switch
+            {
+                DayOfWeek.Monday => detail.EndMon,
+                DayOfWeek.Tuesday => detail.EndTue,
+                DayOfWeek.Wednesday => detail.EndWed,
+                DayOfWeek.Thursday => detail.EndThu,
+                DayOfWeek.Friday => detail.EndFri,
+                DayOfWeek.Saturday => detail.EndSat,
+                DayOfWeek.Sunday => detail.EndSun,
+                _ => null
+            };
+
+            if (string.IsNullOrWhiteSpace(time))
+                return null;
+
+            return TimeSpan.TryParse(time, out var result) ? result : null;
+        }
+        private int GetVisits(PcarRouteDetails detail)
+        {
+            var visit = DateTime.Today.DayOfWeek switch
+            {
+                DayOfWeek.Monday => detail.VisitMon,
+                DayOfWeek.Tuesday => detail.VisitTue,
+                DayOfWeek.Wednesday => detail.VisitWed,
+                DayOfWeek.Thursday => detail.VisitThu,
+                DayOfWeek.Friday => detail.VisitFri,
+                DayOfWeek.Saturday => detail.VisitSat,
+                DayOfWeek.Sunday => detail.VisitSun,
+                _ => 0
+            };
+
+            
+
+            return visit;
         }
     }
 }

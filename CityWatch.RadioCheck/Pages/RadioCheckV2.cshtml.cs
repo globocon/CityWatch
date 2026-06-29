@@ -53,10 +53,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly ILogbookDataService _logbookDataService;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ISmartWandReportGenarator _smartWandReportGenarator;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
             IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider, ILogbookDataService logbookDataService,
-            IWebHostEnvironment webHostEnvironment, ISmartWandReportGenarator smartWandReportGenarator)
+            IWebHostEnvironment webHostEnvironment, ISmartWandReportGenarator smartWandReportGenarator, IClientSiteWandDataProvider clientSiteWandDataProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -70,6 +71,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _logbookDataService = logbookDataService;
             _webHostEnvironment = webHostEnvironment;
             _smartWandReportGenarator= smartWandReportGenarator;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -3332,6 +3334,44 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(GuardDetails);
         }
 
+        public IActionResult OnGetClientSiteActivityStatusClientSiteForGlobeMap(string ClientSiteId)
+        {
+            int[] siteIds = ClientSiteId?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            //var patroldetails = _clientSiteWandDataProvider.GetPatrolGroupAllocations(siteIds);
+            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            var activeGuardDetailModels = activeGuardDetails.Select(detail => new RadioCheckListGuardData
+            {
+                ClientSiteId = detail.ClientSiteId,
+                GuardId = detail.GuardId,
+                SiteName = detail.SiteName,
+                Address = detail.Address,
+                GPS = detail.GPS,
+                GuardName = detail.GuardName,
+                LogBook = detail.LogBook,
+                KeyVehicle = detail.KeyVehicle,
+                IncidentReport = detail.IncidentReport,
+                SmartWands = detail.SmartWands,
+                RcStatus = detail.RcStatus,
+                RcColor = detail.RcColor,
+                Status = detail.Status,
+                RcColorId = detail.RcColorId,
+                OnlySiteName = detail.OnlySiteName,
+                LatestDate = detail.LatestDate,
+                ShowColor = detail.ShowColor,
+                hasmartwand = detail.hasmartwand,
+                HR1 = CalculateHr1GroupStatus(detail.GuardId),
+                HR2 = CalculateHr2GroupStatus(detail.GuardId),
+                HR3 = CalculateHr3GroupStatus(detail.GuardId),
+                State = detail.State,
+                CompletedRounds = detail.CompletedRounds,
+                haswandtags = detail.haswandtags,
+                TourMode = detail.TourMode,
+                pcarRoutesForClients= _clientSiteWandDataProvider.GetPatrolGroupAllocations(detail.ClientSiteId),
 
+                // Map other properties as needed
+            }).ToList().Where(x => siteIds.Contains(x.ClientSiteId));
+            //.Where(x => x.ClientSiteId == ClientSiteId);
+            return new JsonResult(activeGuardDetailModels);
+        }
     }
 }

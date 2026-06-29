@@ -44,7 +44,7 @@ window.closeVideoPlayer = function () {
 let connection;
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
-        startClock();
+        startClockNew();
 
     }
 
@@ -276,7 +276,7 @@ $(document).ready(function () {
 
     });
 });
-function startClock() {
+function startClockNew() {
     let timer = duration, minutes, seconds;
     display = document.querySelector('#clockRefresh');
     if (!nIntervId) {
@@ -292,7 +292,7 @@ function startClock() {
                 display.textContent = minutes + " min" + " " + seconds + " sec";
 
                 if (--timer < 0) {
-                    location.reload();
+                    //location.reload();
 
                 }
 
@@ -415,29 +415,29 @@ function createPatrolCarIcon(color, isBlinking = false) {
     return L.divIcon({
         className: 'patrol-car-marker',
         html: `
-                            <div style="
-                                width: 28px;
-                                height: 28px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                ${isBlinking ? 'animation: blink 1s infinite;' : ''}
-                            ">
-                                <svg width="26" height="26" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill="${color}" d="M53 28h-2.1l-4.2-9.4A5 5 0 0 0 42.2 16H21.8a5 5 0 0 0-4.5 2.6L13.1 28H11a3 3 0 0 0-3 3v11a3 3 0 0 0 3 3h2a6 6 0 0 0 12 0h14a6 6 0 0 0 12 0h2a3 3 0 0 0 3-3V31a3 3 0 0 0-3-3zM21.8 20h20.4a1 1 0 0 1 .9.5l3.4 7.5H17.5l3.4-7.5a1 1 0 0 1 .9-.5zM19 48a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm26 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
-                                </svg>
-                            </div>
-                        `,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-        popupAnchor: [0, -14]
+            <div style="
+                width:64px;
+                height:64px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                ${isBlinking ? 'animation: blink 1s infinite;' : ''}
+            ">
+                <svg width="60" height="60" viewBox="0 0 64 64">
+                    <path fill="${color}" d="M53 28h-2.1l-4.2-9.4A5 5 0 0 0 42.2 16H21.8a5 5 0 0 0-4.5 2.6L13.1 28H11a3 3 0 0 0-3 3v11a3 3 0 0 0 3 3h2a6 6 0 0 0 12 0h14a6 6 0 0 0 12 0h2a3 3 0 0 0 3-3V31a3 3 0 0 0-3-3zM21.8 20h20.4a1 1 0 0 1 .9.5l3.4 7.5H17.5l3.4-7.5a1 1 0 0 1 .9-.5zM19 48a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm26 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+                </svg>
+            </div>
+        `,
+        iconSize: [64, 64],
+        iconAnchor: [32, 32],
+        popupAnchor: [0, -32]
     });
 }
 
 
 function updateMapSite(state) {
 
-    fetch(`/RadioCheckV2?handler=ClientSiteActivityStatusClientSite&ClientSiteId=${state}`, {
+    fetch(`/RadioCheckV2?handler=ClientSiteActivityStatusClientSiteForGlobeMap&ClientSiteId=${state}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
     })
