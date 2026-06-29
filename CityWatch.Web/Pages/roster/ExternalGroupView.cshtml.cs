@@ -116,9 +116,10 @@ namespace CityWatch.Web.Pages.roster
                     days = Enumerable.Range(0, 7).Select(dayOffset =>
                     {
                         var targetDate = startDate.AddDays(dayOffset);
-                        return schedules
-                            .Where(s => s.RosterGroupId == bp.RosterGroupId && s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
-                            .OrderBy(s => s.ShiftStart)
+                        // Keep a guard's continuous (back-to-back) shifts adjacent rather than
+                        // interleaving another guard between them. See RosterShiftSorter.
+                        return RosterShiftSorter.OrderByContinuousBlocks(
+                                schedules.Where(s => s.RosterGroupId == bp.RosterGroupId && s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date))
                             .Select(s => new
                             {
                                 id = s.Id,

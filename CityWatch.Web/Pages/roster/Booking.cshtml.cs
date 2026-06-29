@@ -377,9 +377,11 @@ namespace CityWatch.Web.Pages.roster
                 days = Enumerable.Range(0, 7).Select(dayOffset =>
                 {
                     var targetDate = startDate.AddDays(dayOffset);
-                    return schedules
-                        .Where(s => s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
-                        .OrderBy(s => s.ShiftStart)
+                    // Keep a guard's continuous (back-to-back) shifts together instead of letting
+                    // another guard slot in between them. e.g. Shane 08:00-16:00 + 16:00-20:00 stay
+                    // adjacent, with Jesse 15:00-23:00 after the block. See RosterShiftSorter.
+                    return RosterShiftSorter.OrderByContinuousBlocks(
+                            schedules.Where(s => s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date))
                         .Select(s => new
                         {
                             id = s.Id,
@@ -1207,9 +1209,10 @@ namespace CityWatch.Web.Pages.roster
                     days = Enumerable.Range(0, 7).Select(dayOffset =>
                     {
                         var targetDate = startDate.AddDays(dayOffset);
-                        return schedules
-                            .Where(s => s.RosterGroupId == bp.RosterGroupId && s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date)
-                            .OrderBy(s => s.ShiftStart)
+                        // Same continuous-block ordering as the Projects grid so back-to-back
+                        // shifts of one guard are not split apart by another guard. See RosterShiftSorter.
+                        return RosterShiftSorter.OrderByContinuousBlocks(
+                                schedules.Where(s => s.RosterGroupId == bp.RosterGroupId && s.ClientSiteId == gs.ClientSiteId && s.ShiftStart.Date == targetDate.Date))
                             .Select(s => new
                             {
                                 id = s.Id,
