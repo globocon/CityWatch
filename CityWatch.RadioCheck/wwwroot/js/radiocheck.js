@@ -2871,8 +2871,8 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceDetailsF
         targets: 3,
         data: 'fileName',
         render: function (data, type, row, meta) {
-            if (data)
-                return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+            if (data) 
+                return '<a href="https://cws-ir.com/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
             return '-';
         }
     },
@@ -5134,29 +5134,57 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
 
             render: function (value, type, data) {
-                //p4-146-hr-status-update-start
 
-                if (value == 'Green') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle text-success"></i></button>';
-                if (value == 'Red') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle text-danger"></i></button>';
-                if (value == 'Yellow') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle text-warning"></i></button>';
-                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
-                if (value == 'Orange') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle"style="color:orange;"></i></button>';
-                //p4-146-hr-status-update-end
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
+
+                    if (value == 'Orange') {
+
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1"><i class="fa fa-circle"style="color:orange;"></i></button>';
+                    }
+                    else {
+
+
+                        // Include the sort value as a hidden element and render the color circle
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR1">' +
+                            '<span style="display:none;">' + value + '</span>' +
+                            '<i class="fa fa-circle text-' +
+                            (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                                value == 'Yellow' ? 'warning' : 'muted') +
+                            '"></i>' + '</button>';
+                    }
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
             }
-        },
+        }, 
         {
             data: 'hR2',
             width: '3%',
             className: "text-center",
 
             render: function (value, type, data) {
-                //p4-146-hr-status-update-start
-                if (value == 'Green') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle text-success"></i></button>';
-                if (value == 'Red') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle text-danger"></i></button>';
-                if (value == 'Yellow') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle text-warning"></i></button>';
-                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
-                if (value == 'Orange') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle"style="color:orange;"></i></button>';
-                //p4-146-hr-status-update-end
+
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
+
+                    if (value == 'Orange') {
+
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><i class="fa fa-circle"style="color:orange;"></i></button>';
+                    }
+                    else {
+
+                        // Include the sort value as a hidden element and render the color circle
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR2"><span style="display:none;">' + value + '</span>' +
+                            '<i class="fa fa-circle text-' +
+                            (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                                value == 'Yellow' ? 'warning' : 'muted') +
+                            '"></i></button>';
+                    }
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
+
             }
         },
         {
@@ -5165,14 +5193,24 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
 
             render: function (value, type, data) {
-                
-                //p4-146-hr-status-update-start
-                if (value == 'Green') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle text-success"></i></button>';
-                if (value == 'Red') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle text-danger"></i></button>';
-                if (value == 'Yellow') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle text-warning"></i></button>';
-                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
-                if (value == 'Orange') return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle"style="color:orange;"></i></button>';
-                //p4-146-hr-status-update-end
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
+                    if (value == 'Orange') {
+
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><i class="fa fa-circle"style="color:orange;"></i></button>';
+                    }
+                    else {
+
+                        // Include the sort value as a hidden element and render the color circle
+                        return '<button type="button" class="btn" id="btnGuardHRDocsHistory"  data-guardid="' + data.guardId + '"data-color="' + value + '"data-hrGroup="HR3"><span style="display:none;">' + value + '</span>' +
+                            '<i class="fa fa-circle text-' +
+                            (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                                value == 'Yellow' ? 'warning' : 'muted') +
+                            '"></i></button>';
+                    }
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
             }
         },
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
