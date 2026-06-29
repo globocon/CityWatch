@@ -53,11 +53,14 @@
     .guard-day-cell { transition: background-color 0.2s ease; }
     .guard-day-cell:hover { background-color: #f8f9fa; }
     
-    /* Public Holiday Highlighting - High priority to override weekend colors */
-    #guard_roster_grid tbody td.guard-day-cell.guard-ph-highlight,
-    #guard_roster_grid tbody td.guard-ph-highlight:nth-child(7),
-    #guard_roster_grid tbody td.guard-ph-highlight:nth-child(8) { 
-        background-color: #FFF9C4 !important; 
+    /* Public Holiday Highlighting.
+       The day cells are rendered with class "guard-roster-cell" (not "guard-day-cell"), so the old
+       selector never matched a weekday holiday - only the nth-child(7)/(8) weekend columns lit up.
+       Targeting the real class with an #id-level selector means ANY holiday column (weekday or
+       weekend) shows the holiday colour, and the higher specificity + !important overrides the
+       single-class weekend rules below. Mirrors the Booking page behaviour. */
+    #guard_roster_grid tbody td.guard-roster-cell.guard-ph-highlight {
+        background-color: #FFF9C4 !important;
         color: #333 !important;
     }
     .guard-sat-highlight { background-color: #d7f0d7 !important; }
