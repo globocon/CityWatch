@@ -1776,7 +1776,7 @@
                                 '</div>' +
                                 (s.status === 3 ? '<div class="cancelled-overlay"></div>' : '') + 
                                 (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
-                                (s.reliefGuardId ? '' : '<div class="guard-shift-license">LIC: ' + s.guardLicense + '</div>') +
+                                ((s.reliefGuardId || s.reliefProviderName) ? '' : '<div class="guard-shift-license">LIC: ' + s.guardLicense + '</div>') +
                                 '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
                                 (isAdminSupplierOn ? 
                                     '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + (s.reliefGuardId ? s.reliefProviderName : s.guardProvider) + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
