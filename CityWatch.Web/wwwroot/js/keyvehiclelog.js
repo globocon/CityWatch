@@ -409,20 +409,30 @@ $(function () {
                     defaultContent: '',
 
                     render: function (value, type, data) {
-                        return '<button id="btnEditVkl" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
-                            '<button id="btnPrintVkl" class="btn btn-outline-primary mr-1 "><i class="fa fa-print"></i></button>' +
-                            '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash"></i></button>' +
-                            '<div class="custom-control custom-switch custom-control-inline mr-2 mt-1"  title="Toggle Print Docket">' +
-                            '<input type="checkbox" class="custom-control-input" id="' + value + '" name="toggleDarkMode">' +
-                            '<label class="custom-control-label" for="' + value + '"></label>' +
-                            '</div>';
+                        return '<div class="row">' +
+                                    '<div class="col-md-6 mb-1">' +
+                                        '<button id="btnEditVkl" class="btn btn-outline-primary"><i class="fa fa-pencil"></i></button>' +
+                                    '</div>' +
+                                    '<div class="col-md-6 mb-1 ml-0 pl-0 mr-0 pr-0">' +
+                                        '<button id="btnPrintVkl" class="btn btn-outline-primary"><i class="fa fa-print"></i></button>' +
+                                    '</div>' +
+                                    '<div class="col-md-6">' +
+                                        '<button id="btnDeleteVkl" class="btn btn-outline-danger"><i class="fa fa-trash"></i></button>' +
+                                    '</div>' +
+                                    '<div class="col-md-6 ml-0 pl-0">' +
+                                        '<div class="custom-control custom-switch custom-control-inline mt-1"  title="Toggle Print Docket">' +
+                                            '<input type="checkbox" class="custom-control-input" id="' + value + '" name="toggleDarkMode">' +
+                                            '<label class="custom-control-label" for="' + value + '"></label>' +
+                                        '</div>' +
+                                    '</div>' +
+                              '</div>';
                     }
                 }],
             'createdRow': function (row, data, index) {
                 if (data.detail.initialCallTime !== null) {
                     $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
                     /*to display the color yellow-start*/
-                    if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null && data.detail.hasLoadVariation == false && data.detail.isLoadVariationDuplicate == false) {
+                    if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
                         $('td', row).eq(1).addClass('initial-call-colour');
                         $('td', row).eq(2).addClass('initial-call-colour');
                         $('td', row).eq(3).addClass('initial-call-colour');
@@ -441,7 +451,7 @@ $(function () {
                 if (data.detail.entryTime !== null) {
                     $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
                     /*to display the color green for entry time-start*/
-                    if (data.detail.sentInTime == null && data.detail.exitTime == null && data.detail.hasLoadVariation == false && data.detail.isLoadVariationDuplicate == false) {
+                    if (data.detail.sentInTime == null && data.detail.exitTime == null) {
                         $('td', row).eq(1).addClass('entry-time-colour');
                         $('td', row).eq(2).addClass('entry-time-colour');
                         $('td', row).eq(3).addClass('entry-time-colour');
@@ -475,6 +485,40 @@ $(function () {
                         $('td', row).eq(12).addClass('entry-time-colour');
                     }
                     /*to display the color green for sent in time-end*/
+
+                    if (data.detail.exitTime == null && data.detail.hasLoadVariation == true) {
+                        /*to display the color red for exit  time-start*/
+                        $('td', row).eq(1).addClass('lv-time-colour');
+                        $('td', row).eq(2).addClass('lv-time-colour');
+                        $('td', row).eq(3).addClass('lv-time-colour');
+                        $('td', row).eq(4).addClass('lv-time-colour');
+                        $('td', row).eq(5).addClass('lv-time-colour');
+                        $('td', row).eq(6).addClass('lv-time-colour');
+                        $('td', row).eq(7).addClass('lv-time-colour');
+                        $('td', row).eq(8).addClass('lv-time-colour');
+                        $('td', row).eq(9).addClass('lv-time-colour');
+                        $('td', row).eq(10).addClass('lv-time-colour');
+                        $('td', row).eq(11).addClass('lv-time-colour');
+                        $('td', row).eq(12).addClass('lv-time-colour');
+                        /*to display the color red for exit  time-end*/
+                    }
+                    if (data.detail.exitTime == null && data.detail.isLoadVariationDuplicate == true) {
+                        /*to display the color red for exit  time-start*/
+                        $('td', row).eq(1).addClass('lv-time-colour');
+                        $('td', row).eq(2).addClass('lv-time-colour');
+                        $('td', row).eq(3).addClass('lv-time-colour');
+                        $('td', row).eq(4).addClass('lv-time-colour');
+                        $('td', row).eq(5).addClass('lv-time-colour');
+                        $('td', row).eq(6).addClass('lv-time-colour');
+                        $('td', row).eq(7).addClass('lv-time-colour');
+                        $('td', row).eq(8).addClass('lv-time-colour');
+                        $('td', row).eq(9).addClass('lv-time-colour');
+                        $('td', row).eq(10).addClass('lv-time-colour');
+                        $('td', row).eq(11).addClass('lv-time-colour');
+                        $('td', row).eq(12).addClass('lv-time-colour');
+                        /*to display the color red for exit  time-end*/
+                    }
+                   
                 }
                 if (data.detail.exitTime !== null) {
                     $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
@@ -497,21 +541,22 @@ $(function () {
                     /*to display the color green for exit  time-end*/
                 }
                 if (data.detail.hasLoadVariation == true || data.detail.isLoadVariationDuplicate == true) {
-                    /*to display the color red for exit  time-start*/
+                    
                     if (data.detail.hasLoadVariation == true) { $('td', row).eq(4).html('<strong>LV</strong>'); }
 
-                    $('td', row).eq(1).addClass('lv-time-colour');
-                    $('td', row).eq(2).addClass('lv-time-colour');
-                    $('td', row).eq(3).addClass('lv-time-colour');
-                    $('td', row).eq(4).addClass('lv-time-colour');
-                    $('td', row).eq(5).addClass('lv-time-colour');
-                    $('td', row).eq(6).addClass('lv-time-colour');
-                    $('td', row).eq(7).addClass('lv-time-colour');
-                    $('td', row).eq(8).addClass('lv-time-colour');
-                    $('td', row).eq(9).addClass('lv-time-colour');
-                    $('td', row).eq(10).addClass('lv-time-colour');
-                    $('td', row).eq(11).addClass('lv-time-colour');
-                    $('td', row).eq(12).addClass('lv-time-colour');
+                    /*to display the color red for exit  time-start*/
+                    //$('td', row).eq(1).addClass('lv-time-colour');
+                    //$('td', row).eq(2).addClass('lv-time-colour');
+                    //$('td', row).eq(3).addClass('lv-time-colour');
+                    //$('td', row).eq(4).addClass('lv-time-colour');
+                    //$('td', row).eq(5).addClass('lv-time-colour');
+                    //$('td', row).eq(6).addClass('lv-time-colour');
+                    //$('td', row).eq(7).addClass('lv-time-colour');
+                    //$('td', row).eq(8).addClass('lv-time-colour');
+                    //$('td', row).eq(9).addClass('lv-time-colour');
+                    //$('td', row).eq(10).addClass('lv-time-colour');
+                    //$('td', row).eq(11).addClass('lv-time-colour');
+                    //$('td', row).eq(12).addClass('lv-time-colour');
 
                     /*to display the color red for exit  time-end*/
                 }

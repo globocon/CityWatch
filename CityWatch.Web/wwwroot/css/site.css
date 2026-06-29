@@ -612,7 +612,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
         .dark-mode td.lv-time-colour,
         .dark-mode tr.lv-time-colour,
         .dark-mode .lv-time-colour {
-            background-color: #C8291A !important;
+            background-color: #F5B7B1 !important;
             color: #333 !important;
         }
 
@@ -845,7 +845,7 @@ pre.dark-mode {
 }
 
 .lv-time-colour {
-    background-color: #C8291A;
+    background-color: #F5B7B1;
 }
 
 .btn-lv-quick-color {

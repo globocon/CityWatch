@@ -1045,7 +1045,7 @@ namespace CityWatch.Web.Services
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetPaddingBottom(0)
-                                    .SetBorder(Border.NO_BORDER)
+                                    .SetBorder(new SolidBorder(ColorConstants.BLACK, 0))
                                     .Add(GetNotesTable(keyVehicleLogViewModel, blankNoteOnOrOff));
             outerTable.AddCell(cellNotesTable);
 
@@ -1280,15 +1280,15 @@ namespace CityWatch.Web.Services
         {
             var notesTable = new Table(1).UseAllAvailableWidth();
 
-            notesTable.AddCell(GetHeaderCell("Notes", textAlignment: TextAlignment.LEFT));
+            notesTable.AddCell(GetHeaderCell("Notes", textAlignment: TextAlignment.LEFT).SetMarginLeft(-1).SetPaddingLeft(-1));
             if (blankNoteOnOrOff == "true")
             {
-                notesTable.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT, minHeight: 85));
+                notesTable.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT, minHeight: 85).SetBorder(Border.NO_BORDER));
 
             }
             else
             {
-                notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 85));
+                notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 85).SetBorder(Border.NO_BORDER));
             }
             return notesTable;
         }
