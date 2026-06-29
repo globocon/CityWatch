@@ -465,10 +465,67 @@ function updateMapSite(state) {
                             .addTo(map);
                     }
                     else {
-                        const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
-                        L.marker([lat, lng], { icon: createPatrolCarIcon(markerColor, false) })
-                            .bindPopup('<strong>SiteName:</strong>' + siteName + '<br>' + '<strong>Phone Number:</strong>' + phoneNumber + '<br>' + '<strong>Address:</strong>' + address + '<br>' + '<strong>GuardName:</strong>' + GuardName)
-                            .addTo(map);
+                        if (record.pcarRoutesForClients.length > 0) {
+                            record.pcarRoutesForClients.forEach(item => {
+                              
+
+                                const routePoints = [];
+                                let lastPoint = null;
+
+                                item.sites.forEach(site => {
+
+                                    if (!site.gps) return;
+
+                                    const [lat, lng] = site.gps.split(',').map(Number);
+
+                                    // Polyline requires [lat, lng]
+                                    routePoints.push([lat, lng]);
+
+                                    // Save the latest position
+                                    lastPoint = [lat, lng];
+
+                                    // Optional: Show each GPS point
+                                    L.circleMarker([lat, lng], {
+                                        radius: 4,
+                                        color: 'blue',
+                                        fillColor: 'blue',
+                                        fillOpacity: 1
+                                    }).addTo(map);
+
+                                });
+
+                                // Draw patrol route
+                                if (routePoints.length > 1) {
+
+                                    L.polyline(routePoints, {
+                                        color: 'red',
+                                        weight: 4
+                                    }).addTo(map);
+
+                                }
+
+                                // Show patrol car at the latest GPS location
+                                if (lastPoint) {
+
+                                    L.marker(lastPoint, {
+                                        icon: createPatrolCarIcon(markerColor, false)
+                                    })
+                                        .bindPopup(
+                                            `<strong>Guard:</strong> ${GuardName}<br>
+         <strong>Site:</strong> ${siteName}`
+                                        )
+                                        .addTo(map);
+
+                                }
+
+                            });
+                        }
+                        else {
+                            const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                            L.marker([lat, lng], { icon: createPatrolCarIcon(markerColor, false) })
+                                .bindPopup('<strong>SiteName:</strong>' + siteName + '<br>' + '<strong>Phone Number:</strong>' + phoneNumber + '<br>' + '<strong>Address:</strong>' + address + '<br>' + '<strong>GuardName:</strong>' + GuardName)
+                                .addTo(map);
+                        }
                     }
                 }
             });
