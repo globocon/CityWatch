@@ -11,11 +11,10 @@ a.navbar-brand {
     margin-bottom: 0 !important;
     margin-top: 0 !important;
 }
+
 .main-container {
     margin-top: 0px; /* Decreased margin at the top */
     padding-bottom: 0px; /* Space for links at the bottom */
-   
-
 }
 /* Provide sufficient contrast against white background */
 a {
@@ -69,7 +68,6 @@ body {
     /* Margin bottom by footer height */
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    
 }
 
 .footer {
@@ -214,9 +212,11 @@ i.client-status-circle {
         margin-top: 0.25rem !important;
         margin-bottom: 0.25rem !important;
     }
+
     .slogan.pb-3, .slogan.pb-md-3 {
         padding-bottom: 0.5rem !important;
     }
+
     a.navbar-brand img {
         height: 45px;
     }
@@ -232,9 +232,10 @@ i.client-status-circle {
         padding-left: 1.5rem;
         padding-right: 1.5rem;
     }
-    .login-disclaimer br {
-        display: none;
-    }
+
+        .login-disclaimer br {
+            display: none;
+        }
 }
 
 @media (min-width: 768px) {
@@ -538,6 +539,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 #container {
     text-align: center;
 }
+
 .dynamic-link {
     width: 150px;
     margin: 3px;
@@ -575,6 +577,50 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     }
 
     .dark-mode table.dataTable tbody > tr td {
+        background-color: #333 !important;
+    }
+
+        .dark-mode table.dataTable tbody > tr td.initial-call-colour,
+        .dark-mode table.dataTable tbody tr.initial-call-colour,
+        .dark-mode td.initial-call-colour,
+        .dark-mode tr.initial-call-colour,
+        .dark-mode .initial-call-colour {
+            background-color: #FCF3CF !important;
+            color: #333 !important;
+        }
+
+        .dark-mode table.dataTable tbody > tr td.entry-time-colour,
+        .dark-mode table.dataTable tbody tr.entry-time-colour,
+        .dark-mode td.entry-time-colour,
+        .dark-mode tr.entry-time-colour,
+        .dark-mode .entry-time-colour {
+            background-color: #A9DFBF !important;
+            color: #333 !important;
+        }
+
+        .dark-mode table.dataTable tbody > tr td.exit-time-colour,
+        .dark-mode table.dataTable tbody tr.exit-time-colour,
+        .dark-mode td.exit-time-colour,
+        .dark-mode tr.exit-time-colour,
+        .dark-mode .exit-time-colour {
+            background-color: #F5B7B1 !important;
+            color: #333 !important;
+        }
+
+        .dark-mode table.dataTable tbody > tr td.lv-time-colour,
+        .dark-mode table.dataTable tbody tr.lv-time-colour,
+        .dark-mode td.lv-time-colour,
+        .dark-mode tr.lv-time-colour,
+        .dark-mode .lv-time-colour {
+            background-color: #F5B7B1 !important;
+            color: #333 !important;
+        }
+
+    .dark-mode table.dataTable thead > tr th.kv-dailylog-group-th,
+    .dark-mode table.dataTable thead tr.kv-dailylog-group-th,
+    .dark-mode th.kv-dailylog-group-th,
+    .dark-mode tr.kv-dailylog-group-th,
+    .dark-mode .kv-dailylog-group-th {
         background-color: #333 !important;
     }
 
@@ -764,7 +810,6 @@ pre {
 }
 
 #divmarqueeLiveEvents {
-  
     overflow: hidden;
     display: grid;
 }
@@ -799,7 +844,19 @@ pre.dark-mode {
     background-color: #F5B7B1;
 }
 
+.lv-time-colour {
+    background-color: #F5B7B1;
+}
 
+.btn-lv-quick-color {
+    background-color: #fd7e14;
+    border-color: #fd7e14;
+    color: #FFFFFF;
+}
+
+.kv-dailylog-group-th {
+    background-color: #EAF0ED;
+}
 
 .page-break {
     page-break-after: always;
@@ -809,6 +866,7 @@ pre.dark-mode {
     padding-left: 1px !important;
     padding-right: 1px !important;
 }
+
 #user_settings tbody div[data-role="display"] {
     vertical-align: middle;
     text-indent: 0;
@@ -816,10 +874,12 @@ pre.dark-mode {
     -ms-word-break: break-word;
     word-break: break-word;
 }
+
 p.center-or-justify:only-child {
     text-align: justify;
     text-align-last: center; /* Align last line center if only one line */
 }
+
 .text-orange {
     color: #ff8c00;
 }
@@ -837,19 +897,19 @@ p.center-or-justify:only-child {
     width: 100% !important;
 }
 
-.pdf-export-active #monthly_patrol_data th,
-.pdf-export-active #monthly_patrol_data td {
-    white-space: normal !important;
-    word-break: break-word !important;
-    font-size: 5px !important;
-    padding: 1px !important;
-    line-height: 1.1 !important;
-}
+    .pdf-export-active #monthly_patrol_data th,
+    .pdf-export-active #monthly_patrol_data td {
+        white-space: normal !important;
+        word-break: break-word !important;
+        font-size: 5px !important;
+        padding: 1px !important;
+        line-height: 1.1 !important;
+    }
 
-.pdf-export-active #monthly_patrol_data th {
-    font-size: 5.3px !important;
-    font-weight: bold !important;
-}
+    .pdf-export-active #monthly_patrol_data th {
+        font-size: 5.3px !important;
+        font-weight: bold !important;
+    }
 
 .pdf-export-active .action-taken {
     min-width: 70px !important;
@@ -860,5 +920,3 @@ p.center-or-justify:only-child {
     min-width: 30px !important;
     white-space: normal !important;
 }
-
-

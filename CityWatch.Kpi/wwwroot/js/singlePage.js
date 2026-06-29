@@ -1364,28 +1364,48 @@ $(function () {
         $('#chk_cs_Is_Reels').val(isChecked);
     });
 
-    $('#chk_cs_ISOVIN').on('change', function () {
-
+    $('#chk_cs_ISO').on('change', function () {
         const isChecked = $(this).is(':checked');
         if (isChecked == true) {
+            $('#chk_cs_VIN').prop('checked', false);
             $('#chk_cs_TrailerRego').prop('checked', false);
+            $('#chk_cs_CarsStock').prop('checked', false);
         }
-        else {
-            $('#chk_cs_TrailerRego').prop('checked', true);
+        $('#chk_cs_ISO').val(isChecked);
+        $('#modalIsISO').val(isChecked);
+    });
+
+    $('#chk_cs_VIN').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_ISO').prop('checked', false);
+            $('#chk_cs_TrailerRego').prop('checked', false);
+            $('#chk_cs_CarsStock').prop('checked', false);
         }
-        $('#chk_cs_ISOVIN').val(isChecked);
+        $('#chk_cs_VIN').val(isChecked);
+        $('#modalIsVin').val(isChecked);
     });
 
     $('#chk_cs_TrailerRego').on('change', function () {
-
         const isChecked = $(this).is(':checked');
         if (isChecked == true) {
-            $('#chk_cs_ISOVIN').prop('checked', false);
-        }
-        else {
-            $('#chk_cs_ISOVIN').prop('checked', true);
+            $('#chk_cs_VIN').prop('checked', false);
+            $('#chk_cs_ISO').prop('checked', false);
+            $('#chk_cs_CarsStock').prop('checked', false);        
         }
         $('#chk_cs_TrailerRego').val(isChecked);
+        $('#modalIsTrailerRego').val(isChecked);
+    });
+
+    $('#chk_cs_CarsStock').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_VIN').prop('checked', false);
+            $('#chk_cs_ISO').prop('checked', false);
+            $('#chk_cs_TrailerRego').prop('checked', false);
+        }
+        $('#chk_cs_CarsStock').val(isChecked);
+        $('#modalIsCarsStock').val(isChecked);
     });
     //for Reels - start
     $('#btnSaveToggleKeys').on('click', function () {
@@ -1424,15 +1444,7 @@ $(function () {
             $('#chk_cs_Is_Reels').val(false);
 
         }
-
-        if ($('#chk_cs_ISOVIN').is(":checked")) {
-            $('#chk_cs_IsISOVIN').val(true);
-
-        }
-        else {
-            $('#chk_cs_IsISOVIN').val(false);
-
-        }
+                
         const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
             url: '/Admin/Settings?handler=SaveToggleType',
@@ -1448,7 +1460,10 @@ $(function () {
                 reelstoggleTypeId: 4,
                 reelsIsActive: $('#chk_cs_Is_Reels').val(),
                 trailerRegoTypeId: 5,
-                isISOVINAcive: $('#chk_cs_IsISOVIN').val(),
+                isISO: $('#chk_cs_ISO').is(":checked"),
+                isVIN: $('#chk_cs_VIN').is(":checked"),
+                isTrailerRego: $('#chk_cs_TrailerRego').is(":checked"),
+                isCarsStock: $('#chk_cs_CarsStock').is(":checked"),
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
@@ -1461,6 +1476,13 @@ $(function () {
 
     function GetClientSiteToggle() {
         const token = $('input[name="__RequestVerificationToken"]').val();
+
+        $('#chk_cs_ISO').prop('checked', false);
+        $('#chk_cs_VIN').prop('checked', false);
+        $('#chk_cs_TrailerRego').prop('checked', false);
+        $('#chk_cs_CarsStock').prop('checked', false);
+
+
         $.ajax({
             url: '/Admin/Settings?handler=ClientSiteToggle',
             type: 'GET',
@@ -1521,18 +1543,11 @@ $(function () {
                 }
 
                 if (response[i].toggleTypeId == 5) {
-                    $('#chk_cs_IsISOVIN').val(response[i].isActive);
-                    if (response[i].isActive == true) {
-                        $('#chk_cs_ISOVIN').prop('checked', true);
-                        $('#chk_cs_TrailerRego').prop('checked', false);
-                    }
-                    else {
-                        $('#chk_cs_ISOVIN').prop('checked', false);
-                        $('#chk_cs_TrailerRego').prop('checked', true);
-                    }
-
+                    $('#chk_cs_ISO').prop('checked', response[i].isISO);
+                    $('#chk_cs_VIN').prop('checked', response[i].isVin);
+                    $('#chk_cs_TrailerRego').prop('checked', response[i].isTrailerRego);
+                    $('#chk_cs_CarsStock').prop('checked', response[i].isCarsStock);
                 }
-
             }
 
         }).fail(function () {

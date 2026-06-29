@@ -185,7 +185,7 @@ namespace CityWatch.Data.Providers
         string DeleteDuressGloablSMSNumber(int SmsNumberId, out bool status);
 
         //for toggle areas - start 
-        void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive);
+        void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive, bool isVin, bool isISO, bool isTrailerRego, bool isCarsStock);
         //for toggle areas - end
         IncidentReportPosition GetClientSitePosition(string Name);
         List<GlobalComplianceAlertEmail> GetGlobalComplianceAlertEmail();
@@ -3111,7 +3111,7 @@ namespace CityWatch.Data.Providers
 
         //GeneralFeeds - end
         //for toggle areas - start 
-        public void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive)
+        public void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive, bool isVin, bool isISO, bool isTrailerRego, bool isCarsStock)
         {
             var clientSitetoggle = _context.ClientSiteToggle.Where(x => x.ClientSiteId == siteId && x.ToggleTypeId == toggleTypeId).FirstOrDefault();
             //if (clientSitetoggle == null)
@@ -3125,7 +3125,10 @@ namespace CityWatch.Data.Providers
                 {
                     ToggleTypeId = toggleTypeId,
                     ClientSiteId = siteId,
-
+                    IsVin = isVin,
+                    IsISO = isISO,
+                    IsTrailerRego = isTrailerRego,
+                    IsCarsStock = isCarsStock,
                     IsActive = IsActive
                 });
 
@@ -3141,6 +3144,10 @@ namespace CityWatch.Data.Providers
 
                 clientSiteToggleToUpdate.ToggleTypeId = toggleTypeId;
                 clientSiteToggleToUpdate.ClientSiteId = siteId;
+                clientSiteToggleToUpdate.IsVin = isVin;
+                clientSiteToggleToUpdate.IsISO = isISO;
+                clientSiteToggleToUpdate.IsTrailerRego = isTrailerRego;
+                clientSiteToggleToUpdate.IsCarsStock = isCarsStock;
                 clientSiteToggleToUpdate.IsActive = IsActive;
 
             }

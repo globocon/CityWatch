@@ -1694,14 +1694,17 @@ namespace CityWatch.Kpi.Pages.Admin
         /*key settings - end*/
         //for toggle areas - start 
         public void OnPostSaveToggleType(int siteId, int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId, bool vwiIsActive,
-            int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive, int trailerRegoTypeId, bool isISOVINAcive)
+            int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive, int trailerRegoTypeId, bool isISO, bool isVIN,
+            bool isTrailerRego, bool isCarsStock)
         {
 
-            _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
-            _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
-            _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
-            _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
-            _clientDataProvider.SaveClientSiteToggle(siteId, trailerRegoTypeId, isISOVINAcive);
+            bool trailerRegoIsActive = isVIN || isISO || isTrailerRego || isCarsStock;
+
+            _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive,false,false,false,false);
+            _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive, false, false, false, false);
+            _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive, false, false, false, false);
+            _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive, false, false, false, false);
+            _clientDataProvider.SaveClientSiteToggle(siteId, trailerRegoTypeId, trailerRegoIsActive, isVIN, isISO, isTrailerRego, isCarsStock);
         }
         public IActionResult OnGetClientSiteToggle(int siteId)
         {

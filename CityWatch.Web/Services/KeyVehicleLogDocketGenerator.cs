@@ -1045,7 +1045,7 @@ namespace CityWatch.Web.Services
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetPaddingBottom(0)
-                                    .SetBorder(Border.NO_BORDER)
+                                    .SetBorder(new SolidBorder(ColorConstants.BLACK, 0))
                                     .Add(GetNotesTable(keyVehicleLogViewModel, blankNoteOnOrOff));
             outerTable.AddCell(cellNotesTable);
 
@@ -1055,6 +1055,13 @@ namespace CityWatch.Web.Services
                                         .SetBorder(Border.NO_BORDER)
                                         .Add(GetVehicleDetailsTable(keyVehicleLogViewModel));
             outerTable.AddCell(cellVehicleDetails);
+
+            var cellVehicleTrailerDetails = new Cell(1, 2)
+                                        .SetPaddingLeft(0)
+                                        .SetPaddingTop(0)
+                                        .SetBorder(Border.NO_BORDER)
+                                        .Add(GetVehicleTrailerDetailsTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellVehicleTrailerDetails);
 
             return outerTable;
         }
@@ -1273,33 +1280,28 @@ namespace CityWatch.Web.Services
         {
             var notesTable = new Table(1).UseAllAvailableWidth();
 
-            notesTable.AddCell(GetHeaderCell("Notes", textAlignment: TextAlignment.LEFT));
+            notesTable.AddCell(GetHeaderCell("Notes", textAlignment: TextAlignment.LEFT).SetMarginLeft(-1).SetPaddingLeft(-1));
             if (blankNoteOnOrOff == "true")
             {
-                notesTable.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT, minHeight: 85));
+                notesTable.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT, minHeight: 85).SetBorder(Border.NO_BORDER));
 
             }
             else
             {
-                notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 85));
+                notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 85).SetBorder(Border.NO_BORDER));
             }
             return notesTable;
         }
 
         private static Table GetVehicleDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
-            var vehicleDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 10, 20, 20, 10, 10, 10, 10 })).UseAllAvailableWidth().SetMarginTop(10);
+            var vehicleDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 20, 30, 30 })).UseAllAvailableWidth().SetMarginTop(10);
             vehicleDetailsTable.AddCell(GetHeaderCell("ID No / Vehicle Rego", 2));
             vehicleDetailsTable.AddCell(GetHeaderCell("Plate", 2));
             vehicleDetailsTable.AddCell(GetHeaderCell("Vehicle Description", 1, 2));
-            vehicleDetailsTable.AddCell(GetHeaderCell("Trailer Rego or ISO + Seals", 1, 4));
-
             vehicleDetailsTable.AddCell(GetHeaderCell("Truck Config"));
             vehicleDetailsTable.AddCell(GetHeaderCell("Trailer Type"));
-            vehicleDetailsTable.AddCell(GetHeaderCell("1"));
-            vehicleDetailsTable.AddCell(GetHeaderCell("2"));
-            vehicleDetailsTable.AddCell(GetHeaderCell("3"));
-            vehicleDetailsTable.AddCell(GetHeaderCell("4"));
+            
 
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.VehicleRego));
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate));
@@ -1307,14 +1309,36 @@ namespace CityWatch.Web.Services
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.TrailerTypeText));
 
 
-
-
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate1 + "\n" + keyVehicleLogViewModel.Detail.Trailer1Rego));
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate2 + "\n" + keyVehicleLogViewModel.Detail.Trailer2Rego));
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate3 + "\n" + keyVehicleLogViewModel.Detail.Trailer3Rego));
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate4 + "\n" + keyVehicleLogViewModel.Detail.Trailer4Rego));
-
             return vehicleDetailsTable;
+        }
+                
+        private static Table GetVehicleTrailerDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var vehicleTrailerDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 10, 10, 10, 10, 10, 10, 10 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            //var vehicleRegoColumnName = keyVehicleLogViewModel.Detail.
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell(keyVehicleLogViewModel.VehicleRegoHeading, 1, 8));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("1"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("2"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("3"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("4"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("5"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("6"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("7"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("8"));
+
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate1 + "\n" + keyVehicleLogViewModel.Detail.Trailer1Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate2 + "\n" + keyVehicleLogViewModel.Detail.Trailer2Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate3 + "\n" + keyVehicleLogViewModel.Detail.Trailer3Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate4 + "\n" + keyVehicleLogViewModel.Detail.Trailer4Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate5 + "\n" + keyVehicleLogViewModel.Detail.Trailer5Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate6 + "\n" + keyVehicleLogViewModel.Detail.Trailer6Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate7 + "\n" + keyVehicleLogViewModel.Detail.Trailer7Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate8 + "\n" + keyVehicleLogViewModel.Detail.Trailer8Rego));
+
+
+
+            return vehicleTrailerDetailsTable;
         }
 
         private Table GetKeyAndOtherDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)

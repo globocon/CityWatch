@@ -659,7 +659,7 @@
                             <option value="1">Do's</option>
                             <option value="2">Dont's</option>
                         </select>
-                        <select class="form-control" id="kvl_fields_types" asp-items="@Html.GetEnumSelectList<KvlFieldType>()">
+                        <select class="form-control" id="kvl_fields_types" asp-items="@Html.GetEnumSelectList<KvlFieldType>().OrderBy(x=> x.Text)">
                             <option value="">None</option>
                         </select>
                         <select class="form-control" id="KPITelematicsfields_types">

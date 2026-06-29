@@ -708,7 +708,6 @@ pre {
 }
 
 #divmarqueeLiveEvents {
-  
     overflow: hidden;
     display: grid;
 }
@@ -741,6 +740,14 @@ pre.dark-mode {
 
 .exit-time-colour {
     background-color: #F5B7B1;
+}
+
+.lv-time-colour {
+    background-color: #C8291A;
+}
+
+.kv-dailylog-group-th {
+    background-color: #EAF0ED;
 }
 /*form trafiic lights-end*/
 

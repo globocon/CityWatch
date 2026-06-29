@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Models
@@ -42,6 +43,14 @@ namespace CityWatch.Data.Models
         public string Trailer3Rego { get; set; }
 
         public string Trailer4Rego { get; set; }
+
+        public string Trailer5Rego { get; set; }
+
+        public string Trailer6Rego { get; set; }
+
+        public string Trailer7Rego { get; set; }
+
+        public string Trailer8Rego { get; set; }
         public string IndividualTitle { get; set; }
         public string Gender { get; set; }
         public string CompanyABN { get; set; }
@@ -95,7 +104,7 @@ namespace CityWatch.Data.Models
         public int? ClientSiteLocationId { get; set; }
 
         public int? ClientSitePocId { get; set; }
-        
+
         public string ClientSitePocIdsVehicleLog { get; set; }
         public decimal? Reels { get; set; }
 
@@ -175,6 +184,14 @@ namespace CityWatch.Data.Models
 
         public int? Trailer4PlateId { get; set; }
 
+        public int? Trailer5PlateId { get; set; }
+
+        public int? Trailer6PlateId { get; set; }
+
+        public int? Trailer7PlateId { get; set; }
+
+        public int? Trailer8PlateId { get; set; }
+
 
         [HiddenInput]
         public bool IsDocketNo { get; set; }
@@ -194,47 +211,93 @@ namespace CityWatch.Data.Models
             if (string.IsNullOrEmpty(VehicleRego))
             {
                 if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego)
-                    || !string.IsNullOrEmpty(Trailer3Rego) || !string.IsNullOrEmpty(Trailer4Rego))
+                    || !string.IsNullOrEmpty(Trailer3Rego) || !string.IsNullOrEmpty(Trailer4Rego)
+                    || !string.IsNullOrEmpty(Trailer5Rego) || !string.IsNullOrEmpty(Trailer6Rego)
+                    || !string.IsNullOrEmpty(Trailer7Rego) || !string.IsNullOrEmpty(Trailer8Rego))
                 {
-
                     RegoStatus = true;
                 }
                 else
                 {
-
                     errors.Add(new ValidationResult("ID No or Vehicle Registration or Trailer Rego is required"));
                 }
-
             }
 
-            if (!string.IsNullOrEmpty(Trailer1Rego)
-                || !string.IsNullOrEmpty(Trailer2Rego)
-                    || !string.IsNullOrEmpty(Trailer3Rego)
-                    || !string.IsNullOrEmpty(Trailer4Rego)
-                    || !string.IsNullOrEmpty(VehicleRego))
+            if (IsCarsStock.HasValue && IsCarsStock.Value)
             {
-                bool sameValue = false;
-                string[] strings = { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, VehicleRego };
-
-                // Loop through each string and compare it with the others
-                for (int i = 0; i < strings.Length; i++)
+                var msg = "Vehicle colour selection is required in Car Stock";
+                if (!string.IsNullOrEmpty(Trailer1Rego))
                 {
-                    for (int j = i + 1; j < strings.Length; j++)
+                    if (Trailer1PlateId == null || Trailer1PlateId == 0)
                     {
-                        if (!string.IsNullOrEmpty((strings[i])) && !string.IsNullOrEmpty((strings[j])))
-                        {
-                            if (strings[i] == strings[j])
-                            {
-
-                                errors.Add(new ValidationResult("The same Trailer Rego or Vehicle Rego (" + strings[i] + ") not allowed. "));
-                                sameValue = true;
-                                break;
-                            }
-                        }
+                        errors.Add(new ValidationResult($"{msg} 1."));
                     }
                 }
-
+                if (!string.IsNullOrEmpty(Trailer2Rego))
+                {
+                    if (Trailer2PlateId == null || Trailer2PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 2."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer3Rego))
+                {
+                    if (Trailer3PlateId == null || Trailer3PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 3."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer4Rego))
+                {
+                    if (Trailer4PlateId == null || Trailer4PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 4."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer5Rego))
+                {
+                    if (Trailer5PlateId == null || Trailer5PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 5."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer6Rego))
+                {
+                    if (Trailer6PlateId == null || Trailer6PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 6."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer7Rego))
+                {
+                    if (Trailer7PlateId == null || Trailer7PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 7."));
+                    }
+                }
+                if (!string.IsNullOrEmpty(Trailer8Rego))
+                {
+                    if (Trailer8PlateId == null || Trailer8PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult($"{msg} 8."));
+                    }
+                }
             }
+
+            if (IsCarsStock != true)
+            {
+                var duplicates = new[] { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, Trailer5Rego, Trailer6Rego, Trailer7Rego, Trailer8Rego, VehicleRego }
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .GroupBy(x => x, StringComparer.OrdinalIgnoreCase)
+                            .Where(g => g.Count() > 1);
+
+                foreach (var duplicate in duplicates)
+                {
+                    errors.Add(new ValidationResult(
+                        $"The same Trailer Rego or Vehicle Rego ({duplicate.Key}) is not allowed."));
+                }
+            }
+
 
             if (RegoStatus)
             {
@@ -267,6 +330,38 @@ namespace CityWatch.Data.Models
                     if (Trailer4PlateId == null || Trailer4PlateId == 0)
                     {
                         errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 4 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer5Rego))
+                {
+                    if (Trailer5PlateId == null || Trailer5PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 5 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer6Rego))
+                {
+                    if (Trailer6PlateId == null || Trailer6PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 6 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer7Rego))
+                {
+                    if (Trailer7PlateId == null || Trailer7PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 7 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer8Rego))
+                {
+                    if (Trailer8PlateId == null || Trailer8PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 8 Rego"));
                     }
 
                 }
@@ -323,5 +418,17 @@ namespace CityWatch.Data.Models
         public string SitePocNames { get; set; }
         [HiddenInput]
         public bool IsISOVIN { get; set; }
+        [HiddenInput]
+        public bool? IsISO { get; set; }
+        [HiddenInput]
+        public bool? IsVin { get; set; }
+        [HiddenInput]
+        public bool? IsTrailerRego { get; set; }
+        [HiddenInput]
+        public bool? IsCarsStock { get; set; }
+        public bool HasLoadVariation { get; set; } = false;
+        public bool IsLoadVariationDuplicate { get; set; } = false;
+        public int? CopiedFromKVLogId { get; set; }
+
     }
 }

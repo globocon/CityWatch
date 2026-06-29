@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
 using CityWatch.Web.Services;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -173,6 +174,34 @@ namespace CityWatch.Web.Models
                 return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer4PlateId)?.Name;
             }
         }
+        public string Plate5
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer5PlateId)?.Name;
+            }
+        }
+        public string Plate6
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer6PlateId)?.Name;
+            }
+        }
+        public string Plate7
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer7PlateId)?.Name;
+            }
+        }
+        public string Plate8
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer8PlateId)?.Name;
+            }
+        }
         //p7-137--pax-start
         public int PAX
         {
@@ -183,6 +212,23 @@ namespace CityWatch.Web.Models
             }
         }
         //p7-137--pax-end
+
+        public string VehicleRegoHeading
+        {
+            get
+            {
+                if (Detail.IsCarsStock.HasValue && Detail.IsCarsStock.Value)
+                    return "Cars (Stock)";
+                else if (Detail.IsISO.HasValue && Detail.IsISO.Value)
+                    return "ISO No + Seal";
+                else if (Detail.IsVin.HasValue && Detail.IsVin.Value)
+                    return "VIN No + Seal";
+                else if (Detail.IsTrailerRego.HasValue && Detail.IsTrailerRego.Value)
+                    return "Trailer Rego";
+                else
+                    return "";
+            }
+        }
 
     }
 }
