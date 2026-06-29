@@ -109,9 +109,10 @@ namespace CityWatch.Web.Pages.roster
                             for (int i = 0; i < 7; i++)
                             {
                                 var loopDate = startDate.AddDays(i).Date;
-                                var dayShifts = projectSchedules
-                                    .Where(s => s.ShiftStart.Date == loopDate)
-                                    .OrderBy(s => s.ShiftStart)
+                                // Keep a guard's continuous (back-to-back) shifts together instead of
+                                // letting another guard slot between them. See RosterShiftSorter.
+                                var dayShifts = RosterShiftSorter.OrderByContinuousBlocks(
+                                        projectSchedules.Where(s => s.ShiftStart.Date == loopDate))
                                     .Select(s => new
                                     {
                                         s.Id,
@@ -168,9 +169,10 @@ namespace CityWatch.Web.Pages.roster
                     for (int i = 0; i < 7; i++)
                     {
                         var loopDate = startDate.AddDays(i).Date;
-                        var dayShifts = schedules
-                            .Where(s => s.ShiftStart.Date == loopDate)
-                            .OrderBy(s => s.ShiftStart)
+                        // Keep a guard's continuous (back-to-back) shifts together instead of
+                        // letting another guard slot between them. See RosterShiftSorter.
+                        var dayShifts = RosterShiftSorter.OrderByContinuousBlocks(
+                                schedules.Where(s => s.ShiftStart.Date == loopDate))
                             .Select(s => new
                             {
                                 s.Id,
