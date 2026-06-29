@@ -55,8 +55,15 @@ namespace CityWatch.Web.Pages.roster
         public DateTime PreviousWeek { get; set; }
         public DateTime NextWeek { get; set; }
         public string MonthLabel { get; set; }
-        public DateTime PreviousMonth { get; set; }
-        public DateTime NextMonth { get; set; }
+        public List<MonthJumpOption> MonthOptions { get; set; }
+
+        // One entry per month in the month-jump dropdown.
+        public class MonthJumpOption
+        {
+            public string Value { get; set; }   // startDate (yyyy-MM-dd) to navigate to
+            public string Label { get; set; }   // e.g. "JUN"
+            public bool Selected { get; set; }  // true for the month currently on screen
+        }
         public int? SelectedGroupId { get; set; }
         public int? SelectedBinderId { get; set; }
         public List<PayRate> PayRatesList { get; set; }
@@ -96,12 +103,24 @@ namespace CityWatch.Web.Pages.roster
             PreviousWeek = StartDate.AddDays(-7);
             NextWeek = StartDate.AddDays(7);
 
-            // Month jump navigation: shows the month of the current week and lets the user
-            // jump to the week containing the 1st of the previous/next month.
+            // Month jump dropdown: lists all 12 months of the displayed year so the user can jump
+            // straight to any month (no prev/next arrow stepping, which skipped months).
+            // Each month navigates to the FIRST week that STARTS within that month, so the dropdown's
+            // selected value always matches the week shown on screen.
+            // Example: viewing June 2026 and picking "MAY" lands on Mon 04 May 2026 (the first week
+            // starting in May) and the box reads "MAY" - it no longer jumps to 27 Apr and read "APR".
             MonthLabel = StartDate.ToString("MMM").ToUpper();
-            var firstOfMonth = new DateTime(StartDate.Year, StartDate.Month, 1);
-            PreviousMonth = StartOfWeek(firstOfMonth.AddMonths(-1), firstDayOfWeek);
-            NextMonth = StartOfWeek(firstOfMonth.AddMonths(1), firstDayOfWeek);
+            MonthOptions = new List<MonthJumpOption>();
+            for (int m = 1; m <= 12; m++)
+            {
+                var monthWeekStart = FirstWeekStartOfMonth(StartDate.Year, m, firstDayOfWeek);
+                MonthOptions.Add(new MonthJumpOption
+                {
+                    Value = monthWeekStart.ToString("yyyy-MM-dd"),
+                    Label = new DateTime(StartDate.Year, m, 1).ToString("MMM").ToUpper(),
+                    Selected = m == StartDate.Month
+                });
+            }
             SelectedGroupId = groupId;
             SelectedBinderId = binderId;
             ActiveTab = tab ?? "projects";
@@ -1970,6 +1989,21 @@ namespace CityWatch.Web.Pages.roster
         {
             int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
             return dt.AddDays(-1 * diff).Date;
+        }
+
+        // Returns the start date of the FIRST week that begins inside the given month.
+        // If the 1st of the month falls mid-week (so its week actually starts in the previous month),
+        // we step forward one week so the returned week truly belongs to this month. This keeps the
+        // month-jump dropdown consistent: the landing week's month always equals the picked month.
+        private DateTime FirstWeekStartOfMonth(int year, int month, DayOfWeek firstDayOfWeek)
+        {
+            var firstOfMonth = new DateTime(year, month, 1);
+            var weekStart = StartOfWeek(firstOfMonth, firstDayOfWeek);
+            if (weekStart < firstOfMonth)
+            {
+                weekStart = weekStart.AddDays(7);
+            }
+            return weekStart;
         }
     }
 }

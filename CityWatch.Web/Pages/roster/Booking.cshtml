@@ -117,7 +117,7 @@
             </div>
 
             <!-- Row 2: All Tools (Buttons, Date Nav, Add Site) on One Line -->
-            <div class="row mb-4 align-items-center no-gutters">
+            <div class="row mb-4 align-items-center no-gutters flex-nowrap">
                 <!-- Action Buttons -->
                 <div class="col-auto mr-4">
                         <div id="project_actions" style="display:none; white-space: nowrap;">
@@ -169,10 +169,20 @@
                         <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
                         <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
                     </div>
-                    <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 ml-2" title="Jump to previous/next month">
-                        <a href="#" id="btnPrevMonth" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
-                        <span class="font-weight-bold text-danger px-2 text-uppercase" style="min-width: 44px; font-size: 0.9rem;">@Model.MonthLabel</span>
-                        <a href="#" id="btnNextMonth" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                    <div class="d-inline-flex align-items-center ml-2" title="Jump to month">
+                        <select class="custom-select custom-select-sm month-jump shadow-sm font-weight-bold text-uppercase" style="width: auto; color: #dc3545; cursor: pointer;">
+                            @foreach (var m in Model.MonthOptions)
+                            {
+                                if (m.Selected)
+                                {
+                                    <option value="@m.Value" selected>@m.Label</option>
+                                }
+                                else
+                                {
+                                    <option value="@m.Value">@m.Label</option>
+                                }
+                            }
+                        </select>
                     </div>
                 </div>
 
@@ -273,7 +283,7 @@
                 </div>
 
                 <!-- Row 2: Tools -->
-                <div class="row mb-4 align-items-center no-gutters">
+                <div class="row mb-4 align-items-center no-gutters flex-nowrap">
                     <!-- Action Buttons -->
                     <div class="col-auto mr-4">
                         <div id="binder_actions" style="display:none; white-space: nowrap;">
@@ -315,10 +325,20 @@
                             <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
                             <a href="#" id="btnNextWeekBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
                         </div>
-                        <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 ml-2" title="Jump to previous/next month">
-                            <a href="#" id="btnPrevMonthBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
-                            <span class="font-weight-bold text-danger px-2 text-uppercase" style="min-width: 44px; font-size: 0.9rem;">@Model.MonthLabel</span>
-                            <a href="#" id="btnNextMonthBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                        <div class="d-inline-flex align-items-center ml-2" title="Jump to month">
+                            <select class="custom-select custom-select-sm month-jump shadow-sm font-weight-bold text-uppercase" style="width: auto; color: #dc3545; cursor: pointer;">
+                                @foreach (var m in Model.MonthOptions)
+                                {
+                                    if (m.Selected)
+                                    {
+                                        <option value="@m.Value" selected>@m.Label</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@m.Value">@m.Label</option>
+                                    }
+                                }
+                            </select>
                         </div>
                     </div>
 
@@ -1614,8 +1634,6 @@
             $('#binderToggle2').prop('checked', groupSupplierMode);
             var previousWeekDate = '@Model.PreviousWeek.ToString("yyyy-MM-dd")';
             var nextWeekDate = '@Model.NextWeek.ToString("yyyy-MM-dd")';
-            var previousMonthDate = '@Model.PreviousMonth.ToString("yyyy-MM-dd")';
-            var nextMonthDate = '@Model.NextMonth.ToString("yyyy-MM-dd")';
 
             function getHeaders() {
                 var token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
@@ -1732,18 +1750,12 @@
                 window.location.href = url;
             });
 
-            // Month jump handlers - jump to the week containing the 1st of the prev/next month
-            $('#btnPrevMonth, #btnPrevMonthBinder').on('click', function(e) {
-                e.preventDefault();
-                var url = '/roster/Booking?startDate=' + previousMonthDate + '&tab=' + activeTab;
-                if (currentGroupId) url += '&groupId=' + currentGroupId;
-                if (currentBinderId) url += '&binderId=' + currentBinderId;
-                window.location.href = url;
-            });
-
-            $('#btnNextMonth, #btnNextMonthBinder').on('click', function(e) {
-                e.preventDefault();
-                var url = '/roster/Booking?startDate=' + nextMonthDate + '&tab=' + activeTab;
+            // Month jump dropdown - jump straight to the selected month's first week.
+            // The selected <option> value is already the target startDate (yyyy-MM-dd).
+            $('.month-jump').on('change', function() {
+                var targetDate = $(this).val();
+                if (!targetDate) return;
+                var url = '/roster/Booking?startDate=' + targetDate + '&tab=' + activeTab;
                 if (currentGroupId) url += '&groupId=' + currentGroupId;
                 if (currentBinderId) url += '&binderId=' + currentBinderId;
                 window.location.href = url;
