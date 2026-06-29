@@ -5881,20 +5881,30 @@ namespace CityWatch.Web.API
         {
             try
             {
-                // Logic Breakdown:
-                // 1. Filter by specific siteId and ensure the shift is not deleted.
-                // 2. Check if the guard is either the primary Guard or the Relief Guard for the shift.
-                // 3. Ensure that a Callsign is actually assigned to the shift (CallsignId != null).
-                // 4. Order by ShiftStart descending to get the most recent callsign assignment, 
-                //    allowing us to ignore specific dates and just get the latest active mapping.
+                // First try to find a current or future shift (closest to today)
                 var shift = await _context.RosterSchedules
                     .Include(x => x.Callsign)
                     .Where(x => x.ClientSiteId == siteId && 
                                 (x.GuardId == guardId || x.ReliefGuardId == guardId) && 
                                 !x.IsDeleted && 
-                                x.CallsignId != null)
-                    .OrderByDescending(x => x.ShiftStart)
+                                x.CallsignId != null &&
+                                x.ShiftStart.Date >= DateTime.Today)
+                    .OrderBy(x => x.ShiftStart)
                     .FirstOrDefaultAsync();
+
+                // If no future shift, fall back to the most recent past shift
+                if (shift == null)
+                {
+                    shift = await _context.RosterSchedules
+                        .Include(x => x.Callsign)
+                        .Where(x => x.ClientSiteId == siteId && 
+                                    (x.GuardId == guardId || x.ReliefGuardId == guardId) && 
+                                    !x.IsDeleted && 
+                                    x.CallsignId != null &&
+                                    x.ShiftStart.Date < DateTime.Today)
+                        .OrderByDescending(x => x.ShiftStart)
+                        .FirstOrDefaultAsync();
+                }
 
                 if (shift != null && shift.Callsign != null)
                 {
