@@ -117,7 +117,7 @@
             </div>
 
             <!-- Row 2: All Tools (Buttons, Date Nav, Add Site) on One Line -->
-            <div class="row mb-4 align-items-center no-gutters">
+            <div class="row mb-4 align-items-center no-gutters flex-nowrap">
                 <!-- Action Buttons -->
                 <div class="col-auto mr-4">
                         <div id="project_actions" style="display:none; white-space: nowrap;">
@@ -168,6 +168,21 @@
                         <a href="#" id="btnPrevWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
                         <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
                         <a href="#" id="btnNextWeek" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                    </div>
+                    <div class="d-inline-flex align-items-center ml-2" title="Jump to month">
+                        <select class="custom-select custom-select-sm month-jump shadow-sm font-weight-bold text-uppercase" style="width: auto; cursor: pointer;">
+                            @foreach (var m in Model.MonthOptions)
+                            {
+                                if (m.Selected)
+                                {
+                                    <option value="@m.Value" selected>@m.Label</option>
+                                }
+                                else
+                                {
+                                    <option value="@m.Value">@m.Label</option>
+                                }
+                            }
+                        </select>
                     </div>
                 </div>
 
@@ -268,7 +283,7 @@
                 </div>
 
                 <!-- Row 2: Tools -->
-                <div class="row mb-4 align-items-center no-gutters">
+                <div class="row mb-4 align-items-center no-gutters flex-nowrap">
                     <!-- Action Buttons -->
                     <div class="col-auto mr-4">
                         <div id="binder_actions" style="display:none; white-space: nowrap;">
@@ -309,6 +324,21 @@
                             <a href="#" id="btnPrevWeekBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-left"></i></a>
                             <span class="font-weight-bold text-dark px-2" style="min-width: 160px; font-size: 0.9rem;">@Model.WeekRange</span>
                             <a href="#" id="btnNextWeekBinder" class="btn btn-link btn-sm text-secondary p-0 px-2"><i class="fa fa-chevron-right"></i></a>
+                        </div>
+                        <div class="d-inline-flex align-items-center ml-2" title="Jump to month">
+                            <select class="custom-select custom-select-sm month-jump shadow-sm font-weight-bold text-uppercase" style="width: auto; cursor: pointer;">
+                                @foreach (var m in Model.MonthOptions)
+                                {
+                                    if (m.Selected)
+                                    {
+                                        <option value="@m.Value" selected>@m.Label</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@m.Value">@m.Label</option>
+                                    }
+                                }
+                            </select>
                         </div>
                     </div>
 
@@ -1720,6 +1750,17 @@
                 window.location.href = url;
             });
 
+            // Month jump dropdown - jump straight to the selected month's first week.
+            // The selected <option> value is already the target startDate (yyyy-MM-dd).
+            $('.month-jump').on('change', function() {
+                var targetDate = $(this).val();
+                if (!targetDate) return;
+                var url = '/roster/Booking?startDate=' + targetDate + '&tab=' + activeTab;
+                if (currentGroupId) url += '&groupId=' + currentGroupId;
+                if (currentBinderId) url += '&binderId=' + currentBinderId;
+                window.location.href = url;
+            });
+
             // Site Search initialization
             $('#search_site').select2({
                 placeholder: 'Search Client Site',
@@ -2271,6 +2312,7 @@
                                         '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
+                                        '<div class="popup-row"><span class="popup-label">Mobile:</span><span class="popup-value">' + (s.guardMobile || 'N/A') + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
                                         '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
@@ -3581,6 +3623,7 @@
                                             '<div class="popup-row"><span class="popup-label">Name:</span><span class="popup-value">' + s.guardName + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">License:</span><span class="popup-value">' + s.guardLicense + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">State:</span><span class="popup-value">' + s.guardState + '</span></div>' +
+                                            '<div class="popup-row"><span class="popup-label">Mobile:</span><span class="popup-value">' + (s.guardMobile || 'N/A') + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Provider:</span><span class="popup-value">' + s.guardProvider + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Callsign:</span><span class="popup-value">' + (s.callsignName || 'N/A') + '</span></div>' +
                                             '<div class="popup-row"><span class="popup-label">Duration:</span><span class="popup-value">' + s.durationHours + ' hrs</span></div>' +
