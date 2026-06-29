@@ -53,11 +53,14 @@
     .guard-day-cell { transition: background-color 0.2s ease; }
     .guard-day-cell:hover { background-color: #f8f9fa; }
     
-    /* Public Holiday Highlighting - High priority to override weekend colors */
-    #guard_roster_grid tbody td.guard-day-cell.guard-ph-highlight,
-    #guard_roster_grid tbody td.guard-ph-highlight:nth-child(7),
-    #guard_roster_grid tbody td.guard-ph-highlight:nth-child(8) { 
-        background-color: #FFF9C4 !important; 
+    /* Public Holiday Highlighting.
+       The day cells are rendered with class "guard-roster-cell" (not "guard-day-cell"), so the old
+       selector never matched a weekday holiday - only the nth-child(7)/(8) weekend columns lit up.
+       Targeting the real class with an #id-level selector means ANY holiday column (weekday or
+       weekend) shows the holiday colour, and the higher specificity + !important overrides the
+       single-class weekend rules below. Mirrors the Booking page behaviour. */
+    #guard_roster_grid tbody td.guard-roster-cell.guard-ph-highlight {
+        background-color: #FFF9C4 !important;
         color: #333 !important;
     }
     .guard-sat-highlight { background-color: #d7f0d7 !important; }
@@ -1776,7 +1779,7 @@
                                 '</div>' +
                                 (s.status === 3 ? '<div class="cancelled-overlay"></div>' : '') + 
                                 (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
-                                (s.reliefGuardId ? '' : '<div class="guard-shift-license">LIC: ' + s.guardLicense + '</div>') +
+                                ((s.reliefGuardId || s.reliefProviderName) ? '' : '<div class="guard-shift-license">LIC: ' + s.guardLicense + '</div>') +
                                 '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
                                 (isAdminSupplierOn ? 
                                     '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + (s.reliefGuardId ? s.reliefProviderName : s.guardProvider) + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 

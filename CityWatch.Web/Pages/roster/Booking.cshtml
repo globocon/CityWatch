@@ -2292,7 +2292,7 @@
                                             (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
                                         '</div>' +
                                         (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
-                                        (s.reliefGuardId ? '' : '<div class="shift-license" style="margin-top: 1px;">' + s.guardLicense + '</div>') +
+                                        ((s.reliefGuardId || s.reliefProviderName) ? '' : '<div class="shift-license" style="margin-top: 1px;">' + s.guardLicense + '</div>') +
                                         '<div style="font-size: 10px; display: flex; align-items: center; justify-content: flex-start; white-space: nowrap; margin-top: 1px;">' +
                                             '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                             '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
@@ -3603,7 +3603,7 @@
                                                 (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
                                             '</div>' +
                                             (s.reliefReason ? '<div class="text-truncate" style="font-size: 9px; font-style: italic; margin-top: 1px; color: white;">[' + s.reliefReason + '] ' + truncateName(s.guardName, 12) + '</div>' : '') +
-                                            (s.reliefGuardId ? '' : '<div class="shift-license" style="margin-top: 1px;">' + s.guardLicense + '</div>') +
+                                            ((s.reliefGuardId || s.reliefProviderName) ? '' : '<div class="shift-license" style="margin-top: 1px;">' + s.guardLicense + '</div>') +
                                             '<div style="font-size: 10px; display: flex; align-items: center; justify-content: flex-start; white-space: nowrap; margin-top: 1px;">' +
                                                 '<span style="opacity: 0.9;">' + s.shiftStart + ' - ' + s.shiftEnd + '</span>' +
                                                 '<span class="hour-badge" style="margin-left: 5px; flex-shrink: 0;">' + s.durationHours.toString().replace(/\.00$/, "") + 'h</span>' +
