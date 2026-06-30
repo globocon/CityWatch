@@ -10595,9 +10595,9 @@ function loadGuardFqData() {
             success: function(data) {
                 if (data) {
                     if (data.haswandtags === 0 || data.isControlRoomLogbook === 1) {
-                        $('#fqListContainer').hide();
+                        $('#guardFqDisplay').closest('li').hide();
                     } else {
-                        $('#fqListContainer').show();
+                        $('#guardFqDisplay').closest('li').show();
                     }
                     
                     var bgcolr = '#A9A9A9';
