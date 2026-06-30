@@ -1021,33 +1021,36 @@ namespace CityWatch.Web.Services
 
             var innerTable1 = new Table(1).UseAllAvailableWidth();
 
-            var cellClockDetails = new Cell()
+            var cellClockDetails = new Cell(1,2)
                                     .SetPaddingLeft(0)
                                     .SetPaddingTop(0)
                                     .SetBorder(Border.NO_BORDER)
-                                    .Add(GetClockDetailsTable(keyVehicleLogViewModel));
-            innerTable1.AddCell(cellClockDetails);
+                                    .Add(GetClockDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
+            //innerTable1.AddCell(cellClockDetails);
 
-            var cellCompanyDetails = new Cell()
+            outerTable.AddCell(cellClockDetails);
+
+            var cellCompanyDetails = new Cell(1,2)
                                         .SetPaddingLeft(0)
                                         .SetBorder(Border.NO_BORDER)
                                         .Add(GetCompanyDetailsTable(keyVehicleLogViewModel));
-            innerTable1.AddCell(cellCompanyDetails);
+            //innerTable1.AddCell(cellCompanyDetails);
+            outerTable.AddCell(cellCompanyDetails);
 
-            var cellInnerTable1 = new Cell()
-                                    .SetPaddingLeft(0)
-                                    .SetPaddingTop(0)
-                                    .SetBorder(Border.NO_BORDER)
-                                    .Add(innerTable1);
-            outerTable.AddCell(cellInnerTable1);
+            //var cellInnerTable1 = new Cell()
+            //                        .SetPaddingLeft(0)
+            //                        .SetPaddingTop(0)
+            //                        .SetBorder(Border.NO_BORDER)
+            //                        .Add(innerTable1);
+            //outerTable.AddCell(cellInnerTable1);
 
-            var cellNotesTable = new Cell()
-                                    .SetPaddingRight(0)
-                                    .SetPaddingTop(0)
-                                    .SetPaddingBottom(0)
-                                    .SetBorder(new SolidBorder(ColorConstants.BLACK, 0))
-                                    .Add(GetNotesTable(keyVehicleLogViewModel, blankNoteOnOrOff));
-            outerTable.AddCell(cellNotesTable);
+            //var cellNotesTable = new Cell()
+            //                        .SetPaddingRight(0)
+            //                        .SetPaddingTop(0)
+            //                        .SetPaddingBottom(0)
+            //                        .SetBorder(new SolidBorder(ColorConstants.BLACK, 0))
+            //                        .Add(GetNotesTable(keyVehicleLogViewModel, blankNoteOnOrOff));
+            //outerTable.AddCell(cellNotesTable);
 
             var cellVehicleDetails = new Cell(1, 2)
                                         .SetPaddingLeft(0)
@@ -1191,11 +1194,13 @@ namespace CityWatch.Web.Services
         }
         // Table for Image
 
-        private static Table GetClockDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        private static Table GetClockDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel, string blankNoteOnOrOff)
         {
-            var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 15, 15, 15, 15, 40 })).UseAllAvailableWidth();
+            var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 12, 12, 12, 12, 12, 30 })).UseAllAvailableWidth();
 
             clockDetails.AddCell(GetHeaderCell("Clocks", 1, 5));
+            //New changes Binoy 30-06-2026
+            clockDetails.AddCell(GetHeaderCell("Notes", 2));
 
             clockDetails.AddCell(GetHeaderCell("Intial Call"));
             clockDetails.AddCell(GetHeaderCell("Entry Time"));
@@ -1204,22 +1209,30 @@ namespace CityWatch.Web.Services
             var headerTimeSlotNo = keyVehicleLogViewModel.Detail.IsTimeSlotNo ? "Time Slot No." : "T-No. (Load)";
             clockDetails.AddCell(GetHeaderCell(headerTimeSlotNo));
 
-            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.InitialCallTime?.ToString("HH:mm")));
-            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.EntryTime?.ToString("HH:mm")));
-            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.SentInTime?.ToString("HH:mm")));
-            //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ExitTime?.ToString("HH:mm")));
+            
+
             clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.InitialCallTime));
             clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.EntryTime));
             clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.SentInTime));
             clockDetails.AddCell(GetClockDataCell(keyVehicleLogViewModel.Detail.ExitTime));
             clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.TimeSlotNo));
 
+            //New changes Binoy 30-06-2026
+            if (blankNoteOnOrOff == "true")
+            {
+                clockDetails.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT));
+            }
+            else
+            {
+                clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT));
+            }
+
             return clockDetails;
         }
 
         private Table GetCompanyDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
-            var companyDetails = new Table(UnitValue.CreatePercentArray(new float[] { 23, 10, 12, 10, 10, 12, 23 })).UseAllAvailableWidth();
+            var companyDetails = new Table(UnitValue.CreatePercentArray(new float[] { 16, 10, 12, 10, 10, 12, 30 })).UseAllAvailableWidth();
 
             companyDetails.AddCell(GetHeaderCell("Company Name", 2));
 
