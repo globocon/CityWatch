@@ -84,19 +84,15 @@
     @@media (max-width: 768px) {
         /* Break out of the centered Bootstrap .container (from _Layout) so the roster fills the
            full screen width instead of leaving white gutters on the left/right. Scoped to mobile. */
-        .roster-fullbleed {
-            width: 100vw;
-            max-width: 100vw;
-            position: relative;
-            left: 50%;
-            right: 50%;
-            margin-left: -50vw;
-            margin-right: -50vw;
-            /* Remove the container-fluid's own horizontal padding so content reaches the edges. */
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-        }
-        /* Kill the inner px-3 gutters that still leave gray strips on the left/right. */
+        /* Make the shared layout's content container full-width on mobile so the roster has no
+           side gutters. Targets ".container.flex-fill" (the main wrapper in _Layout) which is
+           unique - the navbar/footer use plain ".container". Because this <style> only loads on
+           this page, no other page is affected. This replaces the old 100vw full-bleed hack,
+           which caused horizontal overflow / stray white space on iPad and iPod (iOS Safari). */
+        .container.flex-fill { max-width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+        /* Remove the container-fluid's own horizontal padding so content reaches the edges. */
+        .roster-fullbleed { padding-left: 0 !important; padding-right: 0 !important; }
+        /* Keep a tiny gutter so the cards aren't glued to the screen edge. */
         .roster-fullbleed #roster-grid-container { padding-left: 6px !important; padding-right: 6px !important; }
         .roster-fullbleed .external-roster-header { padding-left: 10px !important; padding-right: 10px !important; }
 
