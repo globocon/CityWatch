@@ -8971,7 +8971,9 @@ namespace CityWatch.Data.Providers
             
             return new {
                 patrolFqForDayOrHour = patrolFq,
-                haswandtags = tags.Any() ? 1 : 0,
+                // "Has wand tags" must mean has REQUIRED tags. Bypass tags are not required, so a
+                // site whose only tags are "(Bypass)" should count as 0 and hide the FQ text.
+                haswandtags = requiredTags.Any() ? 1 : 0,
                 completedRounds = completedRounds,
                 isControlRoomLogbook = _context.RadioCheckLogbookSiteDetails.Any(x => x.ClientSiteId == clientSiteId) ? 1 : 0
             };
