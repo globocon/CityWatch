@@ -92,7 +92,13 @@
             right: 50%;
             margin-left: -50vw;
             margin-right: -50vw;
+            /* Remove the container-fluid's own horizontal padding so content reaches the edges. */
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
+        /* Kill the inner px-3 gutters that still leave gray strips on the left/right. */
+        .roster-fullbleed #roster-grid-container { padding-left: 6px !important; padding-right: 6px !important; }
+        .roster-fullbleed .external-roster-header { padding-left: 10px !important; padding-right: 10px !important; }
 
         /* Stack the title, week navigator and download button instead of cramming one row. */
         .external-roster-header { flex-direction: column; align-items: stretch !important; }
