@@ -1378,6 +1378,7 @@ namespace CityWatch.Data.Providers
                 .Where(z => z.ClientSiteLogBookId == logBookId)
                 .Include(x => x.ClientSiteLogBook)
                 .Include(x => x.ClientSitePatrolCar)
+                .OrderBy(x=> x.ClientSitePatrolCar.Model)
                 .ToList();
 
             return result;
@@ -1389,6 +1390,7 @@ namespace CityWatch.Data.Providers
                 .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate)
                 .Include(x => x.ClientSiteLogBook)
                 .Include(x => x.ClientSitePatrolCar)
+                .OrderBy(x => x.ClientSitePatrolCar.Model)
                 .ToList();
 
             return result;

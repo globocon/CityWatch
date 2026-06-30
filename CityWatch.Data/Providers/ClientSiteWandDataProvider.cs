@@ -188,6 +188,7 @@ namespace CityWatch.Data.Providers
             return _dbContext.ClientSitePatrolCars
                 .Where(x => x.ClientSiteId == clientSiteId && x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
+                .OrderBy(x=> x.Model)
                 .ToList();
         }
 

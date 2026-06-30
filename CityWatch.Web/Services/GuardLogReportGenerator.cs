@@ -575,7 +575,7 @@ namespace CityWatch.Web.Services
 
             var patrolCarLogTable = new Table(UnitValue.CreatePercentArray(new float[] { 80, 20 })).UseAllAvailableWidth();
 
-            foreach (var patrolCarLog in patrolCarLogs)
+            foreach (var patrolCarLog in patrolCarLogs.OrderBy(x=> x.ClientSitePatrolCar.Model))
             {
                 var cellForPatrolCar = new Cell()
                     .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
