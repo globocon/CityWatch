@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -256,6 +256,31 @@ namespace CityWatch.Web.Services
                 }
                 try
                 {
+                    /*
+                     * Isolated Feature: FQ reaching 3 milestone message
+                     * -------------------------------------------------
+                     * Logic Summary:
+                     * 1. This block only decides ELIGIBILITY for the FQ message (no count is read here).
+                     * 2. The site must NOT be a control room logbook, and its KPI must be exactly "Per Day" (PD).
+                     * 3. The actual FQ count is read AFTER the scan is saved (see block below). We no longer rely on
+                     *    a fragile before/after transition (before==2 && after==3) because the FQ minimum can jump
+                     *    past 3 (e.g. a low-count wand is deleted or marked "(Bypass)") and concurrent scans from
+                     *    multiple guards can race the snapshot, both of which could miss the exact 2->3 edge.
+                     */
+                    bool isEligibleForFqMessage = false;
+                    try
+                    {
+                        var controlSites = _clientDataProvider.GetClientSiteForRcLogBook();
+                        if (controlSites != null && !controlSites.Any(x => x.Id == siteId))
+                        {
+                            if (_guardLogDataProvider.IsClientSitePatrolFrequencyPerDay(siteId))
+                            {
+                                isEligibleForFqMessage = true;
+                            }
+                        }
+                    }
+                    catch { }
+
                     // Log the tag details
                     _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
                     RowIdInServer = _clientSiteSmartWandTagsHitLog.Id;
@@ -270,6 +295,63 @@ namespace CityWatch.Web.Services
                             _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLogCorrespondingSite);
                         }
                     }
+
+                    /*
+                     * Isolated Feature: Check if FQ has reached 3 (guaranteed-once delivery)
+                     * ---------------------------------------------------------------------
+                     * Logic Summary:
+                     * 1. After the wand scan is saved, we read the current FQ (completed rounds) once.
+                     * 2. The milestone fires when FQ is 3 OR MORE. Using ">= 3" (instead of "== 3") guarantees the
+                     *    message is still sent if the FQ minimum jumps past 3 in a single step.
+                     * 3. Idempotency is enforced by the DATABASE, not by catching the exact transition: before inserting
+                     *    we re-read today's DailyGuardLog and skip if a milestone entry (identified by FqMilestoneMarker)
+                     *    already exists. This makes "send exactly once per day" deterministic even with concurrent scans.
+                     * 4. The message is inserted into GuardLog as a System Entry (IsSystemEntry = true, GuardLoginId = null).
+                     * 5. IrEntryType.Notification renders the message with a yellow background in the UI,
+                     *    identically to how Control Room Push Notifications are formatted.
+                     */
+                    try
+                    {
+                        if (isEligibleForFqMessage)
+                        {
+                            int afterRounds = _guardLogDataProvider.GetCompletedPatrolRounds(siteId);
+                            if (afterRounds >= 3)
+                            {
+                                // Distinctive substring present in the milestone message; used for the once-per-day dedup check.
+                                const string FqMilestoneMarker = "based on the FQ counter";
+
+                                var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(siteId, LogBookType.DailyGuardLog, DateTime.Now.Date);
+                                if (logBookId > 0)
+                                {
+                                    // Only insert if today's logbook does not already contain the FQ milestone entry.
+                                    var todaysLogs = _guardLogDataProvider.GetGuardLogs(logBookId, DateTime.Now.Date);
+                                    bool alreadySent = todaysLogs != null && todaysLogs.Any(g => g.IsSystemEntry && g.Notes != null && g.Notes.Contains(FqMilestoneMarker));
+
+                                    if (!alreadySent)
+                                    {
+                                        string milestoneMsg = "C4i System Supervisor:\n\"This team has worked well together to achieve the minimum daily patrol requirements based on the FQ counter. Well done, and thank you for ensuring SOPs are being followed and site risks are being mitigated through your security patrols and OH&S observation checks.\n\nPlease continue to patrol in line with SOPs and client expectations, as this achievement represents a minimum milestone—not a reason to reduce patrol activity. The quality of patrols is equally important, so please remember to slow down between points and actively check surrounding areas.\n\nKeep up the good work, and remember: counters reset at midnight.\"";
+
+                                        var fqGuardLog = new GuardLog
+                                        {
+                                            ClientSiteLogBookId = logBookId,
+                                            EventDateTime = DateTime.Now,
+                                            Notes = milestoneMsg,
+                                            IrEntryType = IrEntryType.Notification,
+                                            IsSystemEntry = true,
+                                            EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                                            EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                                            EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                                            EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                                            EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                                            PlayNotificationSound = true
+                                        };
+                                        _guardLogDataProvider.SaveGuardLog(fqGuardLog);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
                 }
                 catch (Exception exp)
                 {
