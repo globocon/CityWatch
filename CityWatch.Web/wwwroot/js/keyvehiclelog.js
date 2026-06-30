@@ -362,7 +362,7 @@ $(function () {
             searching: true,
             ordering: false,
             info: false,
-            scrollX: true,
+            scrollX: false,
             ajax: {
                 url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogs',
                 data: function (d) {
@@ -384,14 +384,14 @@ $(function () {
                 { data: 'detail.entryTime', width: '5%' },
                 { data: 'detail.sentInTime', width: '5%' },
                 { data: 'detail.exitTime', width: '5%' },
-                { data: 'detail.timeSlotNo' },
+                { data: 'detail.timeSlotNo', width: '5%' },
                 { data: 'detail.vehicleRego', width: '5%' },
-                { data: 'plate' },
-                { data: 'detail.companyName' },
-                { data: 'truckConfigText' },
-                { data: 'trailerTypeText' },
+                { data: 'plate', width: '5%' },
+                { data: 'detail.companyName', width: '10%' },
+                { data: 'truckConfigText', width: '6%' },
+                { data: 'trailerTypeText', width: '6%' },
 
-                { data: 'detail.keyNo', width: '10%' },
+                { data: 'detail.keyNo', width: '5%' },
                 { data: 'pax', width: '2%' },
                 { data: 'detail.mobileNumber', visible: false },
                 { data: 'detail.personName', visible: false },
@@ -405,7 +405,7 @@ $(function () {
                 {
                     targets: -1,
                     data: 'detail.id',
-                    width: '30%',
+                    width: '32%',
                     defaultContent: '',
 
                     render: function (value, type, data) {
@@ -522,9 +522,9 @@ $(function () {
                 }
                 if (data.detail.exitTime !== null) {
                     $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
-                    /*to display the color green for exit  time-start*/
+                    /*to display the color red for exit  time-start*/
 
-                    if (data.detail.hasLoadVariation == false && data.detail.isLoadVariationDuplicate == false) {
+                    if (data.detail.hasLoadVariation == false) {
                         $('td', row).eq(1).addClass('exit-time-colour');
                         $('td', row).eq(2).addClass('exit-time-colour');
                         $('td', row).eq(3).addClass('exit-time-colour');
@@ -538,27 +538,11 @@ $(function () {
                         $('td', row).eq(11).addClass('exit-time-colour');
                         $('td', row).eq(12).addClass('exit-time-colour');
                     }
-                    /*to display the color green for exit  time-end*/
+                    /*to display the color red for exit  time-end*/
                 }
                 if (data.detail.hasLoadVariation == true || data.detail.isLoadVariationDuplicate == true) {
                     
                     if (data.detail.hasLoadVariation == true) { $('td', row).eq(4).html('<strong>LV</strong>'); }
-
-                    /*to display the color red for exit  time-start*/
-                    //$('td', row).eq(1).addClass('lv-time-colour');
-                    //$('td', row).eq(2).addClass('lv-time-colour');
-                    //$('td', row).eq(3).addClass('lv-time-colour');
-                    //$('td', row).eq(4).addClass('lv-time-colour');
-                    //$('td', row).eq(5).addClass('lv-time-colour');
-                    //$('td', row).eq(6).addClass('lv-time-colour');
-                    //$('td', row).eq(7).addClass('lv-time-colour');
-                    //$('td', row).eq(8).addClass('lv-time-colour');
-                    //$('td', row).eq(9).addClass('lv-time-colour');
-                    //$('td', row).eq(10).addClass('lv-time-colour');
-                    //$('td', row).eq(11).addClass('lv-time-colour');
-                    //$('td', row).eq(12).addClass('lv-time-colour');
-
-                    /*to display the color red for exit  time-end*/
                 }
                 if (data.detail.exitTime == null && data.detail.hasLoadVariation == false) {
                     $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> <br/> <button type="button" class="btn btn-warning btn-lv-quick-color btn-lv-quick mt-1 pr-2 pl-2 pt-1 pb-1">LV</button> ');

@@ -668,7 +668,7 @@ namespace CityWatch.Web.Pages.Guard
                     PersonOfInterest = keyVehicleLogInExitTime.PersonOfInterest,
                     ReportReference = Guid.NewGuid(),
                     EntryTime = keyVehicleLogInExitTime.EntryTime,
-                    ExitTime = null,
+                    ExitTime = tmdata.EventDateTimeLocal,
                     SentInTime = keyVehicleLogInExitTime.SentInTime,
                     InitialCallTime = keyVehicleLogInExitTime.InitialCallTime,
                     POIImage = keyVehicleLogInExitTime.POIImage,

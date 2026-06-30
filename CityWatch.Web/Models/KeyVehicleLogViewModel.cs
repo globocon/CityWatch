@@ -55,7 +55,7 @@ namespace CityWatch.Web.Models
         {
             get
             {
-                if (Detail.ExitTime.HasValue)
+                if (Detail.ExitTime.HasValue || (Detail.HasLoadVariation && Detail.EntryTime.HasValue))
                     return KvlStatusFilter.Closed;
 
                 if (Detail.EntryTime.HasValue)
