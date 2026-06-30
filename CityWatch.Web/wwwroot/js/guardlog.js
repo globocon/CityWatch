@@ -10144,6 +10144,8 @@ function loadGuardFqData() {
         $.ajax({
             url: '?handler=GuardFqData',
             type: 'GET',
+            cache: false, // Force a fresh server call every time (GET requests are browser-cached by default,
+                          // which can serve a stale FQ response without ever hitting the server/handler).
             data: {
                 guardId: currentGuardId,
                 clientSiteId: currentClientSiteId

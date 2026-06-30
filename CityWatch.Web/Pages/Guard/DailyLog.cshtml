@@ -179,7 +179,10 @@ else
                                     }
                                     @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
                                 </li>
-                                <li class="d-flex flex-sm-row flex-column flex-sm-wrap mt-1 align-items-center" id="fqListContainer">
+                                @* Start hidden to avoid a flash of the FQ row on load. The JS (loadGuardFqData)
+                                   reveals it only when the site is eligible (has required wand tags and is not a
+                                   control-room logbook); otherwise it stays hidden. *@
+                                <li class="d-flex flex-sm-row flex-column flex-sm-wrap mt-1 align-items-center" id="fqListContainer" style="display: none;">
                                     <b class="mr-1">Fq: </b>
                                     <span id="guardFqDisplay"><i class="fa fa-spinner fa-spin"></i></span>
                                     <a href="javascript:void(0)" id="btnRefreshFq" class="ml-2" title="Refresh Fq data"><i class="fa fa-refresh"></i></a>
