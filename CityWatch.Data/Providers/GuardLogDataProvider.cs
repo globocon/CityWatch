@@ -445,6 +445,8 @@ namespace CityWatch.Data.Providers
         public void DeleteKeyVehicleLogPax(int id);
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
         object GetClientSiteFrequencyData(int clientSiteId);
+        int GetCompletedPatrolRounds(int clientSiteId);
+        bool IsClientSitePatrolFrequencyPerDay(int clientSiteId);
         public void DeleteOnBoardUsersCourseByAdmin(int Id);
         string GetTagScanGpsFromLogBook(int RecordId);
         List<ActivityModelDTO> GetActivityModels();
@@ -8970,8 +8972,37 @@ namespace CityWatch.Data.Providers
             return new {
                 patrolFqForDayOrHour = patrolFq,
                 haswandtags = tags.Any() ? 1 : 0,
-                completedRounds = completedRounds 
+                completedRounds = completedRounds,
+                isControlRoomLogbook = _context.RadioCheckLogbookSiteDetails.Any(x => x.ClientSiteId == clientSiteId) ? 1 : 0
             };
+        }
+
+        public int GetCompletedPatrolRounds(int clientSiteId)
+        {
+            var tags = GetTagStatusPendingForSpecificClientSite(clientSiteId, DateTime.Now.Date, DateTime.Now.Date.AddDays(1).AddTicks(-1));
+            int completedRounds = 0;
+            var requiredTags = tags.Where(t => t.LabelDescription != null && !t.LabelDescription.Contains("(Bypass)", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (requiredTags.Any())
+            {
+                completedRounds = requiredTags.Min(t => t.TodayScanCount);
+            }
+            return completedRounds;
+        }
+
+        public bool IsClientSitePatrolFrequencyPerDay(int clientSiteId)
+        {
+            var weekOfToday = DateTime.Now.DayOfWeek;
+            var kpisettingsday = _context.ClientSiteDayKpiSettings
+                .Include(x => x.ClientSiteKpiSetting)
+                .Where(x => x.WeekDay == weekOfToday && x.ClientSiteKpiSetting.ClientSiteId == clientSiteId)
+                .FirstOrDefault();
+
+            // PatrolFrequency == 1 indicates "Per Day"
+            if (kpisettingsday != null && kpisettingsday.PatrolFrequency == 1)
+            {
+                return true;
+            }
+            return false;
         }
 
         public void DeleteOnBoardUsersCourseByAdmin(int Id)
