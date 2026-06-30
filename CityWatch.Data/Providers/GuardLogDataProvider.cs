@@ -8972,7 +8972,8 @@ namespace CityWatch.Data.Providers
             return new {
                 patrolFqForDayOrHour = patrolFq,
                 haswandtags = tags.Any() ? 1 : 0,
-                completedRounds = completedRounds 
+                completedRounds = completedRounds,
+                isControlRoomLogbook = _context.RadioCheckLogbookSiteDetails.Any(x => x.ClientSiteId == clientSiteId) ? 1 : 0
             };
         }
 

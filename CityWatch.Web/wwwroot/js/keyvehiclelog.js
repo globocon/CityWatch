@@ -10594,6 +10594,12 @@ function loadGuardFqData() {
             },
             success: function(data) {
                 if (data) {
+                    if (data.haswandtags === 0 || data.isControlRoomLogbook === 1) {
+                        $('#fqListContainer').hide();
+                    } else {
+                        $('#fqListContainer').show();
+                    }
+                    
                     var bgcolr = '#A9A9A9';
                     if (data.completedRounds > 0)
                         bgcolr = '#FFD580';
