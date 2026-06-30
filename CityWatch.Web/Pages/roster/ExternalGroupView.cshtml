@@ -82,6 +82,18 @@
     .roster-grid-table { min-width: 760px; }
 
     @@media (max-width: 768px) {
+        /* Break out of the centered Bootstrap .container (from _Layout) so the roster fills the
+           full screen width instead of leaving white gutters on the left/right. Scoped to mobile. */
+        .roster-fullbleed {
+            width: 100vw;
+            max-width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
         /* Stack the title, week navigator and download button instead of cramming one row. */
         .external-roster-header { flex-direction: column; align-items: stretch !important; }
         .external-roster-header h1 { font-size: 1.6rem !important; letter-spacing: -0.5px !important; }
@@ -93,7 +105,7 @@
     }
 </style>
 
-<div class="container-fluid py-4" style="background-color: #f4f7f6; min-height: 100vh;">
+<div class="container-fluid py-4 roster-fullbleed" style="background-color: #f4f7f6; min-height: 100vh;">
     <div class="d-flex justify-content-between align-items-center mb-4 px-3 external-roster-header">
         <div>
             <h1 class="mb-0 text-primary font-weight-bold" style="letter-spacing: -1px;">@Model.GroupName</h1>
