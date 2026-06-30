@@ -79,7 +79,7 @@ namespace CityWatch.Web.Services
                 var patrolCarLogs = patrolCarLogGroups.Where(z => z.ClientSiteLogBookId == group.Key);
                 if (patrolCarLogs.Any())
                 {
-                    dailyGuardLogs.Add(new GuardLogViewModel(patrolCarLogs));
+                    dailyGuardLogs.Add(new GuardLogViewModel(patrolCarLogs.OrderBy(x=> x.ClientSitePatrolCar.Model)));
                 }
                 var customFieldLogs = customFieldLogGroups.Where(z => z.ClientSiteLogBookId == group.Key);
                 if (customFieldLogs.Any())
