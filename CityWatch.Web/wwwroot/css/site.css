@@ -920,3 +920,57 @@ p.center-or-justify:only-child {
     min-width: 30px !important;
     white-space: normal !important;
 }
+
+
+.stock-modal {
+    border-radius: 0;
+}
+
+.stock-header {
+    background: #98d63b;
+    color: #fff;
+    padding: 10px 15px;
+}
+
+.stock-header .modal-title {
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
+.stock-header .close {
+    color: #fff;
+    opacity: 1;
+    font-size: 32px;
+    text-shadow: none;
+}
+
+.stock-title {
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.replicate-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 20px;
+}
+
+.btn-replicate {
+    border: 2px solid #5ed67d;
+    color: #4fbf68;
+    background: #fff;
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    height: 50px;
+    transition: .2s;
+}
+
+.btn-replicate:hover,
+.btn-replicate:focus {
+    background: #5ed67d;
+    color: #fff;
+}

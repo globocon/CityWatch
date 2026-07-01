@@ -335,10 +335,6 @@ $(function () {
     function vehicleRegoValidateSplChars(e) {
         const allowHyphen = $('#chk_cs_CarsStock').is(':checked');
         const key = e.which;
-        alert('checked:', $('#chk_cs_CarsStock').is(':checked'));
-        alert('which:', e.which);
-        console.log('checked:', $('#chk_cs_CarsStock').is(':checked'));
-        console.log('which:', e.which);
         // Allow letters (A-Z, a-z), numbers (0-9)
         const isAlphaNumeric =
             (key >= 48 && key <= 57) ||
@@ -849,6 +845,7 @@ $(function () {
     let isKeyAllocatedModalDesc;
     let isPOIOnsiteModal;
     let isLoadVariationModal;
+    let clearTrailerRegoModal;
     if ($('#vehicle_key_daily_log').length === 1) {
         isVehicleOnsiteModal = new ConfirmationModal('vehicle-onsite', {
             message: 'This truck was already onsite today and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already onsite?',
@@ -875,6 +872,10 @@ $(function () {
         isLoadVariationModal = new ConfirmationModal('load-variation', {
             message: 'This truck is already onsite today and there is no exit time recorded.<br/><br/>By hitting "Load Variation" button, system will close of the incoming entry, duplicate it, so you can quickly exit the same truck with a variation to the load.<br/><br/>Do you wish to do this ?',
             onYes: function () { SaveLV(loadVariationId); }
+        });
+        clearTrailerRegoModal = new ConfirmationModal('clear-trailer-rego', {
+            message: 'Clear all entries ?',
+            onYes: function () { ClearTrailerRegoEntries(); }
         });
     }
 
@@ -3089,6 +3090,68 @@ $(function () {
                 });
 
         });
+        $('#clear_all_TrailerRegoAndPlates').on('click', function () {
+            clearTrailerRegoModal.showConfirmation();
+        });
+
+        $('#btn_replicate_toall').on('click', function () {
+            const isCars = $('#chk_cs_CarsStock').is(':checked');
+
+            if (!isCars) {
+                alert('The values can be replicated only for Cars (Stock).');
+                return;
+            }
+            
+            const T8RegoVal = $('#Trailer8Rego').val();
+            const T8RegoTypeVal = $('#Trailer8Rego_Vehicle_type').val();
+            const T8RegoTypeText = $('#Trailer8Rego_Vehicle_type option:selected').text().trim();
+
+            if (!T8RegoVal) {
+                alert('Replicator requires values in box 8.');
+                return;
+            }
+
+            //if (!T8RegoTypeVal || T8RegoTypeText === 'Select') {
+            //    alert('Replicator requires colour selection in box 8.');
+            //    return;
+            //}
+
+            $('#T8RegoReplicateVal').val(T8RegoVal);
+            $('#T8RegoTypeReplicateVal').val(T8RegoTypeVal);
+            $('#T8RegoTypeReplicateText').val(T8RegoTypeText);
+            //$('#sel_replicate_to_trailer_rego_boxes').val('2');
+            $('#stockReplicatorModal').modal('show');
+        });
+
+
+        $('.btn-replicate').on('click', function () {
+
+            var NoOfBoxes = $(this).data('count');
+            const isTrailerOrCars = $('#chk_cs_TrailerRego').is(':checked') || $('#chk_cs_CarsStock').is(':checked');
+            const isIsoVin = $('#chk_cs_ISO').is(':checked') || $('#chk_cs_VIN').is(':checked');
+            const T8RegoVal = $('#T8RegoReplicateVal').val();
+            const T8RegoTypeVal = $('#T8RegoTypeReplicateVal').val();
+            const T8RegoTypeText = $('#T8RegoTypeReplicateText').val();
+
+            $('#Trailer8Rego').val('');
+            $('#Trailer8Rego_Vehicle_type').prop('disabled', true);
+            if (isTrailerOrCars) {
+                $('#Trailer8Rego_Vehicle_type').val('');
+            }
+
+            for (let i = 1; i <= NoOfBoxes; i++) {
+                $(`#Trailer${i}Rego`).val(T8RegoVal);
+                $(`#Trailer${i}Rego_Vehicle_type`).attr('disabled', false);
+
+                if (isTrailerOrCars) {
+                    $(`#Trailer${i}Rego_Vehicle_type`).val(T8RegoTypeVal);
+                    $(`#Trailer${i}PlateId`).val(T8RegoTypeVal);
+                }
+            }
+
+            $('#stockReplicatorModal').modal('hide');            
+        });
+       
         $('#kvl_list_plates').on('change', function () {
             const option = $(this).find(":selected");
             if (option.val() !== '') {
@@ -6474,6 +6537,10 @@ $(function () {
                 });
 
         });
+        //$('#clear_all_TrailerRegoAndPlates').on('click', function () {
+        //    clearTrailerRegoModal.showConfirmation();
+        //});        
+
         $('#kvl_list_plates').on('change', function () {
             const option = $(this).find(":selected");
             if (option.val() !== '') {
@@ -10187,6 +10254,24 @@ $(function () {
         });
     }
     /*to get POI Number-end*/
+
+    function ClearTrailerRegoEntries() {
+        //const isIsoVin = $('#chk_cs_ISO').is(':checked') || $('#chk_cs_VIN').is(':checked');
+        const isTrailerOrCars = $('#chk_cs_TrailerRego').is(':checked') || $('#chk_cs_CarsStock').is(':checked');
+
+        for (let i = 1; i <= 8; i++) {
+            $(`#Trailer${i}Rego`).val('');
+
+            if (isTrailerOrCars) {
+                //const vehicleType = $(`#Trailer${i}Rego_Vehicle_type option:selected`).text();			
+                //$(`#Trailer${i}Rego_Vehicle_type`).attr('disabled', true);
+                $(`#Trailer${i}Rego_Vehicle_type`).val('');
+                $(`#Trailer${i}PlateId`).val('');
+            }
+        }
+
+        $('.vehicle-type-dropdown').prop('disabled', true);
+    }
 
     /*to Off Duty start*/
     $('#keyvehicle_offduty').on('click', function (e) {

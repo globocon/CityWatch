@@ -1387,7 +1387,7 @@ namespace CityWatch.Web.Services
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego).Where(p => !string.IsNullOrWhiteSpace(p.CompanyName)
              && !string.IsNullOrWhiteSpace(p.PersonName)).GroupBy(p => new { p.CompanyName, p.PersonName })
-    .Select(g => g.First());
+    .Select(g => g.OrderByDescending(x => x.Id).First());
 
             var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
             var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);

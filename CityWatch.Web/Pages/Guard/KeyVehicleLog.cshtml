@@ -31,6 +31,7 @@ else
 {
     <input type="hidden" id="hdnIsAdminLoggedIn1" value="GuardLogin" />
 }
+
 <input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.Id" />
@@ -1466,6 +1467,45 @@ else
         </div>
     </div>
 </div>
+
+@* Trailer Rego Replicate Modal *@
+<div class="modal fade" id="stockReplicatorModal" tabindex="-1" role="dialog" aria-labelledby="stockReplicatorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content stock-modal">
+
+            <div class="modal-header stock-header">
+                <h5 class="modal-title">STOCK REPLICATOR</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body text-center">
+
+                <h5 class="stock-title">
+                    Select how many cars you<br />
+                    want replicated:
+                </h5>
+
+                <div class="replicate-buttons mt-4">
+                    <button class="btn btn-replicate" data-count="2">2</button>
+                    <button class="btn btn-replicate" data-count="3">3</button>
+                    <button class="btn btn-replicate" data-count="4">4</button>
+                    <button class="btn btn-replicate" data-count="5">5</button>
+                    <button class="btn btn-replicate" data-count="6">6</button>
+                    <button class="btn btn-replicate" data-count="7">7</button>
+                    <button class="btn btn-replicate" data-count="8">8</button>
+                </div>
+
+            </div>
+
+        </div>
+         <input type="hidden" id="T8RegoReplicateVal"/>
+                        <input type="hidden" id="T8RegoTypeReplicateVal"/>
+                        <input type="hidden" id="T8RegoTypeReplicateText"/>
+    </div>
+</div>
+
 @section scripts {
     <script>
         function initialize() {
