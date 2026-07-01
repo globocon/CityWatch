@@ -257,23 +257,24 @@ namespace CityWatch.Web.Services
                 try
                 {
                     /*
-                     * Isolated Feature: FQ reaching 3 milestone message
-                     * -------------------------------------------------
+                     * Isolated Feature: FQ milestone message (fires when the per-site "X PD" target is met)
+                     * -----------------------------------------------------------------------------------
                      * Logic Summary:
-                     * 1. This block only decides ELIGIBILITY for the FQ message (no count is read here).
-                     * 2. The site must NOT be a control room logbook, and its KPI must be exactly "Per Day" (PD).
-                     * 3. The actual FQ count is read AFTER the scan is saved (see block below). We no longer rely on
-                     *    a fragile before/after transition (before==2 && after==3) because the FQ minimum can jump
-                     *    past 3 (e.g. a low-count wand is deleted or marked "(Bypass)") and concurrent scans from
-                     *    multiple guards can race the snapshot, both of which could miss the exact 2->3 edge.
+                     * 1. This block only decides ELIGIBILITY and reads the site's per-day patrol target.
+                     * 2. The site must NOT be a control room logbook, and it must have a "Per Day" (PD) target > 0.
+                     * 3. The trigger threshold is the site's configured "X PD" (NoOfPatrols) - which is UNIQUE per site
+                     *    (may be 3, 4, 5, ...), NOT a fixed number. The actual FQ count is read AFTER the scan is saved.
                      */
                     bool isEligibleForFqMessage = false;
+                    int fqTargetPerDay = 0;
                     try
                     {
                         var controlSites = _clientDataProvider.GetClientSiteForRcLogBook();
                         if (controlSites != null && !controlSites.Any(x => x.Id == siteId))
                         {
-                            if (_guardLogDataProvider.IsClientSitePatrolFrequencyPerDay(siteId))
+                            // The site's own per-day target (X in "X PD"); 0 when not Per Day / not configured.
+                            fqTargetPerDay = _guardLogDataProvider.GetClientSitePatrolTargetPerDay(siteId);
+                            if (fqTargetPerDay > 0)
                             {
                                 isEligibleForFqMessage = true;
                             }
@@ -297,12 +298,12 @@ namespace CityWatch.Web.Services
                     }
 
                     /*
-                     * Isolated Feature: Check if FQ has reached 3 (guaranteed-once delivery)
-                     * ---------------------------------------------------------------------
+                     * Isolated Feature: Check if FQ has reached the site's per-day target (guaranteed-once delivery)
+                     * ----------------------------------------------------------------------------------------------
                      * Logic Summary:
                      * 1. After the wand scan is saved, we read the current FQ (completed rounds) once.
-                     * 2. The milestone fires when FQ is 3 OR MORE. Using ">= 3" (instead of "== 3") guarantees the
-                     *    message is still sent if the FQ minimum jumps past 3 in a single step.
+                     * 2. The milestone fires when FQ reaches the site's configured target (fqTargetPerDay, the "X" in
+                     *    "X PD"). Using ">=" guarantees the message is still sent if the FQ minimum jumps past the target.
                      * 3. Idempotency is enforced by the DATABASE, not by catching the exact transition: before inserting
                      *    we re-read today's DailyGuardLog and skip if a milestone entry (identified by FqMilestoneMarker)
                      *    already exists. This makes "send exactly once per day" deterministic even with concurrent scans.
@@ -315,7 +316,7 @@ namespace CityWatch.Web.Services
                         if (isEligibleForFqMessage)
                         {
                             int afterRounds = _guardLogDataProvider.GetCompletedPatrolRounds(siteId);
-                            if (afterRounds >= 3)
+                            if (afterRounds >= fqTargetPerDay)
                             {
                                 // Distinctive substring present in the milestone message; used for the once-per-day dedup check.
                                 const string FqMilestoneMarker = "based on the FQ counter";

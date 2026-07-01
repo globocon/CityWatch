@@ -447,6 +447,7 @@ namespace CityWatch.Data.Providers
         object GetClientSiteFrequencyData(int clientSiteId);
         int GetCompletedPatrolRounds(int clientSiteId);
         bool IsClientSitePatrolFrequencyPerDay(int clientSiteId);
+        int GetClientSitePatrolTargetPerDay(int clientSiteId);
         public void DeleteOnBoardUsersCourseByAdmin(int Id);
         string GetTagScanGpsFromLogBook(int RecordId);
         List<ActivityModelDTO> GetActivityModels();
@@ -9005,6 +9006,25 @@ namespace CityWatch.Data.Providers
                 return true;
             }
             return false;
+        }
+
+        // Returns the site's configured "X PD" patrol target for today (the "X" in "X PD"), which is unique per site.
+        // The FQ milestone message fires when completed rounds reach this target - NOT a fixed number.
+        // Returns 0 when the site is not "Per Day" today or no target is configured (so no milestone fires).
+        public int GetClientSitePatrolTargetPerDay(int clientSiteId)
+        {
+            var weekOfToday = DateTime.Now.DayOfWeek;
+            var kpisettingsday = _context.ClientSiteDayKpiSettings
+                .Include(x => x.ClientSiteKpiSetting)
+                .Where(x => x.WeekDay == weekOfToday && x.ClientSiteKpiSetting.ClientSiteId == clientSiteId)
+                .FirstOrDefault();
+
+            // PatrolFrequency == 1 indicates "Per Day"; NoOfPatrols is the configured target count.
+            if (kpisettingsday != null && kpisettingsday.PatrolFrequency == 1 && kpisettingsday.NoOfPatrols != null)
+            {
+                return kpisettingsday.NoOfPatrols.Value;
+            }
+            return 0;
         }
 
         public void DeleteOnBoardUsersCourseByAdmin(int Id)
