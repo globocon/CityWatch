@@ -3107,14 +3107,14 @@ $(function () {
             const T8RegoTypeText = $('#Trailer8Rego_Vehicle_type option:selected').text().trim();
 
             if (!T8RegoVal) {
-                alert('No values found in box 8 to replicate.');
+                alert('Replicator requires values in box 8.');
                 return;
             }
 
-            if (!T8RegoTypeVal || T8RegoTypeText === 'Select') {
-                alert('No colour selection found for box 8 to replicate.');
-                return;
-            }
+            //if (!T8RegoTypeVal || T8RegoTypeText === 'Select') {
+            //    alert('Replicator requires colour selection in box 8.');
+            //    return;
+            //}
 
             $('#T8RegoReplicateVal').val(T8RegoVal);
             $('#T8RegoTypeReplicateVal').val(T8RegoTypeVal);
