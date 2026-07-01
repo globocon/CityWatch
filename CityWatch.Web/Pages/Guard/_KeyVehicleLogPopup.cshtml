@@ -28,6 +28,7 @@
     <input type="hidden" asp-for="@Model.HasLoadVariation" />
     <input type="hidden" asp-for="@Model.IsLoadVariationDuplicate" />
     <input type="hidden" asp-for="@Model.CopiedFromKVLogId" />
+    <input type="hidden" asp-for="@Model.IsISOVIN" />
     @{
         var kvlAttachments = ViewData["KeyVehicleLog_Attachments"] as List<string>;
         var kvlAttachmentsCount = kvlAttachments != null ? kvlAttachments.Count : 0;
@@ -127,9 +128,6 @@
                                 <div class="custom-control custom-switch duty-day-switch">
                                     <input type="checkbox" class="custom-control-input" id="cbIsTimeSlotNo">
                                     <label class="custom-control-label" for="cbIsTimeSlotNo"></label>
-
-
-
                                     <input hidden asp-for="@Model.IsTimeSlotNo" />
                                 </div>
                             </div>
@@ -140,7 +138,6 @@
                         <div class="form-group col-md-4 custom-control-log">
                             <label>Vehicle Config</label>
                             <select asp-for="@Model.TruckConfig" class="form-control form-control-sm" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
-
                         </div>
                         <div class="form-group col-md-4 custom-control-log">
                             <label>Trailer Type</label>
@@ -157,15 +154,11 @@
                                 <div class="custom-control custom-switch duty-day-switch">
                                     <input type="checkbox" class="custom-control-input" id="cbIsReels">
                                     <label class="custom-control-label" for="cbIsReels"></label>
-
-
-
                                     <input hidden asp-for="@Model.IsReels" />
                                 </div>
                             </div>
                             @*for manifest options-end*@
                             <input class="form-control form-control-sm" type="number" asp-for="@Model.Reels" />
-
                         </div>
                     </div>
                     <div class="form-row">
@@ -228,46 +221,61 @@
                             <input type="text" id="txtDispatchName" class="form-control form-control-sm custom-control-log" asp-for="@Model.DispatchName" disabled />
                         </div>
                     </div>
-                    <hr class="mt-0 mb-1" />
+                    <hr class="mt-0 mb-2" />
                     @* p7-115 docket output issues-end*@
+                     <div class="form-row">
+                         <div class="form-group col mb-0">
+                            <input type="checkbox" id="chk_cs_ISO">
+                            <label id="lblISO_One" for="chk_cs_ISO">ISO No.</label>
+                            <input type="hidden" asp-for="@Model.IsISO" id="modalIsISO" />
+                         </div>
+                         <div class="form-group col mb-0">                             
+                            <input type="checkbox" id="chk_cs_VIN">
+                            <label id="lblISO_Two" for="chk_cs_VIN">VIN No.</label>
+                            <input type="hidden" asp-for="@Model.IsVin" id="modalIsVin" />
+                         </div>
+                         <div class="form-group col mb-0">
+                            <input type="checkbox" id="chk_cs_TrailerRego" />
+                            <label id="lblISO_Three" for="chk_cs_TrailerRego">Trailer Rego</label>
+                            <input type="hidden" asp-for="@Model.IsTrailerRego" id="modalIsTrailerRego" />
+                         </div>
+                         <div class="form-group col mb-0">
+                            <input type="checkbox" id="chk_cs_CarsStock"" />
+                            <label id="lblISO_Four" for="chk_cs_CarsStock">Cars (Stock)</label>
+                            <input type="hidden" asp-for="@Model.IsCarsStock" id="modalIsCarsStock" />
+                         </div>
+                         <div class="form-group col mb-1 text-right">
+                            <button type="button" class="btn btn-sm btn-outline-success  bg-light mr-2" title="Replicate entry in last box" id="btn_replicate_toall"><i class="fa fa-plus-circle text-success"></i></button>                             
+                            <button type="button" class="btn btn-sm btn-outline-danger bg-light" title="Clear below boxes" id="clear_all_TrailerRegoAndPlates"><i class="fa fa-trash text-danger"></i></button>
+                         </div>
+                     </div>
+
                     <div class="form-row custom-control-log">
                         <div class="form-group col-md-3 custom-control-log">
-                            <input type="checkbox" id="chk_cs_ISO">
-                            <label id="lblISO_One">ISO No.</label>
                             <select class="form-control mb-0 form-control-sm vehicle-type-dropdown" asp-for="@Model.Trailer1PlateId" disabled id="Trailer1Rego_Vehicle_type" data-selected-val="@Model.Trailer1PlateId">
                             </select>
                             @*<input type="hidden" asp-for="@Model.Trailer1PlateId" />*@
                             <input class="form-control form-control-sm" type="text" asp-for="@Model.Trailer1Rego" id="Trailer1Rego" autocomplete="off" />
-                            <input type="hidden" asp-for="@Model.IsISO" id="modalIsISO" />
                         </div>
                         <div class="form-group col-md-3 custom-control-log">
-                            <input type="checkbox" id="chk_cs_VIN">
-                            <label id="lblISO_Two">VIN No.</label>
                             <select class="form-control mb-0 form-control-sm vehicle-type-dropdown" asp-for="@Model.Trailer2PlateId" disabled id="Trailer2Rego_Vehicle_type" data-selected-val="@Model.Trailer2PlateId">
                             </select>
                             @* <input type="hidden" asp-for="@Model.Trailer2PlateId" />*@
                             <input class="form-control form-control-sm" type="text" asp-for="@Model.Trailer2Rego" id="Trailer2Rego" autocomplete="off" />
-                            <input type="hidden" asp-for="@Model.IsVin" id="modalIsVin" />
                         </div>
                         <div class="form-group col-md-3 custom-control-log">
-                            <input type="checkbox" id="chk_cs_TrailerRego" />
-                            <label id="lblISO_Three">Trailer Rego</label>
                             <select class="form-control mb-0 form-control-sm vehicle-type-dropdown" asp-for="@Model.Trailer3PlateId" disabled id="Trailer3Rego_Vehicle_type" data-selected-val="@Model.Trailer3PlateId">
                             </select>
                             @* <input type="hidden" asp-for="@Model.Trailer3PlateId" />*@
                             <input class="form-control mb-0 form-control-sm" type="text" asp-for="@Model.Trailer3Rego" id="Trailer3Rego" autocomplete="off" />
-                            <input type="hidden" asp-for="@Model.IsTrailerRego" id="modalIsTrailerRego" />
                         </div>
-                        <div class="form-group col-md-3 custom-control-log">
-                            <input type="checkbox" id="chk_cs_CarsStock" />
-                            <label id="lblISO_Four">Cars (Stock)</label>
-                            <input type="hidden" asp-for="@Model.IsISOVIN" />
+                        <div class="form-group col-md-3 custom-control-log">                             
                             <select class="form-control mb-0 form-control-sm vehicle-type-dropdown" asp-for="@Model.Trailer4PlateId" disabled id="Trailer4Rego_Vehicle_type" data-selected-val="@Model.Trailer4PlateId">
                             </select>
                             <input class="form-control form-control-sm" type="text" asp-for="@Model.Trailer4Rego" id="Trailer4Rego" autocomplete="off" />
-                            <input type="hidden" asp-for="@Model.IsCarsStock" id="modalIsCarsStock" />
                         </div>
                     </div>
+
                     <div class="form-row custom-control-log pt-1">
                         <div class="form-group col-md-3 custom-control-log">
                             <select class="form-control mb-0 form-control-sm vehicle-type-dropdown" asp-for="@Model.Trailer5PlateId" disabled id="Trailer5Rego_Vehicle_type" data-selected-val="@Model.Trailer5PlateId">
@@ -721,7 +729,7 @@
     </div>
 
     <div class="row custom-control-log ">
-        <div class="col-md-12 custom-control-log">
+        <div class="col-md-12 custom-control-log ml-1 pl-2">
             <div asp-validation-summary="All" id="validation-summary"></div>
         </div>
     </div>
