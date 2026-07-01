@@ -346,7 +346,17 @@ namespace CityWatch.Web.Services
                                             EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
                                             PlayNotificationSound = true
                                         };
-                                        _guardLogDataProvider.SaveGuardLog(fqGuardLog);
+                                        var fqLogId = _guardLogDataProvider.SaveGuardLogAndReturnId(fqGuardLog);
+
+                                        // The FQ log is a system entry with no GuardLoginId, so the GuardLogs trigger
+                                        // can't create its Fusion row. Insert directly into the Fusion history table so it
+                                        // shows in Fusion as a system entry (no guard initials) and yellow, without
+                                        // touching the live Radio Check dashboard. The logbook entry stays a system entry.
+                                        if (fqLogId > 0)
+                                        {
+                                            fqGuardLog.Id = fqLogId;
+                                            _guardLogDataProvider.AddFqMilestoneFusionActivity(siteId, fqGuardLog);
+                                        }
                                     }
                                 }
                             }

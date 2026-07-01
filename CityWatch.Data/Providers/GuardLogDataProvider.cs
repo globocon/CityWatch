@@ -448,6 +448,7 @@ namespace CityWatch.Data.Providers
         int GetCompletedPatrolRounds(int clientSiteId);
         bool IsClientSitePatrolFrequencyPerDay(int clientSiteId);
         int GetClientSitePatrolTargetPerDay(int clientSiteId);
+        void AddFqMilestoneFusionActivity(int clientSiteId, GuardLog fqGuardLog);
         public void DeleteOnBoardUsersCourseByAdmin(int Id);
         string GetTagScanGpsFromLogBook(int RecordId);
         List<ActivityModelDTO> GetActivityModels();
@@ -9025,6 +9026,43 @@ namespace CityWatch.Data.Providers
                 return kpisettingsday.NoOfPatrols.Value;
             }
             return 0;
+        }
+
+        // Makes the FQ milestone message visible in the Fusion report/grid WITHOUT touching the live Radio Check state.
+        // The FQ GuardLog is a system entry with no GuardLoginId, so the Insert_GuardLogs trigger can't resolve the site
+        // and never creates a Fusion row. We insert directly into the history table Fusion actually reads from
+        // (ClientSiteRadioChecksActivityStatus_History), NOT the base ClientSiteRadioChecksActivityStatus table.
+        // Why this is the safe choice:
+        //   - The live Radio Check dashboard (sp_GetActiveGuardDetailsForRC) reads the BASE table, not _History, so a
+        //     row here can never make a phantom guard show as "active".
+        //   - In _History, GuardId is nullable with no FK, so we set GuardId = null -> the Fusion grid renders it as a
+        //     system entry ("Admin", no guard initials), matching the logbook.
+        //   - LBId links back to the FQ GuardLog, so Fusion picks up IrEntryType.Notification -> the row is yellow.
+        public void AddFqMilestoneFusionActivity(int clientSiteId, GuardLog fqGuardLog)
+        {
+            var siteName = _context.ClientSites.Where(x => x.Id == clientSiteId).Select(x => x.Name).FirstOrDefault();
+
+            _context.ClientSiteRadioChecksActivityStatus_History.Add(new ClientSiteRadioChecksActivityStatus_History()
+            {
+                ClientSiteId = clientSiteId,
+                GuardId = null,               // system entry -> grid shows "Admin"; never hits the RC dashboard
+                GuardName = null,
+                SiteName = siteName,
+                ActivityType = "LB",
+                ActivityDescription = "Added New Notes",
+                LBId = fqGuardLog.Id,         // link back to the FQ GuardLog -> yellow (IrEntryType.Notification)
+                LastLBCreatedTime = fqGuardLog.EventDateTime,
+                NotificationCreatedTime = fqGuardLog.EventDateTime,
+                Notes = fqGuardLog.Notes,
+                LogBookNotes = fqGuardLog.Notes,
+                EventDateTime = fqGuardLog.EventDateTime,
+                EventDateTimeLocal = fqGuardLog.EventDateTimeLocal,
+                EventDateTimeLocalWithOffset = fqGuardLog.EventDateTimeLocalWithOffset,
+                EventDateTimeZone = fqGuardLog.EventDateTimeZone,
+                EventDateTimeZoneShort = fqGuardLog.EventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = fqGuardLog.EventDateTimeUtcOffsetMinute
+            });
+            _context.SaveChanges();
         }
 
         public void DeleteOnBoardUsersCourseByAdmin(int Id)
