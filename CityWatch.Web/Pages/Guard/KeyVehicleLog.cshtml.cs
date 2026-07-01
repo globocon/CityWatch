@@ -750,7 +750,8 @@ namespace CityWatch.Web.Pages.Guard
             //var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
             //string imagepath = Path.Combine(reportRootDir, "ziren.png");
             string imagepath = "~/images/ziren.png";
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRegoNew(truckRego, imagepath).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
+            var r = _viewDataService.GetKeyVehicleLogProfilesByRegoNew(truckRego, imagepath).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer());
+            return new JsonResult(r);
         }
 
         public JsonResult OnGetTrailerDetails(string truckRego)
@@ -2083,14 +2084,19 @@ namespace CityWatch.Web.Pages.Guard
             var personalDetails = _guardLogDataProvider
                 .GetKeyVehicleLogVisitorPersonalDetails(keyVehicleLog.VehicleRego);
 
-            // If plate already exists → lock company
+            // If plate already exists → lock company, unless the company name is updated/changed
             if (personalDetails.Any())
             {
-                var existingCompany = personalDetails.Where(x => !string.IsNullOrEmpty(x.CompanyName)).First().CompanyName;
+                var existingCompany = personalDetails.Where(x => !string.IsNullOrEmpty(x.CompanyName)).FirstOrDefault()?.CompanyName;
 
-                // Force company to existing one
-                kvlPersonalDetail.CompanyName = existingCompany;
-                //kvlPersonalDetail.KeyVehicleLogProfile.KeyVehicleLog.CompanyName = existingCompany;
+                if (string.IsNullOrEmpty(keyVehicleLog.CompanyName) || keyVehicleLog.CompanyName == "Unknown")
+                {
+                    kvlPersonalDetail.CompanyName = existingCompany;
+                }
+                else
+                {
+                    kvlPersonalDetail.CompanyName = keyVehicleLog.CompanyName;
+                }
             }
 
             // Check if driver already exists for plate
@@ -2102,7 +2108,12 @@ namespace CityWatch.Web.Pages.Guard
             {
                 // Merge with existing driver
                 kvlPersonalDetail.Id = existingDriver.Id;
+                kvlPersonalDetail.ProfileId = existingDriver.ProfileId;
+                kvlPersonalDetail.KeyVehicleLogProfile.Id = existingDriver.ProfileId;
                 kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
+
+                // Save/update the profile and personal details in the database
+                _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
 
                 var kvlVisitorProfile = _guardLogDataProvider
                     .GetKeyVehicleLogVisitorProfile(existingDriver.KeyVehicleLogProfile.VehicleRego);
