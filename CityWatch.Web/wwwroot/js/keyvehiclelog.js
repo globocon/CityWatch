@@ -4224,6 +4224,9 @@ $(function () {
             ordering: false,
             info: false,
             searching: false,
+            order: [[1, "asc"]],
+            scrollX: true,
+            autoWidth: false,
             data: [],
             columns: [
 
@@ -4329,7 +4332,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4352,7 +4356,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -4379,7 +4384,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4402,7 +4408,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -4428,7 +4435,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4451,7 +4459,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -4477,7 +4486,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4500,7 +4510,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -4525,7 +4536,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4548,7 +4560,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -4573,7 +4586,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4596,7 +4610,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -4622,7 +4637,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4645,7 +4661,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -4671,7 +4688,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -4694,7 +4712,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -7615,6 +7634,9 @@ $(function () {
             ordering: false,
             info: false,
             searching: false,
+            order: [[1, "asc"]],
+            scrollX: true,
+            autoWidth: false,
             data: [],
             columns: [
 
@@ -7720,7 +7742,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -7743,7 +7766,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -7768,7 +7792,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -7791,7 +7816,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -7817,7 +7843,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -7840,7 +7867,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -7866,7 +7894,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -7889,7 +7918,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -7913,7 +7943,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -7936,7 +7967,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -7961,7 +7993,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -7984,7 +8017,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -8010,7 +8044,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -8033,7 +8068,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
@@ -8059,7 +8095,8 @@ $(function () {
             autoSelect: true,
             source: function (request, response) {
                 var _url = '/Guard/KeyVehiclelog?handler=TrailerRegos';
-                if ($('#chk_cs_CarsStock').is(':checked')) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock) { _url = '/Guard/KeyVehiclelog?handler=TrailerCarsRegos'; }
                 $.ajax({
                     url: _url,
                     data: { regoPart: request },
@@ -8082,7 +8119,8 @@ $(function () {
                 });
             },
             afterSelect: function (item) {
-                if (item) {
+                var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
                         type: 'GET',
