@@ -591,7 +591,7 @@ namespace CityWatch.Web.API
             }
         }
 
-
+        //This to be removed after ios update
         [HttpGet("GetClientSitesByClientType")]
         public IActionResult GetClientSitesByClientType(int userId, int clientTypeId)
         {
@@ -603,6 +603,34 @@ namespace CityWatch.Web.API
                     return NotFound(new { message = "No client sites found." });
 
                 return Ok(clientSites);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+
+        [HttpGet("GetClientSitesByClientTypeNew")]
+        public IActionResult GetClientSitesByClientTypeNew(int userId, int clientTypeId)
+        {
+            try
+            {
+                var clientSites = _viewDataService.GetUserClientSitesFromUserId(userId, clientTypeId);
+
+                if (clientSites == null || !clientSites.Any())
+                    return NotFound(new { message = "No client sites found." });
+
+                var clientSiteDtos = clientSites
+               .Select(site => new ClientSiteLoginDto
+               {
+                   Id = site.Id,
+                   TypeId = site.TypeId,
+                   Name = site.Name,
+                   IsActive = site.IsActive,
+                   PatrolTourMode = site.PatrolTourMode
+               }).ToList();
+
+                return Ok(clientSiteDtos);
             }
             catch (Exception ex)
             {
@@ -3235,7 +3263,7 @@ namespace CityWatch.Web.API
 
                         string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
 
-                        var file = files.FirstOrDefault(x => string.Equals(Path.GetFileName(x.FileName).Trim(), Path.GetFileName(o.FileNameCache).Trim(), StringComparison.OrdinalIgnoreCase));                       
+                        var file = files.FirstOrDefault(x => string.Equals(Path.GetFileName(x.FileName).Trim(), Path.GetFileName(o.FileNameCache).Trim(), StringComparison.OrdinalIgnoreCase));
                         var type = o.FileType;
 
                         // [Fix Date: 24-Jun-2026, Developer: Dileep]
@@ -6033,9 +6061,18 @@ namespace CityWatch.Web.API
         public string GuardInitials { get; set; }
         public int IrEntryType { get; set; }
         public bool IsSystemEntry { get; set; }
-
         public int? rcPushMessageId { get; set; }
     }
+
+    public class ClientSiteLoginDto
+    {
+        public int Id { get; set; }
+        public int TypeId { get; set; }
+        public string Name { get; set; }
+        public bool IsActive { get; set; }
+        public PatrolTouringMode PatrolTourMode { get; set; }
+    }
+
     public class DuressRequest
     {
         public int ClientSiteId { get; set; }

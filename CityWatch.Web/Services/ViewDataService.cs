@@ -187,7 +187,7 @@ namespace CityWatch.Web.Services
         public UserClientSiteAccess GetUserClientSiteAccessNew(int userId);
         public List<DropdownItem> GetUserClientTypesWithId(int? userId);
         public List<DropdownItem> GetUserClientSitesUsingId(int? userId, int id);
-
+        public List<ClientSite> GetUserClientSitesFromUserId(int? userId, int id);
         public List<ActivityModel> GetDressAppFields(int type, int? siteid = 0);
 
         public List<Mp3File> GetDressAppFieldsAudio(int type);
@@ -2500,6 +2500,19 @@ namespace CityWatch.Web.Services
             return sites;
         }
 
+        public List<ClientSite> GetUserClientSitesFromUserId(int? userId, int id)
+        {
+            List<ClientSite> mapping = new List<ClientSite>();
+
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Id == id);
+
+            if (clientType != null)
+            {
+                mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty);
+            }
+
+            return mapping;
+        }
 
         public ClientSiteMobileAppSettings GetCrowdSettingForSite(int siteId)
         {
