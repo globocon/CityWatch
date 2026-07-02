@@ -445,6 +445,8 @@ namespace CityWatch.Data.Providers
         public void DeleteKeyVehicleLogPax(int id);
         List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificClientSite(int clientId, DateTime fromDate, DateTime ToDate);
         object GetClientSiteFrequencyData(int clientSiteId);
+        bool HasRequiredWandTags(int clientSiteId);
+        bool IsRcControlRoomSite(int clientSiteId);
         int GetCompletedPatrolRounds(int clientSiteId);
         bool IsClientSitePatrolFrequencyPerDay(int clientSiteId);
         int GetClientSitePatrolTargetPerDay(int clientSiteId);
@@ -8948,6 +8950,22 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        // FQ eligibility: the site must have wand tag POINTS configured, not merely a SmartWand
+        // device assigned. Bypass tags are not required tags, so a site whose only tags are
+        // FqBypass does not qualify.
+        public bool HasRequiredWandTags(int clientSiteId)
+        {
+            return _context.ClientSiteSmartWandTags
+                .Any(t => t.ClientSiteId == clientSiteId && !t.IsDeleted && !t.FqBypass);
+        }
+
+        // Single definition of "RC specified control room" for the FQ display, shared by the
+        // page render decision and the ajax refresh so they can never disagree.
+        public bool IsRcControlRoomSite(int clientSiteId)
+        {
+            return _context.RadioCheckLogbookSiteDetails.Any(x => x.ClientSiteId == clientSiteId);
+        }
+
         public object GetClientSiteFrequencyData(int clientSiteId)
         {
             var weekOfToday = DateTime.Now.DayOfWeek;
@@ -8973,11 +8991,12 @@ namespace CityWatch.Data.Providers
             
             return new {
                 patrolFqForDayOrHour = patrolFq,
-                // "Has wand tags" must mean has REQUIRED tags. Bypass tags are not required, so a
-                // site whose only tags are "(Bypass)" should count as 0 and hide the FQ text.
-                haswandtags = requiredTags.Any() ? 1 : 0,
+                // "Has wand tags" means the site has REQUIRED wand tag points configured
+                // (ClientSiteSmartWandTags, excluding deleted/FqBypass) - the same rule the page
+                // uses to decide whether to render the FQ row at all.
+                haswandtags = HasRequiredWandTags(clientSiteId) ? 1 : 0,
                 completedRounds = completedRounds,
-                isControlRoomLogbook = _context.RadioCheckLogbookSiteDetails.Any(x => x.ClientSiteId == clientSiteId) ? 1 : 0
+                isControlRoomLogbook = IsRcControlRoomSite(clientSiteId) ? 1 : 0
             };
         }
 
