@@ -109,6 +109,11 @@ namespace CityWatch.Web.Pages.Guard
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
+        // FQ row is rendered only for sites that have required wand tag points and are not the
+        // RC specified control room logbook site. Decided server-side so the row never flashes
+        // or appears after page load for ineligible sites.
+        public bool ShowFqDisplay { get; set; }
+
         public void OnGet()
         {
             KeyVehicleLog = GetKeyVehicleLog();
@@ -117,6 +122,10 @@ namespace CityWatch.Web.Pages.Guard
                                 .FirstOrDefault()?
                                 .ClientSiteId;
             ViewData["IsDuressEnabled"] = clientSiteId != null && _viewDataService.IsClientSiteDuressEnabled(clientSiteId.Value);
+
+            ShowFqDisplay = clientSiteId != null
+                            && _guardLogDataProvider.HasRequiredWandTags(clientSiteId.Value)
+                            && !_guardLogDataProvider.IsRcControlRoomSite(clientSiteId.Value);
             var host = HttpContext.Request.Host.Host;
             var hostParts = host.Split('.');
 

@@ -10136,9 +10136,15 @@ $(function () {
 
 // --- Fq Display Logic ---
 function loadGuardFqData() {
+    // The row is only rendered server-side for eligible sites (has required wand tag points and
+    // is not the RC specified control room logbook). If it isn't in the DOM, there is nothing to load.
+    var $fqRow = $('#fqListContainer');
+    if ($fqRow.length === 0)
+        return;
+
     var currentGuardId = $('#GuardLog_GuardLogin_GuardId').val();
     var currentClientSiteId = $('#ClientSiteID').val();
-    
+
     if (currentGuardId && currentClientSiteId) {
         $('#guardFqDisplay').html('<i class="fa fa-spinner fa-spin"></i>');
         $.ajax({
@@ -10151,35 +10157,27 @@ function loadGuardFqData() {
                 clientSiteId: currentClientSiteId
             },
             success: function(data) {
-                if (data) {
-                    if (data.haswandtags === 0 || data.isControlRoomLogbook === 1) {
-                        $('#guardFqDisplay').closest('li').hide();
-                    } else {
-                        $('#guardFqDisplay').closest('li').show();
-                    }
-                    
+                // Fail closed: show the row ONLY when the server explicitly confirms eligibility.
+                // A missing/old response shape, an empty response, or an ineligible site all hide it.
+                if (data && data.haswandtags === 1 && data.isControlRoomLogbook !== 1) {
                     var bgcolr = '#A9A9A9';
                     if (data.completedRounds > 0)
                         bgcolr = '#FFD580';
-                        
+
                     var fqHtml = (data.patrolFqForDayOrHour || '0 PD') + ' <span class="p-1" style="background: ' + bgcolr + ';">' + data.completedRounds + '</span> ' +
                         '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
                         'data-client="' + currentClientSiteId + '" ' +
                         'data-guard="' + currentGuardId + '" ' +
                         'data-value="' + data.completedRounds + '">?</a>]';
-                        
+
                     $('#guardFqDisplay').html(fqHtml);
+                    $fqRow.show();
                 } else {
-                    var emptyHtml = '0 PD <span class="p-1" style="background: #A9A9A9;">0</span> ' +
-                        '[<a href="#guardSWTagsInfoModal" id="btnWandTagdetails" class="btnWandTagdetails" ' +
-                        'data-client="' + currentClientSiteId + '" ' +
-                        'data-guard="' + currentGuardId + '" ' +
-                        'data-value="0">?</a>]';
-                    $('#guardFqDisplay').html(emptyHtml);
+                    $fqRow.hide();
                 }
             },
             error: function() {
-                $('#guardFqDisplay').html('Error loading data');
+                $fqRow.hide();
             }
         });
     }

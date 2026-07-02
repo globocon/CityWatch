@@ -50,6 +50,11 @@ namespace CityWatch.Web.Pages.Guard
         public IViewDataService ViewDataService { get { return _viewDataService; } }
         public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
         public string ClientNameTitle { get; set; }
+
+        // FQ row is rendered only for sites that have required wand tag points and are not the
+        // RC specified control room logbook site. Decided server-side so the row never flashes
+        // or appears after page load for ineligible sites.
+        public bool ShowFqDisplay { get; set; }
         private readonly IConfigDataProvider _configDataProvider;
         public DailyLogModel(IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
@@ -139,6 +144,9 @@ namespace CityWatch.Web.Pages.Guard
             };
 
             ViewData["IsDuressEnabled"] = _viewDataService.IsClientSiteDuressEnabled(clientSiteLogBook.ClientSiteId);
+
+            ShowFqDisplay = _guardLogDataProvider.HasRequiredWandTags(clientSiteLogBook.ClientSiteId)
+                            && !_guardLogDataProvider.IsRcControlRoomSite(clientSiteLogBook.ClientSiteId);
         }
 
         public JsonResult OnGetGuardLogs(int logBookId, DateTime? logBookDate)
