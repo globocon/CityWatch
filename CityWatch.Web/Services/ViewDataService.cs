@@ -1538,7 +1538,7 @@ namespace CityWatch.Web.Services
             var previousDayLogs = _guardLogDataProvider.GetKeyVehicleLogs(previousDayLogBookId);
 
             // p7#136 -Update to midnight logic start
-            var logsToCopy = previousDayLogs.Where(z => !z.ExitTime.HasValue &&
+            var logsToCopy = previousDayLogs.Where(z => !z.ExitTime.HasValue && !z.HasLoadVariation &&
                 (z.EntryTime.HasValue ||
                 (kvlFieldsToLookup.TryGetValue("Law Enforcement", out int idLawEnforce) && z.PersonType == idLawEnforce) ||
                     (kvlFieldsToLookup.TryGetValue("Emergency Services", out int idEms) && z.PersonType == idEms) ||
@@ -1573,7 +1573,7 @@ namespace CityWatch.Web.Services
             }
             // Task P7#129 Yellow wont roll over  - Binoy 29-07-2024 -- Start
             // To rollover previous days pending yellow entries to new logbook
-            var pendinglogentries = previousDayLogs.Where(z => !z.ExitTime.HasValue && !z.EntryTime.HasValue && !z.SentInTime.HasValue && z.InitialCallTime.HasValue);
+            var pendinglogentries = previousDayLogs.Where(z => !z.ExitTime.HasValue && !z.EntryTime.HasValue && !z.SentInTime.HasValue && z.InitialCallTime.HasValue && !z.HasLoadVariation);
             if (pendinglogentries.Count() > 0)
             {
                 foreach (var logToCopy in pendinglogentries)
@@ -1827,31 +1827,7 @@ namespace CityWatch.Web.Services
 
             return items;
         }
-        //}
-        //code added for Guard Access Dropdown stop
-        //public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory()
-        //{
-        //    var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile();
-        //    var history = new List<KeyVehicleLogAuditHistory>();
-        //    foreach (var item in kvlVisitorProfile)
-        //    {
-        //        var hist = GetKeyVehicleLogAuditHistoryNew(item.Id);
-        //        foreach(var item2 in hist)
-        //        {
-        //            item2.KeyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogsByID(item2.KeyVehicleLogId).FirstOrDefault();
-
-        //        }
-        //        history.AddRange(hist); 
-        //    }
-
-        //    return history;
-        //}
-        //public List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId)
-        //{
-        //    return _guardLogDataProvider.GetAuditHistory(profileId)
-        //        .OrderByDescending(z => z.Id)
-        //        .ThenByDescending(z => z.AuditTime).ToList();
-        //}
+        
         public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName)
         {
             var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(PersonName);
@@ -2452,18 +2428,6 @@ namespace CityWatch.Web.Services
             return hrGroups;
         }
 
-
-        //public List<Mp3File> GetDressAppFieldsAudio(int type)
-        //{
-        //    var audio = _guardLogDataProvider.GetDuressAppFields(type);
-
-        //    return audio.Select(x => new Mp3File
-        //    {
-        //        Label = x.Label,
-        //        Url = "http://test.c4i-system.com/DuressAppAudio/Deva%20Deva.mp3",
-
-        //    }).ToList();
-        //}
         public List<Mp3File> GetDressAppFieldsAudio(int type)
         {
             string baseUrl = "https://cws-ir.com/DuressAppAudio/";
@@ -2483,12 +2447,6 @@ namespace CityWatch.Web.Services
 
             }).ToList();
         }
-
-
-
-
-
-
 
         public List<DropdownItem> GetUserClientTypesWithId(int? userId)
         {
