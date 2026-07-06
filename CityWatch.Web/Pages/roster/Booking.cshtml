@@ -2135,8 +2135,10 @@
                 console.log('Loading roster for Group ID:', currentGroupId);
                 if (!currentGroupId) return;
 
-                var today = new Date();
-                var firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                // P9 Issue 65: day-cell locking no longer depends on the current month
+                // (previously computed here via today/firstDayOfCurrentMonth). Each row's
+                // isDayLocked is now derived from the site's week STATUS - see the
+                // row.days.forEach loop below.
 
                 $('#roster_grid tbody').empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
 
@@ -3438,8 +3440,10 @@
                 var tbody = $('#binder_grid tbody');
                 tbody.empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading Combined Roster...</td></tr>');
 
-                var today = new Date();
-                var firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                // P9 Issue 65: day-cell locking no longer depends on the current month
+                // (previously computed here via today/firstDayOfCurrentMonth). Each site's
+                // isDayLocked is now derived from the site's week STATUS - see the
+                // site.days.forEach loop below.
 
                 $.ajax({
                     url: '/roster/Booking?handler=LoadBinderRoster',

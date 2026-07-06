@@ -161,7 +161,11 @@ namespace CityWatch.Web.Pages.roster
                 .OrderBy(x => x.Name)
                 .ToList();
 
-            // Locking logic: Dec is locked if it's Jan.
+            // Page-level date flag: true when the displayed week is in a previous calendar month.
+            // P9 Issue 65 NOTE: shift-level edit locking is NOT based on this anymore - it is
+            // linked to the site's week STATUS (see GetWeekStatusLockMessageAsync). IsLocked is
+            // kept date-based on purpose: it only gates the "Remove Site from Group" icon in the
+            // grid, which is a structural change to the project rather than a shift edit.
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
             IsLocked = EndDate < firstDayOfCurrentMonth;
 
@@ -1476,7 +1480,11 @@ namespace CityWatch.Web.Pages.roster
                         .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= targetStart && x.ShiftStart < copyUntil)
                         .ToListAsync();
                     
-                    // Do not delete shifts that are in previous/locked months
+                    // Do not delete shifts that are in previous/locked months.
+                    // P9 Issue 65 NOTE: this date safeguard is intentionally KEPT even though
+                    // single-shift editing is now status-based. Rollover "erase future" is a bulk
+                    // operation; keeping the date guard prevents it from silently wiping past
+                    // weeks (e.g. already invoiced ones) in one click.
                     var firstDayOfWeek = GetFirstDayOfWeek();
                     var shiftsAllowedToDelete = shiftsToDelete.Where(x => StartOfWeek(x.ShiftStart, firstDayOfWeek).AddDays(6) >= firstDayOfCurrentMonth).ToList();
                     
@@ -1495,7 +1503,7 @@ namespace CityWatch.Web.Pages.roster
 
                 foreach (var targetWeekStart in targetWeeks)
                 {
-                    if (targetWeekStart.AddDays(6) < firstDayOfCurrentMonth) continue; // Safety check
+                    if (targetWeekStart.AddDays(6) < firstDayOfCurrentMonth) continue; // Safety check (kept date-based on purpose - see P9 Issue 65 note above)
 
                     foreach (var source in sourceSchedules)
                     {
