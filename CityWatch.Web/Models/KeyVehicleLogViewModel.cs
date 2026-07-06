@@ -39,7 +39,10 @@ namespace CityWatch.Web.Models
         {
             get
             {
-                return _keyVehicleLogPaxlist.Where(x=> x.KeyVehicleLogId == _keyVehicleLog.Id).ToList();
+                if (_keyVehicleLogPaxlist != null && _keyVehicleLogPaxlist.Any())
+                    return _keyVehicleLogPaxlist.Where(x => x.KeyVehicleLogId == _keyVehicleLog.Id).ToList();
+                else
+                    return new List<KeyVehicleLogPax>();
             }
         }
         //p7-137--pax-end
