@@ -80,7 +80,14 @@ namespace CityWatch.Web.Services
             var group = await _context.RosterGroups.FindAsync(groupId);
             if (group == null) return null;
 
-            byte[] rosterBytes = await GenerateSingleProjectRosterPartAsync(groupId, startDate, weeks, includeFinancials, includeSuppliers, rateType);
+            // P9 Issue 61: a project with no sites allocated must produce only its cover
+            // sheet — skip the empty roster card page. When there is no cover sheet either,
+            // keep the previous behaviour so the download still returns a document.
+            var hasSites = await _context.RosterGroupSites.AnyAsync(x => x.RosterGroupId == groupId);
+
+            byte[] rosterBytes = (hasSites || string.IsNullOrEmpty(group.CoverFileName))
+                ? await GenerateSingleProjectRosterPartAsync(groupId, startDate, weeks, includeFinancials, includeSuppliers, rateType)
+                : null;
 
             if (string.IsNullOrEmpty(group.CoverFileName))
             {
@@ -265,8 +272,17 @@ namespace CityWatch.Web.Services
                         }
 
                         // 2b. Project Roster
-                        byte[] partBytes = await GenerateSingleProjectRosterPartAsync(bp.RosterGroupId, startDate, weeks, includeFinancials, includeSuppliers, rateType);
-                        AddBytesToMerger(merger, partBytes);
+                        // P9 Issue 61: skip the empty roster card page for projects with no
+                        // sites allocated when a cover sheet (group or project) is present.
+                        // Without any cover sheet, keep the previous behaviour so the merged
+                        // document is never empty.
+                        var projectHasSites = await _context.RosterGroupSites.AnyAsync(x => x.RosterGroupId == bp.RosterGroupId);
+                        bool hasAnyCover = !string.IsNullOrEmpty(binder.CoverFileName) || !string.IsNullOrEmpty(bp.RosterGroup.CoverFileName);
+                        if (projectHasSites || !hasAnyCover)
+                        {
+                            byte[] partBytes = await GenerateSingleProjectRosterPartAsync(bp.RosterGroupId, startDate, weeks, includeFinancials, includeSuppliers, rateType);
+                            AddBytesToMerger(merger, partBytes);
+                        }
                     }
                     merger.Close();
                 }
