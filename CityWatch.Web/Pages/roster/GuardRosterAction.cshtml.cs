@@ -378,13 +378,20 @@ namespace CityWatch.Web.Pages.roster
 
             try
             {
-                var today = DateTime.Today;
-                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
-                
-                if (weekEndDate < firstDayOfCurrentMonth)
+                // Lock Check (P9 Issue 65: linked to the week STATUS, not the calendar month.
+                // Live / Disputed (or no status set) = editable; Invoiced / Paid / Cancelled = locked.)
+                var weekStart = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek());
+                var weekStatus = await _context.RosterSiteWeekStatuses
+                    .Where(x => x.ClientSiteId == schedule.ClientSiteId && x.StartDate == weekStart)
+                    .Select(x => x.Status)
+                    .FirstOrDefaultAsync();
+
+                if (!string.IsNullOrEmpty(weekStatus) &&
+                    (weekStatus.Equals("Invoiced", StringComparison.OrdinalIgnoreCase) ||
+                     weekStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase) ||
+                     weekStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase)))
                 {
-                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                    return new JsonResult(new { success = false, message = $"This week is locked because its status is '{weekStatus}'. Change the status to Live or Disputed to make changes." });
                 }
 
                 int oldStatusVal = (int)schedule.Status;

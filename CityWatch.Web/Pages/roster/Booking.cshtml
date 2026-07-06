@@ -2256,7 +2256,9 @@
                             row.days.forEach(function (daySchedules, index) {
                                 var cellDate = new Date(currentStartDate);
                                 cellDate.setDate(cellDate.getDate() + index);
-                                var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                                // P9 Issue 65: lock is linked to the week STATUS, not the calendar month.
+                                // Invoiced / Paid / Cancelled = locked; Live / Disputed / none = editable.
+                                var isDayLocked = !!(row.status && ['INVOICED', 'PAID', 'CANCELLED'].indexOf(row.status.toUpperCase()) !== -1);
 
                                     var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
                                     var phClass = isPh ? "ph-highlight" : "";
@@ -3564,7 +3566,9 @@
                                 site.days.forEach(function (daySchedules, index) {
                                     var cellDate = new Date(currentStartDate);
                                     cellDate.setDate(cellDate.getDate() + index);
-                                    var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                                    // P9 Issue 65: lock is linked to the week STATUS, not the calendar month.
+                                    // Invoiced / Paid / Cancelled = locked; Live / Disputed / none = editable.
+                                    var isDayLocked = !!(site.status && ['INVOICED', 'PAID', 'CANCELLED'].indexOf(site.status.toUpperCase()) !== -1);
                                     var isPh = (site.isPublicHoliday && site.isPublicHoliday[index]);
                                     var phClass = isPh ? "ph-highlight" : "";
                                     var phReason = (site.publicHolidayReasons && site.publicHolidayReasons[index]) || "";

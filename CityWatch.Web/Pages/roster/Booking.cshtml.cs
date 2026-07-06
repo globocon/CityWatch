@@ -536,6 +536,26 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
+        // P9 Issue 65: shift edit locking is linked to the site's week STATUS, not the calendar month.
+        // Live / Disputed (or no status set yet) = editable; Invoiced / Paid / Cancelled = locked.
+        private static readonly string[] LockedWeekStatuses = { "Invoiced", "Paid", "Cancelled" };
+
+        private async Task<string> GetWeekStatusLockMessageAsync(int clientSiteId, DateTime shiftDate)
+        {
+            var weekStart = StartOfWeek(shiftDate, GetFirstDayOfWeek());
+            var status = await _context.RosterSiteWeekStatuses
+                .Where(x => x.ClientSiteId == clientSiteId && x.StartDate == weekStart)
+                .Select(x => x.Status)
+                .FirstOrDefaultAsync();
+
+            if (!string.IsNullOrEmpty(status) && LockedWeekStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                return $"This week is locked because its status is '{status}'. Change the status to Live or Disputed to make changes.";
+            }
+
+            return null;
+        }
+
         public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, decimal? payRate = null, bool ignoreUnavailability = false)
         {
             if (payRateId.HasValue && payRate.HasValue)
@@ -547,13 +567,11 @@ namespace CityWatch.Web.Pages.roster
                     // No need for separate save here, it will be saved with the shift
                 }
             }
-            // Lock Check
-            var today = DateTime.Today;
-            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            var weekEndDate = StartOfWeek(start, GetFirstDayOfWeek()).AddDays(6);
-            if (weekEndDate < firstDayOfCurrentMonth)
+            // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+            var addShiftLockMessage = await GetWeekStatusLockMessageAsync(siteId, start);
+            if (addShiftLockMessage != null)
             {
-                return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                return new JsonResult(new { success = false, message = addShiftLockMessage });
             }
 
             // Validation: Time range check (00:01 - 23:59)
@@ -935,12 +953,11 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule != null)
             {
-                var today = DateTime.Today;
-                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
-                if (weekEndDate < firstDayOfCurrentMonth)
+                // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+                var updateLockMessage = await GetWeekStatusLockMessageAsync(schedule.ClientSiteId, schedule.ShiftStart);
+                if (updateLockMessage != null)
                 {
-                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                    return new JsonResult(new { success = false, message = updateLockMessage });
                 }
 
                 schedule.Status = (RosterShiftStatus)status;
@@ -967,12 +984,11 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule != null)
             {
-                var today = DateTime.Today;
-                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
-                if (weekEndDate < firstDayOfCurrentMonth)
+                // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+                var deleteLockMessage = await GetWeekStatusLockMessageAsync(schedule.ClientSiteId, schedule.ShiftStart);
+                if (deleteLockMessage != null)
                 {
-                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                    return new JsonResult(new { success = false, message = deleteLockMessage });
                 }
 
                 int oldStatusVal = (int)schedule.Status;
@@ -1801,12 +1817,11 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule == null) return new JsonResult(new { success = false, message = "Shift not found." });
 
-            var today = DateTime.Today;
-            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
-            if (weekEndDate < firstDayOfCurrentMonth)
+            // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+            var cycleLockMessage = await GetWeekStatusLockMessageAsync(schedule.ClientSiteId, schedule.ShiftStart);
+            if (cycleLockMessage != null)
             {
-                return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                return new JsonResult(new { success = false, message = cycleLockMessage });
             }
 
             // Cycle: Regular -> Adhoc -> RegularAccepted -> AdhocAccepted -> Declined -> Regular

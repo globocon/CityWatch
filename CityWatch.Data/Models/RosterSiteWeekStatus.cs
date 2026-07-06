@@ -17,7 +17,7 @@ namespace CityWatch.Data.Models
         public DateTime StartDate { get; set; }
 
         [StringLength(50)]
-        public string Status { get; set; } // Live, Invoiced, Paid, Cancelled
+        public string Status { get; set; } // Live, Disputed (editable) / Invoiced, Paid, Cancelled (locked - P9 Issue 65)
 
         public DateTime UpdatedDate { get; set; }
 
