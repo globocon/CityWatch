@@ -33,6 +33,9 @@ namespace CityWatch.Data.Models
         public bool IsEntryByPCAR { get; set; } = false;
         public int? CallSignId { get; set; }
         public int? PositionId { get; set; }
+        // Guard-typed notes for custom log entries saved with images while offline.
+        // Null/empty for plain image uploads so the sync keeps the default notes text.
+        public string Notes { get; set; }
 
     }
     
