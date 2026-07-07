@@ -2879,7 +2879,7 @@ namespace CityWatch.Web.API
             [FromForm] int clientsiteId, [FromForm] int userId, [FromForm] string gps, [FromForm] DateTime? eventDateTimeLocal,
             [FromForm] DateTimeOffset? eventDateTimeLocalWithOffset, [FromForm] string? eventDateTimeZone, [FromForm] string? eventDateTimeZoneShort,
             [FromForm] int? eventDateTimeUtcOffsetMinute, [FromForm] int? logbookclientsiteId, [FromForm] bool? isEntryByPCAR, [FromForm] int? callSignId,
-            [FromForm] int? positionId
+            [FromForm] int? positionId, [FromForm] string notes = null
         )
         {
             bool success = false;
@@ -2927,8 +2927,8 @@ namespace CityWatch.Web.API
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                     EventDateTime = DateTime.Now,
-                    /*your message */
-                    Notes = "Mob app image upload",
+                    // Custom log entries from the mobile app send their notes text; plain image uploads do not, keeping the default text.
+                    Notes = string.IsNullOrWhiteSpace(notes) ? "Mob app image upload" : notes.Trim(),
                     IsSystemEntry = false,
                     EventDateTimeLocal = eventDateTimeLocal ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
                     EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
@@ -3198,8 +3198,8 @@ namespace CityWatch.Web.API
                         ClientSiteLogBookId = logBookId,
                         GuardLoginId = guardLoginId,
                         EventDateTime = TimeZoneHelper.ConvertToSystemLocalTime(g.FirstOrDefault().EventDateTimeLocal.Value, g.FirstOrDefault().EventDateTimeUtcOffsetMinute.Value),
-                        /*your message */
-                        Notes = "Mob app image upload",
+                        // Offline custom log entries with images carry the guard's notes; plain image uploads keep the default text.
+                        Notes = string.IsNullOrWhiteSpace(g.FirstOrDefault().Notes) ? "Mob app image upload" : g.FirstOrDefault().Notes.Trim(),
                         IsSystemEntry = false,
                         EventDateTimeLocal = g.FirstOrDefault().EventDateTimeLocal.Value,
                         EventDateTimeLocalWithOffset = g.FirstOrDefault().EventDateTimeLocalWithOffset.Value,
