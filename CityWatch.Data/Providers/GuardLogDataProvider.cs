@@ -1207,44 +1207,44 @@ namespace CityWatch.Data.Providers
                     _context.SaveChanges();
                 }
 
-                if (keyVehicleLog.IsCarsStock.HasValue && keyVehicleLog.IsCarsStock.Value)
-                {
-                    List<string> CarBrands = new List<string>();
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer1Rego)) { CarBrands.Add(keyVehicleLog.Trailer1Rego.ToUpper().Trim()); }
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer2Rego)) { CarBrands.Add(keyVehicleLog.Trailer2Rego.ToUpper().Trim()); }
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer3Rego)) { CarBrands.Add(keyVehicleLog.Trailer3Rego.ToUpper().Trim()); }
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer4Rego)) { CarBrands.Add(keyVehicleLog.Trailer4Rego.ToUpper().Trim()); }
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer5Rego)) { CarBrands.Add(keyVehicleLog.Trailer5Rego.ToUpper().Trim()); }
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer6Rego)) { CarBrands.Add(keyVehicleLog.Trailer6Rego.ToUpper().Trim()); }
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer7Rego)) { CarBrands.Add(keyVehicleLog.Trailer7Rego.ToUpper().Trim()); }
-                    if (!string.IsNullOrEmpty(keyVehicleLog.Trailer8Rego)) { CarBrands.Add(keyVehicleLog.Trailer8Rego.ToUpper().Trim()); }
+                // if (keyVehicleLog.IsCarsStock.HasValue && keyVehicleLog.IsCarsStock.Value)
+                // {
+                //     List<string> CarBrands = new List<string>();
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer1Rego)) { CarBrands.Add(keyVehicleLog.Trailer1Rego.ToUpper().Trim()); }
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer2Rego)) { CarBrands.Add(keyVehicleLog.Trailer2Rego.ToUpper().Trim()); }
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer3Rego)) { CarBrands.Add(keyVehicleLog.Trailer3Rego.ToUpper().Trim()); }
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer4Rego)) { CarBrands.Add(keyVehicleLog.Trailer4Rego.ToUpper().Trim()); }
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer5Rego)) { CarBrands.Add(keyVehicleLog.Trailer5Rego.ToUpper().Trim()); }
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer6Rego)) { CarBrands.Add(keyVehicleLog.Trailer6Rego.ToUpper().Trim()); }
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer7Rego)) { CarBrands.Add(keyVehicleLog.Trailer7Rego.ToUpper().Trim()); }
+                //     if (!string.IsNullOrEmpty(keyVehicleLog.Trailer8Rego)) { CarBrands.Add(keyVehicleLog.Trailer8Rego.ToUpper().Trim()); }
 
-                    if (CarBrands.Any())
-                    {
-                        foreach (var brand in CarBrands.Distinct().ToList())
-                        {
-                            var alreadyexists = _context.KeyVehcileLogFields.Where(x => x.TypeId == KvlFieldType.VehicleBrand && x.IsDeleted == false && x.Name.ToUpper() == brand.ToUpper()).FirstOrDefault();
-                            if (alreadyexists == null)
-                            {
-                                KeyVehcileLogField kvlf = new KeyVehcileLogField()
-                                {
-                                    TypeId = KvlFieldType.VehicleBrand,
-                                    IsDeleted = false,
-                                    Name = brand
-                                };
-                                _context.KeyVehcileLogFields.Add(kvlf);
-                            }
-                        }
-                        try
-                        {
-                            _context.SaveChanges();
-                        }
-                        catch (Exception)
-                        {
+                //     if (CarBrands.Any())
+                //     {
+                //         foreach (var brand in CarBrands.Distinct().ToList())
+                //         {
+                //             var alreadyexists = _context.KeyVehcileLogFields.Where(x => x.TypeId == KvlFieldType.VehicleBrand && x.IsDeleted == false && x.Name.ToUpper() == brand.ToUpper()).FirstOrDefault();
+                //             if (alreadyexists == null)
+                //             {
+                //                 KeyVehcileLogField kvlf = new KeyVehcileLogField()
+                //                 {
+                //                     TypeId = KvlFieldType.VehicleBrand,
+                //                     IsDeleted = false,
+                //                     Name = brand
+                //                 };
+                //                 _context.KeyVehcileLogFields.Add(kvlf);
+                //             }
+                //         }
+                //         try
+                //         {
+                //             _context.SaveChanges();
+                //         }
+                //         catch (Exception)
+                //         {
 
-                        }
-                    }
-                }
+                //         }
+                //     }
+                // }
 
             }
             catch (Exception ex)
@@ -7083,6 +7083,7 @@ namespace CityWatch.Data.Providers
                             var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
                             item.IrEntryType = tmplog?.IrEntryType ?? null;
                             item.gpsCoordinates = tmplog?.GpsCoordinates ?? string.Empty;
+                            item.EventDateTime = item.EventDateTimeLocal ?? item.EventDateTime;
                         }
                         break;  // Ensure break is always hit
 
