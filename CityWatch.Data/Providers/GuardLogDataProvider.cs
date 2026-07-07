@@ -7083,6 +7083,7 @@ namespace CityWatch.Data.Providers
                             var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
                             item.IrEntryType = tmplog?.IrEntryType ?? null;
                             item.gpsCoordinates = tmplog?.GpsCoordinates ?? string.Empty;
+                            item.EventDateTime = item.EventDateTimeLocal ?? item.EventDateTime;
                         }
                         break;  // Ensure break is always hit
 
