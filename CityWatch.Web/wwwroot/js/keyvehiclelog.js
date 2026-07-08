@@ -321,6 +321,41 @@ $(function () {
 
     }
 
+    // CarsStock mode: uses the native 'readonly' attribute to block freeform editing.
+    // Backspace/Delete on a readonly field clears it so the user can search and select again.
+    function trailerCarsStockKeydownBlocker(e) {
+        if (!$('#chk_cs_CarsStock').is(':checked')) return; // Only block in CarsStock mode
+
+        const $input = $(this);
+        if (!$input.prop('readonly')) return; // Not locked — allow normal typing for typeahead
+
+        const isDeleteKey = e.key === 'Backspace' || e.key === 'Delete' || e.which === 8 || e.which === 46; // Backspace or Delete
+        e.preventDefault(); // Always prevent default on a locked field
+
+        if (isDeleteKey) {
+            // Release the lock: clear value, remove readonly, update dropdowns
+            $input.val('');
+            $input.removeAttr('readonly');
+            $input.trigger('change');
+        }
+    }
+
+    // Attach or remove the CarsStock readonly-mode on all Trailer Rego inputs
+    function toggleTrailerCarsStockMode(isEnabled) {
+        const $trailerInputs = $('#Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego, #Trailer5Rego, #Trailer6Rego, #Trailer7Rego, #Trailer8Rego');
+        if (isEnabled) {
+            $trailerInputs.each(function () {
+                const $input = $(this);
+                // If the field already has a value when CarsStock is checked, lock it immediately
+                if ($input.val() !== '') {
+                    $input.attr('readonly', true);
+                }
+            });
+        } else {
+            $trailerInputs.removeAttr('readonly');
+        }
+    }
+
     //function vehicleRegoValidateSplChars(e) {
     //    //  blocking special charactors
     //    if ($('#chk_cs_CarsStock').is(':checked')) { }
@@ -2350,6 +2385,7 @@ $(function () {
             $('#chk_cs_VIN').prop('checked', isVin);
             $('#chk_cs_TrailerRego').prop('checked', isTrailerRego);
             $('#chk_cs_CarsStock').prop('checked', isCarsStock);
+            toggleTrailerCarsStockMode(isCarsStock);
 
             if (isISO) {
                 $('.vehicle-type-dropdown').each(function () {
@@ -2490,7 +2526,7 @@ $(function () {
             if (isChecked) {
                 $('#chk_cs_VIN').prop('checked', false);
                 $('#chk_cs_TrailerRego').prop('checked', false);
-                $('#chk_cs_CarsStock').prop('checked', false);
+                $('#chk_cs_CarsStock').prop('checked', false).trigger('change');
 
                 $('.vehicle-type-dropdown').each(function () {
                     $(this).prop('disabled', true);
@@ -2505,7 +2541,7 @@ $(function () {
             if (isChecked) {
                 $('#chk_cs_ISO').prop('checked', false);
                 $('#chk_cs_TrailerRego').prop('checked', false);
-                $('#chk_cs_CarsStock').prop('checked', false);
+                $('#chk_cs_CarsStock').prop('checked', false).trigger('change');
 
                 $('.vehicle-type-dropdown').each(function () {
                     $(this).prop('disabled', true);
@@ -2520,7 +2556,7 @@ $(function () {
             if (isChecked) {
                 $('#chk_cs_ISO').prop('checked', false);
                 $('#chk_cs_VIN').prop('checked', false);
-                $('#chk_cs_CarsStock').prop('checked', false);
+                $('#chk_cs_CarsStock').prop('checked', false).trigger('change');
 
                 $('.vehicle-type-dropdown').each(function () {
                     $(this).empty();
@@ -2543,6 +2579,8 @@ $(function () {
                     populateVehicleTypeDropdown(this, kvlFieldCarsStockType);
                 });
             }
+            // Enable or disable selection-only mode on Trailer Rego inputs
+            toggleTrailerCarsStockMode(isChecked);
         });
 
         /*for manifest options-end*/
@@ -3138,6 +3176,7 @@ $(function () {
             const T8RegoTypeText = $('#T8RegoTypeReplicateText').val();
 
             $('#Trailer8Rego').val('');
+            $('#Trailer8Rego').removeAttr('readonly');
             $('#Trailer8Rego_Vehicle_type').prop('disabled', true);
             if (isTrailerOrCars) {
                 $('#Trailer8Rego_Vehicle_type').val('');
@@ -3150,6 +3189,10 @@ $(function () {
                 if (isTrailerOrCars) {
                     $(`#Trailer${i}Rego_Vehicle_type`).val(T8RegoTypeVal);
                     $(`#Trailer${i}PlateId`).val(T8RegoTypeVal);
+                }
+
+                if ($('#chk_cs_CarsStock').is(':checked')) {
+                    $(`#Trailer${i}Rego`).attr('readonly', true);
                 }
             }
 
@@ -4157,12 +4200,22 @@ $(function () {
         });
 
         //trailer changes New change for Add rigo without plate number 21032024 dileep Start*/
-        $('#Trailer1Rego').on('blur', function () {
-            const vehicleRegoHasVal = $(this).val() !== '';
+        const $trailerInputsGlobal = $('#Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego, #Trailer5Rego, #Trailer6Rego, #Trailer7Rego, #Trailer8Rego');
+        $trailerInputsGlobal.on('blur', function () {
+            if ($('#chk_cs_CarsStock').is(':checked')) {
+                const $input = $(this);
+                setTimeout(function () {
+                    if (!$input.prop('readonly') && $input.val() !== '') {
+                        $input.val('');
+                        $input.trigger('change');
+                    }
+                }, 200);
+            }
         });
+        $trailerInputsGlobal.on('keydown', trailerCarsStockKeydownBlocker);
         $('#Trailer1Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
-
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer1Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer1Rego_Vehicle_type option:selected').prop('selected', false);
 
@@ -4171,6 +4224,7 @@ $(function () {
         });
         $('#Trailer2Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer2Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer2Rego_Vehicle_type option:selected').prop('selected', false);
             let regoToUpper = $(this).val().toUpperCase();
@@ -4178,6 +4232,7 @@ $(function () {
         });
         $('#Trailer3Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer3Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer3Rego_Vehicle_type option:selected').prop('selected', false);
             let regoToUpper = $(this).val().toUpperCase();
@@ -4185,6 +4240,7 @@ $(function () {
         });
         $('#Trailer4Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer4Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer4Rego_Vehicle_type option:selected').prop('selected', false);
             let regoToUpper = $(this).val().toUpperCase();
@@ -4192,7 +4248,7 @@ $(function () {
         });
         $('#Trailer5Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
-
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer5Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer5Rego_Vehicle_type option:selected').prop('selected', false);
 
@@ -4201,6 +4257,7 @@ $(function () {
         });
         $('#Trailer6Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer6Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer6Rego_Vehicle_type option:selected').prop('selected', false);
             let regoToUpper = $(this).val().toUpperCase();
@@ -4208,6 +4265,7 @@ $(function () {
         });
         $('#Trailer7Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer7Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer7Rego_Vehicle_type option:selected').prop('selected', false);
             let regoToUpper = $(this).val().toUpperCase();
@@ -4215,6 +4273,7 @@ $(function () {
         });
         $('#Trailer8Rego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
+            if (!vehicleRegoHasVal) { $(this).removeAttr('readonly'); }
             $('#Trailer8Rego_Vehicle_type').attr('disabled', !vehicleRegoHasVal);
             $('#Trailer8Rego_Vehicle_type option:selected').prop('selected', false);
             let regoToUpper = $(this).val().toUpperCase();
@@ -4361,6 +4420,10 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    // Lock the field so the user cannot freeform-edit the selection
+                    $('#Trailer1Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -4413,6 +4476,9 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    $('#Trailer2Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -4464,6 +4530,9 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    $('#Trailer3Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -4515,6 +4584,9 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    $('#Trailer4Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -4565,6 +4637,9 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    $('#Trailer5Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -4615,6 +4690,9 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    $('#Trailer6Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -4666,6 +4744,9 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    $('#Trailer7Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -4717,6 +4798,9 @@ $(function () {
             },
             afterSelect: function (item) {
                 var _isCarsStock = $('#chk_cs_CarsStock').is(':checked');
+                if (_isCarsStock && item) {
+                    $('#Trailer8Rego').attr('readonly', true);
+                }
                 if (item && !_isCarsStock) {
                     $.ajax({
                         url: '/Guard/KeyVehicleLog?handler=TrailerDetails&truckRego=' + item,
@@ -10303,6 +10387,7 @@ $(function () {
 
         for (let i = 1; i <= 8; i++) {
             $(`#Trailer${i}Rego`).val('');
+            $(`#Trailer${i}Rego`).removeAttr('readonly');
 
             if (isTrailerOrCars) {
                 //const vehicleType = $(`#Trailer${i}Rego_Vehicle_type option:selected`).text();			

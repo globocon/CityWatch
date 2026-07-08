@@ -464,8 +464,9 @@ namespace CityWatch.Web.Pages.Guard
             {
                 success = false;
                 message = ex.Message;
+                results.Add(new ValidationResult(ex.Message));
             }
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success, message, errors = results.Select(z => z.ErrorMessage) });
         }
 
         public JsonResult OnPostDeleteKeyVehicleLog(int Id)
