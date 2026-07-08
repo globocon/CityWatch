@@ -2135,8 +2135,10 @@
                 console.log('Loading roster for Group ID:', currentGroupId);
                 if (!currentGroupId) return;
 
-                var today = new Date();
-                var firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                // P9 Issue 65: day-cell locking no longer depends on the current month
+                // (previously computed here via today/firstDayOfCurrentMonth). Each row's
+                // isDayLocked is now derived from the site's week STATUS - see the
+                // row.days.forEach loop below.
 
                 $('#roster_grid tbody').empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
 
@@ -2159,6 +2161,9 @@
 
                         // Add Project Header Row for consistency with Groups tab
                         var projName = $('#project_name option:selected').text() || 'Selected Project';
+                        // P9 Issue 65: lock symbol next to Status when the week is read-only
+                        var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                        var isProjectLocked = lockedStatusList.indexOf((res.projectStatus || '').toUpperCase()) !== -1;
                         var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
                             '<div class="d-flex align-items-center justify-content-between">' +
                             '<div class="d-flex align-items-center">' +
@@ -2173,12 +2178,17 @@
                                         '<option value="Cancelled" ' + (res.projectStatus === "Cancelled" ? "selected" : "") + '>⬛ Cancelled</option>' +
                                     '</select>' +
                                     '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
+                                    // P9 Issue 65: lock indicator - visible when status is Invoiced/Paid/Cancelled
+                                    (isProjectLocked ? '<span class="ml-2 text-danger" title="This week is locked (' + res.projectStatus + '). Change status to Live or Disputed to edit shifts."><i class="fa fa-lock"></i></span>' : '') +
                                 '</div>' +
                             '</div>' +
                             '</div></td></tr>';
                         tbody.append(headerHtml);
 
                         res.results.forEach(function (row) {
+                            // P9 Issue 65: lock is linked to the week STATUS, not the calendar month.
+                            // Invoiced / Paid / Cancelled = locked; Live / Disputed / none = editable.
+                            var isRowLocked = !!(row.status && lockedStatusList.indexOf(row.status.toUpperCase()) !== -1);
                             var statusHtml = '';
                             if (row.status) {
                                 var imgName = '';
@@ -2190,8 +2200,10 @@
                                     case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                                 }
                                 if (imgName) {
-                                    statusHtml = '<div class="mt-auto pb-1 text-center">' + 
-                                                   '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + row.status + '" />' + 
+                                    statusHtml = '<div class="mt-auto pb-1 text-center">' +
+                                                   '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + row.status + '" />' +
+                                                   // P9 Issue 65: lock symbol beside the stamp for read-only weeks
+                                                   (isRowLocked ? ' <i class="fa fa-lock text-danger ml-1" title="Week locked (' + row.status + '). Change status to Live or Disputed to edit."></i>' : '') +
                                                  '</div>';
                                 }
                             }
@@ -2256,7 +2268,8 @@
                             row.days.forEach(function (daySchedules, index) {
                                 var cellDate = new Date(currentStartDate);
                                 cellDate.setDate(cellDate.getDate() + index);
-                                var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                                // P9 Issue 65: locking derives from the row's week status (see isRowLocked above)
+                                var isDayLocked = isRowLocked;
 
                                     var isPh = (row.isPublicHoliday && row.isPublicHoliday[index]);
                                     var phClass = isPh ? "ph-highlight" : "";
@@ -3436,8 +3449,10 @@
                 var tbody = $('#binder_grid tbody');
                 tbody.empty().append('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading Combined Roster...</td></tr>');
 
-                var today = new Date();
-                var firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                // P9 Issue 65: day-cell locking no longer depends on the current month
+                // (previously computed here via today/firstDayOfCurrentMonth). Each site's
+                // isDayLocked is now derived from the site's week STATUS - see the
+                // site.days.forEach loop below.
 
                 $.ajax({
                     url: '/roster/Booking?handler=LoadBinderRoster',
@@ -3458,6 +3473,10 @@
                             var projectDailyTotals = [0, 0, 0, 0, 0, 0, 0];
                             var projectGrandTotal = 0;
 
+                            // P9 Issue 65: lock symbol next to Status when the week is read-only
+                            var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                            var isProjectLocked = lockedStatusList.indexOf((project.projectStatus || '').toUpperCase()) !== -1;
+
                             // Add Project Header Row
                             var headerHtml = '<tr class="bg-light"><td colspan="8" class="py-1 px-3">' +
                                 '<div class="d-flex align-items-center justify-content-between">' +
@@ -3477,6 +3496,8 @@
                                             '<option value="Cancelled" ' + (project.projectStatus === "Cancelled" ? "selected" : "") + '>⬛ Cancelled</option>' +
                                         '</select>' +
                                         '<span class="status-loading ml-2" style="display:none;"><i class="fa fa-spinner fa-spin text-primary"></i> <small class="text-primary italic">Updating...</small></span>' +
+                                        // P9 Issue 65: lock indicator - visible when status is Invoiced/Paid/Cancelled
+                                        (isProjectLocked ? '<span class="ml-2 text-danger" title="This week is locked (' + project.projectStatus + '). Change status to Live or Disputed to edit shifts."><i class="fa fa-lock"></i></span>' : '') +
                                     '</div>' +
                                 '</div>' +
                                 '<button class="btn btn-link btn-xs text-danger p-0" title="Remove Project from Group" onclick="deleteProjectFromBinder(' + project.projectId + ', \'' + project.projectName.replace(/'/g, "\\'") + '\')"><i class="fa fa-times-circle"></i> Remove Project</button>' +
@@ -3488,6 +3509,9 @@
                             }
 
                             project.sites.forEach(function (site) {
+                                // P9 Issue 65: lock is linked to the week STATUS, not the calendar month.
+                                // Invoiced / Paid / Cancelled = locked; Live / Disputed / none = editable.
+                                var isSiteLocked = !!(site.status && lockedStatusList.indexOf(site.status.toUpperCase()) !== -1);
                                 var statusHtml = '';
                                 if (site.status) {
                                     var imgName = '';
@@ -3499,8 +3523,10 @@
                                         case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
                                     }
                                     if (imgName) {
-                                        statusHtml = '<div class="mt-auto pb-1 text-center">' + 
-                                                       '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + site.status + '" />' + 
+                                        statusHtml = '<div class="mt-auto pb-1 text-center">' +
+                                                       '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + site.status + '" />' +
+                                                       // P9 Issue 65: lock symbol beside the stamp for read-only weeks
+                                                       (isSiteLocked ? ' <i class="fa fa-lock text-danger ml-1" title="Week locked (' + site.status + '). Change status to Live or Disputed to edit."></i>' : '') +
                                                      '</div>';
                                     }
                                 }
@@ -3564,7 +3590,8 @@
                                 site.days.forEach(function (daySchedules, index) {
                                     var cellDate = new Date(currentStartDate);
                                     cellDate.setDate(cellDate.getDate() + index);
-                                    var isDayLocked = cellDate < firstDayOfCurrentMonth;
+                                    // P9 Issue 65: locking derives from the site's week status (see isSiteLocked above)
+                                    var isDayLocked = isSiteLocked;
                                     var isPh = (site.isPublicHoliday && site.isPublicHoliday[index]);
                                     var phClass = isPh ? "ph-highlight" : "";
                                     var phReason = (site.publicHolidayReasons && site.publicHolidayReasons[index]) || "";
@@ -3973,6 +4000,15 @@
                                 projectSection = headerRow.nextUntil('tr.bg-light');
                             }
                             updateProjectStamps(projectSection, status);
+
+                            // P9 Issue 65: reload the grid so the lock symbol and the
+                            // editable/locked state of every cell reflect the new status
+                            // immediately (edit/delete buttons, drag & drop, add-guard).
+                            if ($('#projects-tab').hasClass('active')) {
+                                loadRoster();
+                            } else {
+                                loadBinderRoster();
+                            }
                         } else {
                             alert(res.message);
                         }

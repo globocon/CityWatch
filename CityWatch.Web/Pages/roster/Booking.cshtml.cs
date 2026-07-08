@@ -161,7 +161,11 @@ namespace CityWatch.Web.Pages.roster
                 .OrderBy(x => x.Name)
                 .ToList();
 
-            // Locking logic: Dec is locked if it's Jan.
+            // Page-level date flag: true when the displayed week is in a previous calendar month.
+            // P9 Issue 65 NOTE: shift-level edit locking is NOT based on this anymore - it is
+            // linked to the site's week STATUS (see GetWeekStatusLockMessageAsync). IsLocked is
+            // kept date-based on purpose: it only gates the "Remove Site from Group" icon in the
+            // grid, which is a structural change to the project rather than a shift edit.
             var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
             IsLocked = EndDate < firstDayOfCurrentMonth;
 
@@ -536,6 +540,26 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(new { success = false, message = "This site is already added to the group." });
         }
 
+        // P9 Issue 65: shift edit locking is linked to the site's week STATUS, not the calendar month.
+        // Live / Disputed (or no status set yet) = editable; Invoiced / Paid / Cancelled = locked.
+        private static readonly string[] LockedWeekStatuses = { "Invoiced", "Paid", "Cancelled" };
+
+        private async Task<string> GetWeekStatusLockMessageAsync(int clientSiteId, DateTime shiftDate)
+        {
+            var weekStart = StartOfWeek(shiftDate, GetFirstDayOfWeek());
+            var status = await _context.RosterSiteWeekStatuses
+                .Where(x => x.ClientSiteId == clientSiteId && x.StartDate == weekStart)
+                .Select(x => x.Status)
+                .FirstOrDefaultAsync();
+
+            if (!string.IsNullOrEmpty(status) && LockedWeekStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                return $"This week is locked because its status is '{status}'. Change the status to Live or Disputed to make changes.";
+            }
+
+            return null;
+        }
+
         public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, decimal? payRate = null, bool ignoreUnavailability = false)
         {
             if (payRateId.HasValue && payRate.HasValue)
@@ -547,13 +571,11 @@ namespace CityWatch.Web.Pages.roster
                     // No need for separate save here, it will be saved with the shift
                 }
             }
-            // Lock Check
-            var today = DateTime.Today;
-            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            var weekEndDate = StartOfWeek(start, GetFirstDayOfWeek()).AddDays(6);
-            if (weekEndDate < firstDayOfCurrentMonth)
+            // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+            var addShiftLockMessage = await GetWeekStatusLockMessageAsync(siteId, start);
+            if (addShiftLockMessage != null)
             {
-                return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                return new JsonResult(new { success = false, message = addShiftLockMessage });
             }
 
             // Validation: Time range check (00:01 - 23:59)
@@ -935,12 +957,11 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule != null)
             {
-                var today = DateTime.Today;
-                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
-                if (weekEndDate < firstDayOfCurrentMonth)
+                // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+                var updateLockMessage = await GetWeekStatusLockMessageAsync(schedule.ClientSiteId, schedule.ShiftStart);
+                if (updateLockMessage != null)
                 {
-                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                    return new JsonResult(new { success = false, message = updateLockMessage });
                 }
 
                 schedule.Status = (RosterShiftStatus)status;
@@ -967,12 +988,11 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule != null)
             {
-                var today = DateTime.Today;
-                var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-                var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
-                if (weekEndDate < firstDayOfCurrentMonth)
+                // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+                var deleteLockMessage = await GetWeekStatusLockMessageAsync(schedule.ClientSiteId, schedule.ShiftStart);
+                if (deleteLockMessage != null)
                 {
-                    return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                    return new JsonResult(new { success = false, message = deleteLockMessage });
                 }
 
                 int oldStatusVal = (int)schedule.Status;
@@ -1460,7 +1480,11 @@ namespace CityWatch.Web.Pages.roster
                         .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= targetStart && x.ShiftStart < copyUntil)
                         .ToListAsync();
                     
-                    // Do not delete shifts that are in previous/locked months
+                    // Do not delete shifts that are in previous/locked months.
+                    // P9 Issue 65 NOTE: this date safeguard is intentionally KEPT even though
+                    // single-shift editing is now status-based. Rollover "erase future" is a bulk
+                    // operation; keeping the date guard prevents it from silently wiping past
+                    // weeks (e.g. already invoiced ones) in one click.
                     var firstDayOfWeek = GetFirstDayOfWeek();
                     var shiftsAllowedToDelete = shiftsToDelete.Where(x => StartOfWeek(x.ShiftStart, firstDayOfWeek).AddDays(6) >= firstDayOfCurrentMonth).ToList();
                     
@@ -1479,7 +1503,7 @@ namespace CityWatch.Web.Pages.roster
 
                 foreach (var targetWeekStart in targetWeeks)
                 {
-                    if (targetWeekStart.AddDays(6) < firstDayOfCurrentMonth) continue; // Safety check
+                    if (targetWeekStart.AddDays(6) < firstDayOfCurrentMonth) continue; // Safety check (kept date-based on purpose - see P9 Issue 65 note above)
 
                     foreach (var source in sourceSchedules)
                     {
@@ -1801,12 +1825,11 @@ namespace CityWatch.Web.Pages.roster
             var schedule = await _context.RosterSchedules.FindAsync(id);
             if (schedule == null) return new JsonResult(new { success = false, message = "Shift not found." });
 
-            var today = DateTime.Today;
-            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
-            var weekEndDate = StartOfWeek(schedule.ShiftStart, GetFirstDayOfWeek()).AddDays(6);
-            if (weekEndDate < firstDayOfCurrentMonth)
+            // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
+            var cycleLockMessage = await GetWeekStatusLockMessageAsync(schedule.ClientSiteId, schedule.ShiftStart);
+            if (cycleLockMessage != null)
             {
-                return new JsonResult(new { success = false, message = "Changes to previous months are locked." });
+                return new JsonResult(new { success = false, message = cycleLockMessage });
             }
 
             // Cycle: Regular -> Adhoc -> RegularAccepted -> AdhocAccepted -> Declined -> Regular
