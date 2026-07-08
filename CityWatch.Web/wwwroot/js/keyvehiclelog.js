@@ -2485,6 +2485,7 @@ $(function () {
         });
 
         $('#chk_cs_ISO').on('change', function () {
+            $('#Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego, #Trailer5Rego, #Trailer6Rego, #Trailer7Rego, #Trailer8Rego').val('').trigger('change');
             const isChecked = $(this).is(':checked');
             if (isChecked) {
                 $('#chk_cs_VIN').prop('checked', false);
@@ -2499,6 +2500,7 @@ $(function () {
             }
         });
         $('#chk_cs_VIN').on('change', function () {
+            $('#Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego, #Trailer5Rego, #Trailer6Rego, #Trailer7Rego, #Trailer8Rego').val('').trigger('change');
             const isChecked = $(this).is(':checked');
             if (isChecked) {
                 $('#chk_cs_ISO').prop('checked', false);
@@ -2513,6 +2515,7 @@ $(function () {
             }
         });
         $('#chk_cs_TrailerRego').on('change', function () {
+            $('#Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego, #Trailer5Rego, #Trailer6Rego, #Trailer7Rego, #Trailer8Rego').val('').trigger('change');
             const isChecked = $(this).is(':checked');
             if (isChecked) {
                 $('#chk_cs_ISO').prop('checked', false);
@@ -2527,6 +2530,7 @@ $(function () {
             }
         });
         $('#chk_cs_CarsStock').on('change', function () {
+            $('#Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego, #Trailer5Rego, #Trailer6Rego, #Trailer7Rego, #Trailer8Rego').val('').trigger('change');
             const isChecked = $(this).is(':checked');
             if (isChecked) {
                 $('#chk_cs_ISO').prop('checked', false);
