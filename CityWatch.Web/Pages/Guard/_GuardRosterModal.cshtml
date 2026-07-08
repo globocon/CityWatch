@@ -446,22 +446,19 @@
                             </select>
                         </div>
 
-                        <!-- Guard Filter Control [NEW] -->
-                        <div class="input-group input-group-sm ml-2" style="width: 150px;">
+                        <!-- Guard Filter Control [NEW] - icon only, no "FILTER" text -->
+                        <div class="input-group input-group-sm ml-2" style="width: 130px;" title="Filter by Guard">
                             <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-filter mr-1"></i> FILTER</span>
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-filter"></i></span>
                             </div>
                             <select id="adminGuardFilter" class="form-control font-weight-bold" style="font-size: 10px; height: 32px; border-left: 0;">
                                 <option value="ALL">ALL GUARDS</option>
                             </select>
                         </div>
 
-                        <!-- Callsign Filter Control [NEW - Issue 68] -->
-                        <div class="input-group input-group-sm ml-2" style="width: 150px;" title="Filter by Callsign">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-microphone"></i></span>
-                            </div>
-                            <select id="adminCallsignFilter" class="form-control font-weight-bold" style="font-size: 10px; height: 32px; border-left: 0;">
+                        <!-- Callsign Filter Control [NEW - Issue 68] - dropdown only, no icon -->
+                        <div class="input-group input-group-sm ml-2" style="width: 130px;" title="Filter by Callsign">
+                            <select id="adminCallsignFilter" class="form-control font-weight-bold" style="font-size: 10px; height: 32px;">
                                 <option value="ALL">ALL CALLSIGNS</option>
                             </select>
                         </div>
@@ -490,7 +487,7 @@
                     <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-2" id="btnDownloadGuardPdf" title="Download PDF">
                         <i class="fa fa-file-pdf-o mr-1"></i>PDF
                     </button>
-                    <button type="button" class="close ml-2" data-dismiss="modal" aria-label="Close" style="opacity: 1; outline: none; box-shadow: none; flex-shrink: 0;">
+                    <button type="button" class="close ml-3 pl-2" data-dismiss="modal" aria-label="Close" style="opacity: 1; outline: none; box-shadow: none; flex-shrink: 0;">
                         <span aria-hidden="true" style="font-size: 1.5rem; color: #000;">&times;</span>
                     </button>
                 </div>
