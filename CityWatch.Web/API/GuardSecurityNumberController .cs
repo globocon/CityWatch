@@ -5223,6 +5223,141 @@ namespace CityWatch.Web.API
             }
         }
 
+        [HttpGet("GetGuardRosterAcrossSites")]
+        public async Task<IActionResult> GetGuardRosterAcrossSites(int guardId, string? date = null)
+        {
+            try
+            {
+                DateTime selectedDate;
+                if (string.IsNullOrEmpty(date))
+                {
+                    selectedDate = DateTime.Today;
+                }
+                else
+                {
+                    if (!DateTime.TryParse(date, out selectedDate))
+                    {
+                        selectedDate = DateTime.Today;
+                    }
+                }
+
+                // 1. Calculate Start of Week (Logic matched from GetRoster)
+                var timesheet = _clientDataProvider.GetTimesheetDetails();
+                DayOfWeek firstDayOfWeek = DayOfWeek.Monday;
+                if (timesheet != null && !string.IsNullOrEmpty(timesheet.weekName))
+                {
+                    if (Enum.TryParse<DayOfWeek>(timesheet.weekName, true, out var parsedDay))
+                    {
+                        firstDayOfWeek = parsedDay;
+                    }
+                }
+
+                int diff = (7 + (selectedDate.DayOfWeek - firstDayOfWeek)) % 7;
+                var startDate = selectedDate.AddDays(-1 * diff).Date;
+                var totalEndDate = startDate.AddDays(7).AddSeconds(-1);
+
+                // 2. Fetch this guard's schedules across all sites (as guard or relief guard)
+                var schedules = await _context.RosterSchedules
+                    .Where(x => (x.GuardId == guardId || x.ReliefGuardId == guardId) && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart <= totalEndDate)
+                    .Include(x => x.Guard)
+                    .Include(x => x.ReliefGuard)
+                    .Include(x => x.Callsign)
+                    .Include(x => x.PayRate)
+                    .Include(x => x.ClientSite).ThenInclude(cs => cs.ClientType)
+                    .OrderBy(x => x.ShiftStart)
+                    .ToListAsync();
+
+                // 3. Fetch Holidays logic (web parity, shared by all sites)
+                var holidays = await _context.BroadcastBannerCalendarEvents
+                    .Where(x => x.IsPublicHoliday && (x.RepeatYearly || (x.ExpiryDate >= startDate && x.StartDate <= totalEndDate)))
+                    .Select(x => new
+                    {
+                        x.id,
+                        x.StartDate,
+                        x.ExpiryDate,
+                        x.RepeatYearly,
+                        Reason = x.TextMessage,
+                        States = _context.PublicHolidayStates
+                            .Where(s => s.CalendarEventId == x.id && !s.IsDeleted)
+                            .Select(s => s.State)
+                            .ToList()
+                    })
+                    .ToListAsync();
+
+                var siteIds = schedules.Select(s => s.ClientSiteId).Distinct().ToList();
+                var weekStatuses = await _context.RosterSiteWeekStatuses
+                    .Where(x => siteIds.Contains(x.ClientSiteId) && x.StartDate == startDate)
+                    .ToListAsync();
+
+                // 4. Group by site; each site object mirrors the GetRoster response shape
+                var sites = new List<object>();
+                foreach (var siteGroup in schedules.GroupBy(s => s.ClientSiteId).OrderBy(g => g.First().ClientSite?.Name))
+                {
+                    var siteSchedules = siteGroup.ToList();
+                    var site = siteSchedules.First().ClientSite;
+
+                    var days = new List<object>();
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var loopDate = startDate.AddDays(i).Date;
+                        var dayShifts = siteSchedules
+                            .Where(s => s.ShiftStart.Date == loopDate)
+                            .OrderBy(s => s.ShiftStart)
+                            .Select(s => new
+                            {
+                                s.Id,
+                                shiftStart = s.ShiftStart.ToString("HH:mm"),
+                                shiftEnd = s.ShiftEnd.ToString("HH:mm"),
+                                guardId = s.GuardId,
+                                guardName = s.Guard != null ? s.Guard.Name : s.ProviderName,
+                                reliefGuardId = s.ReliefGuardId,
+                                reliefGuardName = s.ReliefGuard != null ? s.ReliefGuard.Name : s.ReliefProviderName,
+                                reliefProviderName = s.ReliefProviderName,
+                                reliefReason = s.ReliefReason,
+                                guardLicense = s.Guard != null ? s.Guard.SecurityNo : "",
+                                reliefGuardLicense = s.ReliefGuard != null ? s.ReliefGuard.SecurityNo : "",
+                                guardProvider = !string.IsNullOrEmpty(s.ProviderName) ? s.ProviderName : (s.Guard != null ? (s.Guard.Provider ?? "N/A") : "N/A"),
+                                shiftType = s.ShiftType ?? "Regular",
+                                status = (int)s.Status,
+                                callsignName = s.Callsign != null ? s.Callsign.Name : "",
+                                durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
+                                sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
+                                buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                            })
+                            .ToList<object>();
+                        days.Add(dayShifts);
+                    }
+
+                    var statusObj = weekStatuses.FirstOrDefault(x => x.ClientSiteId == siteGroup.Key);
+                    var status = statusObj?.Status ?? (siteSchedules.Any() ? "Live" : "");
+
+                    sites.Add(new
+                    {
+                        siteId = siteGroup.Key,
+                        startDate = startDate.ToString("yyyy-MM-dd"),
+                        endDate = startDate.AddDays(6).ToString("yyyy-MM-dd"),
+                        siteName = site?.Name ?? "Unknown Site",
+                        clientTypeName = site?.ClientType?.Name ?? "Security Service",
+                        siteState = site?.State,
+                        status = status,
+                        holidays = holidays,
+                        days = days
+                    });
+                }
+
+                return Ok(new
+                {
+                    startDate = startDate.ToString("yyyy-MM-dd"),
+                    endDate = startDate.AddDays(6).ToString("yyyy-MM-dd"),
+                    sites = sites
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while fetching guard roster across sites", error = ex.Message });
+            }
+        }
+
         [HttpPost("UpdateShiftStatus")]
         /* 
          * GUARD ROSTER FLOW (Web & Mobile Sync):
