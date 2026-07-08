@@ -849,6 +849,7 @@
     var lastGuardRosterData = null;
     var isROEditor = false;
     var isEditMode = false;
+    var isWeekLocked = false;
     
     // Public Holiday Orange Sun SVG
     const phIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg>`;
@@ -906,7 +907,7 @@
         // Drag and Drop Event Listeners for Guard Roster
         $(document).on('dragstart', '.guard-shift-card', function (e) {
             var card = $(this);
-            if (!isEditMode) { e.preventDefault(); return; }
+            if (!isEditMode || isWeekLocked) { e.preventDefault(); return; }
             card.addClass('dragging');
             
             var shiftData = {
@@ -930,7 +931,7 @@
         });
 
         $(document).on('dragover', '.guard-roster-cell', function (e) {
-            if (isEditMode && $(this).data('site-id')) {
+            if (isEditMode && !isWeekLocked && $(this).data('site-id')) {
                 e.preventDefault();
                 e.originalEvent.dataTransfer.dropEffect = 'copy';
                 $(this).addClass('drag-over');
@@ -944,7 +945,7 @@
         $(document).on('drop', '.guard-roster-cell', function (e) {
             e.preventDefault();
             $(this).removeClass('drag-over');
-            if (!isEditMode) return;
+            if (!isEditMode || isWeekLocked) return;
 
             var siteId = $(this).data('site-id');
             var cellDate = $(this).data('date');
@@ -1343,6 +1344,9 @@
             success: function(res) {
                 $('#adminRosterStatus').val(res.status || 'Live');
                 updateGridStatusDisplay(res.status || 'Live');
+                
+                var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                isWeekLocked = !!(res.status && lockedStatusList.indexOf(res.status.toUpperCase()) !== -1);
             }
         });
     }
@@ -1447,10 +1451,10 @@
                         '<td class="px-3 font-weight-bold">' + ent.name + '</td>' +
                         '<td class="text-right remuneration-total">$' + ent.total.toFixed(2) + '</td>' +
                         '<td class="text-center">' +
-                            '<input type="checkbox" class="paid-checkbox" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" ' + (dbItem.isPaid ? 'checked' : '') + ' />' +
+                            '<input type="checkbox" class="paid-checkbox" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" ' + (dbItem.isPaid ? 'checked' : '') + ' ' + (isWeekLocked ? 'disabled' : '') + ' />' +
                         '</td>' +
                         '<td>' +
-                            '<input type="text" class="remuneration-note-input" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" value="' + (dbItem.notes || '') + '" placeholder="Add notes..." />' +
+                            '<input type="text" class="remuneration-note-input" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" value="' + (dbItem.notes || '') + '" placeholder="Add notes..." ' + (isWeekLocked ? 'disabled' : '') + ' />' +
                         '</td>' +
                     '</tr>';
                     tbody.append(rowHtml);
@@ -1470,6 +1474,7 @@
     }
 
     function saveRemunerationItem(input) {
+        if (isWeekLocked) return;
         var guardId = input.data('guardid');
         var providerName = input.data('providername');
         var totalAmount = input.data('total');
@@ -1514,6 +1519,9 @@
                 setTimeout(function() {
                     $('#rosterAdminAlert').fadeOut();
                 }, 3000);
+
+                // Reload the roster to apply lock/unlock state
+                loadGuardRoster();
             }
         });
     }
@@ -1574,6 +1582,9 @@
 
                  lastGuardRosterData = res;
                  currentRosterGroupId = res.rosterGroupId || null;
+
+                 var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                 isWeekLocked = !!(res.status && lockedStatusList.indexOf(res.status.toUpperCase()) !== -1);
 
                 // Update Filter Dropdown (Add unique guards found in data)
                 var filterSelect = $('#adminGuardFilter');
@@ -1675,6 +1686,8 @@
 
                     var statusStampHtml = '';
                     var status = row.projectStatus || res.status;
+                    var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                    var isRowLocked = !!(status && lockedStatusList.indexOf(status.toUpperCase()) !== -1);
                     if (isEditMode && status) {
                         var imgName = '';
                         switch(status.toUpperCase()) {
@@ -1687,6 +1700,7 @@
                         if (imgName) {
                             statusStampHtml = '<div class="text-center">' + 
                                              '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + status + '" />' + 
+                                             (isRowLocked ? '<div class="mt-1 text-danger font-weight-bold" style="font-size: 11px;" title="This week is locked (' + status + '). Change status to Live or Disputed to edit shifts."><i class="fa fa-lock mr-1"></i>LOCKED</div>' : '') +
                                              '</div>';
                         }
                     }
@@ -1762,7 +1776,7 @@
                             today.setHours(0,0,0,0);
                             var isFutureOrToday = shiftDate >= today;
 
-                            rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + isEditMode + '" ' +
+                            rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (isEditMode && !isRowLocked) + '" ' +
                                 'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '" ' +
                                 'data-guard-name="' + (s.guardName || '') + '" data-shift-start="' + s.shiftStart + '" data-shift-end="' + s.shiftEnd + '" ' +
                                 'data-provider-name="' + (s.providerName || '') + '" data-relief-provider-name="' + (s.reliefProviderName || '') + '" ' +
@@ -1770,8 +1784,8 @@
                                 'data-adhoc-text="' + (s.adhocOffsiteText || '') + '" data-callsign-id="' + (s.callsignId || '') + '" data-callsign-name="' + (s.callsignName || '') + '" ' +
                                 'data-payrate-id="' + (s.payRateId || '') + '" data-payrate-group-id="' + (s.payRateGroupId || '') + '" ' +
                                 'data-buy-rate="' + s.buyRate + '" data-group-id="' + s.groupId + '">' +
-                                (isEditMode ? '<span class="btn-delete-shift" onclick="deleteGuardRosterShift(event, ' + s.id + ')"><i class="fa fa-times"></i></span>' : '') +
-                                (isEditMode ? '<span class="btn-edit-shift" onclick="openEditShiftModal(' + s.id + ', ' + s.groupId + ', ' + row.siteId + ')"><i class="fa fa-pencil"></i></span>' : '') +
+                                (isEditMode && !isRowLocked ? '<span class="btn-delete-shift" onclick="deleteGuardRosterShift(event, ' + s.id + ')"><i class="fa fa-times"></i></span>' : '') +
+                                (isEditMode && !isRowLocked ? '<span class="btn-edit-shift" onclick="openEditShiftModal(' + s.id + ', ' + s.groupId + ', ' + row.siteId + ')"><i class="fa fa-pencil"></i></span>' : '') +
                                 (belongsToLoggedGuard && !isEditMode ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
                                 '<div class="text-truncate font-weight-bold">' + 
                                     (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
@@ -1792,7 +1806,7 @@
                             
                             rowHtml += '</div>';
                         });
-                        if (isEditMode) {
+                        if (isEditMode && !isRowLocked) {
                              rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard-roster btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-date="' + dStr + '" data-site-id="' + row.siteId + '" data-group-id="' + (row.rosterGroupId || '') + '"><i class="fa fa-plus"></i></button>';
                         }
                         rowHtml += '</td>';
@@ -2098,6 +2112,10 @@
     }
 
     function saveGuardRosterShiftAttempt(ignoreUnavail) {
+        if (isWeekLocked) {
+            alert('Cannot save: This week is locked.');
+            return;
+        }
         var shiftId = parseInt($('#geModalShiftId').val()) || 0;
         var groupId = parseInt($('#geModalGroupId').val()) || 0;
         var siteId = parseInt($('#geModalSiteId').val()) || 0;
@@ -2343,6 +2361,7 @@
     // * Note: Guards cannot reset back to Orange (Pending) once interacted.
     $(document).on('click', '.clickable-shift', function(e) {
         if ($(e.target).closest('.btn-delete-shift, .btn-edit-shift').length) return;
+        if (isWeekLocked) return;
         var card = $(this);
         var shiftId = card.data('shift-id');
         var currentStatus = parseInt(card.data('status'));
