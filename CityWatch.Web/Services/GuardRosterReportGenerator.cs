@@ -32,7 +32,7 @@ namespace CityWatch.Web.Services
     /// </summary>
     public interface IGuardRosterReportGenerator
     {
-        Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false);
+        Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false, string guardFilter = "ALL", string callsignFilter = "ALL");
     }
 
     public class GuardRosterReportGenerator : IGuardRosterReportGenerator
@@ -70,7 +70,7 @@ namespace CityWatch.Web.Services
             public bool IsPublicHoliday { get; set; }
         }
 
-        public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false)
+        public async Task<byte[]> GenerateSiteRosterPdfAsync(int siteId, DateTime startDate, int weeks = 1, bool includeFinancials = false, string rateType = "guard", string status = "", bool includeSuppliers = false, string guardFilter = "ALL", string callsignFilter = "ALL")
         {
             var site = await _context.ClientSites.Include(s => s.ClientType).FirstOrDefaultAsync(x => x.Id == siteId);
             if (site == null) return null;
@@ -86,6 +86,24 @@ namespace CityWatch.Web.Services
                 .Include(x => x.PayRate)
                 .OrderBy(x => x.ShiftStart)
                 .ToListAsync();
+
+            // Apply the on-screen guard/callsign filters so the PDF matches the HTML grid [Issue 68].
+            // Keys mirror the modal JS: guard = "G{id}" (relief guard owns the shift) or "P{name}" for provider-only shifts; callsign = "C{id}".
+            if (!string.IsNullOrEmpty(guardFilter) && guardFilter != "ALL")
+            {
+                schedules = schedules.Where(s =>
+                {
+                    var effectiveGuardId = s.ReliefGuardId ?? s.GuardId;
+                    var effectiveName = s.ReliefGuard?.Name ?? s.ReliefProviderName ?? s.Guard?.Name ?? s.ProviderName ?? "Unassigned";
+                    var key = effectiveGuardId.HasValue ? ("G" + effectiveGuardId.Value) : ("P" + effectiveName);
+                    return key == guardFilter;
+                }).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(callsignFilter) && callsignFilter != "ALL")
+            {
+                schedules = schedules.Where(s => (s.CallsignId.HasValue ? ("C" + s.CallsignId.Value) : "NONE") == callsignFilter).ToList();
+            }
 
             // Fetch Holidays for the range (including recurring match patterns)
             var holidayEvents = await _context.BroadcastBannerCalendarEvents

@@ -446,24 +446,22 @@
                             </select>
                         </div>
 
-                        <!-- Guard Filter Control [NEW] -->
-                        <div class="input-group input-group-sm ml-2" style="width: 150px;">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-filter mr-1"></i> FILTER</span>
-                            </div>
-                            <select id="adminGuardFilter" class="form-control font-weight-bold" style="font-size: 10px; height: 32px; border-left: 0;">
+                        <!-- Filter Group [Issue 68] - Guard + Callsign filters in one neat outlined container -->
+                        <div class="d-flex align-items-center ml-2 border rounded bg-white overflow-hidden" style="height: 32px;" title="Filter Roster">
+                            <span class="text-muted pl-2 pr-1" style="font-size: 11px;"><i class="fa fa-filter"></i></span>
+                            <select id="adminGuardFilter" class="form-control font-weight-bold border-0 rounded-0 shadow-none h-100 pl-1" style="font-size: 10px; width: 105px;" title="Filter by Guard">
                                 <option value="ALL">ALL GUARDS</option>
+                            </select>
+                            <select id="adminCallsignFilter" class="form-control font-weight-bold border-0 border-left rounded-0 shadow-none h-100 pl-1" style="font-size: 10px; width: 115px;" title="Filter by Callsign">
+                                <option value="ALL">ALL CALLSIGNS</option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Site Switcher (Admins & RO Editors) -->
                     <div id="guardRosterSiteSwitcher" class="d-none align-items-center mr-2">
-                        <div class="input-group input-group-sm mr-2" style="width: 140px;">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white text-muted small font-weight-bold border-right-0" title="Client Type"><i class="fa fa-building"></i></span>
-                            </div>
-                            <select id="grModalClientType" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px; border-left: 0;">
+                        <div class="input-group input-group-sm mr-2" style="width: 130px;">
+                            <select id="grModalClientType" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px;">
                                 <option value="">Client Type</option>
                             </select>
                         </div>
@@ -474,13 +472,13 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none" id="btnToggleRosterEditMode" title="Toggle Edit Mode">
+                    <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none text-nowrap" id="btnToggleRosterEditMode" style="height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;" title="Toggle Edit Mode">
                         <i class="fa fa-pencil-square-o mr-1"></i>RO
                     </button>
-                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-2" id="btnDownloadGuardPdf" title="Download PDF">
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-2 text-nowrap d-inline-flex align-items-center justify-content-center" id="btnDownloadGuardPdf" style="height: 32px; flex-shrink: 0;" title="Download PDF">
                         <i class="fa fa-file-pdf-o mr-1"></i>PDF
                     </button>
-                    <button type="button" class="close ml-2" data-dismiss="modal" aria-label="Close" style="opacity: 1; outline: none; box-shadow: none; flex-shrink: 0;">
+                    <button type="button" class="close ml-3 pl-2" data-dismiss="modal" aria-label="Close" style="opacity: 1; outline: none; box-shadow: none; flex-shrink: 0;">
                         <span aria-hidden="true" style="font-size: 1.5rem; color: #000;">&times;</span>
                     </button>
                 </div>
@@ -1199,14 +1197,16 @@
         $('#btnConfirmGuardDownload').on('click', function() {
             var weeks = $('#guardPdfWeeks').val();
             var status = currentRosterStatus; // Send the status regardless of role
-            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' + 
-                '&siteId=' + currentGuardSiteId + 
-                '&startDate=' + guardRosterStartDate + 
-                '&weeks=' + weeks + 
-                '&includeFinancials=' + isAdminFinancialsOn + 
-                '&rateType=' + adminRateType + 
+            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' +
+                '&siteId=' + currentGuardSiteId +
+                '&startDate=' + guardRosterStartDate +
+                '&weeks=' + weeks +
+                '&includeFinancials=' + isAdminFinancialsOn +
+                '&rateType=' + adminRateType +
                 '&status=' + status +
-                '&includeSuppliers=' + isAdminSupplierOn;
+                '&includeSuppliers=' + isAdminSupplierOn +
+                '&guardFilter=' + encodeURIComponent($('#adminGuardFilter').val() || 'ALL') +
+                '&callsignFilter=' + encodeURIComponent($('#adminCallsignFilter').val() || 'ALL');
             window.open(url, '_blank');
             $('#guardDownloadFilterModal').modal('hide');
         });
@@ -1241,6 +1241,10 @@
         });
 
         $('#adminGuardFilter').on('change', function() {
+            applyGuardFilter();
+        });
+
+        $('#adminCallsignFilter').on('change', function() {
             applyGuardFilter();
         });
 
@@ -1609,7 +1613,31 @@
                     filterSelect.append('<option value="' + g.key + '">' + g.name + '</option>');
                 });
                 filterSelect.val(currentSelection || "ALL");
-                    var filterVal = filterSelect.val();
+                if (!filterSelect.val()) filterSelect.val("ALL"); // Selected guard not rostered this week
+                var filterVal = filterSelect.val();
+
+                // Update Callsign Filter Dropdown (Add unique callsigns found in this week's data) [Issue 68]
+                var callsignSelect = $('#adminCallsignFilter');
+                var currentCallsignSelection = callsignSelect.val();
+                callsignSelect.find('option:not([value="ALL"])').remove();
+
+                var filterCallsigns = [];
+                res.results.forEach(function(row) {
+                    row.days.forEach(function(dayShifts) {
+                        dayShifts.forEach(function(s) {
+                            if (s.callsignId && s.callsignName && !filterCallsigns.find(x => x.key === ("C" + s.callsignId))) {
+                                filterCallsigns.push({ key: "C" + s.callsignId, name: s.callsignName });
+                            }
+                        });
+                    });
+                });
+
+                filterCallsigns.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+                    callsignSelect.append('<option value="' + c.key + '">' + c.name + '</option>');
+                });
+                callsignSelect.val(currentCallsignSelection || "ALL");
+                if (!callsignSelect.val()) callsignSelect.val("ALL"); // Selected callsign not used this week
+                var callsignFilterVal = callsignSelect.val();
                 var grandTotalHours = 0;
                 var grandTotalCost = 0;
                 var dailyTotalHours = [0,0,0,0,0,0,0];
@@ -1738,6 +1766,10 @@
                             
                             // Apply Filtering
                             if (filterVal !== "ALL" && filterVal !== key) return;
+
+                            // Apply Callsign Filtering [Issue 68]
+                            var callsignKey = s.callsignId ? ("C" + s.callsignId) : "NONE";
+                            if (callsignFilterVal !== "ALL" && callsignFilterVal !== callsignKey) return;
 
                             var duration = parseFloat(s.durationHours);
                             var activeRate = (adminRateType == 'sell' ? s.sellRate : s.buyRate);
