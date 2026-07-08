@@ -455,6 +455,16 @@
                                 <option value="ALL">ALL GUARDS</option>
                             </select>
                         </div>
+
+                        <!-- Callsign Filter Control [NEW - Issue 68] -->
+                        <div class="input-group input-group-sm ml-2" style="width: 150px;" title="Filter by Callsign">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold"><i class="fa fa-microphone"></i></span>
+                            </div>
+                            <select id="adminCallsignFilter" class="form-control font-weight-bold" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="ALL">ALL CALLSIGNS</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Site Switcher (Admins & RO Editors) -->
@@ -1198,14 +1208,16 @@
         $('#btnConfirmGuardDownload').on('click', function() {
             var weeks = $('#guardPdfWeeks').val();
             var status = currentRosterStatus; // Send the status regardless of role
-            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' + 
-                '&siteId=' + currentGuardSiteId + 
-                '&startDate=' + guardRosterStartDate + 
-                '&weeks=' + weeks + 
-                '&includeFinancials=' + isAdminFinancialsOn + 
-                '&rateType=' + adminRateType + 
+            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' +
+                '&siteId=' + currentGuardSiteId +
+                '&startDate=' + guardRosterStartDate +
+                '&weeks=' + weeks +
+                '&includeFinancials=' + isAdminFinancialsOn +
+                '&rateType=' + adminRateType +
                 '&status=' + status +
-                '&includeSuppliers=' + isAdminSupplierOn;
+                '&includeSuppliers=' + isAdminSupplierOn +
+                '&guardFilter=' + encodeURIComponent($('#adminGuardFilter').val() || 'ALL') +
+                '&callsignFilter=' + encodeURIComponent($('#adminCallsignFilter').val() || 'ALL');
             window.open(url, '_blank');
             $('#guardDownloadFilterModal').modal('hide');
         });
@@ -1240,6 +1252,10 @@
         });
 
         $('#adminGuardFilter').on('change', function() {
+            applyGuardFilter();
+        });
+
+        $('#adminCallsignFilter').on('change', function() {
             applyGuardFilter();
         });
 
@@ -1598,7 +1614,31 @@
                     filterSelect.append('<option value="' + g.key + '">' + g.name + '</option>');
                 });
                 filterSelect.val(currentSelection || "ALL");
-                    var filterVal = filterSelect.val();
+                if (!filterSelect.val()) filterSelect.val("ALL"); // Selected guard not rostered this week
+                var filterVal = filterSelect.val();
+
+                // Update Callsign Filter Dropdown (Add unique callsigns found in this week's data) [Issue 68]
+                var callsignSelect = $('#adminCallsignFilter');
+                var currentCallsignSelection = callsignSelect.val();
+                callsignSelect.find('option:not([value="ALL"])').remove();
+
+                var filterCallsigns = [];
+                res.results.forEach(function(row) {
+                    row.days.forEach(function(dayShifts) {
+                        dayShifts.forEach(function(s) {
+                            if (s.callsignId && s.callsignName && !filterCallsigns.find(x => x.key === ("C" + s.callsignId))) {
+                                filterCallsigns.push({ key: "C" + s.callsignId, name: s.callsignName });
+                            }
+                        });
+                    });
+                });
+
+                filterCallsigns.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+                    callsignSelect.append('<option value="' + c.key + '">' + c.name + '</option>');
+                });
+                callsignSelect.val(currentCallsignSelection || "ALL");
+                if (!callsignSelect.val()) callsignSelect.val("ALL"); // Selected callsign not used this week
+                var callsignFilterVal = callsignSelect.val();
                 var grandTotalHours = 0;
                 var grandTotalCost = 0;
                 var dailyTotalHours = [0,0,0,0,0,0,0];
@@ -1724,6 +1764,10 @@
                             
                             // Apply Filtering
                             if (filterVal !== "ALL" && filterVal !== key) return;
+
+                            // Apply Callsign Filtering [Issue 68]
+                            var callsignKey = s.callsignId ? ("C" + s.callsignId) : "NONE";
+                            if (callsignFilterVal !== "ALL" && callsignFilterVal !== callsignKey) return;
 
                             var duration = parseFloat(s.durationHours);
                             var activeRate = (adminRateType == 'sell' ? s.sellRate : s.buyRate);
