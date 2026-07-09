@@ -429,6 +429,27 @@
         .crm-mini .m1 { font-size: 12px; font-weight: 700; }
         .crm-mini .m2 { font-size: 11px; color: var(--text-dim); margin-top: 2px; font-weight: 600; }
 
+        /* ================= site tour control ================= */
+        .crm-tour {
+            position: fixed; z-index: 1000; left: 50%; bottom: 10px; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 9px; padding: 7px 13px;
+        }
+        .crm-tour button {
+            width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+            font-size: 13px; line-height: 1; transition: filter .15s, transform .1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .crm-tour button:active { transform: scale(.94); }
+        #tourPlay { background: var(--accent); color: #fff; }
+        #tourPlay:hover { filter: brightness(1.12); }
+        #tourPlay.playing { background: var(--warn); }
+        #tourStop { background: var(--off-soft); color: var(--text-dim); }
+        #tourStop:hover:not(:disabled) { background: var(--alarm-soft); color: var(--alarm); }
+        #tourStop:disabled { opacity: .45; cursor: default; }
+        .crm-tour .tinfo { font-size: 12px; font-weight: 600; color: var(--text-dim); white-space: nowrap; min-width: 88px; }
+        .crm-tour .tinfo b { color: var(--text); }
+        .crm-tour.touring { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.15), var(--shadow); }
+
         /* legend */
         .crm-legend {
             position: fixed; z-index: 900; right: 10px; bottom: 10px;
@@ -584,6 +605,13 @@
     <div id="crmBackdrop"></div>
     <div class="crm-card" id="crmGuard"></div>
     <div id="crmToasts"></div>
+
+    <!-- ============ auto site tour ============ -->
+    <div class="crm-card crm-tour" id="crmTourBox">
+        <button type="button" id="tourPlay" title="Play site tour">&#9654;</button>
+        <button type="button" id="tourStop" title="Stop tour" disabled>&#9632;</button>
+        <span class="tinfo" id="tourInfo">Site tour</span>
+    </div>
 
     <div class="crm-card crm-legend">
         <span><span class="crm-bead ok"></span>Active</span>

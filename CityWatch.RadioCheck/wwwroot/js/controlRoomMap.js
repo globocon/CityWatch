@@ -958,6 +958,82 @@
         this.classList.toggle('closed');
     });
 
+    /* ================= auto site tour (play / pause / stop) ================= */
+    const TOUR_DWELL_MS = 2000;        /* time spent looking at each site */
+    const TOUR_FLY_SECONDS = 1.4;      /* flight time between sites */
+    const tour = { ids: [], i: -1, playing: false, timer: null };
+
+    function tourUi() {
+        const play = document.getElementById('tourPlay');
+        const stop = document.getElementById('tourStop');
+        const info = document.getElementById('tourInfo');
+        const box = document.getElementById('crmTourBox');
+        play.innerHTML = tour.playing ? '&#10074;&#10074;' : '&#9654;';
+        play.classList.toggle('playing', tour.playing);
+        play.title = tour.playing ? 'Pause tour' : (tour.i >= 0 ? 'Resume tour' : 'Play site tour');
+        stop.disabled = tour.i < 0 && !tour.playing;
+        box.classList.toggle('touring', tour.playing);
+        if (tour.i >= 0 && tour.i < tour.ids.length) {
+            const s = sites[tour.ids[tour.i]];
+            info.innerHTML = `<b>${tour.i + 1} / ${tour.ids.length}</b> ${esc(s ? (s.name.length > 20 ? s.name.slice(0, 18) + '…' : s.name) : '')}`;
+        } else {
+            info.textContent = 'Site tour';
+        }
+    }
+
+    function tourStep() {
+        if (!tour.playing) return;
+        tour.i++;
+        if (tour.i >= tour.ids.length) { tourEnd(true); return; }
+        const s = sites[tour.ids[tour.i]];
+        if (!s || !s.gps) { tourStep(); return; }     /* site vanished mid-tour → skip */
+        map.flyTo(s.gps, 16, { duration: TOUR_FLY_SECONDS });
+        openPanel(s.id);                               /* shows the site's guards */
+        tourUi();
+        tour.timer = setTimeout(tourStep, TOUR_FLY_SECONDS * 1000 + TOUR_DWELL_MS);
+    }
+
+    function tourEnd(completed) {
+        tour.playing = false;
+        clearTimeout(tour.timer);
+        tour.i = -1; tour.ids = [];
+        const panel = document.getElementById('crmPanel');
+        panel.style.display = 'none'; selectedSiteId = null;
+        const pts = Object.values(sites).filter(s => s.gps && AU_BOUNDS.contains(s.gps)).map(s => s.gps);
+        if (pts.length) map.flyToBounds(L.latLngBounds(pts).pad(0.15), { duration: 1.2 });
+        tourUi();
+        if (completed) document.getElementById('tourInfo').textContent = 'Tour complete ✓';
+    }
+
+    document.getElementById('tourPlay').addEventListener('click', () => {
+        if (tour.playing) {                            /* pause: stay on current site */
+            tour.playing = false;
+            clearTimeout(tour.timer);
+        } else {
+            if (tour.i < 0) {                          /* fresh start: tour what's on screen (filters respected) */
+                tour.ids = visibleSites().filter(s => s.gps).sort((a, b) => a.name.localeCompare(b.name)).map(s => s.id);
+                if (!tour.ids.length) return;
+                tour.i = -1;
+                tour.playing = true;
+                tourStep();
+                return;
+            }
+            tour.playing = true;                       /* resume: move on to the next site */
+            tour.timer = setTimeout(tourStep, 400);
+        }
+        tourUi();
+    });
+    document.getElementById('tourStop').addEventListener('click', () => tourEnd(false));
+
+    /* operator grabs the map → pause the tour instead of fighting them */
+    map.on('dragstart', () => {
+        if (tour.playing) {
+            tour.playing = false;
+            clearTimeout(tour.timer);
+            tourUi();
+        }
+    });
+
     /* ================= SignalR: instant refresh on duress ================= */
     (function connectSignalR() {
         try {
