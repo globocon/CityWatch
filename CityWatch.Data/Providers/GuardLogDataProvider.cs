@@ -7065,7 +7065,42 @@ namespace CityWatch.Data.Providers
                             z.EventDateTime.Date <= logToDate.Date &&
                             activityTypes.Contains(z.ActivityType))
                 .ToList(); // get full entity with all fields
+                           // Convert GuardLogs to the same model
+            var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
+            {
+                ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
+                NotificationCreatedTime = log.EventDateTime,
+                LBId = log.Id,
+                Notes = log.Notes,
+                ActivityType = log.IsIRReportTypeEntry ? "IR" : "LB", // Set ActivityType based on IsIRReportTypeEntry
+                SiteName = log.ClientSiteLogBook?.ClientSite?.Name, // Null check for ClientSite
+                GuardName = log.GuardLogin?.Guard != null
+        ? $"[{log.GuardLogin.Guard.Initial}] {log.GuardLogin.Guard.Name}"
+        : null, // Null check for Guard
+                
+                EventDateTime = log.EventDateTime,
+                EventDateTimeLocal = log.EventDateTimeLocal,
+                gpsCoordinates = log.GpsCoordinates,
+                GuardId = log.GuardLogin?.GuardId,
+                IrEntryType = log.IrEntryType,
+                IsIRReportTypeEntry = log.IsIRReportTypeEntry
 
+            }).Where(x=> x.IsIRReportTypeEntry==false ).ToList();
+            if (data.Count == 0)
+            {
+                data.AddRange(unifiedGuardLogs);
+            }
+            else
+            {
+                var existingLBIds = data
+                    .Where(x => x.LBId.HasValue)
+                    .Select(x => x.LBId.Value)
+                    .ToHashSet();
+
+                data.AddRange(
+                    unifiedGuardLogs.Where(x => !existingLBIds.Contains(x.LBId ?? 0))
+                );
+            }
             // now adjust Notes in memory
             foreach (var item in data)
             {
@@ -7116,7 +7151,7 @@ namespace CityWatch.Data.Providers
                 .Select(x => x.EventDateTimeZoneShort)
                 .FirstOrDefault();
 
-            // Convert GuardLogs to the same model
+            //// Convert GuardLogs to the same model
             //    var unifiedGuardLogs = GuardLogs.Select(log => new ClientSiteRadioChecksActivityStatus_History
             //    {
             //        ClientSiteId = log.ClientSiteLogBook?.ClientSiteId ?? 0, // Default to 0 if null
