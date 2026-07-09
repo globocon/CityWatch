@@ -38,11 +38,34 @@ namespace CityWatch.RadioCheck.Pages
         {
             var siteImage = string.Empty;
             var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
-            if (kpiSetting != null && !string.IsNullOrEmpty(kpiSetting.SiteImage) && !string.IsNullOrEmpty(_settings.KpiWebUrl))
+            if (kpiSetting != null && !string.IsNullOrEmpty(kpiSetting.SiteImage))
             {
-                siteImage = $"{new Uri(_settings.KpiWebUrl)}{kpiSetting.SiteImage}";
+                if (kpiSetting.SiteImage.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    siteImage = kpiSetting.SiteImage;
+                }
+                else
+                {
+                    siteImage = $"{GetKpiBaseUrl()}/{kpiSetting.SiteImage.TrimStart('/')}";
+                }
             }
             return new JsonResult(new { siteImage });
+        }
+
+        /// <summary>
+        /// Base URL of the KPI site that hosts the uploaded site images.
+        /// Prefers Settings:KpiWebUrl from configuration; falls back to the same
+        /// hard-coded base the Site Settings page uses (localhost dev values are
+        /// useless to the operator's browser, so they are ignored too).
+        /// </summary>
+        private string GetKpiBaseUrl()
+        {
+            var url = _settings.KpiWebUrl;
+            if (string.IsNullOrWhiteSpace(url))
+                url = _configuration.GetSection("Settings")["KpiWebUrl"];
+            if (string.IsNullOrWhiteSpace(url) || url.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+                url = "https://kpi.cws-ir.com";
+            return url.TrimEnd('/');
         }
 
         /// <summary>
@@ -72,6 +95,83 @@ namespace CityWatch.RadioCheck.Pages
                     minFq = m.MinFq,
                     wandFq = wands.Where(w => w.ClientSiteId == m.ClientSiteId).Select(w => w.WandFq).FirstOrDefault()
                 }).ToList();
+
+                return new JsonResult(result);
+            }
+            catch (Exception)
+            {
+                return new JsonResult(Array.Empty<object>());
+            }
+        }
+
+        /// <summary>
+        /// PCAR live route data: today's wand-scan confirmed site visits per patrol guard,
+        /// in chronological order, plus the planned route (for "next expected site").
+        /// A patrol's current location is the site of its most recent scan.
+        /// </summary>
+        public JsonResult OnGetPcarRoutes()
+        {
+            try
+            {
+                var today = DateTime.Today;
+                var visits = _context.PcarRouteDailyVisits
+                    .Where(v => v.CreatedAt >= today)
+                    .OrderBy(v => v.CreatedAt)
+                    .ToList();
+                if (visits.Count == 0)
+                    return new JsonResult(Array.Empty<object>());
+
+                var siteIds = visits.Select(v => v.SiteId).Distinct().ToList();
+                var sitesById = _context.ClientSites
+                    .Where(s => siteIds.Contains(s.Id))
+                    .Select(s => new { s.Id, s.Name, s.Gps })
+                    .ToList()
+                    .ToDictionary(s => s.Id);
+
+                var routeIds = visits.Select(v => v.PcarRouteId).Distinct().ToList();
+                var routesById = _context.PcarRoute
+                    .Where(r => routeIds.Contains(r.Id))
+                    .Select(r => new { r.Id, r.Pcarroutename, PatrolCarName = r.SmartWand.PatrolCarName })
+                    .ToList()
+                    .ToDictionary(r => r.Id);
+                var plannedByRoute = _context.PcarRouteDetails
+                    .Where(d => routeIds.Contains(d.PcarRouteId))
+                    .OrderBy(d => d.OrderNo)
+                    .Select(d => new { d.PcarRouteId, d.ClientSiteId, d.OrderNo, SiteName = d.ClientSite.Name })
+                    .ToList();
+
+                var result = visits
+                    .GroupBy(v => v.GuardId)
+                    .Select(g =>
+                    {
+                        var ordered = g.OrderBy(v => v.CreatedAt).ToList();
+                        var last = ordered[ordered.Count - 1];
+                        var route = routesById.ContainsKey(last.PcarRouteId) ? routesById[last.PcarRouteId] : null;
+                        var planned = plannedByRoute.Where(p => p.PcarRouteId == last.PcarRouteId).ToList();
+                        var curPlanned = planned.FirstOrDefault(p => p.ClientSiteId == last.SiteId);
+                        var next = curPlanned == null ? null : planned.FirstOrDefault(p => p.OrderNo > curPlanned.OrderNo);
+
+                        return new
+                        {
+                            guardId = g.Key,
+                            routeName = route?.Pcarroutename ?? "",
+                            patrolCarName = route?.PatrolCarName ?? "",
+                            nextSite = next?.SiteName ?? "",
+                            plannedTotal = planned.Count,
+                            visits = ordered.Select(v => new
+                            {
+                                siteId = v.SiteId,
+                                siteName = sitesById.ContainsKey(v.SiteId) ? sitesById[v.SiteId].Name : ("Site " + v.SiteId),
+                                gps = !string.IsNullOrWhiteSpace(v.GpsCoordinates)
+                                    ? v.GpsCoordinates
+                                    : (sitesById.ContainsKey(v.SiteId) ? sitesById[v.SiteId].Gps : null),
+                                timeOn = v.TimeOn,
+                                timeOff = v.TimeOff,
+                                at = v.CreatedAt
+                            }).ToList()
+                        };
+                    })
+                    .ToList();
 
                 return new JsonResult(result);
             }
@@ -119,6 +219,13 @@ namespace CityWatch.RadioCheck.Pages
                     .FirstOrDefault();
 
                 var wandPart = wandToken == null ? "w0" : $"{wandToken.MaxId}|{wandToken.Count}|{wandToken.LastUpdate:O}";
+
+                /* PCAR site-visit scans → route tracking updates */
+                var visitToken = _context.PcarRouteDailyVisits
+                    .GroupBy(x => 1)
+                    .Select(g => new { MaxId = (int?)g.Max(x => x.Id), Count = g.Count() })
+                    .FirstOrDefault();
+                wandPart += visitToken == null ? "|v0" : $"|{visitToken.MaxId}|{visitToken.Count}";
 
                 if (token == null)
                     return new JsonResult(new { token = "empty|" + wandPart });

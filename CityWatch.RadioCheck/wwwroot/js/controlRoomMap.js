@@ -56,6 +56,7 @@
 
     /* ================= state ================= */
     let sites = {};                 // clientSiteId -> site model
+    let pcarRoutes = {};            // guardId -> { routeName, patrolCarName, nextSite, plannedTotal, visits[] }
     let markers = {};               // clientSiteId -> { site: L.Marker, iconSig, cars: {guardId: {m, iconSig}} }
     let prevGuards = null;          // diff snapshots
     let recentUpdates = {};         // "siteId:guardId" -> epoch ms of last observed change
@@ -183,10 +184,19 @@
         return Promise.all([
             fetchJson('/RadioCheckV2?handler=ClientSiteActivityStatus&clientSiteIds='),
             fetchJson('/RadioCheckV2?handler=ClientSiteInActivityStatus&clientSiteIds='),
-            fetchJson('/ControlRoomMap?handler=SiteFq').catch(() => [])
-        ]).then(([active, inactive, siteFq]) => {
+            fetchJson('/ControlRoomMap?handler=SiteFq').catch(() => []),
+            fetchJson('/ControlRoomMap?handler=PcarRoutes').catch(() => [])
+        ]).then(([active, inactive, siteFq, pcar]) => {
             const fqMap = {};
             (siteFq || []).forEach(f => { fqMap[f.clientSiteId] = { min: f.minFq || 0, wand: f.wandFq || 0 }; });
+
+            /* PCAR routes keyed by guardId; visits get parsed GPS */
+            const routes = {};
+            (pcar || []).forEach(r => {
+                r.visits = (r.visits || []).map(v => ({ ...v, pos: parseGps(v.gps) })).filter(v => v.pos);
+                if (r.visits.length) routes[r.guardId] = r;
+            });
+            pcarRoutes = routes;
             const model = {};
             const add = (rec, isActive) => {
                 const id = rec.clientSiteId;
@@ -342,19 +352,22 @@
                 if (!entry.site.getLatLng().equals(L.latLng(s.gps))) entry.site.setLatLng(s.gps);
             }
 
-            /* PCAR guards glide on their own layer (not clustered) */
+            /* PCAR guards glide on their own layer (not clustered).
+               Position = site of the most recent wand scan (live route), else feed GPS. */
             const seenCars = {};
-            s.guards.filter(g => g.tourMode === 'PCAR' && g.gps && guardPasses(g)).forEach(g => {
+            s.guards.filter(g => g.tourMode === 'PCAR' && guardPasses(g)).forEach(g => {
+                const pos = pcarCurrentPos(g);
+                if (!pos) return;
                 seenCars[g.guardId] = true;
                 let car = entry.cars[g.guardId];
                 const csig = carIconSig(g);
                 if (!car) {
-                    const m = L.marker(g.gps, { icon: carIcon(g) }).on('click', () => openGuard(g));
+                    const m = L.marker(pos, { icon: carIcon(g) }).on('click', () => openGuard(g));
                     carLayer.addLayer(m);
                     entry.cars[g.guardId] = { m: m, iconSig: csig };
                 } else {
                     if (car.iconSig !== csig) { car.m.setIcon(carIcon(g)); car.iconSig = csig; }
-                    car.m.setLatLng(g.gps);           /* CSS transition = smooth glide */
+                    car.m.setLatLng(pos);             /* CSS transition = smooth glide */
                 }
             });
             Object.keys(entry.cars).forEach(gid => {
@@ -641,6 +654,53 @@
         const upd = recentUpdates[gKey(g)];
         const rc = rcState(g);
         openGuardKey = gKey(g);
+
+        /* PCAR patrol route section */
+        const route = g.tourMode === 'PCAR' ? pcarRoutes[g.guardId] : null;
+        let routeHtml = '';
+        if (g.tourMode === 'PCAR') {
+            if (route && route.visits.length) {
+                const vs = route.visits;
+                const cur = vs[vs.length - 1], prev = vs.length > 1 ? vs[vs.length - 2] : null;
+                const first = vs[0];
+                const durMs = new Date(cur.at) - new Date(first.at);
+                const rows = vs.map((v, i) =>
+                    `<div class="pcar-tl-row${i === vs.length - 1 ? ' cur' : ''}">
+                       <span class="n" style="background:${i === 0 ? '#16a34a' : i === vs.length - 1 ? '#dc2626' : '#2563eb'}">${i === 0 ? 'S' : i + 1}</span>
+                       <span class="t">${esc(visitTime(v))}</span>
+                       <span class="s">${esc(v.siteName)}${i === 0 ? ' (Start)' : i === vs.length - 1 ? ' (Current)' : ''}</span>
+                       <span class="w" title="Wand scan confirmed">&#10003;</span>
+                     </div>`).join('')
+                    + (route.nextSite ? `<div class="pcar-tl-row next">
+                       <span class="n" style="background:#94a3b8">&#8594;</span>
+                       <span class="t">next</span><span class="s">${esc(route.nextSite)} (Expected)</span><span class="w"></span></div>` : '');
+                routeHtml = `
+              <div class="rcbox pcarbox">
+                <div class="rchead">
+                  <h4>&#128663; PATROL ROUTE ${route.patrolCarName ? '&middot; ' + esc(route.patrolCarName) : ''}${route.routeName ? ' (' + esc(route.routeName) + ')' : ''}</h4>
+                  <span class="tag on">${vs.length}${route.plannedTotal ? '/' + route.plannedTotal : ''} SITES</span>
+                </div>
+                <dl style="margin:0 0 8px;display:grid;grid-template-columns:104px 1fr;gap:4px 10px;font-size:12px">
+                  <dt style="color:var(--text-dim)">Current site</dt><dd style="margin:0;font-weight:600">${esc(cur.siteName)}</dd>
+                  <dt style="color:var(--text-dim)">Previous site</dt><dd style="margin:0;font-weight:600">${prev ? esc(prev.siteName) : '—'}</dd>
+                  <dt style="color:var(--text-dim)">Next expected</dt><dd style="margin:0;font-weight:600">${route.nextSite ? esc(route.nextSite) : '—'}</dd>
+                  <dt style="color:var(--text-dim)">Distance</dt><dd style="margin:0;font-weight:600">~${routeDistanceKm(route).toFixed(1)} km</dd>
+                  <dt style="color:var(--text-dim)">Started</dt><dd style="margin:0;font-weight:600">${esc(visitTime(first))}</dd>
+                  <dt style="color:var(--text-dim)">Last scan</dt><dd style="margin:0;font-weight:600">${esc(visitTime(cur))}</dd>
+                  <dt style="color:var(--text-dim)">Duration</dt><dd style="margin:0;font-weight:600">${ago(durMs)}</dd>
+                </dl>
+                <div class="pcar-tl">${rows}</div>
+                <div class="pcar-pb">
+                  <button type="button" id="pbPlay" title="Replay route">&#9654;</button>
+                  <button type="button" id="pbSpeed" title="Playback speed">${pb.speed}x</button>
+                  <span id="pbInfo">Replay route</span>
+                </div>
+              </div>`;
+            } else {
+                routeHtml = `<div class="rcbox pcarbox"><div class="rchead"><h4>&#128663; PATROL ROUTE</h4></div>
+                  <div class="rcmsg" style="color:var(--text-dim)">No wand-scan site visits recorded today yet. The route will appear here as sites are scanned.</div></div>`;
+            }
+        }
         const tag = st === 'alarm' ? '<span class="tag alarm">DURESS</span>'
             : st === 'warn' ? '<span class="tag warn">2-HR ALERT</span>'
             : g.active ? '<span class="tag on">ON DUTY</span>' : '<span class="tag off">OFF DUTY</span>';
@@ -681,11 +741,15 @@
                 <div class="rchead"><h4>&#128100; HR RECORD STATUS</h4></div>
                 ${hrBadges(g)}
               </div>
+              ${routeHtml}
               <button type="button" class="locbtn" id="crmGuardFly">&#128205; Show on map</button>
             </div>`;
         backdrop.classList.add('open');
         card.classList.add('open');
-        const close = () => { card.classList.remove('open'); backdrop.classList.remove('open'); openGuardKey = null; };
+        const close = () => {
+            card.classList.remove('open'); backdrop.classList.remove('open'); openGuardKey = null;
+            clearPcarRoute();
+        };
         card.querySelector('#crmGuardClose').addEventListener('click', close);
         backdrop.onclick = close;
         card.querySelector('#crmGuardFly').addEventListener('click', () => {
@@ -694,8 +758,35 @@
             if (pos) { map.flyTo(pos, Math.max(map.getZoom(), 16), { duration: 1.2 }); openPanel(g.siteId); }
         });
         if (fly) {
-            const pos = g.gps || s.gps;
+            const pos = (g.tourMode === 'PCAR' ? pcarCurrentPos(g) : null) || g.gps || s.gps;
             if (pos) map.flyTo(pos, Math.max(map.getZoom(), 14), { duration: 1.2 });
+        }
+
+        /* PCAR: draw the live route on the map and wire the replay controls */
+        if (g.tourMode === 'PCAR' && route && route.visits.length) {
+            const firstDraw = shownRouteGuardId !== g.guardId;
+            drawPcarRoute(g.guardId);
+            if (firstDraw && route.visits.length > 1) {
+                map.flyToBounds(L.latLngBounds(route.visits.map(v => v.pos)).pad(0.25), { duration: 1.2 });
+            }
+            const pbPlay = card.querySelector('#pbPlay');
+            const pbSpeed = card.querySelector('#pbSpeed');
+            if (pbPlay) pbPlay.addEventListener('click', () => {
+                if (pb.playing) {                       /* pause */
+                    pb.playing = false; clearTimeout(pb.timer);
+                } else {                                /* play / resume */
+                    pb.guardId = g.guardId;
+                    pb.playing = true;
+                    pbStep();
+                }
+                refreshPbUi();
+            });
+            if (pbSpeed) pbSpeed.addEventListener('click', () => {
+                pb.speed = PB_SPEEDS[(PB_SPEEDS.indexOf(pb.speed) + 1) % PB_SPEEDS.length];
+                refreshPbUi();
+            });
+        } else if (g.tourMode !== 'PCAR' && shownRouteGuardId !== null) {
+            clearPcarRoute();
         }
     }
 
@@ -958,6 +1049,160 @@
         this.classList.toggle('closed');
     });
 
+    /* ================= PCAR live route tracking ================= */
+    const pcarPathLayer = L.layerGroup().addTo(map);
+    let shownRouteGuardId = null;
+    let shownRouteSig = '';
+    let prevVisitCounts = {};       /* guardId -> visit count, to announce new scans */
+
+    function pcarCurrentPos(g) {
+        const r = pcarRoutes[g.guardId];
+        if (r && r.visits.length) return r.visits[r.visits.length - 1].pos;
+        return g.gps;
+    }
+    function haversineKm(a, b) {
+        const R = 6371, dLa = (b[0] - a[0]) * Math.PI / 180, dLo = (b[1] - a[1]) * Math.PI / 180;
+        const h = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * Math.PI / 180) * Math.cos(b[0] * Math.PI / 180) * Math.sin(dLo / 2) ** 2;
+        return 2 * R * Math.asin(Math.sqrt(h));
+    }
+    function routeDistanceKm(r) {
+        let d = 0;
+        for (let i = 1; i < r.visits.length; i++) d += haversineKm(r.visits[i - 1].pos, r.visits[i].pos);
+        return d;
+    }
+    function visitTime(v) {
+        if (v.timeOn) return v.timeOn;
+        const d = new Date(v.at);
+        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    function bearingDeg(a, b) {
+        const y = Math.sin((b[1] - a[1]) * Math.PI / 180) * Math.cos(b[0] * Math.PI / 180);
+        const x = Math.cos(a[0] * Math.PI / 180) * Math.sin(b[0] * Math.PI / 180)
+            - Math.sin(a[0] * Math.PI / 180) * Math.cos(b[0] * Math.PI / 180) * Math.cos((b[1] - a[1]) * Math.PI / 180);
+        return Math.atan2(y, x) * 180 / Math.PI;
+    }
+    function stopIcon(kind, n) {
+        const col = kind === 'start' ? '#16a34a' : kind === 'current' ? '#dc2626' : '#2563eb';
+        const label = kind === 'start' ? 'S' : n;
+        return L.divIcon({
+            className: '',
+            html: `<div class="pcar-stop ${kind}" style="background:${col}">${label}</div>`,
+            iconSize: [22, 22], iconAnchor: [11, 11]
+        });
+    }
+    function arrowIcon(angle) {
+        return L.divIcon({
+            className: '',
+            html: `<div class="pcar-arrow" style="transform:rotate(${angle}deg)">&#10148;</div>`,
+            iconSize: [16, 16], iconAnchor: [8, 8]
+        });
+    }
+
+    function routeSig(r) {
+        return r ? r.visits.length + '|' + (r.visits.length ? r.visits[r.visits.length - 1].at : '') : '';
+    }
+
+    function drawPcarRoute(guardId) {
+        const r = pcarRoutes[guardId];
+        pcarPathLayer.clearLayers();
+        shownRouteGuardId = guardId;
+        shownRouteSig = routeSig(r);
+        if (!r || r.visits.length === 0) return;
+
+        const pts = r.visits.map(v => v.pos);
+
+        /* completed segments: solid blue; active (latest) segment: dashed red */
+        if (pts.length > 2)
+            pcarPathLayer.addLayer(L.polyline(pts.slice(0, pts.length - 1),
+                { color: '#2563eb', weight: 4, opacity: .85, lineJoin: 'round' }));
+        if (pts.length > 1)
+            pcarPathLayer.addLayer(L.polyline(pts.slice(pts.length - 2),
+                { color: '#dc2626', weight: 4, opacity: .9, dashArray: '8 8', lineJoin: 'round' }));
+
+        /* direction arrows at segment midpoints */
+        for (let i = 1; i < pts.length; i++) {
+            const mid = [(pts[i - 1][0] + pts[i][0]) / 2, (pts[i - 1][1] + pts[i][1]) / 2];
+            pcarPathLayer.addLayer(L.marker(mid, {
+                icon: arrowIcon(bearingDeg(pts[i - 1], pts[i]) - 90),
+                interactive: false, keyboard: false
+            }));
+        }
+
+        /* stops: green start, blue numbered, red pulsing current */
+        r.visits.forEach((v, i) => {
+            const kind = i === 0 ? 'start' : (i === r.visits.length - 1 ? 'current' : 'mid');
+            pcarPathLayer.addLayer(L.marker(v.pos, { icon: stopIcon(kind, i + 1) })
+                .bindTooltip(`${i + 1}. ${v.siteName} — ${visitTime(v)}`, { direction: 'top' }));
+        });
+    }
+    function clearPcarRoute() {
+        pcarPathLayer.clearLayers();
+        shownRouteGuardId = null;
+        shownRouteSig = '';
+        stopPlayback();
+    }
+
+    /* announce new wand-scan arrivals + live-extend the drawn route */
+    function pcarAfterRefresh() {
+        Object.keys(pcarRoutes).forEach(gid => {
+            const r = pcarRoutes[gid];
+            const prev = prevVisitCounts[gid] || 0;
+            if (prev && r.visits.length > prev) {
+                const v = r.visits[r.visits.length - 1];
+                const name = r.patrolCarName || r.routeName || 'Patrol car';
+                toast({ guard: name, site: v.siteName, siteId: v.siteId },
+                    ['Arrived — wand scan ' + visitTime(v)], 'ok');
+                blinkSite(v.siteId, false);
+            }
+            prevVisitCounts[gid] = r.visits.length;
+        });
+        if (shownRouteGuardId !== null && routeSig(pcarRoutes[shownRouteGuardId]) !== shownRouteSig) {
+            drawPcarRoute(shownRouteGuardId);   /* smooth extension: only redraws when a scan landed */
+        }
+    }
+
+    /* ---------------- route playback (replay the patrol) ---------------- */
+    const pb = { playing: false, idx: -1, speed: 1, timer: null, guardId: null, ghost: null };
+    const PB_SPEEDS = [1, 2, 5];
+
+    function stopPlayback() {
+        pb.playing = false;
+        clearTimeout(pb.timer);
+        pb.idx = -1; pb.guardId = null;
+        if (pb.ghost) { map.removeLayer(pb.ghost); pb.ghost = null; }
+    }
+    function pbStep() {
+        if (!pb.playing) return;
+        const r = pcarRoutes[pb.guardId];
+        if (!r) { stopPlayback(); return; }
+        pb.idx++;
+        if (pb.idx >= r.visits.length) { stopPlayback(); refreshPbUi(); return; }
+        const v = r.visits[pb.idx];
+        if (!pb.ghost) {
+            pb.ghost = L.marker(v.pos, {
+                icon: L.divIcon({ className: '', html: '<div class="pcar-ghost">&#128663;</div>', iconSize: [30, 30], iconAnchor: [15, 15] }),
+                interactive: false, zIndexOffset: 1000
+            }).addTo(map);
+        } else pb.ghost.setLatLng(v.pos);
+        refreshPbUi();
+        pb.timer = setTimeout(pbStep, 1400 / pb.speed);
+    }
+    function refreshPbUi() {
+        const btn = document.getElementById('pbPlay');
+        const spd = document.getElementById('pbSpeed');
+        const lbl = document.getElementById('pbInfo');
+        if (!btn) return;
+        btn.innerHTML = pb.playing ? '&#10074;&#10074;' : '&#9654;';
+        if (spd) spd.textContent = pb.speed + 'x';
+        const r = pcarRoutes[pb.guardId];
+        if (lbl) lbl.textContent = pb.playing && r && pb.idx >= 0 && pb.idx < r.visits.length
+            ? (pb.idx + 1) + '/' + r.visits.length + ' ' + r.visits[pb.idx].siteName
+            : 'Replay route';
+        document.querySelectorAll('#crmGuard .pcar-tl-row').forEach((el, i) => {
+            el.classList.toggle('playing', pb.playing && i === pb.idx);
+        });
+    }
+
     /* ================= auto site tour (play / pause / stop) ================= */
     const TOUR_DWELL_MS = 2000;        /* time spent looking at each site */
     const TOUR_FLY_SECONDS = 1.4;      /* flight time between sites */
@@ -1083,12 +1328,13 @@
             render();                                  /* incremental: map view, zoom, filters untouched */
             renderBanner();
             renderFqBanner();
+            pcarAfterRefresh();                        /* extend drawn routes + announce new scans */
             document.getElementById('kpiLast').textContent = timeNow();
             if (selectedSiteId && sites[selectedSiteId] &&
                 document.getElementById('crmPanel').style.display === 'block') {
                 openPanel(selectedSiteId);             /* keep open panel data live */
             }
-            if (openGuardKey) {                        /* keep open guard card live too */
+            if (openGuardKey && !pb.playing) {         /* keep open guard card live (not mid-replay) */
                 const g = findGuard(openGuardKey);
                 if (g) openGuard(g); else { openGuardKey = null; }
             }
