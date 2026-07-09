@@ -1,0 +1,218 @@
+@page
+@model CityWatch.RadioCheck.Pages.ControlRoomMapModel
+@{
+    ViewData["Title"] = "Control Room Map";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Room Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --ink: #070d18;
+            --panel: rgba(13,22,38,.92);
+            --panel-line: rgba(79,216,232,.25);
+            --text: #dbe7f4;
+            --text-dim: #7d90a8;
+            --hud: #4fd8e8;
+            --ok: #3ddc84;
+            --warn: #ffb020;
+            --alarm: #ff4d5e;
+        }
+
+        html, body { height: 100%; margin: 0; }
+
+        body {
+            background: var(--ink);
+            color: var(--text);
+            font-family: "Segoe UI", system-ui, sans-serif;
+            overflow: hidden;
+        }
+
+        #map { position: fixed; inset: 0; background: #0a111e; }
+
+        /* ---------- top bar ---------- */
+        .crm-topbar {
+            position: fixed; z-index: 1000; top: 12px; left: 12px; right: 12px;
+            display: flex; align-items: center; gap: 14px; padding: 9px 16px;
+            background: var(--panel); border: 1px solid var(--panel-line);
+            border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.45);
+        }
+
+        .crm-brand { display: flex; align-items: center; gap: 9px; font-weight: 600; letter-spacing: .03em; white-space: nowrap; }
+        .crm-brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--alarm); animation: crmpulse 1.6s ease-out infinite; }
+        .crm-brand small { color: var(--hud); font-family: Consolas, monospace; font-size: 11px; letter-spacing: .16em; }
+
+        .crm-count { font-family: Consolas, monospace; font-size: 12.5px; color: var(--text-dim); white-space: nowrap; }
+        .crm-count b { font-size: 15px; font-weight: 700; }
+        .crm-count.c-ok b { color: var(--ok); }
+        .crm-count.c-off b { color: var(--text-dim); }
+        .crm-count.c-warn b { color: var(--warn); }
+        .crm-count.c-alarm b { color: var(--alarm); }
+
+        .crm-spacer { flex: 1; }
+
+        #crmSearch {
+            background: rgba(9,16,29,.8); border: 1px solid rgba(125,144,168,.35);
+            border-radius: 6px; color: var(--text); font-size: 13px; padding: 6px 10px; width: 190px;
+        }
+        #crmSearch:focus { outline: none; border-color: var(--hud); }
+
+        .crm-clock { font-family: Consolas, monospace; font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+        .crm-clock b { color: var(--text); }
+
+        #btnRefreshNow {
+            background: transparent; border: 1px solid var(--hud); color: var(--hud);
+            border-radius: 6px; font-size: 12px; font-weight: 600; padding: 6px 13px; cursor: pointer;
+        }
+        #btnRefreshNow:hover { background: rgba(79,216,232,.12); }
+
+        @@keyframes crmpulse { 0% { box-shadow: 0 0 0 0 rgba(255,77,94,.55); } 100% { box-shadow: 0 0 0 9px rgba(255,77,94,0); } }
+
+        /* ---------- legend ---------- */
+        .crm-legend {
+            position: fixed; z-index: 1000; left: 12px; bottom: 12px;
+            display: flex; gap: 15px; padding: 9px 14px; font-size: 11.5px;
+            background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px;
+        }
+        .crm-legend span { display: flex; align-items: center; gap: 6px; }
+        .crm-bead { width: 10px; height: 10px; border-radius: 50%; }
+        .crm-bead.ok { background: var(--ok); box-shadow: 0 0 7px var(--ok); }
+        .crm-bead.warn { background: var(--warn); box-shadow: 0 0 7px var(--warn); }
+        .crm-bead.alarm { background: var(--alarm); box-shadow: 0 0 7px var(--alarm); }
+        .crm-bead.off { background: #5a6a80; }
+
+        /* ---------- site markers ---------- */
+        .leaflet-marker-icon { transition: transform 1.8s linear; } /* smooth PCAR glide */
+
+        .crm-site { position: relative; text-align: center; filter: drop-shadow(0 3px 6px rgba(0,0,0,.6)); }
+        .crm-site .figs { display: flex; justify-content: center; gap: 1px; height: 20px; }
+        .crm-site .figs svg { display: block; }
+        .crm-site .bld { display: block; margin: 0 auto; }
+        .crm-site .nm {
+            margin-top: 1px; font-size: 10.5px; font-weight: 600; color: #eaf2fb;
+            text-shadow: 0 1px 3px #000, 0 0 6px #000; white-space: nowrap;
+        }
+        .crm-site .cnt {
+            position: absolute; top: -7px; right: -4px; min-width: 17px; height: 17px;
+            border-radius: 9px; background: #0a1424; border: 1.5px solid var(--ok);
+            color: var(--ok); font: 700 10px Consolas, monospace; line-height: 14px; padding: 0 3px;
+        }
+        .crm-site.inactive { opacity: .72; }
+        .crm-site.inactive .cnt { border-color: #5a6a80; color: #8fa0b5; }
+        .crm-site.st-warn .cnt { border-color: var(--warn); color: var(--warn); }
+        .crm-site.st-alarm .cnt { border-color: var(--alarm); color: var(--alarm); }
+
+        .crm-site.blink { animation: crmblink
+ .55s ease-in-out 8 alternate; }
+        @@keyframes crmblink { from { filter: drop-shadow(0 0 2px var(--hud)) brightness(1); } to { filter: drop-shadow(0 0 14px var(--hud)) brightness(1.9); } }
+        .crm-site.blink-alarm { animation: crmblinkred .45s ease-in-out 14 alternate; }
+        @@keyframes crmblinkred { from { filter: drop-shadow(0 0 2px var(--alarm)) brightness(1); } to { filter: drop-shadow(0 0 16px var(--alarm)) brightness(2); } }
+
+        /* ---------- side panel ---------- */
+        #crmPanel {
+            position: fixed; z-index: 1100; top: 68px; right: 12px; bottom: 12px; width: 304px;
+            background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.5); overflow: hidden auto; display: none;
+        }
+        #crmPanel .ph { position: relative; min-height: 40px; background: #0a1424; }
+        #crmPanel .ph img { display: block; width: 100%; max-height: 170px; object-fit: cover; }
+        #crmPanel .ph .cap {
+            position: absolute; left: 10px; bottom: 8px; font: 9px Consolas, monospace; letter-spacing: .14em;
+            color: rgba(219,231,244,.85); background: rgba(7,13,24,.7); padding: 3px 8px; border-radius: 4px;
+        }
+        #crmPanel .bd { padding: 13px 15px; }
+        #crmPanel h2 { margin: 0 0 3px; font-size: 15.5px; line-height: 1.3; }
+        #crmPanel .addr { font-size: 12px; color: var(--text-dim); margin-bottom: 3px; }
+        #crmPanel .phn { font: 12px Consolas, monospace; color: var(--hud); margin-bottom: 10px; }
+        #crmPanel h3 { margin: 13px 0 5px; font: 600 10px Consolas, monospace; letter-spacing: .2em; color: var(--text-dim); }
+        #crmPanel .close {
+            position: absolute; top: 8px; right: 10px; z-index: 5; width: 26px; height: 26px;
+            border-radius: 50%; border: none; background: rgba(7,13,24,.75); color: var(--text);
+            font-size: 15px; line-height: 1; cursor: pointer;
+        }
+
+        .crm-grow { border-top: 1px solid rgba(125,144,168,.15); padding: 8px 0; }
+        .crm-grow:first-of-type { border-top: 0; }
+        .crm-grow .top { display: flex; align-items: center; gap: 9px; }
+        .crm-ava {
+            width: 28px; height: 28px; border-radius: 50%; flex: none; display: flex;
+            align-items: center; justify-content: center; font: 700 10.5px Consolas, monospace; color: #07121e;
+        }
+        .crm-grow b { font-size: 13px; }
+        .crm-grow .sub { font: 10.5px Consolas, monospace; color: var(--text-dim); }
+        .crm-grow .tag { margin-left: auto; font: 9px Consolas, monospace; letter-spacing: .1em; padding: 2px 8px; border-radius: 999px; }
+        .crm-grow .tag.on { color: var(--ok); border: 1px solid var(--ok); }
+        .crm-grow .tag.off { color: #8fa0b5; border: 1px solid #5a6a80; }
+        .crm-grow .tag.warn { color: var(--warn); border: 1px solid var(--warn); }
+        .crm-grow .tag.alarm { color: var(--alarm); border: 1px solid var(--alarm); animation: crmtxtblink 1s step-end infinite; }
+        @@keyframes crmtxtblink { 50% { opacity: .3; } }
+
+        .crm-chips { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+        .crm-chip {
+            font: 600 10px Consolas, monospace; padding: 3px 7px; border-radius: 5px;
+            border: 1px solid rgba(125,144,168,.3); color: var(--text-dim); background: rgba(9,16,29,.6);
+        }
+        .crm-chip.yes { color: var(--ok); border-color: rgba(61,220,132,.55); }
+        .crm-chip.no { color: var(--alarm); border-color: rgba(255,77,94,.45); }
+
+        /* ---------- guard update toasts ---------- */
+        #crmToasts {
+            position: fixed; z-index: 1200; right: 12px; bottom: 12px;
+            display: flex; flex-direction: column-reverse; gap: 9px; max-width: 330px;
+        }
+        .crm-toast {
+            background: var(--panel); border: 1px solid var(--panel-line);
+            border-left: 4px solid var(--hud); border-radius: 8px; padding: 10px 13px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.55); cursor: pointer;
+            animation: toastin .3s ease-out;
+        }
+        .crm-toast.warn { border-left-color: var(--warn); }
+        .crm-toast.alarm { border-left-color: var(--alarm); }
+        .crm-toast .t1 { font-size: 12.5px; font-weight: 600; display: flex; gap: 7px; align-items: center; }
+        .crm-toast .t1 .w { color: var(--hud); }
+        .crm-toast.warn .t1 .w { color: var(--warn); }
+        .crm-toast.alarm .t1 .w { color: var(--alarm); }
+        .crm-toast .t2 { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; }
+        .crm-toast .t3 { font: 10.5px Consolas, monospace; color: var(--text); margin-top: 4px; }
+        @@keyframes toastin { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+        /* leaflet dark chrome */
+        .leaflet-control-zoom a { background: var(--panel) !important; color: var(--hud) !important; border-color: var(--panel-line) !important; }
+        .leaflet-control-attribution { background: rgba(7,13,24,.7) !important; color: #6b7d94 !important; }
+        .leaflet-control-attribution a { color: #8fa0b5 !important; }
+        .leaflet-control-layers { background: var(--panel) !important; color: var(--text) !important; border: 1px solid var(--panel-line) !important; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div class="crm-topbar">
+        <div class="crm-brand"><span class="dot"></span>CityWatch <small>CONTROL ROOM MAP</small></div>
+        <span class="crm-count c-ok">ACTIVE <b id="cntActive">0</b></span>
+        <span class="crm-count c-off">INACTIVE <b id="cntInactive">0</b></span>
+        <span class="crm-count c-warn">ALERTS <b id="cntWarn">0</b></span>
+        <span class="crm-count c-alarm">DURESS <b id="cntAlarm">0</b></span>
+        <span class="crm-spacer"></span>
+        <input type="text" id="crmSearch" placeholder="Search site / guard..." />
+        <span class="crm-clock">next update <b id="crmClock">0:30</b></span>
+        <button type="button" id="btnRefreshNow">&#8635; Refresh</button>
+    </div>
+
+    <div class="crm-legend">
+        <span><span class="crm-bead ok"></span>Active guard</span>
+        <span><span class="crm-bead warn"></span>2-Hr alert</span>
+        <span><span class="crm-bead alarm"></span>Duress</span>
+        <span><span class="crm-bead off"></span>Inactive / off duty</span>
+    </div>
+
+    <div id="crmPanel"></div>
+    <div id="crmToasts"></div>
+
+    <script src="~/js/controlRoomMap.js" asp-append-version="true"></script>
+</body>
+</html>
