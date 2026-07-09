@@ -67,12 +67,14 @@ namespace CityWatch.Kpi.Services
         private readonly ILogger<ReportGenerator> _logger;
         private readonly Settings _settings;
         private readonly IPatrolDataReportService _patrolDataReportService;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
 
         public ReportGenerator(IOptions<Settings> settings,
             IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
-            ILogger<ReportGenerator> logger, IPatrolDataReportService patrolDataReportService)
+            ILogger<ReportGenerator> logger, IPatrolDataReportService patrolDataReportService, IGuardLogDataProvider guardLogDataProvider,IClientSiteWandDataProvider clientSiteWandDataProvider)
         {
             _viewDataService = viewDataService;
             _clientDataProvider = clientDataProvider;
@@ -93,6 +95,8 @@ namespace CityWatch.Kpi.Services
 
             if (!IO.Directory.Exists(_graphImageRootDir))
                 IO.Directory.CreateDirectory(_graphImageRootDir);
+            _guardLogDataProvider = guardLogDataProvider;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
         }
 
         public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused, bool IsDownselect, int CriticalDocumentID)
@@ -134,6 +138,25 @@ namespace CityWatch.Kpi.Services
 
             doc.Add(headerTable);
             doc.Add(tableSitemartwands);
+            List<string> list = new List<string>();
+            list.Add(_clientSiteKpiSetting.ClientSite.Name);
+            string[] clientsitename = list.ToArray();
+
+            var patrolDataReport = _patrolDataReportService.GetDailyPatrolData(new PatrolRequest()
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                DataFilter = PatrolDataFilter.Custom,
+                ClientSites = clientsitename,
+            });
+            PatrolRequest ReportRequest = new PatrolRequest();
+            ReportRequest.FromDate = fromDate;
+            ReportRequest.ToDate = toDate;
+
+            ReportRequest.ClientSites = new string[] { _clientSiteKpiSetting.ClientSite.Name };
+            ReportRequest.ClientTypes = new string[] { _clientSiteKpiSetting.ClientSite.ClientType.Name };
+            var wandGraphsTable = CreateWandGraphsTables(ReportRequest);
+            doc.Add(wandGraphsTable);
             if (_settings.GuardListOn)
             {
                 //doc.Add(new AreaBreak());
@@ -175,17 +198,7 @@ namespace CityWatch.Kpi.Services
             doc.Add(new AreaBreak());
 
             doc.Add(headerTable);
-            List<string> list = new List<string>();
-            list.Add(_clientSiteKpiSetting.ClientSite.Name);
-            string[] clientsitename = list.ToArray();
-
-            var patrolDataReport = _patrolDataReportService.GetDailyPatrolData(new PatrolRequest()
-            {
-                FromDate = fromDate,
-                ToDate = toDate,
-                DataFilter = PatrolDataFilter.Custom,
-                ClientSites = clientsitename,
-            });
+           
 
             // Disable on 21-06-2024 by binoy to enable empty graph for zero data. Task P2#126 
             //if (patrolDataReport.ResultsCount > 0)
@@ -194,12 +207,7 @@ namespace CityWatch.Kpi.Services
             //    doc.Add(graphsTable);
             //}
             //p2-184-hr-charts-start
-            PatrolRequest ReportRequest = new PatrolRequest();
-            ReportRequest.FromDate = fromDate;
-            ReportRequest.ToDate = toDate;
             
-            ReportRequest.ClientSites = new string[] { _clientSiteKpiSetting.ClientSite.Name };
-            ReportRequest.ClientTypes = new string[] { _clientSiteKpiSetting.ClientSite.ClientType.Name };
             var hrGraphsTable = CreateHRGraphsTables(ReportRequest);
             doc.Add(hrGraphsTable);
             //p2-184-hr-charts-end
@@ -2175,6 +2183,105 @@ namespace CityWatch.Kpi.Services
             var PyramidImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "Pyrimid.jpg"))).SetHorizontalAlignment(HorizontalAlignment.CENTER).SetHeight(160).SetMarginTop(20);
             chartDataTable.AddCell(new Cell().Add(PyramidImage).SetBorder(Border.NO_BORDER));
 
+            return chartDataTable;
+        }
+        private Table CreateWandGraphsTables(PatrolRequest ReportRequest)
+        {
+            var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
+                .SetMarginTop(5)
+                .SetKeepTogether(true);
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateWandGraphsTable1(ReportRequest)));
+         
+            return graphTable;
+        }
+        private Table CreateWandGraphsTable1(PatrolRequest ReportRequest)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49,2,49 })).UseAllAvailableWidth().SetMarginBottom(5);
+            var dailyLogWandStrikeReportForSiteController = _guardLogDataProvider.GetGuardLogsWithWandStrikes(ReportRequest, true);
+           
+            int totalDays = 28; // always 4 weeks
+            DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
+            var groupedLogs = dailyLogWandStrikeReportForSiteController
+    .GroupBy(x => x.HitUtcDateTime.Date.Date)
+    .ToDictionary(g => g.Key, g => g.Count());
+         
+            var dailySiteControllerWandStrikeDataList =
+                Enumerable.Range(0, (toDate.Date - ReportRequest.FromDate.Date).Days + 1)
+                .Select(offset =>
+                {
+                    var day = ReportRequest.FromDate.Date.AddDays(offset);
+                    groupedLogs.TryGetValue(day, out int strikes);
+
+                    return new
+                    {
+                        //DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
+                        DayLabel =  day.ToString("dddd")[0].ToString() ,
+                        Strikes = strikes
+                    };
+                })
+                .ToList();
+            var filteredLogs = dailyLogWandStrikeReportForSiteController
+ .Where(x => x.HitUtcDateTime.Date >= ReportRequest.FromDate.Date &&
+             x.HitUtcDateTime.Date <= ReportRequest.ToDate.Date)
+ .ToList();
+
+            int totalStrikes = filteredLogs.Count;
+            var individualFQWandStrikeDataList = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
+            .Where(z =>
+                (ReportRequest.ClientTypes == null || ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                (ReportRequest.ClientSites == null || ReportRequest.ClientSites.Contains(z.ClientSite.Name)))
+            .Select(item =>
+            {
+                var normalizedLabel = item.UId;
+                int strikes = filteredLogs.Count(x => x.TagUId.Contains(normalizedLabel));
+                double percent = totalStrikes > 0 ? Math.Round((double)strikes / totalStrikes * 100, 2) : 0;
+
+                return new
+                {
+                    Wands = item.LabelDescription, // MTWTFSS
+                    Strikes = percent
+                };
+            })
+            .Where(x => x.Strikes > 0)
+            .ToList();
+            var dailySiteControllerWandStrikeData= dailySiteControllerWandStrikeDataList.Cast<dynamic>()
+   .Select(x => new KeyValuePair<string, double>(
+       (string)x.DayLabel,
+       (double)x.Strikes))
+   .OrderByDescending(x => x.Key)
+   .ToArray();
+
+            var individualFQWandStrikeData= individualFQWandStrikeDataList.Cast<dynamic>()
+   .Select(x => new KeyValuePair<string, double>(
+       (string)x.Wands,
+       (double)x.Strikes))
+   .OrderByDescending(x => x.Key)
+   .ToArray();
+            chartDataTable.AddCell(GetChartHeaderCell("SITE COMBINED WAND STRIKES", "\nCount: " + dailySiteControllerWandStrikeDataList.Count));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("INDIVIDUAL WAND POINT FQ", "Count: " + individualFQWandStrikeDataList.Count));
+
+            // row 1 blank cell
+          
+            var sitesPieChartImage = GetChartImage(dailySiteControllerWandStrikeData.OrderByDescending(z => z.Value).ToArray(),ChartType.Bar);
+            chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var areaPieChartImage = GetChartImage(individualFQWandStrikeData.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(areaPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+         
             return chartDataTable;
         }
         private Cell GetChartHeaderCell(string leftText, string rightText, int colspan = 1)
