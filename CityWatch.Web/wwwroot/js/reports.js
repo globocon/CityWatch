@@ -7890,8 +7890,8 @@ function getActiveStatsPdfTarget() {
         return { paneId: '#hrstat-chart', title: 'HR Statistics Report', perRow: 3 };
     if ($('#wandstrike-chart').hasClass('active')) {
         if ($('#tagdownselect-chart').hasClass('active'))
-            return { paneId: '#tagdownselect-chart', title: 'Wand Strike Report - Tag DownSelect', perRow: 2 };
-        return { paneId: '#siteeffortcounters-chart', title: 'Wand Strike Report', perRow: 2 };
+            return { paneId: '#tagdownselect-chart', title: 'Wand Strike Report - Tag DownSelect', perRow: 1 };
+        return { paneId: '#siteeffortcounters-chart', title: 'Wand Strike Report', perRow: 1 };
     }
     return { paneId: '#pd-chart', title: 'IR Statistics Report', perRow: 2 };
 }
@@ -7919,25 +7919,57 @@ function buildStatsPdfElement(title, pane, perRow) {
     header.appendChild(range);
     container.appendChild(header);
 
-    var grid = document.createElement('div');
-    grid.style.cssText = 'display:flex;flex-wrap:wrap;margin:-5px;';
+    // collect the rendered charts first so the grid can be sized to fill the page
+    var cards = [];
     pane.find('.card').each(function () {
         var canvas = $(this).find('canvas').get(0);
         if (!canvas || canvas.width === 0 || canvas.height === 0) return;
+        cards.push({
+            headerText: $(this).find('.card-header').text().replace(/\s+/g, ' ').trim(),
+            canvas: canvas
+        });
+    });
+
+    // fixed geometry: 1050px wide container mapped onto one A4 landscape page
+    // (0.2in margins => ~93px/inch => ~730px of usable page height)
+    var PAGE_HEIGHT = 730;
+    var PAGE_HEADER_HEIGHT = 80;
+    var CONTAINER_PADDING = 14, CELL_PADDING = 5, CARD_HEADER_HEIGHT = 27, BODY_PADDING = 8, BORDER = 2;
+    var rowCount = Math.max(1, Math.ceil(cards.length / perRow));
+    var rowHeight = Math.floor((PAGE_HEIGHT - PAGE_HEADER_HEIGHT - CONTAINER_PADDING * 2) / rowCount);
+    var imgMaxHeight = rowHeight - CELL_PADDING * 2 - CARD_HEADER_HEIGHT - BODY_PADDING * 2 - BORDER;
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;margin:-' + CELL_PADDING + 'px;';
+    cards.forEach(function (item, index) {
+        // cards in a partial last row spread out to use the full page width
+        var lastRowStart = (rowCount - 1) * perRow;
+        var cardsInThisRow = index >= lastRowStart ? cards.length - lastRowStart : perRow;
+        var cellWidth = Math.floor((1050 - CONTAINER_PADDING * 2) / cardsInThisRow);
+        var imgMaxWidth = cellWidth - CELL_PADDING * 2 - BODY_PADDING * 2 - BORDER;
 
         var cell = document.createElement('div');
-        cell.style.cssText = 'box-sizing:border-box;padding:5px;width:' + (100 / perRow) + '%;';
+        cell.style.cssText = 'box-sizing:border-box;padding:' + CELL_PADDING + 'px;width:' + (100 / cardsInThisRow) + '%;';
         var card = document.createElement('div');
         card.style.cssText = 'border:1px solid #dee2e6;border-radius:4px;overflow:hidden;height:100%;box-sizing:border-box;';
         var cardHeader = document.createElement('div');
         cardHeader.style.cssText = 'background:#f5f5f5;border-bottom:1px solid #dee2e6;padding:6px 10px;font-size:11px;font-weight:bold;';
-        cardHeader.textContent = $(this).find('.card-header').text().replace(/\s+/g, ' ').trim();
+        cardHeader.textContent = item.headerText;
         card.appendChild(cardHeader);
         var body = document.createElement('div');
-        body.style.cssText = 'padding:8px;background:#ffffff;';
+        body.style.cssText = 'padding:' + BODY_PADDING + 'px;background:#ffffff;';
         var img = document.createElement('img');
-        img.src = canvas.toDataURL('image/png');
-        img.style.cssText = 'width:100%;height:auto;display:block;';
+        img.src = item.canvas.toDataURL('image/png');
+
+        // as large as the row allows while keeping the chart's aspect ratio
+        var aspect = item.canvas.width / item.canvas.height;
+        var imgHeight = imgMaxHeight;
+        var imgWidth = Math.round(imgHeight * aspect);
+        if (imgWidth > imgMaxWidth) {
+            imgWidth = imgMaxWidth;
+            imgHeight = Math.round(imgWidth / aspect);
+        }
+        img.style.cssText = 'width:' + imgWidth + 'px;height:' + imgHeight + 'px;display:block;margin:0 auto;';
         body.appendChild(img);
         card.appendChild(body);
         cell.appendChild(card);
