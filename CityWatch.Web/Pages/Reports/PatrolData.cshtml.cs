@@ -1495,43 +1495,9 @@ namespace CityWatch.Web.Pages.Reports
         {
            
             var dailyLogWandStrikeReportForSiteController = _guardLogDataProvider.GetGuardLogsWithWandStrikes(ReportRequest, true);
-           
-            int totalDays = 28; // always 4 weeks
-            DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
-            var groupedLogs = dailyLogWandStrikeReportForSiteController
-    .GroupBy(x => x.HitUtcDateTime.Date.Date)
-    .ToDictionary(g => g.Key, g => g.Count());
 
             var dailySiteControllerWandStrikeData =
-                Enumerable.Range(0, (toDate.Date - ReportRequest.FromDate.Date).Days + 1)
-                .Select(offset =>
-                {
-                    var day = ReportRequest.FromDate.Date.AddDays(offset);
-                    groupedLogs.TryGetValue(day, out int strikes);
-
-                    return new
-                    {
-                        //DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
-                        DayLabel =  day.ToString("dddd")[0].ToString() ,
-                        Strikes = strikes
-                    };
-                })
-                .ToList();
-
-            //var dailySiteControllerWandStrikeData = new List<object>();
-
-            //for (DateTime day = ReportRequest.FromDate; day <= toDate; day = day.AddDays(1))
-            //{
-            //    int strikes = dailyLogWandStrikeReportForSiteController.Where(x => x.ClientSiteLogBook.Date == day.Date)
-            //                    .Count();
-
-            //    dailySiteControllerWandStrikeData.Add(new
-            //    {
-            //        DayLabel = day.ToString("d") + "(" + day.ToString("dddd")[0].ToString() + ")",   // ?? gives MTWTFSS
-
-            //        Strikes = strikes
-            //    });
-            //}
+                BuildWandStrikeSeries(dailyLogWandStrikeReportForSiteController, ReportRequest.FromDate.Date, ReportRequest.ToDate.Date);
             var filteredLogs = dailyLogWandStrikeReportForSiteController
     .Where(x => x.HitUtcDateTime.Date >= ReportRequest.FromDate.Date &&
                 x.HitUtcDateTime.Date <= ReportRequest.ToDate.Date)
@@ -1581,7 +1547,7 @@ namespace CityWatch.Web.Pages.Reports
             //       }
             //   }
 
-            return new JsonResult(new {  chartData = new { dailySiteControllerWandStrikeData, individualFQWandStrikeData } });
+            return new JsonResult(new {  chartData = new { dailySiteControllerWandStrikeData, individualFQWandStrikeData, totalWandStrikes = totalStrikes } });
         }
         public IActionResult OnPostGenerateReportGraphFifthTab(PatrolRequest ReportRequestnew, string[] TagId, string[] TagTypeId, string[] TagLabel,string GuardName,string LicenseNo, string[] SmartWandId)
         {
@@ -1605,27 +1571,8 @@ namespace CityWatch.Web.Pages.Reports
             
 
             
-            int totalDays = 28; // always 4 wee
-            DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
-            var groupedLogs = filterLogsLatest
-    .GroupBy(x => x.HitUtcDateTime.Date.Date)
-    .ToDictionary(g => g.Key, g => g.Count());
-
             var dailySiteControllerWandStrikeDataForDownselect =
-                Enumerable.Range(0, (toDate.Date - ReportRequest.FromDate.Date).Days + 1)
-                .Select(offset =>
-                {
-                    var day = ReportRequest.FromDate.Date.AddDays(offset);
-                    groupedLogs.TryGetValue(day, out int strikes);
-
-                    return new
-                    {
-                        //DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
-                        DayLabel = day.ToString("dddd")[0].ToString(),
-                        Strikes = strikes
-                    };
-                })
-                .ToList();
+                BuildWandStrikeSeries(filterLogsLatest, ReportRequest.FromDate.Date, ReportRequest.ToDate.Date);
 
             var filteredLogs = filterLogsLatest
     .Where(x => x.HitUtcDateTime.Date >= ReportRequest.FromDate.Date &&
@@ -1661,7 +1608,70 @@ namespace CityWatch.Web.Pages.Reports
 
 
 
-            return new JsonResult(new { chartData = new { dailySiteControllerWandStrikeDataForDownselect, individualFQWandStrikeDataForDownselect } });
+            return new JsonResult(new { chartData = new { dailySiteControllerWandStrikeDataForDownselect, individualFQWandStrikeDataForDownselect, totalWandStrikes = totalStrikes } });
+        }
+
+        /// <summary>
+        /// Site Combined Wand Strikes series over the full report range. The series used to be
+        /// capped at 28 days ("always 4 weeks"), which left the chart blank for EFY reports
+        /// spanning 12 months. Buckets adapt to the range so the bars stay readable:
+        /// daily up to ~1 month, weekly up to ~6 months, monthly beyond that.
+        /// </summary>
+        private static List<object> BuildWandStrikeSeries(IEnumerable<ClientSiteSmartWandTagsHitLog> logs, DateTime fromDate, DateTime toDate)
+        {
+            if (toDate < fromDate)
+                toDate = fromDate;
+
+            var hitDates = logs
+                .Select(x => x.HitUtcDateTime.Date)
+                .Where(d => d >= fromDate && d <= toDate)
+                .ToList();
+
+            var totalDays = (toDate - fromDate).Days + 1;
+            var series = new List<object>();
+
+            if (totalDays <= 31)
+            {
+                var byDay = hitDates.GroupBy(d => d).ToDictionary(g => g.Key, g => g.Count());
+                for (var day = fromDate; day <= toDate; day = day.AddDays(1))
+                {
+                    byDay.TryGetValue(day, out int strikes);
+                    series.Add(new
+                    {
+                        DayLabel = day.ToString("dddd")[0].ToString(), // MTWTFSS
+                        Strikes = strikes
+                    });
+                }
+            }
+            else if (totalDays <= 182)
+            {
+                var byWeek = hitDates.GroupBy(d => (d - fromDate).Days / 7).ToDictionary(g => g.Key, g => g.Count());
+                var weekCount = (totalDays + 6) / 7;
+                for (var week = 0; week < weekCount; week++)
+                {
+                    byWeek.TryGetValue(week, out int strikes);
+                    series.Add(new
+                    {
+                        DayLabel = fromDate.AddDays(week * 7).ToString("dd/MM"), // week starting
+                        Strikes = strikes
+                    });
+                }
+            }
+            else
+            {
+                var byMonth = hitDates.GroupBy(d => new DateTime(d.Year, d.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
+                for (var month = new DateTime(fromDate.Year, fromDate.Month, 1); month <= toDate; month = month.AddMonths(1))
+                {
+                    byMonth.TryGetValue(month, out int strikes);
+                    series.Add(new
+                    {
+                        DayLabel = month.ToString("MMM yy"),
+                        Strikes = strikes
+                    });
+                }
+            }
+
+            return series;
         }
 
         public JsonResult OnGetClientSiteWandAndTags(string clientSites)
