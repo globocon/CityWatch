@@ -7884,18 +7884,22 @@ var loaderProgress = {
         clearInterval(this.timer);
         if (this.done >= this.total) return;
         var self = this;
-        var ceiling = Math.round(((this.done + 0.9) / this.total) * 100);
+        // approach the next milestone asymptotically so the bar keeps visibly moving
+        // during long-running requests instead of freezing at a fixed percentage
+        var ceiling = ((this.done + 0.97) / this.total) * 100;
         this.timer = setInterval(function () {
             if (!self.active) { clearInterval(self.timer); return; }
-            if (self.current < ceiling) self._render(self.current + 1);
-        }, 700);
+            var next = self.current + Math.max(0.1, (ceiling - self.current) * 0.06);
+            if (next > ceiling) next = ceiling;
+            if (next > self.current) self._render(next);
+        }, 600);
     },
     _render: function (pct) {
         if (pct > 100) pct = 100;
         if (pct < this.current) return;
         this.current = pct;
         $('#loader-progress-bar').css('width', pct + '%');
-        $('#loader-progress-percent').text(pct + '%');
+        $('#loader-progress-percent').text(Math.round(pct) + '%');
     }
 };
 

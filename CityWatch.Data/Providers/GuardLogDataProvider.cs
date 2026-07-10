@@ -1004,18 +1004,20 @@ namespace CityWatch.Data.Providers
 
         public List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate)
         {
-            var results = _context.KeyVehicleLogs
+            // Read-only reporting query. The old version executed the same query twice
+            // (once through .Load() for the log book include, once through ToList) with
+            // full change tracking, which made long date ranges very slow.
+            return _context.KeyVehicleLogs
+               .AsNoTrackingWithIdentityResolution()
                .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
                             && z.EntryTime >= logFromDate && z.EntryTime < logToDate.AddDays(1))
                .Include(z => z.GuardLogin.Guard)
                .Include(x => x.ClientSiteLocation)
-               .Include(x => x.ClientSitePoc);
-
-            results.Include(x => x.ClientSiteLogBook)
+               .Include(x => x.ClientSitePoc)
+               .Include(x => x.ClientSiteLogBook)
                .ThenInclude(z => z.ClientSite)
-               .Load();
-
-            return results.OrderBy(z => z.EntryTime).ToList();
+               .OrderBy(z => z.EntryTime)
+               .ToList();
         }
         public List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate)
 
