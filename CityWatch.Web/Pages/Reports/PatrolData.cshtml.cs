@@ -1558,14 +1558,16 @@ namespace CityWatch.Web.Pages.Reports
             var dailyLogWandStrikeReportForSiteController = _guardLogDataProvider.GetGuardLogsWithWandStrikes(ReportRequest, true);
 
             var filterLogsLatest = dailyLogWandStrikeReportForSiteController.Where(z =>
-            (TagId == null || !TagId.Any() || TagId.Contains(z.TagUId)) &&
+            // hit log TagUId can carry extra characters around the tag UID, so match by
+            // substring the same way the Individual Wand Point Fq pie does
+            (TagId == null || !TagId.Any() || (z.TagUId != null && TagId.Any(t => z.TagUId.Contains(t)))) &&
             (TagTypeId == null || !TagTypeId.Any() || TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
-            (TagLabel == null || !TagLabel.Any() || TagLabel.Any(term => z.LabelDescription.Contains(term))) &&
+            (TagLabel == null || !TagLabel.Any() || (z.LabelDescription != null && TagLabel.Any(term => z.LabelDescription.Contains(term)))) &&
                      //(string.IsNullOrEmpty(TagId.ToString()) || TagIds.Contains(z.TagUId)) &&
                      //(string.IsNullOrEmpty(TagTypeId) || TagTypeIds.Contains(Convert.ToInt16(z.TagsTypeId))) &&
                      //(string.IsNullOrEmpty(TagLabel) || TagLabels.Contains(z.LabelDescription)) &&
-                     (string.IsNullOrEmpty(GuardName) || string.Equals(z.LoggedInGuard.Name, GuardName, StringComparison.OrdinalIgnoreCase)) &&
-                     (string.IsNullOrEmpty(LicenseNo) || string.Equals(z.LoggedInGuard.SecurityNo, LicenseNo, StringComparison.OrdinalIgnoreCase))
+                     (string.IsNullOrEmpty(GuardName) || string.Equals(z.LoggedInGuard?.Name, GuardName, StringComparison.OrdinalIgnoreCase)) &&
+                     (string.IsNullOrEmpty(LicenseNo) || string.Equals(z.LoggedInGuard?.SecurityNo, LicenseNo, StringComparison.OrdinalIgnoreCase))
                      ).ToList();
 
             

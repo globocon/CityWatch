@@ -992,8 +992,8 @@ $(function () {
         }
         $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
         $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
-        
-        $('#loader-p').show();
+
+        loaderProgress.start(1, 'Generating report...');
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateReport',
             type: 'POST',
@@ -1006,7 +1006,7 @@ $(function () {
             $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
         }).fail(function () {
         }).always(function () {
-            $('#loader-p').hide();
+            loaderProgress.finish();
         });
     });
     $('#btnPatrolReportSumbit').on('click', function () {
@@ -1058,7 +1058,7 @@ $(function () {
         $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
         $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
         //calculate month difference-end
-        $('#loader-p').show();
+        loaderProgress.start(5, 'Generating report table...');
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateReport',
             type: 'POST',
@@ -1069,6 +1069,7 @@ $(function () {
             patrolReport.clear().rows.add(response.results).draw();
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
             $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
+            loaderProgress.step('Loading charts...');
             /// Show Grpah data start
             console.log('graph started ');
             if (window.myChart1 != undefined)
@@ -1169,7 +1170,6 @@ $(function () {
             $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
             $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
             //calculate month difference-end
-            $('#loader-p').show();
             var ajax1 = $.ajax({
                 url: '/Reports/PatrolData?handler=GenerateReportGraphFirstTab',
                 type: 'POST',
@@ -1299,26 +1299,28 @@ $(function () {
             var selectedLabelText = selectedLabel.text();
 
             $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+            // p3-44: keep every form field (the old reduce() collapsed repeated fields such as
+            // the 32 selected ClientSites down to one, so the downselect charts came back empty)
+            var ajax5Data = $('#frm_patrol_report_request').serializeArray();
+            var appendAll = function (name, values) {
+                if (values == null) return;
+                if (!$.isArray(values)) values = [values];
+                values.forEach(function (v) {
+                    if (v !== '' && v != null) ajax5Data.push({ name: name, value: v });
+                });
+            };
+            appendAll('TagId', tag);
+            appendAll('TagTypeId', $('#patroldatawandstrikeTagTypeId').val());
+            appendAll('TagLabel', $('#patroldatawandstrikeTagLabel').val());
+            appendAll('GuardName', $('#patroldatawandstrikeGuardName').val());
+            appendAll('LicenseNo', $('#patroldatawandstrikeLicenseNo').val());
+            appendAll('SmartWandId', $('#patroldatawandstrikeSmartWandId').val());
+
             var ajax5 = $.ajax({
                 url: '/Reports/PatrolData?handler=GenerateReportGraphFifthTab',
                 type: 'POST',
                 dataType: 'json',
-                data:
-                    $.extend(
-                        $('#frm_patrol_report_request').serializeArray().reduce(function (obj, item) {
-                            obj[item.name] = item.value;
-                            return obj;
-                        }, {}),
-                        {
-                            TagId: tag,
-                            TagTypeId: $('#patroldatawandstrikeTagTypeId').val(),
-                            TagLabel: $('#patroldatawandstrikeTagLabel').val(),
-                            GuardName: $('#patroldatawandstrikeGuardName').val(),
-                            LicenseNo: $('#patroldatawandstrikeLicenseNo').val(),
-                            SmartWandId: $('#patroldatawandstrikeSmartWandId').val()
-                        }
-                    ),
-
+                data: $.param(ajax5Data),
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (response) {
                 console.log('graph response4 successs wand strikes downselect charts ');
@@ -1334,11 +1336,17 @@ $(function () {
                 }
             });
 
+            // each chart batch that finishes moves the progress bar one milestone forward
+            ajax1.always(function () { loaderProgress.step(); });
+            ajax2.always(function () { loaderProgress.step(); });
+            ajax4.always(function () { loaderProgress.step(); });
+            ajax5.always(function () { loaderProgress.step(); });
             $.when(ajax1, ajax2, ajax4, ajax5).always(function () {
-                $('#loader-p').hide();
+                loaderProgress.finish();
             });
-            ///show graph data end 
+            ///show graph data end
         }).fail(function () {
+            loaderProgress.finish();
         }).always(function () {
             //$('#loader-p').hide();
         });
@@ -7814,6 +7822,64 @@ $('.wandstrikemultiselect').multiselect({
 });
 //p3-41-end
 
+// p3-44: percentage progress overlay so users can see long-running reports are still loading.
+// start(n) declares how many milestones the task has; each step() jumps the bar to the next
+// milestone; a slow timer creeps the bar between milestones so it never looks frozen.
+var loaderProgress = {
+    total: 0,
+    done: 0,
+    current: 0,
+    timer: null,
+    active: false,
+    start: function (totalSteps, label) {
+        this.total = Math.max(1, totalSteps);
+        this.done = 0;
+        this.current = 0;
+        this.active = true;
+        $('#loader-progress-label').text(label || 'Loading...');
+        $('#loader-progress-bar').css('width', '0%');
+        $('#loader-progress-percent').text('0%');
+        $('#loader-progress-box').show();
+        $('#loader-p').show();
+        this._render(2);
+        this._creep();
+    },
+    step: function (label) {
+        if (!this.active) return;
+        this.done = Math.min(this.done + 1, this.total);
+        if (label) $('#loader-progress-label').text(label);
+        this._render(Math.round((this.done / this.total) * 100));
+        this._creep();
+    },
+    finish: function () {
+        if (!this.active) return;
+        this.active = false;
+        clearInterval(this.timer);
+        this._render(100);
+        setTimeout(function () {
+            $('#loader-p').hide();
+            $('#loader-progress-box').hide();
+        }, 400);
+    },
+    _creep: function () {
+        clearInterval(this.timer);
+        if (this.done >= this.total) return;
+        var self = this;
+        var ceiling = Math.round(((this.done + 0.9) / this.total) * 100);
+        this.timer = setInterval(function () {
+            if (!self.active) { clearInterval(self.timer); return; }
+            if (self.current < ceiling) self._render(self.current + 1);
+        }, 700);
+    },
+    _render: function (pct) {
+        if (pct > 100) pct = 100;
+        if (pct < this.current) return;
+        this.current = pct;
+        $('#loader-progress-bar').css('width', pct + '%');
+        $('#loader-progress-percent').text(pct + '%');
+    }
+};
+
 $('#convert-to-pdf').click(function (e) {
     if (window.patrolReportMode === 'report_only') {
         var href = $(this).attr('href');
@@ -7835,8 +7901,9 @@ $('#convert-to-pdf').click(function (e) {
 
     if (pdfTarget.paneId === '#pd-chart') {
         // IR Stats keeps its dedicated pre-sized hidden layout (#content-to-pdf)
-        $('#loader-p').show();
+        loaderProgress.start(2, 'Preparing charts...');
         setTimeout(function () {
+            loaderProgress.step('Rendering PDF...');
             var element = $('#content-to-pdf');
             html2pdf(element[0], {
                 margin: [0, 0, 0, 0],
@@ -7845,7 +7912,7 @@ $('#convert-to-pdf').click(function (e) {
                 html2canvas: { scale: 2, scrollY: 0 },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
             }).then(function () {
-                $('#loader-p').hide();
+                loaderProgress.finish();
             });
         }, 1000); // Simulated delay of 1 second
         return;
@@ -7860,7 +7927,7 @@ $('#convert-to-pdf').click(function (e) {
         return;
     }
 
-    $('#loader-p').show();
+    loaderProgress.start(2, 'Preparing charts...');
     setTimeout(function () {
         // charts are snapshotted into a clean off-screen layout sized for one A4 landscape page
         var wrapper = document.createElement('div');
@@ -7868,6 +7935,7 @@ $('#convert-to-pdf').click(function (e) {
         var element = buildStatsPdfElement(pdfTarget.title, pane, pdfTarget.perRow);
         wrapper.appendChild(element);
         document.body.appendChild(wrapper);
+        loaderProgress.step('Rendering PDF...');
         html2pdf(element, {
             margin: [0.2, 0.2, 0.2, 0.2],
             filename: '' + formattedDate + ' - - ' + pdfTarget.title + '.pdf',
@@ -7876,7 +7944,7 @@ $('#convert-to-pdf').click(function (e) {
             jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
         }).then(function () {
             wrapper.remove();
-            $('#loader-p').hide();
+            loaderProgress.finish();
         });
     }, 1000); // Simulated delay of 1 second
 });
