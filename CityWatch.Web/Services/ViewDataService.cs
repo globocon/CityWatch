@@ -223,7 +223,7 @@ namespace CityWatch.Web.Services
         public void DeleteMobileAppUpgrade(int id);
         public void UpdateDownloadCount(int id);
         public void RollBackToVersion(int recordId);
-        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId);
+        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId, DateTime targetDate);
         public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key);
         public List<Guard> GetLicenseAndCompliancForGuards(int guardId);
         public List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId);
@@ -3255,9 +3255,9 @@ namespace CityWatch.Web.Services
         }
 
 
-        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId)
+        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId, DateTime targetDate)
         {
-            return _appConfigurationProvider.GetPcarDetails(deviceId);
+            return _appConfigurationProvider.GetPcarDetails(deviceId, targetDate);
         }
 
         public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key)

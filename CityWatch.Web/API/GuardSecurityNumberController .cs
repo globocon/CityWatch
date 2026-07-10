@@ -4046,12 +4046,18 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetPcarDetails")]
-        public IActionResult GetPcarDetails(string deviceId)
+        public IActionResult GetPcarDetails(string deviceId, string? date = null)
         {
             if (string.IsNullOrWhiteSpace(deviceId))
                 return BadRequest(new { message = "Device ID is required" });
 
-            var result = _viewDataService.GetPcarDetailsFromDevice(deviceId);
+            DateTime targetDate = DateTime.Today;
+            if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out var parsedDate))
+            {
+                targetDate = parsedDate;
+            }
+
+            var result = _viewDataService.GetPcarDetailsFromDevice(deviceId, targetDate);
 
             if (!result.Success)
                 return BadRequest(result);
@@ -4071,6 +4077,26 @@ namespace CityWatch.Web.API
 
             try
             {
+                var visitStatus = dto.Status;
+                int? pushedToId = dto.PushedTo;
+                if (pushedToId.HasValue || visitStatus == Data.Enums.PcarVisitStatusEnum.PushedToPcar)
+                {
+                    visitStatus = Data.Enums.PcarVisitStatusEnum.PushedToPcar;
+                }
+                else if (visitStatus == Data.Enums.PcarVisitStatusEnum.Completed || 
+                         visitStatus == Data.Enums.PcarVisitStatusEnum.InProgress || 
+                         visitStatus == null)
+                {
+                    if (!string.IsNullOrEmpty(dto.TimeOn) && !string.IsNullOrEmpty(dto.TimeOff))
+                    {
+                        visitStatus = Data.Enums.PcarVisitStatusEnum.Completed;
+                    }
+                    else if (!string.IsNullOrEmpty(dto.TimeOn) && string.IsNullOrEmpty(dto.TimeOff))
+                    {
+                        visitStatus = Data.Enums.PcarVisitStatusEnum.InProgress;
+                    }
+                }
+
                 var visit = new PcarRouteDailyVisits
                 {
                     SmartWandId = dto.SmartWandId,
@@ -4091,7 +4117,9 @@ namespace CityWatch.Web.API
                     TimeOff = dto.TimeOff,
 
                     GpsCoordinates = dto.GpsCoordinates,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    Status = visitStatus,
+                    PushedTo = pushedToId
                 };
 
                 await _guardLogDataProvider.SavePcarSaveVisitTimeAsync(visit);
@@ -4111,6 +4139,28 @@ namespace CityWatch.Web.API
                     Success = false,
                     Message = "Error saving data: " + ex.Message
                 });
+            }
+        }
+
+
+        [HttpGet("GetPcarRoutes")]
+        public IActionResult GetPcarRoutes(int clientSiteId)
+        {
+            try
+            {
+                var patrolCars = _viewDataService.GetClientSiteSmartWands(clientSiteId)
+                    .Select(x => new
+                    {
+                        Id = Convert.ToInt32(x.Id),
+                        Pcarroutename = $"{x.SmartWandId} - {x.PhoneNumber}"
+                    })
+                    .ToList();
+
+                return Ok(new { success = true, data = patrolCars });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -5991,6 +6041,8 @@ namespace CityWatch.Web.API
 
         public string TimeOn { get; set; }
         public string TimeOff { get; set; }
+        public Data.Enums.PcarVisitStatusEnum? Status { get; set; }
+        public int? PushedTo { get; set; }
     }
 
 

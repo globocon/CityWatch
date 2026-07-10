@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
@@ -112,6 +112,8 @@ namespace CityWatch.Data.Models
 
         public string GpsCoordinates { get; set; }
         public DateTime CreatedAt { get; set; }
+        public Enums.PcarVisitStatusEnum? Status { get; set; }
+        public int? PushedTo { get; set; }
     }
 
 }

@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace CityWatch.Data.Providers
         void DeleteMobileAppUpgrade(int id);
         void UpdateDownloadCount(int id);
         void RollBackToVersion(int recordId);
-        public PcarRouteResult GetPcarDetails(string mobiledevId);
+        public PcarRouteResult GetPcarDetails(string mobiledevId, DateTime? targetDate = null);
     }
 
     public class AppConfigurationProvider : IAppConfigurationProvider
@@ -176,6 +176,7 @@ namespace CityWatch.Data.Providers
         public class VisitDto
         {
             public string VisitName { get; set; }
+            public int VisitNumber { get; set; }
 
             // Visit already saved today?
             public bool IsCheckedToday { get; set; }
@@ -186,11 +187,14 @@ namespace CityWatch.Data.Providers
 
             // Optional: To disable modification in MAUI cleanly
             public bool IsReadOnly => IsCheckedToday;
+            public Enums.PcarVisitStatusEnum? Status { get; set; }
+            public int? PushedTo { get; set; }
         }
 
         public class PcarRouteResponse
         {
             public int SmartWandId { get; set; }   // New
+            public int? PatrolCarId { get; set; }  // New
             public int SiteId { get; set; }        // New
             public string DayName { get; set; }    // New
             public int PcarRouteId { get; set; }           // New
@@ -211,7 +215,7 @@ namespace CityWatch.Data.Providers
         }
 
 
-        public PcarRouteResult GetPcarDetails(string mobiledevId)
+        public PcarRouteResult GetPcarDetails(string mobiledevId, DateTime? targetDate = null)
         {
             try
             {
@@ -228,29 +232,43 @@ namespace CityWatch.Data.Providers
                 var route = _context.PcarRoute
                     .Include(r => r.RouteDetails)
                     .ThenInclude(d => d.ClientSite)
+                    .Include(r => r.SmartWand)
                     .FirstOrDefault(r => r.Smartwandallocation == smartWand.Id);
 
                 if (route == null)
                     return new PcarRouteResult { Success = false, Message = "Route not found for this device" };
 
-                var today = DateTime.Today;
-                string dayName = today.DayOfWeek.ToString().Substring(0, 3);
+                var dateToUse = targetDate ?? DateTime.Today;
+                string dayName = dateToUse.DayOfWeek.ToString().Substring(0, 3);
 
-                // Load saved visits for today
+                // Load saved visits for targetDate
                 var savedVisits = _context.PcarRouteDailyVisits
-                    .Where(v => v.SmartWandId == smartWand.Id && v.CreatedAt.Date == today)
+                    .Where(v => v.SmartWandId == smartWand.Id && v.CreatedAt.Date == dateToUse.Date)
                     .Select(v => new
                     {
                         v.SiteId,
                         v.VisitName,
                         v.TimeOn,
-                        v.TimeOff
+                        v.TimeOff,
+                        v.Status,
+                        v.PushedTo
                     })
                     .ToList();
 
+                // Load pushed tasks to this route (via its PatrolCarId)
+                int? currentPatrolCarId = route.SmartWand?.PatrolCarId;
+                var pushedTasks = new List<PcarRouteDailyVisits>();
+                if (currentPatrolCarId.HasValue)
+                {
+                    pushedTasks = _context.PcarRouteDailyVisits
+                        .Where(v => (v.PushedTo == currentPatrolCarId.Value || v.Status == Enums.PcarVisitStatusEnum.PushedToPcar) && 
+                                    v.CreatedAt.Date == dateToUse.Date)
+                        .ToList();
+                }
+
                 var response = route.RouteDetails.Select(rd =>
                 {
-                    int visitCount = today.DayOfWeek switch
+                    int visitCount = dateToUse.DayOfWeek switch
                     {
                         DayOfWeek.Monday => rd.VisitMon,
                         DayOfWeek.Tuesday => rd.VisitTue,
@@ -262,9 +280,52 @@ namespace CityWatch.Data.Providers
                         _ => 0
                     };
 
+                    var visitsList = Enumerable.Range(1, visitCount)
+                        .Select(i =>
+                        {
+                            var visitName = $"Visit {i}";
+
+                            // Find matching saved visit
+                            var saved = savedVisits
+                                .FirstOrDefault(sv =>
+                                    sv.SiteId == rd.ClientSite.Id &&
+                                    sv.VisitName == visitName);
+
+                            return new VisitDto
+                            {
+                                VisitName = visitName,
+                                VisitNumber = i,
+                                IsCheckedToday = saved != null,
+                                SavedTimeOnSite = saved?.TimeOn,
+                                SavedTimeOffSite = saved?.TimeOff,
+                                Status = saved?.Status,
+                                PushedTo = saved?.PushedTo
+                            };
+                        })
+                        .ToList();
+
+                    // Append pushed visits for this site
+                    var sitePushed = pushedTasks.Where(p => p.SiteId == rd.ClientSite.Id).ToList();
+                    foreach (var pt in sitePushed)
+                    {
+                        var pushedVisitName = $"{pt.VisitName} (Pushed)";
+                        var saved = savedVisits.FirstOrDefault(sv => sv.SiteId == rd.ClientSite.Id && sv.VisitName == pushedVisitName);
+
+                        visitsList.Add(new VisitDto
+                        {
+                            VisitName = pushedVisitName,
+                            VisitNumber = pt.VisitNumber,
+                            IsCheckedToday = saved != null,
+                            SavedTimeOnSite = saved?.TimeOn,
+                            SavedTimeOffSite = saved?.TimeOff,
+                            Status = saved != null ? Enums.PcarVisitStatusEnum.Completed : (Enums.PcarVisitStatusEnum?)null
+                        });
+                    }
+
                     return new PcarRouteResponse
                     {
                         SmartWandId = smartWand.Id,
+                        PatrolCarId = currentPatrolCarId,
                         SiteId = rd.ClientSite.Id,
                         PcarRouteId = route.Id,
                         PcarRouteDetailsId = rd.Id,
@@ -272,29 +333,58 @@ namespace CityWatch.Data.Providers
                         SiteName = rd.ClientSite.Name,
                         Address = rd.ClientSite.Address,
                         GPSLocation = rd.ClientSite.Gps,
-                        VisitCount = visitCount,
-                        Visits = Enumerable.Range(1, visitCount)
-                            .Select(i =>
-                            {
-                                var visitName = $"Visit {i}";
-
-                                // Find matching saved visit
-                                var saved = savedVisits
-                                    .FirstOrDefault(sv =>
-                                        sv.SiteId == rd.ClientSite.Id &&
-                                        sv.VisitName == visitName);
-
-                                return new VisitDto
-                                {
-                                    VisitName = visitName,
-                                    IsCheckedToday = saved != null,
-                                    SavedTimeOnSite = saved?.TimeOn,
-                                    SavedTimeOffSite = saved?.TimeOff
-                                };
-                            })
-                            .ToList()
+                        VisitCount = visitsList.Count,
+                        Visits = visitsList
                     };
                 }).ToList();
+
+                // Handle pushed tasks for sites that are NOT in this route's route details
+                var existingSiteIds = response.Select(r => r.SiteId).ToHashSet();
+                var extraPushedTasks = pushedTasks.Where(p => !existingSiteIds.Contains(p.SiteId)).ToList();
+
+                if (extraPushedTasks.Count > 0)
+                {
+                    var extraSitesGrouped = extraPushedTasks.GroupBy(p => p.SiteId);
+                    foreach (var group in extraSitesGrouped)
+                    {
+                        var siteId = group.Key;
+                        var site = _context.ClientSites.FirstOrDefault(s => s.Id == siteId);
+                        if (site != null)
+                        {
+                            var visitsList = new List<VisitDto>();
+                            foreach (var pt in group)
+                            {
+                                var pushedVisitName = $"{pt.VisitName} (Pushed)";
+                                var saved = savedVisits.FirstOrDefault(sv => sv.SiteId == siteId && sv.VisitName == pushedVisitName);
+
+                                visitsList.Add(new VisitDto
+                                {
+                                    VisitName = pushedVisitName,
+                                    VisitNumber = pt.VisitNumber,
+                                    IsCheckedToday = saved != null,
+                                    SavedTimeOnSite = saved?.TimeOn,
+                                    SavedTimeOffSite = saved?.TimeOff,
+                                    Status = saved != null ? Enums.PcarVisitStatusEnum.Completed : (Enums.PcarVisitStatusEnum?)null
+                                });
+                            }
+
+                            response.Add(new PcarRouteResponse
+                            {
+                                SmartWandId = smartWand.Id,
+                                PatrolCarId = currentPatrolCarId,
+                                SiteId = siteId,
+                                PcarRouteId = route.Id,
+                                PcarRouteDetailsId = 0, // No details record for pushed extra site
+                                DayName = dayName,
+                                SiteName = site.Name,
+                                Address = site.Address,
+                                GPSLocation = site.Gps,
+                                VisitCount = visitsList.Count,
+                                Visits = visitsList
+                            });
+                        }
+                    }
+                }
 
                 return new PcarRouteResult
                 {
