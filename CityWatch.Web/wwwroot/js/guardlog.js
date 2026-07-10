@@ -3358,8 +3358,8 @@ $(function () {
                 options: {
                     layout: {
                         padding: {
-                            left: 10,
-                            right: 10,
+                            left: 45,
+                            right: 45,
                             top: 18,
                             bottom: 18
                         }
@@ -3419,9 +3419,10 @@ $(function () {
                             }
                         },
                         labels: {
+                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
                             render: (args) => {
 
-                                return args.percentage + '%';
+                                return args.label + ' ' + args.percentage + '%';
 
                             },
                             position: 'outside',
@@ -3529,9 +3530,10 @@ $(function () {
                             }
                         },
                         labels: {
+                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
                             render: (args) => {
 
-                                return args.percentage + '%';
+                                return args.label + ' ' + args.percentage + '%';
 
                             },
                             position: 'outside',
@@ -4102,6 +4104,51 @@ $(function () {
     });
     $('#btncount_by_kventriesPerYear').on('click', function () {
         $('#modelKVEntriesForyear').modal('show');
+    });
+    // p3-44: download the KV charts as a single-page PDF (same layout engine as the
+    // IR & Patrol Car Statistics page — buildStatsPdfElement lives in reports.js)
+    $('#btnDownloadKvChartsPdf').on('click', function (e) {
+        e.preventDefault();
+        var pane = $('#keyVehicleLogChart');
+        var hasRenderedChart = pane.find('canvas').filter(function () {
+            var chart = (window.Chart && typeof Chart.getChart === 'function') ? Chart.getChart(this) : null;
+            return chart != null || (this.width > 0 && this.height > 0);
+        }).length > 0;
+        if (!hasRenderedChart) {
+            alert('Please generate the report (View Report) first.');
+            return;
+        }
+        loaderProgress.start(2, 'Preparing charts...');
+        setTimeout(function () {
+            var wrapper = document.createElement('div');
+            wrapper.style.cssText = 'width:1px;height:1px;border:0 none;position:relative;overflow:hidden;';
+            try {
+                var dateRange = formatDate($('#vklAudtitFromDate').val()) + ' to ' + formatDate($('#vklAudtitToDate').val());
+                var element = buildStatsPdfElement('Key & Vehicle Logs - Truck Entries', pane, 2, dateRange);
+                wrapper.appendChild(element);
+                document.body.appendChild(wrapper);
+                loaderProgress.step('Rendering PDF...');
+                html2pdf(element, {
+                    margin: [0.2, 0.2, 0.2, 0.2],
+                    filename: formatDate(new Date()) + ' - Key & Vehicle Truck Entries.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, scrollY: 0 },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+                }).then(function () {
+                    wrapper.remove();
+                    loaderProgress.finish();
+                }, function (err) {
+                    console.log('pdf generation failed', err);
+                    wrapper.remove();
+                    loaderProgress.finish();
+                });
+            } catch (err) {
+                console.log('pdf generation failed', err);
+                wrapper.remove();
+                loaderProgress.finish();
+                alert('PDF generation failed. Please try again.');
+            }
+        }, 500);
     });
     //code addded  to download Excel start for auditsite key vehicle-start
     $("#btnDownloadVklAuditExcel").click(function () {

@@ -8004,7 +8004,8 @@ function getActiveStatsPdfTarget() {
 // Rebuilds the active pane's chart cards into a print layout: header with title,
 // date range and logo, then the charts (canvas snapshots) in a perRow-column grid.
 // Filter controls and buttons are left out so the page stays clean.
-function buildStatsPdfElement(title, pane, perRow) {
+// dateRangeText is optional — pages other than IR & Patrol Statistics pass their own.
+function buildStatsPdfElement(title, pane, perRow, dateRangeText) {
     var container = document.createElement('div');
     container.style.cssText = 'width:1050px;background:#ffffff;padding:14px;font-family:Arial,Helvetica,sans-serif;color:#212529;';
 
@@ -8020,15 +8021,19 @@ function buildStatsPdfElement(title, pane, perRow) {
     header.appendChild(heading);
     var range = document.createElement('div');
     range.style.cssText = 'font-size:12px;padding-top:2px;';
-    range.textContent = formatDate($('#ReportRequest_FromDate').val()) + ' to ' + formatDate($('#ReportRequest_ToDate').val());
+    range.textContent = dateRangeText || (formatDate($('#ReportRequest_FromDate').val()) + ' to ' + formatDate($('#ReportRequest_ToDate').val()));
     header.appendChild(range);
     container.appendChild(header);
 
-    // collect the rendered charts first so the grid can be sized to fill the page
+    // collect the rendered charts first so the grid can be sized to fill the page.
+    // a canvas in a hidden tab can be 0x0 yet still hold a live Chart.js instance —
+    // the export path re-renders those at full size, so accept them too
     var cards = [];
     pane.find('.card').each(function () {
         var canvas = $(this).find('canvas').get(0);
-        if (!canvas || canvas.width === 0 || canvas.height === 0) return;
+        if (!canvas) return;
+        var hasChart = window.Chart && typeof Chart.getChart === 'function' && Chart.getChart(canvas);
+        if (!hasChart && (canvas.width === 0 || canvas.height === 0)) return;
         cards.push({
             headerText: $(this).find('.card-header').text().replace(/\s+/g, ' ').trim(),
             canvas: canvas
@@ -8081,7 +8086,9 @@ function buildStatsPdfElement(title, pane, perRow) {
                 origPadding = (typeof p === 'object')
                     ? { left: p.left || 0, right: p.right || 0, top: p.top || 0, bottom: p.bottom || 0 }
                     : p;
-                chart.options.layout = { padding: { left: 12, right: 12, top: 28, bottom: 8 } };
+                // generous side padding so pies with outside labels (e.g. "Jul 2025 4.8%")
+                // don't clip at the export edges
+                chart.options.layout = { padding: { left: 45, right: 45, top: 28, bottom: 12 } };
                 chart.resize(imgWidth * 2, imgHeight * 2);
                 img.src = item.canvas.toDataURL('image/png');
                 exported = true;
