@@ -8027,15 +8027,31 @@ function buildStatsPdfElement(title, pane, perRow) {
         var body = document.createElement('div');
         body.style.cssText = 'padding:' + BODY_PADDING + 'px;background:#ffffff;';
         var img = document.createElement('img');
-        img.src = item.canvas.toDataURL('image/png');
 
-        // as large as the row allows while keeping the chart's aspect ratio
-        var aspect = item.canvas.width / item.canvas.height;
+        // re-render the live Chart.js instance at the export size (like the popup version)
+        // so value labels and legends that are cramped on screen are not clipped in the PDF,
+        // then put the chart back to its on-screen size
+        var imgWidth = imgMaxWidth;
         var imgHeight = imgMaxHeight;
-        var imgWidth = Math.round(imgHeight * aspect);
-        if (imgWidth > imgMaxWidth) {
-            imgWidth = imgMaxWidth;
-            imgHeight = Math.round(imgWidth / aspect);
+        var chart = (window.Chart && typeof Chart.getChart === 'function') ? Chart.getChart(item.canvas) : null;
+        if (chart) {
+            var origPadding = chart.options.layout ? chart.options.layout.padding : undefined;
+            chart.options.layout = chart.options.layout || {};
+            chart.options.layout.padding = { left: 12, right: 12, top: 28, bottom: 8 };
+            chart.resize(imgWidth * 2, imgHeight * 2);
+            img.src = item.canvas.toDataURL('image/png');
+            chart.options.layout.padding = origPadding;
+            chart.resize();
+        } else {
+            // no Chart.js instance — scale the on-screen snapshot, keeping its aspect ratio
+            var aspect = item.canvas.width / item.canvas.height;
+            imgHeight = imgMaxHeight;
+            imgWidth = Math.round(imgHeight * aspect);
+            if (imgWidth > imgMaxWidth) {
+                imgWidth = imgMaxWidth;
+                imgHeight = Math.round(imgWidth / aspect);
+            }
+            img.src = item.canvas.toDataURL('image/png');
         }
         img.style.cssText = 'width:' + imgWidth + 'px;height:' + imgHeight + 'px;display:block;margin:0 auto;';
         body.appendChild(img);
