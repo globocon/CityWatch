@@ -28,14 +28,23 @@ namespace CityWatch.RadioCheck.Pages
 
         public string SignalRConnectionUrl { get; set; }
 
+        // AllowAnonymousToFolder("/") in Program.cs suppresses [Authorize], so the page
+        // guards itself the same way RadioCheckV2/ClientProfile do.
+        private bool IsLoggedIn => User.Identity != null && User.Identity.IsAuthenticated;
+
         public IActionResult OnGet()
         {
+            if (!IsLoggedIn)
+                return Redirect(Url.Page("/Account/Login", new { returnUrl = Url.Page("/ControlRoomMap") }));
+
             SignalRConnectionUrl = _configuration.GetSection("SignalRConnectionUrl").Value;
             return Page();
         }
 
-        public JsonResult OnGetSiteInfo(int clientSiteId)
+        public IActionResult OnGetSiteInfo(int clientSiteId)
         {
+            if (!IsLoggedIn)
+                return new UnauthorizedResult();
             var siteImage = string.Empty;
             var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
             if (kpiSetting != null && !string.IsNullOrEmpty(kpiSetting.SiteImage))
@@ -74,8 +83,10 @@ namespace CityWatch.RadioCheck.Pages
         /// DailyWandFq count (traditional wands). SmartWand rounds already arrive per guard
         /// in the activity feed, so the client combines both.
         /// </summary>
-        public JsonResult OnGetSiteFq()
+        public IActionResult OnGetSiteFq()
         {
+            if (!IsLoggedIn)
+                return new UnauthorizedResult();
             try
             {
                 var today = DateTime.Today;
@@ -109,8 +120,10 @@ namespace CityWatch.RadioCheck.Pages
         /// in chronological order, plus the planned route (for "next expected site").
         /// A patrol's current location is the site of its most recent scan.
         /// </summary>
-        public JsonResult OnGetPcarRoutes()
+        public IActionResult OnGetPcarRoutes()
         {
+            if (!IsLoggedIn)
+                return new UnauthorizedResult();
             try
             {
                 var today = DateTime.Today;
@@ -186,8 +199,10 @@ namespace CityWatch.RadioCheck.Pages
         /// The map polls this cheaply and only reloads the full data when the token changes,
         /// so a guard adding a new IR/LB/KV/SW record shows up within seconds without a hard refresh.
         /// </summary>
-        public JsonResult OnGetChangeToken()
+        public IActionResult OnGetChangeToken()
         {
+            if (!IsLoggedIn)
+                return new UnauthorizedResult();
             try
             {
                 var token = _context.ClientSiteRadioChecksActivityStatus
