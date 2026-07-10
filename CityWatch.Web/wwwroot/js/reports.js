@@ -7913,6 +7913,9 @@ $('#convert-to-pdf').click(function (e) {
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
             }).then(function () {
                 loaderProgress.finish();
+            }, function (err) {
+                console.log('pdf generation failed', err);
+                loaderProgress.finish();
             });
         }, 1000); // Simulated delay of 1 second
         return;
@@ -7932,20 +7935,31 @@ $('#convert-to-pdf').click(function (e) {
         // charts are snapshotted into a clean off-screen layout sized for one A4 landscape page
         var wrapper = document.createElement('div');
         wrapper.style.cssText = 'width:1px;height:1px;border:0 none;position:relative;overflow:hidden;';
-        var element = buildStatsPdfElement(pdfTarget.title, pane, pdfTarget.perRow);
-        wrapper.appendChild(element);
-        document.body.appendChild(wrapper);
-        loaderProgress.step('Rendering PDF...');
-        html2pdf(element, {
-            margin: [0.2, 0.2, 0.2, 0.2],
-            filename: '' + formattedDate + ' - - ' + pdfTarget.title + '.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, scrollY: 0 },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-        }).then(function () {
+        try {
+            var element = buildStatsPdfElement(pdfTarget.title, pane, pdfTarget.perRow);
+            wrapper.appendChild(element);
+            document.body.appendChild(wrapper);
+            loaderProgress.step('Rendering PDF...');
+            html2pdf(element, {
+                margin: [0.2, 0.2, 0.2, 0.2],
+                filename: '' + formattedDate + ' - - ' + pdfTarget.title + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, scrollY: 0 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).then(function () {
+                wrapper.remove();
+                loaderProgress.finish();
+            }, function (err) {
+                console.log('pdf generation failed', err);
+                wrapper.remove();
+                loaderProgress.finish();
+            });
+        } catch (err) {
+            console.log('pdf generation failed', err);
             wrapper.remove();
             loaderProgress.finish();
-        });
+            alert('PDF generation failed. Please try again.');
+        }
     }, 1000); // Simulated delay of 1 second
 });
 
@@ -8030,20 +8044,36 @@ function buildStatsPdfElement(title, pane, perRow) {
 
         // re-render the live Chart.js instance at the export size (like the popup version)
         // so value labels and legends that are cramped on screen are not clipped in the PDF,
-        // then put the chart back to its on-screen size
+        // then put the chart back to its on-screen size.
+        // NOTE: chart.options is a Chart.js proxy — only copy primitive values out of it and
+        // only assign fresh plain objects into it, or the proxy setter recurses infinitely.
         var imgWidth = imgMaxWidth;
         var imgHeight = imgMaxHeight;
+        var exported = false;
         var chart = (window.Chart && typeof Chart.getChart === 'function') ? Chart.getChart(item.canvas) : null;
         if (chart) {
-            var origPadding = chart.options.layout ? chart.options.layout.padding : undefined;
-            chart.options.layout = chart.options.layout || {};
-            chart.options.layout.padding = { left: 12, right: 12, top: 28, bottom: 8 };
-            chart.resize(imgWidth * 2, imgHeight * 2);
-            img.src = item.canvas.toDataURL('image/png');
-            chart.options.layout.padding = origPadding;
-            chart.resize();
-        } else {
-            // no Chart.js instance — scale the on-screen snapshot, keeping its aspect ratio
+            var origPadding = 0;
+            try {
+                var p = (chart.options.layout && chart.options.layout.padding != null) ? chart.options.layout.padding : 0;
+                origPadding = (typeof p === 'object')
+                    ? { left: p.left || 0, right: p.right || 0, top: p.top || 0, bottom: p.bottom || 0 }
+                    : p;
+                chart.options.layout = { padding: { left: 12, right: 12, top: 28, bottom: 8 } };
+                chart.resize(imgWidth * 2, imgHeight * 2);
+                img.src = item.canvas.toDataURL('image/png');
+                exported = true;
+            } catch (err) {
+                console.log('chart export resize failed, falling back to screen snapshot', err);
+            }
+            try {
+                chart.options.layout = { padding: origPadding };
+                chart.resize();
+            } catch (err2) {
+                console.log('chart restore failed', err2);
+            }
+        }
+        if (!exported) {
+            // no Chart.js instance (or export failed) — scale the on-screen snapshot instead
             var aspect = item.canvas.width / item.canvas.height;
             imgHeight = imgMaxHeight;
             imgWidth = Math.round(imgHeight * aspect);
