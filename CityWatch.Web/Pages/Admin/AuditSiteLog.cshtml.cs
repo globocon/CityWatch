@@ -159,7 +159,45 @@ namespace CityWatch.Web.Pages.Admin
             // Single query for the whole range; the week/month/year charts are bucketed from
             // it in memory. This used to re-run the full logs query once per week, month and
             // year in the range (30+ heavy queries), which made the chart tab take minutes.
-            var keyVehicleAuditLogRequest = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
+            var kvLogs = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
+
+            // Serialize only the fields the report tables actually bind (same JSON paths the
+            // DataTables columns use) — returning the full entity graph per row made the
+            // response enormous and slow to build, transfer and parse.
+            var keyVehicleAuditLogRequest = kvLogs.Select(v => new
+            {
+                v.GroupText,
+                v.Plate,
+                v.TruckConfigText,
+                v.TrailerTypeText,
+                v.PersonTypeText,
+                v.ClientSitePocName,
+                v.ClientSiteLocationName,
+                v.PurposeOfEntry,
+                Detail = new
+                {
+                    v.Detail.EntryTime,
+                    v.Detail.ExitTime,
+                    v.Detail.TimeSlotNo,
+                    v.Detail.VehicleRego,
+                    v.Detail.Trailer1Rego,
+                    v.Detail.Trailer2Rego,
+                    v.Detail.Trailer3Rego,
+                    v.Detail.Trailer4Rego,
+                    v.Detail.KeyNo,
+                    v.Detail.CompanyName,
+                    v.Detail.PersonName,
+                    v.Detail.MobileNumber,
+                    v.Detail.InWeight,
+                    v.Detail.OutWeight,
+                    v.Detail.TareWeight,
+                    v.Detail.Notes,
+                    ClientSiteLogBook = new
+                    {
+                        ClientSite = new { Name = v.Detail.ClientSiteLogBook?.ClientSite?.Name }
+                    }
+                }
+            }).ToList();
 
             var fromDate = keyVehicleLogAuditLogRequest.LogFromDate.Date;
             var toDate = keyVehicleLogAuditLogRequest.LogToDate.Date;

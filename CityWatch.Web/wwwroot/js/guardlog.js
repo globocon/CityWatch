@@ -3445,6 +3445,8 @@ $(function () {
         if (canvas2 !== null) {
             const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_formonth1').getContext('2d');
             ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            // p3-44: popup matches the small monthly chart — real percentages outside
+            // the slices (the old code appended '%' to the raw count, e.g. "625%")
             window.myChart10 = new Chart(ctx2, {
                 type: 'pie',
                 data: {
@@ -3486,6 +3488,11 @@ $(function () {
                         },
                         legend: {
                             position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Legend: Month (Total)',
+                                font: { family: 'Arial', size: 11, weight: 'bold' }
+                            },
                             labels: {
                                 font: {
                                     family: 'Arial',
@@ -3504,7 +3511,7 @@ $(function () {
                                             const style = meta.controller.getStyle(i);
 
                                             return {
-                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                text: `${label} (${Number(data['datasets'][0].data[i]).toLocaleString()})`,
                                                 fillStyle: style.backgroundColor,
                                                 strokeStyle: style.borderColor,
                                                 lineWidth: style.borderWidth,
@@ -3522,10 +3529,9 @@ $(function () {
                             }
                         },
                         labels: {
-                            /* render:"value",*/
                             render: (args) => {
 
-                                return args.value + '%';
+                                return args.percentage + '%';
 
                             },
                             position: 'outside',
@@ -3910,10 +3916,11 @@ $(function () {
                             }
                         },
                         labels: {
-                            /* render:"value",*/
+                            // real percentage of the total — appending '%' to the raw
+                            // count showed values like "625%"
                             render: (args) => {
 
-                                return args.value + '%';
+                                return args.percentage + '%';
 
                             },
                             position: 'outside',
