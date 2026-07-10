@@ -7831,16 +7831,34 @@ var loaderProgress = {
     current: 0,
     timer: null,
     active: false,
+    // works on any page: uses #loader-p or #loader, injecting the progress box if the
+    // page markup doesn't include one
+    _overlayEl: function () {
+        var el = $('#loader-p');
+        if (!el.length) el = $('#loader');
+        return el;
+    },
+    _ensureBox: function () {
+        if (!$('#loader-progress-box').length) {
+            this._overlayEl().append(
+                '<div id="loader-progress-box">' +
+                '<div id="loader-progress-label">Loading...</div>' +
+                '<div id="loader-progress-track"><div id="loader-progress-bar"></div></div>' +
+                '<div id="loader-progress-percent">0%</div>' +
+                '</div>');
+        }
+    },
     start: function (totalSteps, label) {
         this.total = Math.max(1, totalSteps);
         this.done = 0;
         this.current = 0;
         this.active = true;
+        this._ensureBox();
         $('#loader-progress-label').text(label || 'Loading...');
         $('#loader-progress-bar').css('width', '0%');
         $('#loader-progress-percent').text('0%');
         $('#loader-progress-box').show();
-        $('#loader-p').show();
+        this._overlayEl().show();
         this._render(2);
         this._creep();
     },
@@ -7856,8 +7874,9 @@ var loaderProgress = {
         this.active = false;
         clearInterval(this.timer);
         this._render(100);
+        var self = this;
         setTimeout(function () {
-            $('#loader-p').hide();
+            self._overlayEl().hide();
             $('#loader-progress-box').hide();
         }, 400);
     },

@@ -203,7 +203,7 @@ namespace CityWatch.Web.Pages.Admin
                 var count = entryDates.Count(d => d >= start && d <= end);
                 kvtruckentriesForMonthNew.Add(new KeyVehicleLogAuditLogRequest
                 {
-                    DateRange = month.ToString("MMM"),
+                    DateRange = month.ToString("MMM yyyy"),
                     RecordCount = count
                 });
                 kvtruckentriesForMonthNewCount += count;
