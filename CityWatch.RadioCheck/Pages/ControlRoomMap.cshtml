@@ -1,0 +1,671 @@
+@page
+@model CityWatch.RadioCheck.Pages.ControlRoomMapModel
+@{
+    ViewData["Title"] = "Control Room Map";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Room Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <style>
+        :root {
+            --bg: #eef2f7;
+            --card: #ffffff;
+            --line: #dde5ef;
+            --text: #1e293b;
+            --text-dim: #64748b;
+            --accent: #2563eb;
+            --accent-soft: #eff4ff;
+            --ok: #16a34a;
+            --ok-soft: #e9f9ef;
+            --warn: #d97706;
+            --warn-soft: #fef4e6;
+            --alarm: #dc2626;
+            --alarm-soft: #fdeaea;
+            --off: #94a3b8;
+            --off-soft: #f1f5f9;
+            --shadow: 0 1px 3px rgba(15,23,42,.08), 0 8px 24px rgba(15,23,42,.08);
+            --radius: 12px;
+        }
+
+        html, body { height: 100%; margin: 0; }
+        body { background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, -apple-system, sans-serif; overflow: hidden; }
+        * { box-sizing: border-box; }
+
+        #map { position: fixed; inset: 0; background: #dce6f0; }
+
+        button { font-family: inherit; }
+
+        /* ================= top bar ================= */
+        .crm-topbar {
+            position: fixed; z-index: 1000; top: 10px; left: 10px; right: 10px;
+            display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap;
+        }
+        .crm-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+        .crm-brand {
+            display: flex; align-items: center; gap: 10px; padding: 0 16px;
+            font-weight: 700; font-size: 15px; letter-spacing: .01em; white-space: nowrap;
+        }
+        .crm-brand .logo {
+            width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #4f8bf7);
+            display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px;
+        }
+        .crm-brand small { display: block; font-size: 9.5px; font-weight: 600; letter-spacing: .16em; color: var(--text-dim); }
+        .crm-live {
+            margin-left: 6px; display: inline-flex; align-items: center; gap: 5px;
+            font-size: 10px; font-weight: 700; letter-spacing: .1em; color: var(--ok);
+            background: var(--ok-soft); border-radius: 999px; padding: 3px 10px;
+        }
+        .crm-live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: crmpulse 1.4s ease-out infinite; }
+        @@keyframes crmpulse { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,.45); } 100% { box-shadow: 0 0 0 8px rgba(22,163,74,0); } }
+
+        /* KPI widgets */
+        .crm-widgets { display: flex; flex: 1; min-width: 0; overflow-x: auto; }
+        .crm-kpi {
+            flex: 1; min-width: 96px; padding: 8px 14px; text-align: left;
+            border-left: 1px solid var(--line); transition: background .2s;
+        }
+        .crm-kpi:first-child { border-left: 0; }
+        .crm-kpi .v { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; transition: color .3s; }
+        .crm-kpi .k { font-size: 9.5px; font-weight: 600; letter-spacing: .12em; color: var(--text-dim); white-space: nowrap; }
+        .crm-kpi.v-ok .v { color: var(--ok); }
+        .crm-kpi.v-off .v { color: var(--off); }
+        .crm-kpi.v-warn .v { color: var(--warn); }
+        .crm-kpi.v-alarm .v { color: var(--alarm); }
+        .crm-kpi.v-accent .v { color: var(--accent); }
+        .crm-kpi .v.bump { animation: kpibump .5s ease; }
+        @@keyframes kpibump { 40% { transform: scale(1.18); } }
+
+        .crm-right { display: flex; align-items: center; gap: 10px; padding: 0 14px; white-space: nowrap; }
+        .crm-clock { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+        .crm-clock b { color: var(--text); }
+        #btnRefreshNow {
+            background: var(--accent); border: none; color: #fff; border-radius: 8px;
+            font-size: 12.5px; font-weight: 600; padding: 8px 14px; cursor: pointer; transition: filter .15s, transform .1s;
+        }
+        #btnRefreshNow:hover { filter: brightness(1.1); }
+        #btnRefreshNow:active { transform: scale(.97); }
+
+        /* ================= inactive guard alert banner ================= */
+        #crmBanner {
+            position: fixed; z-index: 995; top: 66px; left: 10px; right: 10px;
+            display: none; align-items: center; gap: 11px; padding: 8px 13px;
+            background: linear-gradient(90deg, #fff7ed, #fef2f2);
+            border: 1px solid #f5c9a4; border-left: 5px solid var(--warn);
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            animation: bannerin .35s ease;
+        }
+        #crmBanner.on { display: flex; }
+        @@keyframes bannerin { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+        #crmBanner .bic { font-size: 17px; color: var(--warn); animation: blinktag 1.2s step-end infinite; }
+        #crmBanner .btitle { font-size: 12.5px; font-weight: 700; color: #9a3412; white-space: nowrap; }
+        #crmBanner .bchips { display: flex; gap: 8px; overflow-x: auto; flex: 1; min-width: 0; padding: 1px; }
+        .bchip {
+            flex: none; display: flex; align-items: center; gap: 8px;
+            background: #fff; border: 1px solid #fbdcbe; border-radius: 999px;
+            padding: 4px 12px; font-size: 11.5px; cursor: pointer; transition: border-color .15s, transform .1s;
+        }
+        .bchip:hover { border-color: var(--warn); transform: translateY(-1px); }
+        .bchip b { font-size: 12px; color: var(--text); white-space: nowrap; }
+        .bchip .bs { color: var(--text-dim); white-space: nowrap; }
+        .bchip .bt { color: var(--warn); font-weight: 700; white-space: nowrap; }
+        .bchip .bp { color: var(--accent); font-weight: 600; white-space: nowrap; }
+        .bchip.fresh { animation: chipflash 1s ease 3; }
+        @@keyframes chipflash { 50% { background: var(--warn-soft); border-color: var(--warn); } }
+        #crmBannerClose {
+            flex: none; width: 26px; height: 26px; border-radius: 50%;
+            border: 1px solid #f5c9a4; background: #fff; color: #9a3412;
+            font-size: 14px; line-height: 1; cursor: pointer; transition: all .15s;
+        }
+        #crmBannerClose:hover { background: var(--warn); color: #fff; }
+
+        /* stacked banner offsets (inactive banner + FQ banner) */
+        body { --b1: 0px; --b2: 0px; }
+        body.has-banner { --b1: 52px; }
+        body.has-fqbanner { --b2: 52px; }
+
+        /* ================= FQ target achieved banner ================= */
+        #crmFqBanner {
+            position: fixed; z-index: 994; top: calc(66px + var(--b1)); left: 10px; right: 10px;
+            display: none; align-items: center; gap: 11px; padding: 8px 13px;
+            background: linear-gradient(90deg, #f0fdf4, #ecfeff);
+            border: 1px solid #b5e3c5; border-left: 5px solid var(--ok);
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            animation: bannerin .35s ease; transition: top .3s ease;
+        }
+        #crmFqBanner.on { display: flex; }
+        #crmFqBanner .bic { font-size: 16px; color: var(--ok); }
+        #crmFqBanner .btitle { font-size: 12.5px; font-weight: 700; color: #166534; white-space: nowrap; }
+        #crmFqBanner .bchips { display: flex; gap: 8px; overflow-x: auto; flex: 1; min-width: 0; padding: 1px; }
+        .fqchip {
+            flex: none; display: flex; align-items: center; gap: 8px;
+            background: #fff; border: 1px solid #bfe8cd; border-radius: 999px;
+            padding: 4px 12px; font-size: 11.5px; cursor: pointer; transition: border-color .15s, transform .1s;
+        }
+        .fqchip:hover { border-color: var(--ok); transform: translateY(-1px); }
+        .fqchip b { font-size: 12px; color: var(--text); white-space: nowrap; }
+        .fqchip .fqn { color: var(--ok); font-weight: 700; white-space: nowrap; }
+        .fqchip.fresh { animation: fqflash 1s ease 3; }
+        @@keyframes fqflash { 50% { background: var(--ok-soft); border-color: var(--ok); } }
+        #crmFqBannerClose {
+            flex: none; width: 26px; height: 26px; border-radius: 50%;
+            border: 1px solid #b5e3c5; background: #fff; color: #166534;
+            font-size: 14px; line-height: 1; cursor: pointer; transition: all .15s;
+        }
+        #crmFqBannerClose:hover { background: var(--ok); color: #fff; }
+
+        .fq-badge {
+            display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700;
+            padding: 3px 10px; border-radius: 999px;
+        }
+        .fq-badge.done { color: var(--ok); background: var(--ok-soft); border: 1px solid rgba(22,163,74,.3); }
+        .fq-badge.pending { color: var(--warn); background: var(--warn-soft); border: 1px solid rgba(217,119,6,.3); }
+
+        /* ================= HR record & radio check badges ================= */
+        .hrdots { display: inline-flex; gap: 4px; align-items: center; }
+        .hrdot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(15,23,42,.12); }
+        .hrbadges { display: flex; gap: 6px; flex-wrap: wrap; }
+        .hrbadge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 10px; font-weight: 700; letter-spacing: .05em;
+            padding: 3px 9px; border-radius: 999px; border: 1px solid transparent;
+        }
+        .hrbadge .hrdot { width: 8px; height: 8px; }
+        .hrbadge.hr-green { color: var(--ok); background: var(--ok-soft); border-color: rgba(22,163,74,.25); }
+        .hrbadge.hr-orange { color: #c2410c; background: #fff3e9; border-color: rgba(234,88,12,.3); }
+        .hrbadge.hr-yellow { color: var(--warn); background: var(--warn-soft); border-color: rgba(217,119,6,.28); }
+        .hrbadge.hr-red { color: var(--alarm); background: var(--alarm-soft); border-color: rgba(220,38,38,.3); }
+        .hrbadge.hr-grey { color: var(--off); background: var(--off-soft); border-color: rgba(148,163,184,.3); }
+
+        .rcbox {
+            margin-top: 12px; border: 1px solid var(--line); border-radius: 10px;
+            padding: 10px 12px; background: #f8fafc;
+        }
+        .rcbox .rchead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .rcbox .rchead h4 { margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--text-dim); flex: 1; }
+        .rcbox .rcmsg { font-size: 12px; color: var(--text); line-height: 1.5; }
+        .rcbox .rcmeta { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+
+        /* ================= sidebar ================= */
+        #crmSidebar {
+            position: fixed; z-index: 990; top: calc(74px + var(--b1) + var(--b2)); left: 10px; bottom: 10px; width: 312px;
+            display: flex; flex-direction: column; gap: 10px; transition: transform .3s ease, top .3s ease;
+        }
+        #crmSidebar.hidden { transform: translateX(-340px); }
+        #btnSidebar {
+            position: fixed; z-index: 991; top: calc(82px + var(--b1) + var(--b2)); left: 330px;
+            width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line);
+            background: var(--card); color: var(--text-dim); cursor: pointer; box-shadow: var(--shadow);
+            transition: left .3s ease; font-size: 13px; line-height: 1;
+        }
+        #btnSidebar.closed { left: 10px; }
+
+        .crm-search-card { padding: 12px; }
+        .crm-field { position: relative; margin-bottom: 8px; }
+        .crm-field:last-child { margin-bottom: 0; }
+        .crm-field .ic { position: absolute; left: 10px; top: 9px; font-size: 13px; color: var(--text-dim); pointer-events: none; }
+        .crm-input {
+            width: 100%; background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px;
+            color: var(--text); font-size: 13px; padding: 8px 10px 8px 30px; transition: border-color .15s, box-shadow .15s;
+        }
+        .crm-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); background: #fff; }
+
+        /* autocomplete dropdown */
+        .crm-sugg {
+            position: absolute; z-index: 50; top: calc(100% + 4px); left: 0; right: 0;
+            background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+            box-shadow: var(--shadow); max-height: 265px; overflow-y: auto; display: none;
+        }
+        .crm-sugg.open { display: block; animation: fadein .15s ease; }
+        @@keyframes fadein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+        .crm-sug {
+            display: flex; align-items: center; gap: 9px; padding: 8px 11px; cursor: pointer; font-size: 12.5px;
+        }
+        .crm-sug:hover, .crm-sug.sel { background: var(--accent-soft); }
+        .crm-sug .dot2 { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+        .crm-sug .main { min-width: 0; flex: 1; }
+        .crm-sug .main b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .crm-sug .main span { font-size: 10.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .crm-sug mark { background: #fff1a8; color: inherit; border-radius: 2px; padding: 0 1px; }
+        .crm-sug .side { font-size: 9px; font-weight: 700; letter-spacing: .08em; padding: 2px 7px; border-radius: 999px; flex: none; }
+        .crm-sug .side.on { color: var(--ok); background: var(--ok-soft); }
+        .crm-sug .side.off { color: var(--off); background: var(--off-soft); }
+        .crm-sug .side.site { color: var(--accent); background: var(--accent-soft); }
+
+        /* filters */
+        .crm-filters { padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+        .crm-filters label { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; color: var(--text-dim); display: block; margin-bottom: 3px; }
+        .crm-select {
+            width: 100%; background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px;
+            color: var(--text); font-size: 12px; padding: 6px 8px;
+        }
+        .crm-select:focus { outline: none; border-color: var(--accent); }
+        #btnResetFilters {
+            grid-column: 1 / -1; background: #f1f5f9; border: 1px solid var(--line); color: var(--text-dim);
+            border-radius: 8px; font-size: 11.5px; font-weight: 600; padding: 6px; cursor: pointer; transition: all .15s;
+        }
+        #btnResetFilters:hover { color: var(--alarm); border-color: var(--alarm); background: var(--alarm-soft); }
+
+        /* guard lists */
+        .crm-lists { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .crm-tabs { display: flex; border-bottom: 1px solid var(--line); }
+        .crm-tab {
+            flex: 1; background: none; border: none; padding: 10px 4px 9px; cursor: pointer;
+            font-size: 12px; font-weight: 600; color: var(--text-dim); border-bottom: 2px solid transparent; transition: all .15s;
+        }
+        .crm-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+        .crm-tab .b { display: inline-block; min-width: 20px; padding: 1px 6px; margin-left: 5px; border-radius: 999px; font-size: 10.5px; font-variant-numeric: tabular-nums; }
+        .crm-tab[data-tab="active"] .b { background: var(--ok-soft); color: var(--ok); }
+        .crm-tab[data-tab="inactive"] .b { background: var(--off-soft); color: var(--off); }
+        .crm-list { flex: 1; overflow-y: auto; padding: 6px; }
+        .crm-g {
+            display: flex; align-items: center; gap: 9px; padding: 8px 9px; border-radius: 9px;
+            cursor: pointer; transition: background .15s;
+        }
+        .crm-g:hover { background: var(--accent-soft); }
+        .crm-g.recent { background: linear-gradient(90deg, #fffbe6, transparent); }
+        .crm-ava {
+            width: 30px; height: 30px; border-radius: 50%; flex: none; display: flex; align-items: center;
+            justify-content: center; font-size: 11px; font-weight: 700; color: #fff;
+        }
+        .crm-g .gi { min-width: 0; flex: 1; }
+        .crm-g .gi b { display: block; font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .crm-g .gi span { display: block; font-size: 10.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .crm-g .st { flex: none; width: 9px; height: 9px; border-radius: 50%; }
+        .crm-empty { text-align: center; color: var(--text-dim); font-size: 12px; padding: 26px 10px; }
+
+        /* skeleton */
+        .crm-skel { padding: 10px; }
+        .crm-skel .row { height: 40px; border-radius: 9px; margin-bottom: 8px; background: linear-gradient(90deg, #eef2f7 25%, #f8fafc 50%, #eef2f7 75%); background-size: 200% 100%; animation: shimmer 1.3s infinite; }
+        @@keyframes shimmer { to { background-position: -200% 0; } }
+
+        /* ================= status chips / tags shared ================= */
+        .tag { font-size: 9px; font-weight: 700; letter-spacing: .08em; padding: 2.5px 9px; border-radius: 999px; }
+        .tag.on { color: var(--ok); background: var(--ok-soft); }
+        .tag.off { color: var(--off); background: var(--off-soft); }
+        .tag.warn { color: var(--warn); background: var(--warn-soft); }
+        .tag.alarm { color: var(--alarm); background: var(--alarm-soft); animation: blinktag 1s step-end infinite; }
+        @@keyframes blinktag { 50% { opacity: .35; } }
+
+        .crm-chip {
+            font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+            padding: 3px 8px; border-radius: 6px; background: var(--off-soft); color: var(--text-dim);
+        }
+        .crm-chip.yes { background: var(--ok-soft); color: var(--ok); }
+        .crm-chip.no { background: var(--alarm-soft); color: var(--alarm); }
+
+        /* ================= site panel (right) ================= */
+        #crmPanel {
+            position: fixed; z-index: 1000; top: calc(74px + var(--b1) + var(--b2)); right: 10px; bottom: 10px; width: 316px;
+            overflow: hidden auto; display: none; animation: slidein .25s ease; transition: top .3s ease;
+        }
+        @@keyframes slidein { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+        #crmPanel .ph { position: relative; min-height: 34px; background: #f1f5f9; }
+        #crmPanel .ph img { display: block; width: 100%; max-height: 168px; object-fit: cover; }
+        #crmPanel .ph .cap {
+            position: absolute; left: 10px; bottom: 8px; font-size: 9px; font-weight: 700; letter-spacing: .12em;
+            color: #fff; background: rgba(15,23,42,.55); padding: 3px 9px; border-radius: 5px;
+        }
+        #crmPanel .bd { padding: 14px 16px; }
+        #crmPanel h2 { margin: 0 0 4px; font-size: 15.5px; line-height: 1.3; }
+        #crmPanel .addr { font-size: 12px; color: var(--text-dim); margin-bottom: 3px; }
+        #crmPanel .phn { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+        #crmPanel h3 { margin: 13px 0 5px; font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--text-dim); }
+        .crm-close {
+            position: absolute; top: 8px; right: 10px; z-index: 5; width: 27px; height: 27px;
+            border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.92); color: var(--text-dim);
+            font-size: 15px; line-height: 1; cursor: pointer; transition: all .15s;
+        }
+        .crm-close:hover { color: var(--alarm); border-color: var(--alarm); }
+
+        .crm-grow { border-top: 1px solid var(--line); padding: 9px 0; cursor: pointer; border-radius: 6px; transition: background .15s; }
+        .crm-grow:hover { background: #f8fafc; }
+        .crm-grow:first-of-type { border-top: 0; }
+        .crm-grow .top { display: flex; align-items: center; gap: 9px; }
+        .crm-grow b { font-size: 13px; }
+        .crm-grow .sub { font-size: 10.5px; color: var(--text-dim); }
+        .crm-grow .tag { margin-left: auto; }
+        .crm-chips { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+
+        /* ================= guard detail card ================= */
+        #crmGuard {
+            position: fixed; z-index: 1150; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.96);
+            width: 340px; max-width: calc(100vw - 30px); max-height: 82vh; overflow-y: auto;
+            display: none; opacity: 0; transition: opacity .2s, transform .2s;
+        }
+        #crmGuard.open { display: block; opacity: 1; transform: translate(-50%,-50%) scale(1); }
+        #crmGuard .hd { padding: 18px 18px 14px; display: flex; align-items: center; gap: 13px; border-bottom: 1px solid var(--line); }
+        #crmGuard .hd .crm-ava { width: 46px; height: 46px; font-size: 16px; }
+        #crmGuard .hd h2 { margin: 0; font-size: 16px; }
+        #crmGuard .hd .sub { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+        #crmGuard .bd { padding: 13px 18px 17px; }
+        #crmGuard dl { margin: 0; display: grid; grid-template-columns: 108px 1fr; gap: 7px 10px; font-size: 12.5px; }
+        #crmGuard dt { color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+        #crmGuard dd { margin: 0; font-weight: 600; word-break: break-word; }
+        #crmGuard .crm-chips { margin: 12px 0 0; }
+        #crmGuard .locbtn {
+            margin-top: 13px; width: 100%; background: var(--accent-soft); color: var(--accent);
+            border: none; border-radius: 8px; font-size: 12.5px; font-weight: 600; padding: 9px; cursor: pointer; transition: all .15s;
+        }
+        #crmGuard .locbtn:hover { background: var(--accent); color: #fff; }
+        #crmBackdrop { position: fixed; z-index: 1140; inset: 0; background: rgba(15,23,42,.25); display: none; }
+        #crmBackdrop.open { display: block; animation: fadein .2s; }
+
+        /* ================= toasts ================= */
+        #crmToasts { position: fixed; z-index: 1200; right: 12px; bottom: 12px; display: flex; flex-direction: column-reverse; gap: 8px; max-width: 320px; }
+        .crm-toast {
+            background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+            border-radius: 10px; padding: 10px 13px; box-shadow: var(--shadow); cursor: pointer;
+            animation: toastin .3s ease; transition: opacity .5s, transform .3s;
+        }
+        .crm-toast.warn { border-left-color: var(--warn); }
+        .crm-toast.alarm { border-left-color: var(--alarm); background: #fff5f5; }
+        .crm-toast .t1 { font-size: 12.5px; font-weight: 700; display: flex; gap: 7px; align-items: center; }
+        .crm-toast .t1 .w { color: var(--accent); font-size: 9px; }
+        .crm-toast.warn .t1 .w { color: var(--warn); }
+        .crm-toast.alarm .t1 .w { color: var(--alarm); }
+        .crm-toast .t2 { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+        .crm-toast .t3 { font-size: 11px; font-weight: 600; margin-top: 4px; color: var(--text); }
+        @@keyframes toastin { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+        /* ================= map markers ================= */
+        .leaflet-marker-icon { transition: transform 1.8s linear; }
+
+        .crm-site { position: relative; text-align: center; filter: drop-shadow(0 2px 4px rgba(15,23,42,.35)); transition: filter .3s; }
+        .crm-site .figs { display: flex; justify-content: center; gap: 1px; height: 19px; }
+        .crm-site .figs svg { display: block; }
+        .crm-site .bld { display: block; margin: 0 auto; }
+        .crm-site .nm {
+            margin-top: 1px; font-size: 10.5px; font-weight: 700; color: #1e293b;
+            text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 0 6px #fff; white-space: nowrap;
+        }
+        .crm-site .cnt {
+            position: absolute; top: -7px; right: -2px; min-width: 17px; height: 17px;
+            border-radius: 9px; background: #fff; border: 2px solid var(--ok);
+            color: var(--ok); font-size: 10px; font-weight: 700; line-height: 13px; padding: 0 3px;
+            font-variant-numeric: tabular-nums;
+        }
+        .crm-site.inactive { opacity: .8; }
+        .crm-site.inactive .cnt { border-color: var(--off); color: var(--off); }
+        .crm-site.st-warn .cnt { border-color: var(--warn); color: var(--warn); }
+        .crm-site.st-alarm .cnt { border-color: var(--alarm); color: var(--alarm); }
+
+        .crm-site.pulse::after {
+            content: ""; position: absolute; left: 50%; bottom: 14px; width: 14px; height: 14px;
+            transform: translateX(-50%); border-radius: 50%; border: 2px solid var(--accent);
+            animation: ringout 1.6s ease-out infinite; pointer-events: none;
+        }
+        @@keyframes ringout { from { opacity: .8; transform: translateX(-50%) scale(.6); } to { opacity: 0; transform: translateX(-50%) scale(3.2); } }
+
+        .crm-site.blink { animation: crmblink .5s ease-in-out 8 alternate; }
+        @@keyframes crmblink { from { filter: drop-shadow(0 0 2px var(--accent)); } to { filter: drop-shadow(0 0 13px var(--accent)) brightness(1.35); } }
+        .crm-site.blink-alarm { animation: crmblinkred .4s ease-in-out 16 alternate; }
+        @@keyframes crmblinkred { from { filter: drop-shadow(0 0 2px var(--alarm)); } to { filter: drop-shadow(0 0 15px var(--alarm)) brightness(1.6); } }
+
+        /* clusters */
+        .crm-cluster {
+            background: rgba(255,255,255,.92); border: 3px solid var(--ok); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            box-shadow: var(--shadow); transition: transform .15s;
+        }
+        .crm-cluster:hover { transform: scale(1.08); }
+        .crm-cluster b { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; }
+        .crm-cluster span { font-size: 8px; font-weight: 700; letter-spacing: .06em; color: var(--text-dim); }
+        .crm-cluster.cl-warn { border-color: var(--warn); }
+        .crm-cluster.cl-alarm { border-color: var(--alarm); animation: crmblinkred .5s ease-in-out infinite alternate; }
+        .crm-cluster.cl-off { border-color: var(--off); }
+
+        /* marker change popup */
+        .crm-mini .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+        .crm-mini .leaflet-popup-content { margin: 9px 13px; font-family: inherit; }
+        .crm-mini .m1 { font-size: 12px; font-weight: 700; }
+        .crm-mini .m2 { font-size: 11px; color: var(--text-dim); margin-top: 2px; font-weight: 600; }
+
+        /* ================= PCAR route tracking ================= */
+        .pcar-stop {
+            width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid #fff;
+            box-shadow: 0 1px 5px rgba(15,23,42,.4); color: #fff;
+            font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .pcar-stop.current { animation: pcarpulse 1.3s ease-out infinite; }
+        @@keyframes pcarpulse { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,.5); } 100% { box-shadow: 0 0 0 11px rgba(220,38,38,0); } }
+        .pcar-arrow {
+            color: #2563eb; font-size: 13px; line-height: 16px; text-align: center;
+            text-shadow: 0 0 3px #fff, 0 0 3px #fff; pointer-events: none;
+        }
+        .pcar-ghost {
+            width: 30px; height: 30px; border-radius: 50%; background: #7c3aed; color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 15px;
+            border: 2.5px solid #fff; box-shadow: 0 2px 8px rgba(15,23,42,.45);
+            transition: all .2s;
+        }
+        .leaflet-marker-icon:has(.pcar-ghost) { transition: transform .9s linear; }
+
+        .pcarbox { background: #f5f8ff; border-color: #cddcf7; }
+        .pcar-tl { max-height: 170px; overflow-y: auto; border-top: 1px solid var(--line); }
+        .pcar-tl-row {
+            display: flex; align-items: center; gap: 8px; padding: 5px 2px;
+            font-size: 12px; border-bottom: 1px solid rgba(221,229,239,.6);
+        }
+        .pcar-tl-row .n {
+            width: 18px; height: 18px; border-radius: 50%; flex: none; color: #fff;
+            font-size: 9.5px; font-weight: 700; line-height: 18px; text-align: center;
+        }
+        .pcar-tl-row .t { font-variant-numeric: tabular-nums; color: var(--text-dim); width: 44px; flex: none; }
+        .pcar-tl-row .s { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+        .pcar-tl-row .w { color: var(--ok); font-weight: 700; flex: none; }
+        .pcar-tl-row.cur { background: var(--alarm-soft); border-radius: 6px; }
+        .pcar-tl-row.next { opacity: .65; }
+        .pcar-tl-row.playing { background: #f3e8ff; border-radius: 6px; }
+        .pcar-pb { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
+        .pcar-pb button {
+            height: 27px; border-radius: 7px; border: 1px solid var(--line); background: #fff;
+            cursor: pointer; font-size: 11.5px; font-weight: 700; color: var(--accent);
+            padding: 0 11px; transition: all .15s;
+        }
+        .pcar-pb button:hover { border-color: var(--accent); background: var(--accent-soft); }
+        .pcar-pb #pbInfo { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ================= site tour control ================= */
+        .crm-tour {
+            position: fixed; z-index: 1000; left: 50%; bottom: 10px; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 9px; padding: 7px 13px;
+        }
+        .crm-tour button {
+            width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+            font-size: 13px; line-height: 1; transition: filter .15s, transform .1s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .crm-tour button:active { transform: scale(.94); }
+        #tourPlay { background: var(--accent); color: #fff; }
+        #tourPlay:hover { filter: brightness(1.12); }
+        #tourPlay.playing { background: var(--warn); }
+        #tourStop { background: var(--off-soft); color: var(--text-dim); }
+        #tourStop:hover:not(:disabled) { background: var(--alarm-soft); color: var(--alarm); }
+        #tourStop:disabled { opacity: .45; cursor: default; }
+        .crm-tour .tinfo { font-size: 12px; font-weight: 600; color: var(--text-dim); white-space: nowrap; min-width: 88px; }
+        .crm-tour .tinfo b { color: var(--text); }
+        .crm-tour.touring { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.15), var(--shadow); }
+
+        /* legend */
+        .crm-legend {
+            position: fixed; z-index: 900; right: 10px; bottom: 10px;
+            display: flex; gap: 13px; padding: 8px 14px; font-size: 11px; font-weight: 600; color: var(--text-dim);
+        }
+        #crmPanel[style*="block"] ~ .crm-legend { right: 336px; }
+        .crm-legend span { display: flex; align-items: center; gap: 5px; }
+        .crm-bead { width: 9px; height: 9px; border-radius: 50%; }
+        .crm-bead.ok { background: var(--ok); }
+        .crm-bead.warn { background: var(--warn); }
+        .crm-bead.alarm { background: var(--alarm); }
+        .crm-bead.off { background: var(--off); }
+
+        /* leaflet chrome */
+        .leaflet-control-zoom a { border-radius: 8px !important; color: var(--text) !important; }
+        .leaflet-control-layers { border-radius: 10px !important; border: 1px solid var(--line) !important; box-shadow: var(--shadow) !important; }
+        .leaflet-control-attribution { background: rgba(255,255,255,.75) !important; font-size: 9.5px !important; }
+
+        /* ================= responsive ================= */
+        @@media (max-width: 1100px) {
+            .crm-kpi { min-width: 84px; padding: 7px 10px; }
+            .crm-kpi .v { font-size: 18px; }
+        }
+        @@media (max-width: 860px) {
+            .crm-topbar { flex-wrap: wrap; }
+            .crm-widgets { order: 3; width: 100%; }
+            #crmSidebar { top: calc(128px + var(--b1) + var(--b2)); width: 280px; }
+            #btnSidebar { top: calc(136px + var(--b1) + var(--b2)); left: 298px; }
+            #btnSidebar.closed { left: 10px; }
+            #crmPanel { width: 280px; top: calc(128px + var(--b1) + var(--b2)); }
+            #crmBanner { top: 120px; }
+            #crmFqBanner { top: calc(120px + var(--b1)); }
+        }
+        @@media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <input type="hidden" id="txtSignalRConnectionUrl" value="@Model.SignalRConnectionUrl" />
+
+    <!-- ============ top bar: brand + KPI widgets ============ -->
+    <div class="crm-topbar">
+        <div class="crm-card crm-brand">
+            <span class="logo">&#9737;</span>
+            <span>CityWatch<small>CONTROL ROOM MAP</small></span>
+            <span class="crm-live">LIVE</span>
+        </div>
+        <div class="crm-card crm-widgets">
+            <div class="crm-kpi v-accent"><div class="v" id="kpiTotal">&ndash;</div><div class="k">TOTAL GUARDS</div></div>
+            <div class="crm-kpi v-ok"><div class="v" id="kpiActive">&ndash;</div><div class="k">ACTIVE</div></div>
+            <div class="crm-kpi v-off"><div class="v" id="kpiInactive">&ndash;</div><div class="k">INACTIVE</div></div>
+            <div class="crm-kpi v-accent"><div class="v" id="kpiSites">&ndash;</div><div class="k">SITES ONLINE</div></div>
+            <div class="crm-kpi v-warn"><div class="v" id="kpiRecent">&ndash;</div><div class="k">UPDATED 5 MIN</div></div>
+            <div class="crm-kpi v-alarm"><div class="v" id="kpiAlarm">&ndash;</div><div class="k">DURESS</div></div>
+        </div>
+        <div class="crm-card crm-right">
+            <span class="crm-clock">refreshed <b id="kpiLast">&ndash;</b> &middot; next <b id="crmClock">0:30</b></span>
+            <button type="button" id="btnRefreshNow">&#8635; Refresh</button>
+        </div>
+    </div>
+
+    <!-- ============ inactive guards alert banner ============ -->
+    <div id="crmBanner">
+        <span class="bic">&#9888;</span>
+        <span class="btitle" id="crmBannerTitle">INACTIVE GUARDS</span>
+        <div class="bchips" id="crmBannerChips"></div>
+        <button type="button" id="crmBannerClose" title="Dismiss">&times;</button>
+    </div>
+
+    <!-- ============ FQ target achieved banner ============ -->
+    <div id="crmFqBanner">
+        <span class="bic">&#127942;</span>
+        <span class="btitle" id="crmFqBannerTitle">FQ TARGET REACHED</span>
+        <div class="bchips" id="crmFqBannerChips"></div>
+        <button type="button" id="crmFqBannerClose" title="Dismiss">&times;</button>
+    </div>
+
+    <!-- ============ sidebar: search + filters + lists ============ -->
+    <button type="button" id="btnSidebar" title="Toggle panel">&#9776;</button>
+    <div id="crmSidebar">
+        <div class="crm-card crm-search-card">
+            <div class="crm-field">
+                <span class="ic">&#128100;</span>
+                <input type="text" id="srchGuard" class="crm-input" placeholder="Search guard (active &amp; inactive)..." autocomplete="off" />
+                <div class="crm-sugg" id="suggGuard"></div>
+            </div>
+            <div class="crm-field">
+                <span class="ic">&#127970;</span>
+                <input type="text" id="srchSite" class="crm-input" placeholder="Search site..." autocomplete="off" />
+                <div class="crm-sugg" id="suggSite"></div>
+            </div>
+        </div>
+
+        <div class="crm-card crm-filters">
+            <div>
+                <label>STATUS</label>
+                <select class="crm-select" id="fltStatus">
+                    <option value="all">All guards</option>
+                    <option value="active">Active / online</option>
+                    <option value="inactive">Inactive / offline</option>
+                </select>
+            </div>
+            <div>
+                <label>REGION</label>
+                <select class="crm-select" id="fltRegion"><option value="all">All regions</option></select>
+            </div>
+            <div>
+                <label>LAST UPDATED</label>
+                <select class="crm-select" id="fltUpdated">
+                    <option value="any">Any time</option>
+                    <option value="5">Last 5 min</option>
+                    <option value="30">Last 30 min</option>
+                    <option value="120">Last 2 hrs</option>
+                </select>
+            </div>
+            <div>
+                <label>ALERTS</label>
+                <select class="crm-select" id="fltAlert">
+                    <option value="all">All</option>
+                    <option value="warn">2-Hr alerts</option>
+                    <option value="alarm">Duress only</option>
+                </select>
+            </div>
+            <div>
+                <label>FQ TARGET</label>
+                <select class="crm-select" id="fltFq">
+                    <option value="all">All sites</option>
+                    <option value="achieved">FQ achieved</option>
+                    <option value="notachieved">FQ not achieved</option>
+                </select>
+            </div>
+            <button type="button" id="btnResetFilters">&#10005; Reset all filters</button>
+        </div>
+
+        <div class="crm-card crm-lists">
+            <div class="crm-tabs">
+                <button type="button" class="crm-tab on" data-tab="active">Active<span class="b" id="tabActiveN">0</span></button>
+                <button type="button" class="crm-tab" data-tab="inactive">Inactive<span class="b" id="tabInactiveN">0</span></button>
+            </div>
+            <div class="crm-list" id="crmList">
+                <div class="crm-skel">
+                    <div class="row"></div><div class="row"></div><div class="row"></div>
+                    <div class="row"></div><div class="row"></div><div class="row"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ site panel / guard card / toasts ============ -->
+    <div class="crm-card" id="crmPanel"></div>
+    <div id="crmBackdrop"></div>
+    <div class="crm-card" id="crmGuard"></div>
+    <div id="crmToasts"></div>
+
+    <!-- ============ auto site tour ============ -->
+    <div class="crm-card crm-tour" id="crmTourBox">
+        <button type="button" id="tourPlay" title="Play site tour">&#9654;</button>
+        <button type="button" id="tourStop" title="Stop tour" disabled>&#9632;</button>
+        <span class="tinfo" id="tourInfo">Site tour</span>
+    </div>
+
+    <div class="crm-card crm-legend">
+        <span><span class="crm-bead ok"></span>Active</span>
+        <span><span class="crm-bead warn"></span>2-Hr alert</span>
+        <span><span class="crm-bead alarm"></span>Duress</span>
+        <span><span class="crm-bead off"></span>Inactive</span>
+    </div>
+
+    <script src="~/js/controlRoomMap.js" asp-append-version="true"></script>
+</body>
+</html>

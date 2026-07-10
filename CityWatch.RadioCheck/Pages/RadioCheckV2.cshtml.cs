@@ -3257,7 +3257,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 var objforMessage = _guardLogDataProvider.GetRCActionListMessages().Where(x => x.Id == id).FirstOrDefault();
 
                 objforMessage.Notifications = notifications;
-                if (frequency == "Once Off")
+                if (frequency == "O" || frequency == "OnceOff" || frequency == "Once Off")
                 {
                     objforMessage.Radiofrequencystatus = "OnceOff";
                     objforMessage.messagetime = Convert.ToDateTime(expiryDate);
