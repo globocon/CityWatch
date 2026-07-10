@@ -156,114 +156,75 @@ namespace CityWatch.Web.Pages.Admin
 
         public IActionResult OnPostKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         {
-            //return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogs(keyVehicleLogAuditLogRequest));
-
+            // Single query for the whole range; the week/month/year charts are bucketed from
+            // it in memory. This used to re-run the full logs query once per week, month and
+            // year in the range (30+ heavy queries), which made the chart tab take minutes.
             var keyVehicleAuditLogRequest = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
-            //duress entries per week-start
-            var today = keyVehicleLogAuditLogRequest.LogFromDate;
-            var todate = keyVehicleLogAuditLogRequest.LogToDate;
-            var todaynew = keyVehicleLogAuditLogRequest.LogFromDate;
-            var todatenew = keyVehicleLogAuditLogRequest.LogToDate;
+
+            var fromDate = keyVehicleLogAuditLogRequest.LogFromDate.Date;
+            var toDate = keyVehicleLogAuditLogRequest.LogToDate.Date;
+            if (toDate < fromDate)
+                toDate = fromDate;
+
+            var entryDates = keyVehicleAuditLogRequest
+                .Where(v => v.Detail != null && v.Detail.EntryTime.HasValue)
+                .Select(v => v.Detail.EntryTime.Value.Date)
+                .Where(d => d >= fromDate && d <= toDate)
+                .ToList();
+
+            // truck entries per week (calendar weeks ending Saturday, clipped to the range)
             var kvtruckentriesForWeekNew = new List<KeyVehicleLogAuditLogRequest>();
-            int kvtruckentriesForWeekNewCountnew = 0;
-            TimeSpan ts = keyVehicleLogAuditLogRequest.LogToDate.Subtract(today);
-            int dateDiff = ts.Days;
-            int totalWeeks = (int)dateDiff / 7;
-            KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequestnew = new KeyVehicleLogAuditLogRequest();
-            keyVehicleLogAuditLogRequestnew = keyVehicleLogAuditLogRequest;
-            for (int i = 1; i <= totalWeeks; i++)
+            int kvtruckentriesForWeekNewCount = 0;
+            var weekStart = fromDate;
+            while (weekStart <= toDate)
             {
-                keyVehicleLogAuditLogRequest.LogToDate = todatenew;
-
-                var thisWeekStart = today.AddDays(-(int)today.DayOfWeek);
-                var thisWeekEnd = thisWeekStart.AddDays(7).AddSeconds(-1);
-                if (thisWeekStart < today)
+                var weekEnd = weekStart.AddDays(6 - (int)weekStart.DayOfWeek);
+                if (weekEnd > toDate)
+                    weekEnd = toDate;
+                var start = weekStart;
+                var end = weekEnd;
+                var count = entryDates.Count(d => d >= start && d <= end);
+                kvtruckentriesForWeekNew.Add(new KeyVehicleLogAuditLogRequest
                 {
-                    thisWeekStart = today;
-                }
-
-                if (thisWeekEnd > keyVehicleLogAuditLogRequest.LogToDate)
-                {
-                    thisWeekEnd = keyVehicleLogAuditLogRequest.LogToDate;
-                }
-                keyVehicleLogAuditLogRequestnew.LogFromDate = thisWeekStart;
-                keyVehicleLogAuditLogRequestnew.LogToDate = thisWeekEnd;
-                var kvtruckentriesTypeforWeek = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequestnew);
-                string newdaterange = thisWeekStart.ToString("dd-MM-yyy") + " to " + thisWeekEnd.ToString("dd-MM-yyy");
-                KeyVehicleLogAuditLogRequest obj = new KeyVehicleLogAuditLogRequest();
-                obj.DateRange = newdaterange;
-                obj.RecordCount = kvtruckentriesTypeforWeek.Count();
-                kvtruckentriesForWeekNew.Add(obj);
-                kvtruckentriesForWeekNewCountnew = kvtruckentriesForWeekNewCountnew + obj.RecordCount;
-                today = thisWeekEnd.AddDays(1);
-
+                    DateRange = start.ToString("dd-MM-yyyy") + " to " + end.ToString("dd-MM-yyyy"),
+                    RecordCount = count
+                });
+                kvtruckentriesForWeekNewCount += count;
+                weekStart = weekEnd.AddDays(1);
             }
-            var kvtruckentriesForWeekNewCount = kvtruckentriesForWeekNewCountnew;
-            //duress entries per week-end
-            //duress entries per month-start
-            keyVehicleLogAuditLogRequest.LogFromDate = todaynew;
-            keyVehicleLogAuditLogRequest.LogToDate = todatenew;
-            today = todaynew;
-            todate = todatenew;
+
+            // truck entries per month
             var kvtruckentriesForMonthNew = new List<KeyVehicleLogAuditLogRequest>();
-            int kvtruckentriesForMonthNewCountnew = 0;
-
-            //int months = (int)(ReportRequest.ToDate.Month) - (ReportRequest.FromDate.Month);
-            int months = (keyVehicleLogAuditLogRequest.LogToDate.Year * 12 + keyVehicleLogAuditLogRequest.LogToDate.Month) - (keyVehicleLogAuditLogRequest.LogFromDate.Year * 12 + keyVehicleLogAuditLogRequest.LogFromDate.Month) + 1;
-            for (int i = 1; i <= months; i++)
+            int kvtruckentriesForMonthNewCount = 0;
+            for (var month = new DateTime(fromDate.Year, fromDate.Month, 1); month <= toDate; month = month.AddMonths(1))
             {
-
-                var thisMonthStart = new DateTime(today.Year, today.Month, 1);
-                var thisMonthEnd = thisMonthStart.AddMonths(1).AddDays(-1);
-                keyVehicleLogAuditLogRequestnew.LogFromDate = thisMonthStart;
-                keyVehicleLogAuditLogRequestnew.LogToDate = thisMonthEnd;
-                var kvtruckentriesTypeforMonth = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequestnew);
-                string newdaterange = thisMonthStart.ToString("MMM");
-                KeyVehicleLogAuditLogRequest obj = new KeyVehicleLogAuditLogRequest();
-                obj.DateRange = newdaterange;
-                obj.RecordCount = kvtruckentriesTypeforMonth.Count();
-                kvtruckentriesForMonthNew.Add(obj);
-                kvtruckentriesForMonthNewCountnew = kvtruckentriesForMonthNewCountnew + obj.RecordCount;
-                today = thisMonthEnd.AddDays(1);
-
+                var start = month;
+                var end = month.AddMonths(1).AddDays(-1);
+                var count = entryDates.Count(d => d >= start && d <= end);
+                kvtruckentriesForMonthNew.Add(new KeyVehicleLogAuditLogRequest
+                {
+                    DateRange = month.ToString("MMM"),
+                    RecordCount = count
+                });
+                kvtruckentriesForMonthNewCount += count;
             }
-            var kvtruckentriesForMonthNewCount = kvtruckentriesForMonthNewCountnew;
-            //duress entries per month-end
 
-            //duress entries per year-start
-            keyVehicleLogAuditLogRequest.LogFromDate = todaynew;
-            keyVehicleLogAuditLogRequest.LogToDate = todatenew;
-            today = todaynew;
-            todate = todatenew;
-
+            // truck entries per year
             var kvtruckentriesForYearNew = new List<KeyVehicleLogAuditLogRequest>();
-            int kvtruckentriesForYearNewCountnew = 0;
-
-            int years = (int)(keyVehicleLogAuditLogRequest.LogToDate.Year - keyVehicleLogAuditLogRequest.LogFromDate.Year) +
-        (((keyVehicleLogAuditLogRequest.LogToDate.Month > keyVehicleLogAuditLogRequest.LogFromDate.Month) ||
-        ((keyVehicleLogAuditLogRequest.LogToDate.Month == keyVehicleLogAuditLogRequest.LogFromDate.Month) && (keyVehicleLogAuditLogRequest.LogToDate.Day >= keyVehicleLogAuditLogRequest.LogFromDate.Day))) ? 1 : 0);
-
-            for (int i = 1; i <= years; i++)
+            int kvtruckentriesForYearNewCount = 0;
+            for (var year = new DateTime(fromDate.Year, 1, 1); year <= toDate; year = year.AddYears(1))
             {
-
-                var thisYearStart = new DateTime(today.Year, 1, 1);
-                var thisYearEnd = new DateTime(today.Year, 12, 1);
-                keyVehicleLogAuditLogRequestnew.LogFromDate = thisYearStart;
-                keyVehicleLogAuditLogRequestnew.LogToDate = thisYearEnd;
-                var kvtruckentriesTypeforYear = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequestnew);
-                string newdaterange = thisYearStart.Year.ToString();
-                KeyVehicleLogAuditLogRequest obj = new KeyVehicleLogAuditLogRequest();
-                obj.DateRange = newdaterange;
-                obj.RecordCount = kvtruckentriesTypeforYear.Count();
-                kvtruckentriesForYearNew.Add(obj);
-                kvtruckentriesForYearNewCountnew = kvtruckentriesForYearNewCountnew + obj.RecordCount;
-                today = new DateTime(today.Year + 1, 1, 1);
-
+                var start = year;
+                var end = year.AddYears(1).AddDays(-1);
+                var count = entryDates.Count(d => d >= start && d <= end);
+                kvtruckentriesForYearNew.Add(new KeyVehicleLogAuditLogRequest
+                {
+                    DateRange = year.Year.ToString(),
+                    RecordCount = count
+                });
+                kvtruckentriesForYearNewCount += count;
             }
-            var kvtruckentriesForYearNewCount = kvtruckentriesForYearNewCountnew;
 
-
-            //duress entries per year-end
             return new JsonResult(new { keyVehicleAuditLogRequest, chartData = new { kvtruckentriesForWeekNew, kvtruckentriesForMonthNew, kvtruckentriesForYearNew }, kvtruckentriesForWeekNewCount, kvtruckentriesForMonthNewCount, kvtruckentriesForYearNewCount });
         }
 
