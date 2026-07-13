@@ -2201,34 +2201,20 @@ namespace CityWatch.Kpi.Services
         {
             var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49,2,49 })).UseAllAvailableWidth().SetMarginBottom(5);
             var dailyLogWandStrikeReportForSiteController = _guardLogDataProvider.GetGuardLogsWithWandStrikes(ReportRequest, true);
-           
-            int totalDays = 28; // always 4 weeks
-            DateTime toDate = ReportRequest.FromDate.AddDays(totalDays - 1);
-            var groupedLogs = dailyLogWandStrikeReportForSiteController
-    .GroupBy(x => x.HitUtcDateTime.Date.Date)
-    .ToDictionary(g => g.Key, g => g.Count());
-         
-            var dailySiteControllerWandStrikeDataList =
-                Enumerable.Range(0, (toDate.Date - ReportRequest.FromDate.Date).Days + 1)
-                .Select(offset =>
-                {
-                    var day = ReportRequest.FromDate.Date.AddDays(offset);
-                    groupedLogs.TryGetValue(day, out int strikes);
 
-                    return new
-                    {
-                        //DayLabel = day.ToString("dd-MM-yyyy") + "(" + day.ToString("dddd")[0].ToString() + ")", // MTWTFSS
-                        DayLabel =  day.ToString("dddd")[0].ToString() ,
-                        Strikes = strikes
-                    };
-                })
-                .ToList();
+            // Strikes inside the requested report range. Used by BOTH charts below so the
+            // two "Count" headers always agree with each other and with the web report.
             var filteredLogs = dailyLogWandStrikeReportForSiteController
  .Where(x => x.HitUtcDateTime.Date >= ReportRequest.FromDate.Date &&
              x.HitUtcDateTime.Date <= ReportRequest.ToDate.Date)
  .ToList();
 
             int totalStrikes = filteredLogs.Count;
+
+            var dailySiteControllerWandStrikeData = BuildWandStrikeChartSeries(
+                filteredLogs.Select(x => x.HitUtcDateTime.Date).ToList(),
+                ReportRequest.FromDate.Date,
+                ReportRequest.ToDate.Date);
             var individualFQWandStrikeDataList = _clientSiteWandDataProvider.GetClientSiteSmartWandTags()
             .Where(z =>
                 (ReportRequest.ClientTypes == null || ReportRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
@@ -2247,20 +2233,13 @@ namespace CityWatch.Kpi.Services
             })
             .Where(x => x.Strikes > 0)
             .ToList();
-            var dailySiteControllerWandStrikeData= dailySiteControllerWandStrikeDataList.Cast<dynamic>()
-   .Select(x => new KeyValuePair<string, double>(
-       (string)x.DayLabel,
-       (double)x.Strikes))
-   .OrderByDescending(x => x.Key)
-   .ToArray();
-
             var individualFQWandStrikeData= individualFQWandStrikeDataList.Cast<dynamic>()
    .Select(x => new KeyValuePair<string, double>(
        (string)x.Wands,
        (double)x.Strikes))
    .OrderByDescending(x => x.Key)
    .ToArray();
-            chartDataTable.AddCell(GetChartHeaderCell("SITE COMBINED WAND STRIKES", "\nCount: " + dailySiteControllerWandStrikeDataList.Count));
+            chartDataTable.AddCell(GetChartHeaderCell("SITE COMBINED WAND STRIKES", "\nCount: " + totalStrikes));
 
             // row 1 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
@@ -2269,7 +2248,13 @@ namespace CityWatch.Kpi.Services
 
             // row 1 blank cell
           
-            var sitesPieChartImage = GetChartImage(dailySiteControllerWandStrikeData.OrderByDescending(z => z.Value).ToArray(),ChartType.Bar);
+            // Chronological series - do NOT re-sort by value, and use the Column chart:
+            // day labels repeat (M T W T F S S), and the horizontal Bar chart's label-keyed
+            // band scale collapses duplicate labels onto a single bar.
+            // displayHeight 150 (not the default 101): a full month is ~31 bars, and at 101pt
+            // the value printed above each bar is unreadable. 150pt keeps the image within
+            // its 49%-wide cell (500x320 source aspect -> ~234pt wide).
+            var sitesPieChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, displayHeight: 150f);
             chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
 
             // row 2 blank cell
@@ -2284,6 +2269,53 @@ namespace CityWatch.Kpi.Services
          
             return chartDataTable;
         }
+        /// <summary>
+        /// Site Combined Wand Strikes series for the PDF, kept in step with the web report
+        /// (PatrolData.BuildWandStrikeSeries). The series used to be hardcoded to 28 days
+        /// ("always 4 weeks", dropping days 29-31 of a month) and sorted by value, which
+        /// destroyed the chronological order. Buckets adapt to the range so the bars stay
+        /// readable: daily up to ~1 month, weekly up to ~6 months, monthly beyond that.
+        /// </summary>
+        private static KeyValuePair<string, double>[] BuildWandStrikeChartSeries(List<DateTime> hitDates, DateTime fromDate, DateTime toDate)
+        {
+            if (toDate < fromDate)
+                toDate = fromDate;
+
+            var totalDays = (toDate - fromDate).Days + 1;
+            var series = new List<KeyValuePair<string, double>>();
+
+            if (totalDays <= 31)
+            {
+                var byDay = hitDates.GroupBy(d => d).ToDictionary(g => g.Key, g => g.Count());
+                for (var day = fromDate; day <= toDate; day = day.AddDays(1))
+                {
+                    byDay.TryGetValue(day, out int strikes);
+                    series.Add(new KeyValuePair<string, double>(day.ToString("dddd")[0].ToString(), strikes)); // MTWTFSS
+                }
+            }
+            else if (totalDays <= 182)
+            {
+                var byWeek = hitDates.GroupBy(d => (d - fromDate).Days / 7).ToDictionary(g => g.Key, g => g.Count());
+                var weekCount = (totalDays + 6) / 7;
+                for (var week = 0; week < weekCount; week++)
+                {
+                    byWeek.TryGetValue(week, out int strikes);
+                    series.Add(new KeyValuePair<string, double>(fromDate.AddDays(week * 7).ToString("dd/MM"), strikes)); // week starting
+                }
+            }
+            else
+            {
+                var byMonth = hitDates.GroupBy(d => new DateTime(d.Year, d.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
+                for (var month = new DateTime(fromDate.Year, fromDate.Month, 1); month <= toDate; month = month.AddMonths(1))
+                {
+                    byMonth.TryGetValue(month, out int strikes);
+                    series.Add(new KeyValuePair<string, double>(month.ToString("MMM yy"), strikes));
+                }
+            }
+
+            return series.ToArray();
+        }
+
         private Cell GetChartHeaderCell(string leftText, string rightText, int colspan = 1)
         {
             var cell = new Cell(1, colspan)
@@ -2310,7 +2342,7 @@ namespace CityWatch.Kpi.Services
 
             return imageCell;
         }
-        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f)
         {
             var modifiedData = data;
             if (data.All(z => z.Value == 0))
@@ -2337,7 +2369,7 @@ namespace CityWatch.Kpi.Services
                 if (success && !IO.File.Exists(graphFileName))
                     throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
 
-                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(101);
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(displayHeight);
 
                 IO.File.Delete(graphFileName);
 
