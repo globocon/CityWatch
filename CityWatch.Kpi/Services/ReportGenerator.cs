@@ -2251,7 +2251,10 @@ namespace CityWatch.Kpi.Services
             // Chronological series - do NOT re-sort by value, and use the Column chart:
             // day labels repeat (M T W T F S S), and the horizontal Bar chart's label-keyed
             // band scale collapses duplicate labels onto a single bar.
-            var sitesPieChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column);
+            // displayHeight 150 (not the default 101): a full month is ~31 bars, and at 101pt
+            // the value printed above each bar is unreadable. 150pt keeps the image within
+            // its 49%-wide cell (500x320 source aspect -> ~234pt wide).
+            var sitesPieChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, displayHeight: 150f);
             chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
 
             // row 2 blank cell
@@ -2339,7 +2342,7 @@ namespace CityWatch.Kpi.Services
 
             return imageCell;
         }
-        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f)
         {
             var modifiedData = data;
             if (data.All(z => z.Value == 0))
@@ -2366,7 +2369,7 @@ namespace CityWatch.Kpi.Services
                 if (success && !IO.File.Exists(graphFileName))
                     throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
 
-                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(101);
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(displayHeight);
 
                 IO.File.Delete(graphFileName);
 

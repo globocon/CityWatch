@@ -277,7 +277,9 @@ function drawChart(callback, options, data) {
             .nice()
             .range([height, 0]);
 
-        var labelFontSize = data.length > 20 ? '8px' : '10px';
+        // The PNG is downscaled hard in the PDF (320px tall -> ~150pt), so these sizes are
+        // deliberately larger than they would be for an on-screen chart.
+        var labelFontSize = data.length > 20 ? '10px' : '12px';
 
         svg.append('g')
             .attr('transform', 'translate(0,' + height + ')')
@@ -289,7 +291,7 @@ function drawChart(callback, options, data) {
         svg.append('g')
             .call(d3.axisLeft(y).ticks(5))
             .selectAll('text')
-            .attr('font-size', '10px')
+            .attr('font-size', '12px')
             .attr('font-family', 'Arial');
 
         if (noData) {
@@ -314,15 +316,18 @@ function drawChart(callback, options, data) {
             .attr('height', function (d) { return height - y(d.value); })
             .attr('fill', '#4682b4');
 
-        // value above each bar (hidden for zero so the axis stays clean)
+        // value above each bar (hidden for zero so the axis stays clean).
+        // On dense charts (a full month = ~31 bars) every other label is raised a little
+        // so neighbouring values don't overlap each other.
+        var dense = data.length > 20;
         svg.selectAll('text.columnbar')
             .data(data)
             .enter().append('text')
-            .attr('font-size', data.length > 20 ? '7px' : '10px')
+            .attr('font-size', dense ? '10px' : '12px')
             .attr('font-family', 'Arial')
             .attr('text-anchor', 'middle')
             .attr('x', function (d, i) { return x(i) + x.bandwidth() / 2; })
-            .attr('y', function (d) { return y(d.value) - 3; })
+            .attr('y', function (d, i) { return y(d.value) - 3 - (dense && i % 2 === 1 ? 10 : 0); })
             .text(function (d) { return d.value > 0 ? d.value : ''; });
     }
 }
