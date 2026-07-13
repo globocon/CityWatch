@@ -1418,13 +1418,18 @@ namespace CityWatch.Web.Pages.roster
                 var hasSourceData = await _context.RosterSchedules
                     .AnyAsync(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= startDate && x.ShiftStart < endDate);
 
+                // Month/Year limits are based on the month/year the FIRST TARGET week starts in,
+                // not the current week's start date. Otherwise rolling over from the last week of
+                // a month (or a week spanning two months, e.g. 29 Jun - 05 Jul) finds zero target
+                // weeks and silently copies nothing. Must stay in sync with OnPostRolloverRoster.
+                var targetStart = startDate.AddDays(7);
+
                 DateTime copyUntil;
                 if (option == "NextWeek") copyUntil = startDate.AddDays(14);
-                else if (option == "Month") copyUntil = new DateTime(startDate.Year, startDate.Month, 1).AddMonths(1);
-                else if (option == "Year") copyUntil = new DateTime(startDate.Year, 12, 31).AddDays(1);
+                else if (option == "Month") copyUntil = new DateTime(targetStart.Year, targetStart.Month, 1).AddMonths(1);
+                else if (option == "Year") copyUntil = new DateTime(targetStart.Year, 12, 31).AddDays(1);
                 else return new JsonResult(new { success = false, message = "Invalid option." });
 
-                var targetStart = startDate.AddDays(7);
                 var hasData = await _context.RosterSchedules
                     .Where(x => x.RosterGroupId == groupId && !x.IsDeleted && x.ShiftStart >= targetStart && x.ShiftStart < copyUntil)
                     .AnyAsync();
@@ -1450,6 +1455,14 @@ namespace CityWatch.Web.Pages.roster
                 var today = DateTime.Today;
                 var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
 
+                // First week that receives copies. Month/Year limits below are based on the
+                // month/year THIS week starts in (not the current week's start date), so rolling
+                // over from the last week of a month - or a week spanning two months, e.g.
+                // 29 Jun - 05 Jul - fills the month the copy lands in instead of silently copying
+                // nothing. Mid-month rollovers are unaffected (target week is in the same month).
+                // Must stay in sync with OnPostCheckFutureData.
+                var targetStart = startDate.AddDays(7);
+
                 DateTime copyUntil;
                 if (option == "NextWeek")
                 {
@@ -1457,13 +1470,13 @@ namespace CityWatch.Web.Pages.roster
                 }
                 else if (option == "Month")
                 {
-                    // End of current month
-                    copyUntil = new DateTime(startDate.Year, startDate.Month, 1).AddMonths(1);
+                    // End of the month the first target week starts in
+                    copyUntil = new DateTime(targetStart.Year, targetStart.Month, 1).AddMonths(1);
                 }
                 else if (option == "Year")
                 {
-                    // End of current year
-                    copyUntil = new DateTime(startDate.Year, 12, 31).AddDays(1);
+                    // End of the year the first target week starts in
+                    copyUntil = new DateTime(targetStart.Year, 12, 31).AddDays(1);
                 }
                 else
                 {
@@ -1471,8 +1484,7 @@ namespace CityWatch.Web.Pages.roster
                 }
 
                 var targetWeeks = new List<DateTime>();
-                var currentTargetStart = startDate.AddDays(7);
-                var targetStart = currentTargetStart;
+                var currentTargetStart = targetStart;
 
                 if (eraseFuture)
                 {
