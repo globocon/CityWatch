@@ -38,13 +38,16 @@ function drawChart(callback, options, data) {
         .attr("width", options.width | 500)
         .attr("height", 320);
 
-    // 1 = Pie chart 2 = Bar chart
+    // 1 = Pie chart 2 = Bar chart 3 = Column chart (vertical, time-ordered)
     switch (options.type) {
         case 1:
             drawPieChart(data);
             break;
         case 2:
             drawBarChart(data)
+            break;
+        case 3:
+            drawColumnChart(data)
             break;
     }
 
@@ -236,7 +239,91 @@ function drawChart(callback, options, data) {
                     return 0;
                 if (data[i].value > 0)
                     return data[i].value
-            });           
+            });
+    }
+
+    /****************************************************************************************
+    *  Vertical (column) chart for time-ordered series, e.g. SITE COMBINED WAND STRIKES.
+    *  Labels are allowed to repeat (day letters M T W T F S S ...), so bars are positioned
+    *  by index, NOT by label. Do not reuse drawBarChart for such series: its band scale is
+    *  keyed by label, and duplicate labels collapse onto the same band.
+    *  Mirrors the look of drawBarChartUsingChartJsDailyWandStrikeData in
+    *  CityWatch.Web\wwwroot\js\reports.js (chronological bars, value above each bar).
+    *****************************************************************************************/
+    function drawColumnChart(data) {
+
+        var margin = { top: 25, right: 15, bottom: 35, left: 45 },
+            width = 500 - margin.left - margin.right,
+            height = 320 - margin.top - margin.bottom;
+
+        var svg = d3.select("svg")
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+        var noData = data.length === 1 && data[0].key.toLowerCase() === 'no/data';
+
+        // X: band over indices so duplicate labels each keep their own bar
+        var x = d3.scaleBand()
+            .range([0, width])
+            .domain(d3.range(data.length))
+            .padding(0.15);
+
+        var maxValue = noData ? 0 : d3.max(data, function (d) { return d.value; });
+
+        var y = d3.scaleLinear()
+            .domain([0, maxValue > 0 ? maxValue : 1])
+            .nice()
+            .range([height, 0]);
+
+        var labelFontSize = data.length > 20 ? '8px' : '10px';
+
+        svg.append('g')
+            .attr('transform', 'translate(0,' + height + ')')
+            .call(d3.axisBottom(x).tickFormat(function (i) { return noData ? '' : data[i].key; }))
+            .selectAll('text')
+            .attr('font-size', labelFontSize)
+            .attr('font-family', 'Arial');
+
+        svg.append('g')
+            .call(d3.axisLeft(y).ticks(5))
+            .selectAll('text')
+            .attr('font-size', '10px')
+            .attr('font-family', 'Arial');
+
+        if (noData) {
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height / 2)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '12px')
+                .attr('font-family', 'Arial')
+                .text('No Data');
+            return;
+        }
+
+        // bars
+        svg.selectAll('columnbar')
+            .data(data)
+            .enter()
+            .append('rect')
+            .attr('x', function (d, i) { return x(i); })
+            .attr('y', function (d) { return y(d.value); })
+            .attr('width', x.bandwidth())
+            .attr('height', function (d) { return height - y(d.value); })
+            .attr('fill', '#4682b4');
+
+        // value above each bar (hidden for zero so the axis stays clean)
+        svg.selectAll('text.columnbar')
+            .data(data)
+            .enter().append('text')
+            .attr('font-size', data.length > 20 ? '7px' : '10px')
+            .attr('font-family', 'Arial')
+            .attr('text-anchor', 'middle')
+            .attr('x', function (d, i) { return x(i) + x.bandwidth() / 2; })
+            .attr('y', function (d) { return y(d.value) - 3; })
+            .text(function (d) { return d.value > 0 ? d.value : ''; });
     }
 }
 

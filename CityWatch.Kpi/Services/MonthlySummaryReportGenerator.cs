@@ -27,7 +27,11 @@ namespace CityWatch.Kpi.Services
     {
         Pie = 1,
 
-        Bar
+        Bar,
+
+        // Vertical column chart for time-ordered series where labels may repeat
+        // (e.g. day letters M T W T F S S). Rendered by drawColumnChart in ir-chart.js.
+        Column
     }
 
     public class MonthlySummaryReportGenerator : ISummaryReportGenerator
