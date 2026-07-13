@@ -2955,14 +2955,16 @@ $(function () {
         $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
         $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
         //$('#KeyVehicleLogAuditLogRequest_KeyVehicleDownselect').val($('#KeyVehicleKeydownselect').val());
-        $('#loader').show();
+        // p3-44: percentage progress (same as IR & Patrol Car Statistics) so users can
+        // see the report is loading
+        loaderProgress.start(2, 'Generating report...');
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
             type: 'POST',
             dataType: 'json',
             data: $('#form_kvl_auditlog_request').serialize(),
         }).done(function (response) {
-            $('#loader').hide();
+            loaderProgress.step('Drawing charts...');
             keyVehicleLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
 
             $('#count_by_kventriesperweek').html(response.kvtruckentriesForWeekNewCount);
@@ -2978,6 +2980,8 @@ $(function () {
             if (response.kvtruckentriesForYearNewCount != 0) {
                 drawPieChartUsingChartJsKVEntriesForYear(response.chartData.kvtruckentriesForYearNew);
             }
+        }).always(function () {
+            loaderProgress.finish();
         });
     });
     function drawPieChartUsingChartJsKVEntriesForWeek(dataValue) {
@@ -2987,6 +2991,13 @@ $(function () {
         });
         var data2 = dataValue.map(function (e) {
             return e.recordCount;
+        });
+        // p3-44: bar labels show the week-commencing date ("01 Jul"), parsed from
+        // the "01-07-2026 to 04-07-2026" range; the full range stays in the tooltip
+        var kvMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var weekLabels = dataValue.map(function (e) {
+            var start = ('' + (e.dateRange || '')).split(' to ')[0].split('-');
+            return start.length === 3 ? start[0] + ' ' + kvMonthNames[parseInt(start[1], 10) - 1] : e.dateRange;
         });
         // Data for the pie chart
         const data = {
@@ -3009,22 +3020,16 @@ $(function () {
         if (canvas !== null) {
             const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_forweek').getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // p3-44: weekly truck entries render as vertical bars (week commencing on the
+            // x axis, KV count on the y axis) to match the approved sample format
             window.myChart7 = new Chart(ctx, {
-                type: 'pie',
+                type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: weekLabels,
                     datasets: [{
-                        label: '# of Votes',
+                        label: 'KV count',
                         data: data2,
-                        backgroundColor: getColors(15),
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
+                        backgroundColor: getColors(1),
                         borderWidth: 0
                     }]
                 },
@@ -3033,61 +3038,31 @@ $(function () {
                         padding: {
                             left: 10,
                             right: 10,
-                            top: 2,
+                            top: 24,
                             bottom: 2
                         }
                     },
                     maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Week commencing' },
+                            ticks: { font: { size: 10 }, autoSkip: false, maxRotation: 90, minRotation: 45 }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'KV count' }
+                        }
+                    },
                     plugins: {
                         tooltip: {
                             enabled: true,
                             callbacks: {
-                                label: function (context) {
-                                    let label = context.label + '(' + context.formattedValue + ')'
-                                    return label;
-                                }
+                                title: function (items) { return labels[items[0].dataIndex]; },
+                                label: function (context) { return context.formattedValue + ' entries'; }
                             }
                         },
-                        legend: {
-                            position: 'right',
-                            labels: {
-
-                                font: {
-                                    family: 'Arial',
-                                    size: 11
-                                },
-
-                                boxWidth: 10,
-                                boxHeight: 10,
-                                generateLabels(chart) {
-                                    const data = chart.data;
-                                    if (data.labels.length && data.datasets.length) {
-                                        const { labels: { pointStyle } } = chart.legend.options;
-
-                                        return data.labels.map((label, i) => {
-                                            const meta = chart.getDatasetMeta(0);
-                                            const style = meta.controller.getStyle(i);
-
-                                            return {
-                                                text: `${label} (${data['datasets'][0].data[i]})`,
-                                                fillStyle: style.backgroundColor,
-                                                strokeStyle: style.borderColor,
-                                                lineWidth: style.borderWidth,
-                                                borderWidth: 0,
-                                                pointStyle: pointStyle,
-                                                hidden: !chart.getDataVisibility(i),
-
-                                                // Extra data used for toggling the correct item
-                                                index: i
-                                            };
-                                        });
-                                    }
-                                    return [];
-                                }
-                            }
-                        },
+                        legend: { display: false },
                         labels: {
-                            /* render:"value",*/
                             render: (args) => {
 
                                 return args.value;
@@ -3115,21 +3090,13 @@ $(function () {
             const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_forweek1').getContext('2d');
             ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
             window.myChart8 = new Chart(ctx2, {
-                type: 'pie',
+                type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: weekLabels,
                     datasets: [{
-                        label: '# of Votes',
+                        label: 'KV count',
                         data: data2,
-                        backgroundColor: getColors(15),
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
+                        backgroundColor: getColors(1),
                         borderWidth: 0
                     }]
                 },
@@ -3138,68 +3105,38 @@ $(function () {
                         padding: {
                             left: 10,
                             right: 10,
-                            top: 20,
-                            bottom: 20
+                            top: 24,
+                            bottom: 2
                         }
                     },
                     maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Week commencing' },
+                            ticks: { font: { size: 10 }, autoSkip: false, maxRotation: 90, minRotation: 45 }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'KV count' }
+                        }
+                    },
                     plugins: {
                         tooltip: {
                             enabled: true,
                             callbacks: {
-                                label: function (context) {
-                                    let label = context.label + '(' + context.formattedValue + ')'
-                                    return label;
-                                }
+                                title: function (items) { return labels[items[0].dataIndex]; },
+                                label: function (context) { return context.formattedValue + ' entries'; }
                             }
                         },
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                font: {
-                                    family: 'Arial',
-                                    size: 11
-                                },
-
-                                boxWidth: 10,
-                                boxHeight: 10,
-                                generateLabels(chart) {
-                                    const data = chart.data;
-                                    if (data.labels.length && data.datasets.length) {
-                                        const { labels: { pointStyle } } = chart.legend.options;
-
-                                        return data.labels.map((label, i) => {
-                                            const meta = chart.getDatasetMeta(0);
-                                            const style = meta.controller.getStyle(i);
-
-                                            return {
-                                                text: `${label} (${data['datasets'][0].data[i]})`,
-                                                fillStyle: style.backgroundColor,
-                                                strokeStyle: style.borderColor,
-                                                lineWidth: style.borderWidth,
-                                                borderWidth: 0,
-                                                pointStyle: pointStyle,
-                                                hidden: !chart.getDataVisibility(i),
-
-                                                // Extra data used for toggling the correct item
-                                                index: i
-                                            };
-                                        });
-                                    }
-                                    return [];
-                                }
-                            }
-                        },
+                        legend: { display: false },
                         labels: {
-                            /* render:"value",*/
                             render: (args) => {
 
-                                return args.value + '%';
+                                return args.value;
 
                             },
-                            position: 'outside',
-                            outsidePadding: 10,
-                            textMargin: 10
+                            outsidePadding: 4,
+                            textMargin: 4
 
                         },
 
@@ -3397,6 +3334,8 @@ $(function () {
         if (canvas !== null) {
             const ctx = document.getElementById('bar_chart_by_kv_vehicleentries_formonth').getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // p3-44: monthly distribution styled like the approved sample — legend titled
+            // "Month (Total)" with formatted counts, percentage labels outside the slices
             window.myChart9 = new Chart(ctx, {
                 type: 'pie',
                 data: {
@@ -3419,10 +3358,10 @@ $(function () {
                 options: {
                     layout: {
                         padding: {
-                            left: 10,
-                            right: 10,
-                            top: 2,
-                            bottom: 2
+                            left: 45,
+                            right: 45,
+                            top: 18,
+                            bottom: 18
                         }
                     },
                     maintainAspectRatio: false,
@@ -3438,6 +3377,11 @@ $(function () {
                         },
                         legend: {
                             position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Legend: Month (Total)',
+                                font: { family: 'Arial', size: 11, weight: 'bold' }
+                            },
                             labels: {
 
                                 font: {
@@ -3457,7 +3401,7 @@ $(function () {
                                             const style = meta.controller.getStyle(i);
 
                                             return {
-                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                text: `${label} (${Number(data['datasets'][0].data[i]).toLocaleString()})`,
                                                 fillStyle: style.backgroundColor,
                                                 strokeStyle: style.borderColor,
                                                 lineWidth: style.borderWidth,
@@ -3475,15 +3419,15 @@ $(function () {
                             }
                         },
                         labels: {
-                            /* render:"value",*/
+                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
                             render: (args) => {
 
-                                return args.value;
+                                return args.label + ' ' + args.percentage + '%';
 
                             },
-
-                            outsidePadding: 4,
-                            textMargin: 4
+                            position: 'outside',
+                            outsidePadding: 10,
+                            textMargin: 10
 
                         },
 
@@ -3502,6 +3446,8 @@ $(function () {
         if (canvas2 !== null) {
             const ctx2 = document.getElementById('bar_chart_by_kv_vehicleentries_formonth1').getContext('2d');
             ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            // p3-44: popup matches the small monthly chart — real percentages outside
+            // the slices (the old code appended '%' to the raw count, e.g. "625%")
             window.myChart10 = new Chart(ctx2, {
                 type: 'pie',
                 data: {
@@ -3543,6 +3489,11 @@ $(function () {
                         },
                         legend: {
                             position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Legend: Month (Total)',
+                                font: { family: 'Arial', size: 11, weight: 'bold' }
+                            },
                             labels: {
                                 font: {
                                     family: 'Arial',
@@ -3561,7 +3512,7 @@ $(function () {
                                             const style = meta.controller.getStyle(i);
 
                                             return {
-                                                text: `${label} (${data['datasets'][0].data[i]})`,
+                                                text: `${label} (${Number(data['datasets'][0].data[i]).toLocaleString()})`,
                                                 fillStyle: style.backgroundColor,
                                                 strokeStyle: style.borderColor,
                                                 lineWidth: style.borderWidth,
@@ -3579,10 +3530,10 @@ $(function () {
                             }
                         },
                         labels: {
-                            /* render:"value",*/
+                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
                             render: (args) => {
 
-                                return args.value + '%';
+                                return args.label + ' ' + args.percentage + '%';
 
                             },
                             position: 'outside',
@@ -3967,10 +3918,11 @@ $(function () {
                             }
                         },
                         labels: {
-                            /* render:"value",*/
+                            // real percentage of the total — appending '%' to the raw
+                            // count showed values like "625%"
                             render: (args) => {
 
-                                return args.value + '%';
+                                return args.percentage + '%';
 
                             },
                             position: 'outside',
@@ -4152,6 +4104,51 @@ $(function () {
     });
     $('#btncount_by_kventriesPerYear').on('click', function () {
         $('#modelKVEntriesForyear').modal('show');
+    });
+    // p3-44: download the KV charts as a single-page PDF (same layout engine as the
+    // IR & Patrol Car Statistics page — buildStatsPdfElement lives in reports.js)
+    $('#btnDownloadKvChartsPdf').on('click', function (e) {
+        e.preventDefault();
+        var pane = $('#keyVehicleLogChart');
+        var hasRenderedChart = pane.find('canvas').filter(function () {
+            var chart = (window.Chart && typeof Chart.getChart === 'function') ? Chart.getChart(this) : null;
+            return chart != null || (this.width > 0 && this.height > 0);
+        }).length > 0;
+        if (!hasRenderedChart) {
+            alert('Please generate the report (View Report) first.');
+            return;
+        }
+        loaderProgress.start(2, 'Preparing charts...');
+        setTimeout(function () {
+            var wrapper = document.createElement('div');
+            wrapper.style.cssText = 'width:1px;height:1px;border:0 none;position:relative;overflow:hidden;';
+            try {
+                var dateRange = formatDate($('#vklAudtitFromDate').val()) + ' to ' + formatDate($('#vklAudtitToDate').val());
+                var element = buildStatsPdfElement('Key & Vehicle Logs - Truck Entries', pane, 2, dateRange);
+                wrapper.appendChild(element);
+                document.body.appendChild(wrapper);
+                loaderProgress.step('Rendering PDF...');
+                html2pdf(element, {
+                    margin: [0.2, 0.2, 0.2, 0.2],
+                    filename: formatDate(new Date()) + ' - Key & Vehicle Truck Entries.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, scrollY: 0 },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+                }).then(function () {
+                    wrapper.remove();
+                    loaderProgress.finish();
+                }, function (err) {
+                    console.log('pdf generation failed', err);
+                    wrapper.remove();
+                    loaderProgress.finish();
+                });
+            } catch (err) {
+                console.log('pdf generation failed', err);
+                wrapper.remove();
+                loaderProgress.finish();
+                alert('PDF generation failed. Please try again.');
+            }
+        }, 500);
     });
     //code addded  to download Excel start for auditsite key vehicle-start
     $("#btnDownloadVklAuditExcel").click(function () {

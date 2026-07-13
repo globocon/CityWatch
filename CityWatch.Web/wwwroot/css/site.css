@@ -135,6 +135,49 @@ a.cws-footer-link :visited {
     z-index: 1000;
 }
 
+/* p3-44: report loading progress (shown by loaderProgress in reports.js) */
+#loader-progress-box {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 340px;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 18px 22px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+
+#loader-progress-label {
+    font-size: 14px;
+    color: #333333;
+    margin-bottom: 10px;
+}
+
+#loader-progress-track {
+    height: 12px;
+    background: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+#loader-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #007bff;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+#loader-progress-percent {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #0366d6;
+}
+
 .wand-scan-subtext {
     display: block;
     font-size: 13.5px;

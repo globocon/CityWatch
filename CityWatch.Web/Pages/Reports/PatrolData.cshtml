@@ -8,7 +8,13 @@
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.PatrolData;
     var colourcode = @Model.ConfigDataProiver.GetFeedbackTypesId("Colour Codes");
 }
-<div id="loader-p"></div>
+<div id="loader-p">
+    <div id="loader-progress-box">
+        <div id="loader-progress-label">Loading...</div>
+        <div id="loader-progress-track"><div id="loader-progress-bar"></div></div>
+        <div id="loader-progress-percent">0%</div>
+    </div>
+</div>
 <div class="full-width">
     <form id="frm_patrol_report_request">
         <div class="form-row">

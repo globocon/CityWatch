@@ -682,24 +682,36 @@ $(function () {
                     clientSiteControl.append('<option value="' + site.text + '">' + site.text + '</option>');
                 });
                 clientSiteControl.multiselect('rebuild');
+                // p3-44: sites were replaced programmatically (no change event fires), so
+                // refresh the wand strike downselect filters too or they keep the old type's tags
+                loadWandStrikeTagFilters();
             }
         });
     });
     //p3-41-start
-    $('#ReportRequest_ClientSites').on('change', function () {
-        if ($('#ReportRequest_ClientSites').val().length === 0) {
-            alert('Please select a client site');
-            return;
+    // Fills the Tag DownSelect filters (UID/Type/Label/Wand ID) for the selected client
+    // sites; when no site is ticked ("All"), every site of the chosen client type is used.
+    function loadWandStrikeTagFilters() {
+        var siteNames = $('#ReportRequest_ClientSites').val() || [];
+        if (siteNames.length === 0) {
+            siteNames = $('#ReportRequest_ClientSites option').map(function () { return this.value; }).get();
         }
 
         const clientSiteWandStrikeTagId = $('#patroldatawandstrikeTagId');
         const clientSiteWandStrikeTagTypeId = $('#patroldatawandstrikeTagTypeId');
         const clientSiteWandStrikeTagLabel = $('#patroldatawandstrikeTagLabel');
         const clientSiteWandStrikeSmartWandId = $('#patroldatawandstrikeSmartWandId');
-        var sit = $(this).val().join(';');
+
+        if (siteNames.length === 0) {
+            clientSiteWandStrikeTagId.html('').multiselect('rebuild');
+            clientSiteWandStrikeTagTypeId.html('').multiselect('rebuild');
+            clientSiteWandStrikeTagLabel.html('').multiselect('rebuild');
+            clientSiteWandStrikeSmartWandId.html('').multiselect('rebuild');
+            return;
+        }
 
         $.ajax({
-            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' + encodeURIComponent($(this).val().join(',')),
+            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' + encodeURIComponent(siteNames.join(',')),
             type: 'GET',
             datatype: 'json',
         }).done(function (data) {
@@ -725,6 +737,22 @@ $(function () {
             clientSiteWandStrikeTagLabel.multiselect('rebuild');
             clientSiteWandStrikeSmartWandId.multiselect('rebuild');
         });
+    }
+
+    $('#ReportRequest_ClientSites').on('change', function () {
+        if ($('#ReportRequest_ClientSites').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        loadWandStrikeTagFilters();
+    });
+
+    // p3-44: if the user lands on Tag DownSelect without ever touching the site
+    // dropdown (e.g. left as "All"), the filters were never loaded — load them now
+    $('#tagdownselect-chart-tab').on('shown.bs.tab', function () {
+        if ($('#patroldatawandstrikeTagId option').length === 0) {
+            loadWandStrikeTagFilters();
+        }
     });
     //p4-41-end
     window.myChart2;
@@ -964,8 +992,8 @@ $(function () {
         }
         $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
         $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
-        
-        $('#loader-p').show();
+
+        loaderProgress.start(1, 'Generating report...');
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateReport',
             type: 'POST',
@@ -978,7 +1006,7 @@ $(function () {
             $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
         }).fail(function () {
         }).always(function () {
-            $('#loader-p').hide();
+            loaderProgress.finish();
         });
     });
     $('#btnPatrolReportSumbit').on('click', function () {
@@ -1030,7 +1058,7 @@ $(function () {
         $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
         $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
         //calculate month difference-end
-        $('#loader-p').show();
+        loaderProgress.start(5, 'Generating report table...');
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateReport',
             type: 'POST',
@@ -1041,6 +1069,7 @@ $(function () {
             patrolReport.clear().rows.add(response.results).draw();
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
             $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
+            loaderProgress.step('Loading charts...');
             /// Show Grpah data start
             console.log('graph started ');
             if (window.myChart1 != undefined)
@@ -1141,7 +1170,6 @@ $(function () {
             $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
             $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
             //calculate month difference-end
-            $('#loader-p').show();
             var ajax1 = $.ajax({
                 url: '/Reports/PatrolData?handler=GenerateReportGraphFirstTab',
                 type: 'POST',
@@ -1251,7 +1279,7 @@ $(function () {
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (response) {
                 console.log('graph response3 successs wand strikes charts ');
-                $('#btncount_daily_wandstrikes').html(response.chartData.dailySiteControllerWandStrikeData.length);
+                $('#btncount_daily_wandstrikes').html(response.chartData.totalWandStrikes);
                 if (response.chartData.dailySiteControllerWandStrikeData != 0) {
 
                     drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
@@ -1271,30 +1299,32 @@ $(function () {
             var selectedLabelText = selectedLabel.text();
 
             $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+            // p3-44: keep every form field (the old reduce() collapsed repeated fields such as
+            // the 32 selected ClientSites down to one, so the downselect charts came back empty)
+            var ajax5Data = $('#frm_patrol_report_request').serializeArray();
+            var appendAll = function (name, values) {
+                if (values == null) return;
+                if (!$.isArray(values)) values = [values];
+                values.forEach(function (v) {
+                    if (v !== '' && v != null) ajax5Data.push({ name: name, value: v });
+                });
+            };
+            appendAll('TagId', tag);
+            appendAll('TagTypeId', $('#patroldatawandstrikeTagTypeId').val());
+            appendAll('TagLabel', $('#patroldatawandstrikeTagLabel').val());
+            appendAll('GuardName', $('#patroldatawandstrikeGuardName').val());
+            appendAll('LicenseNo', $('#patroldatawandstrikeLicenseNo').val());
+            appendAll('SmartWandId', $('#patroldatawandstrikeSmartWandId').val());
+
             var ajax5 = $.ajax({
                 url: '/Reports/PatrolData?handler=GenerateReportGraphFifthTab',
                 type: 'POST',
                 dataType: 'json',
-                data:
-                    $.extend(
-                        $('#frm_patrol_report_request').serializeArray().reduce(function (obj, item) {
-                            obj[item.name] = item.value;
-                            return obj;
-                        }, {}),
-                        {
-                            TagId: tag,
-                            TagTypeId: $('#patroldatawandstrikeTagTypeId').val(),
-                            TagLabel: $('#patroldatawandstrikeTagLabel').val(),
-                            GuardName: $('#patroldatawandstrikeGuardName').val(),
-                            LicenseNo: $('#patroldatawandstrikeLicenseNo').val(),
-                            SmartWandId: $('#patroldatawandstrikeSmartWandId').val()
-                        }
-                    ),
-
+                data: $.param(ajax5Data),
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (response) {
                 console.log('graph response4 successs wand strikes downselect charts ');
-                $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.dailySiteControllerWandStrikeDataForDownselect.length);
+                $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.totalWandStrikes);
                 if (response.chartData.dailySiteControllerWandStrikeDataForDownselect != 0) {
 
                     drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(response.chartData.dailySiteControllerWandStrikeDataForDownselect);
@@ -1306,11 +1336,17 @@ $(function () {
                 }
             });
 
+            // each chart batch that finishes moves the progress bar one milestone forward
+            ajax1.always(function () { loaderProgress.step(); });
+            ajax2.always(function () { loaderProgress.step(); });
+            ajax4.always(function () { loaderProgress.step(); });
+            ajax5.always(function () { loaderProgress.step(); });
             $.when(ajax1, ajax2, ajax4, ajax5).always(function () {
-                $('#loader-p').hide();
+                loaderProgress.finish();
             });
-            ///show graph data end 
+            ///show graph data end
         }).fail(function () {
+            loaderProgress.finish();
         }).always(function () {
             //$('#loader-p').hide();
         });
@@ -7786,6 +7822,87 @@ $('.wandstrikemultiselect').multiselect({
 });
 //p3-41-end
 
+// p3-44: percentage progress overlay so users can see long-running reports are still loading.
+// start(n) declares how many milestones the task has; each step() jumps the bar to the next
+// milestone; a slow timer creeps the bar between milestones so it never looks frozen.
+var loaderProgress = {
+    total: 0,
+    done: 0,
+    current: 0,
+    timer: null,
+    active: false,
+    // works on any page: uses #loader-p or #loader, injecting the progress box if the
+    // page markup doesn't include one
+    _overlayEl: function () {
+        var el = $('#loader-p');
+        if (!el.length) el = $('#loader');
+        return el;
+    },
+    _ensureBox: function () {
+        if (!$('#loader-progress-box').length) {
+            this._overlayEl().append(
+                '<div id="loader-progress-box">' +
+                '<div id="loader-progress-label">Loading...</div>' +
+                '<div id="loader-progress-track"><div id="loader-progress-bar"></div></div>' +
+                '<div id="loader-progress-percent">0%</div>' +
+                '</div>');
+        }
+    },
+    start: function (totalSteps, label) {
+        this.total = Math.max(1, totalSteps);
+        this.done = 0;
+        this.current = 0;
+        this.active = true;
+        this._ensureBox();
+        $('#loader-progress-label').text(label || 'Loading...');
+        $('#loader-progress-bar').css('width', '0%');
+        $('#loader-progress-percent').text('0%');
+        $('#loader-progress-box').show();
+        this._overlayEl().show();
+        this._render(2);
+        this._creep();
+    },
+    step: function (label) {
+        if (!this.active) return;
+        this.done = Math.min(this.done + 1, this.total);
+        if (label) $('#loader-progress-label').text(label);
+        this._render(Math.round((this.done / this.total) * 100));
+        this._creep();
+    },
+    finish: function () {
+        if (!this.active) return;
+        this.active = false;
+        clearInterval(this.timer);
+        this._render(100);
+        var self = this;
+        setTimeout(function () {
+            self._overlayEl().hide();
+            $('#loader-progress-box').hide();
+        }, 400);
+    },
+    _creep: function () {
+        clearInterval(this.timer);
+        if (this.done >= this.total) return;
+        var self = this;
+        // approach the next milestone asymptotically so the bar keeps visibly moving
+        // during long-running requests instead of freezing at a fixed percentage
+        var ceiling = ((this.done + 0.97) / this.total) * 100;
+        this.timer = setInterval(function () {
+            if (!self.active) { clearInterval(self.timer); return; }
+            var next = self.current + Math.max(0.1, (ceiling - self.current) * 0.06);
+            if (next > ceiling) next = ceiling;
+            if (next > self.current) self._render(next);
+        }, 600);
+    },
+    _render: function (pct) {
+        if (pct > 100) pct = 100;
+        if (pct < this.current) return;
+        this.current = pct;
+        $('#loader-progress-bar').css('width', pct + '%');
+        $('#loader-progress-percent').text(Math.round(pct) + '%');
+    }
+};
+
 $('#convert-to-pdf').click(function (e) {
     if (window.patrolReportMode === 'report_only') {
         var href = $(this).attr('href');
@@ -7801,20 +7918,211 @@ $('#convert-to-pdf').click(function (e) {
     e.preventDefault();
     var currentDate = new Date();
     var formattedDate = formatDate(currentDate);
-    $('#loader-p').show();
+
+    // p3-44: Download Pdf exports the stats tab the user is on, not always IR Stats
+    var pdfTarget = getActiveStatsPdfTarget();
+
+    if (pdfTarget.paneId === '#pd-chart') {
+        // IR Stats keeps its dedicated pre-sized hidden layout (#content-to-pdf)
+        loaderProgress.start(2, 'Preparing charts...');
+        setTimeout(function () {
+            loaderProgress.step('Rendering PDF...');
+            var element = $('#content-to-pdf');
+            html2pdf(element[0], {
+                margin: [0, 0, 0, 0],
+                filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, scrollY: 0 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).then(function () {
+                loaderProgress.finish();
+            }, function (err) {
+                console.log('pdf generation failed', err);
+                loaderProgress.finish();
+            });
+        }, 1000); // Simulated delay of 1 second
+        return;
+    }
+
+    var pane = $(pdfTarget.paneId);
+    var hasRenderedChart = pane.find('canvas').filter(function () {
+        return this.width > 0 && this.height > 0;
+    }).length > 0;
+    if (!hasRenderedChart) {
+        alert('Please generate the report (Report + Graph) first.');
+        return;
+    }
+
+    loaderProgress.start(2, 'Preparing charts...');
     setTimeout(function () {
-        var element = $('#content-to-pdf');
-        html2pdf(element[0], {
-            margin: [0, 0, 0, 0],
-            filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, scrollY: 0 },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-        }).then(function () {
-            $('#loader-p').hide();
-        });
+        // charts are snapshotted into a clean off-screen layout sized for one A4 landscape page
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'width:1px;height:1px;border:0 none;position:relative;overflow:hidden;';
+        try {
+            var element = buildStatsPdfElement(pdfTarget.title, pane, pdfTarget.perRow);
+            wrapper.appendChild(element);
+            document.body.appendChild(wrapper);
+            loaderProgress.step('Rendering PDF...');
+            html2pdf(element, {
+                margin: [0.2, 0.2, 0.2, 0.2],
+                filename: '' + formattedDate + ' - - ' + pdfTarget.title + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, scrollY: 0 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).then(function () {
+                wrapper.remove();
+                loaderProgress.finish();
+            }, function (err) {
+                console.log('pdf generation failed', err);
+                wrapper.remove();
+                loaderProgress.finish();
+            });
+        } catch (err) {
+            console.log('pdf generation failed', err);
+            wrapper.remove();
+            loaderProgress.finish();
+            alert('PDF generation failed. Please try again.');
+        }
     }, 1000); // Simulated delay of 1 second
 });
+
+// Which stats tab should Download Pdf export? Falls back to IR Stats (old behaviour)
+// when the Report or IR Stats tab is active.
+function getActiveStatsPdfTarget() {
+    if ($('#rcstat-chart').hasClass('active'))
+        return { paneId: '#rcstat-chart', title: 'RC Statistics Report', perRow: 3 };
+    if ($('#hrstat-chart').hasClass('active'))
+        return { paneId: '#hrstat-chart', title: 'HR Statistics Report', perRow: 3 };
+    if ($('#wandstrike-chart').hasClass('active')) {
+        if ($('#tagdownselect-chart').hasClass('active'))
+            return { paneId: '#tagdownselect-chart', title: 'Wand Strike Report - Tag DownSelect', perRow: 1 };
+        return { paneId: '#siteeffortcounters-chart', title: 'Wand Strike Report', perRow: 1 };
+    }
+    return { paneId: '#pd-chart', title: 'IR Statistics Report', perRow: 2 };
+}
+
+// Rebuilds the active pane's chart cards into a print layout: header with title,
+// date range and logo, then the charts (canvas snapshots) in a perRow-column grid.
+// Filter controls and buttons are left out so the page stays clean.
+// dateRangeText is optional — pages other than IR & Patrol Statistics pass their own.
+function buildStatsPdfElement(title, pane, perRow, dateRangeText) {
+    var container = document.createElement('div');
+    container.style.cssText = 'width:1050px;background:#ffffff;padding:14px;font-family:Arial,Helvetica,sans-serif;color:#212529;';
+
+    var header = document.createElement('div');
+    header.style.cssText = 'position:relative;text-align:center;padding:6px 0 12px 0;';
+    var logo = document.createElement('img');
+    logo.src = '/images/cwslogopdf.png';
+    logo.style.cssText = 'position:absolute;right:0;top:0;height:48px;';
+    header.appendChild(logo);
+    var heading = document.createElement('div');
+    heading.style.cssText = 'font-size:18px;font-weight:bold;padding-top:10px;';
+    heading.textContent = title;
+    header.appendChild(heading);
+    var range = document.createElement('div');
+    range.style.cssText = 'font-size:12px;padding-top:2px;';
+    range.textContent = dateRangeText || (formatDate($('#ReportRequest_FromDate').val()) + ' to ' + formatDate($('#ReportRequest_ToDate').val()));
+    header.appendChild(range);
+    container.appendChild(header);
+
+    // collect the rendered charts first so the grid can be sized to fill the page.
+    // a canvas in a hidden tab can be 0x0 yet still hold a live Chart.js instance —
+    // the export path re-renders those at full size, so accept them too
+    var cards = [];
+    pane.find('.card').each(function () {
+        var canvas = $(this).find('canvas').get(0);
+        if (!canvas) return;
+        var hasChart = window.Chart && typeof Chart.getChart === 'function' && Chart.getChart(canvas);
+        if (!hasChart && (canvas.width === 0 || canvas.height === 0)) return;
+        cards.push({
+            headerText: $(this).find('.card-header').text().replace(/\s+/g, ' ').trim(),
+            canvas: canvas
+        });
+    });
+
+    // fixed geometry: 1050px wide container mapped onto one A4 landscape page
+    // (0.2in margins => ~93px/inch => ~730px of usable page height)
+    var PAGE_HEIGHT = 730;
+    var PAGE_HEADER_HEIGHT = 80;
+    var CONTAINER_PADDING = 14, CELL_PADDING = 5, CARD_HEADER_HEIGHT = 27, BODY_PADDING = 8, BORDER = 2;
+    var rowCount = Math.max(1, Math.ceil(cards.length / perRow));
+    var rowHeight = Math.floor((PAGE_HEIGHT - PAGE_HEADER_HEIGHT - CONTAINER_PADDING * 2) / rowCount);
+    var imgMaxHeight = rowHeight - CELL_PADDING * 2 - CARD_HEADER_HEIGHT - BODY_PADDING * 2 - BORDER;
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;margin:-' + CELL_PADDING + 'px;';
+    cards.forEach(function (item, index) {
+        // cards in a partial last row spread out to use the full page width
+        var lastRowStart = (rowCount - 1) * perRow;
+        var cardsInThisRow = index >= lastRowStart ? cards.length - lastRowStart : perRow;
+        var cellWidth = Math.floor((1050 - CONTAINER_PADDING * 2) / cardsInThisRow);
+        var imgMaxWidth = cellWidth - CELL_PADDING * 2 - BODY_PADDING * 2 - BORDER;
+
+        var cell = document.createElement('div');
+        cell.style.cssText = 'box-sizing:border-box;padding:' + CELL_PADDING + 'px;width:' + (100 / cardsInThisRow) + '%;';
+        var card = document.createElement('div');
+        card.style.cssText = 'border:1px solid #dee2e6;border-radius:4px;overflow:hidden;height:100%;box-sizing:border-box;';
+        var cardHeader = document.createElement('div');
+        cardHeader.style.cssText = 'background:#f5f5f5;border-bottom:1px solid #dee2e6;padding:6px 10px;font-size:11px;font-weight:bold;';
+        cardHeader.textContent = item.headerText;
+        card.appendChild(cardHeader);
+        var body = document.createElement('div');
+        body.style.cssText = 'padding:' + BODY_PADDING + 'px;background:#ffffff;';
+        var img = document.createElement('img');
+
+        // re-render the live Chart.js instance at the export size (like the popup version)
+        // so value labels and legends that are cramped on screen are not clipped in the PDF,
+        // then put the chart back to its on-screen size.
+        // NOTE: chart.options is a Chart.js proxy — only copy primitive values out of it and
+        // only assign fresh plain objects into it, or the proxy setter recurses infinitely.
+        var imgWidth = imgMaxWidth;
+        var imgHeight = imgMaxHeight;
+        var exported = false;
+        var chart = (window.Chart && typeof Chart.getChart === 'function') ? Chart.getChart(item.canvas) : null;
+        if (chart) {
+            var origPadding = 0;
+            try {
+                var p = (chart.options.layout && chart.options.layout.padding != null) ? chart.options.layout.padding : 0;
+                origPadding = (typeof p === 'object')
+                    ? { left: p.left || 0, right: p.right || 0, top: p.top || 0, bottom: p.bottom || 0 }
+                    : p;
+                // generous side padding so pies with outside labels (e.g. "Jul 2025 4.8%")
+                // don't clip at the export edges
+                chart.options.layout = { padding: { left: 45, right: 45, top: 28, bottom: 12 } };
+                chart.resize(imgWidth * 2, imgHeight * 2);
+                img.src = item.canvas.toDataURL('image/png');
+                exported = true;
+            } catch (err) {
+                console.log('chart export resize failed, falling back to screen snapshot', err);
+            }
+            try {
+                chart.options.layout = { padding: origPadding };
+                chart.resize();
+            } catch (err2) {
+                console.log('chart restore failed', err2);
+            }
+        }
+        if (!exported) {
+            // no Chart.js instance (or export failed) — scale the on-screen snapshot instead
+            var aspect = item.canvas.width / item.canvas.height;
+            imgHeight = imgMaxHeight;
+            imgWidth = Math.round(imgHeight * aspect);
+            if (imgWidth > imgMaxWidth) {
+                imgWidth = imgMaxWidth;
+                imgHeight = Math.round(imgWidth / aspect);
+            }
+            img.src = item.canvas.toDataURL('image/png');
+        }
+        img.style.cssText = 'width:' + imgWidth + 'px;height:' + imgHeight + 'px;display:block;margin:0 auto;';
+        body.appendChild(img);
+        card.appendChild(body);
+        cell.appendChild(card);
+        grid.appendChild(cell);
+    });
+    container.appendChild(grid);
+
+    return container;
+}
 
 function formatDate(dateStr) {
     var date = new Date(dateStr);

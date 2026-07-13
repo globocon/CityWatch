@@ -92,6 +92,12 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/Radio");
 });
 
+// Compress dynamic responses (JSON report payloads shrink ~10x over the wire)
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 builder.Services.AddSession(options =>
 {
@@ -147,6 +153,7 @@ else
     app.UseHsts();    
 }
 
+app.UseResponseCompression();
 app.UseCors("AllowSpecificOrigin");
 AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 app.UseHttpsRedirection();
