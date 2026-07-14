@@ -1,7 +1,35 @@
 ﻿const d3 = require("d3");
 const jsdom = require("jsdom");
-const { convert } = require('convert-svg-to-png');
+const { createConverter } = require('convert-svg-to-png');
 const fs = require('fs');
+
+/****************************************************************************************
+*  Shared SVG->PNG converter. The library's one-shot convert() launches and destroys a
+*  whole headless Chromium per call (~1-3s each); a report has ~13 charts, so that was
+*  the bulk of the PDF generation time. This module is cached by the NodeJS host, so
+*  one converter (one browser) is reused across every chart of every report.
+*  Calls are queued because a Converter is not safe for concurrent use, and a broken
+*  converter (e.g. the browser process died) is replaced and retried once per call.
+*  Same helper exists in effort-chart.js - keep the two in step.
+*****************************************************************************************/
+let sharedConverter = null;
+let convertQueue = Promise.resolve();
+
+function convertSvgToPng(html) {
+    const result = convertQueue.then(async () => {
+        if (!sharedConverter || sharedConverter.destroyed)
+            sharedConverter = createConverter();
+        try {
+            return await sharedConverter.convert(html);
+        } catch (e) {
+            try { await sharedConverter.destroy(); } catch (ignored) { }
+            sharedConverter = createConverter();
+            return await sharedConverter.convert(html);
+        }
+    });
+    convertQueue = result.catch(() => { });
+    return result;
+}
 
 function drawChart(callback, options, data) {
 
@@ -51,7 +79,7 @@ function drawChart(callback, options, data) {
             break;
     }
 
-    convert(body.node().innerHTML)
+    convertSvgToPng(body.node().innerHTML)
         .then(buffer => fs.writeFile(options.fileName, buffer, () => callback(null, "OK")))
         .catch(e => console.error(e));
 

@@ -176,11 +176,11 @@ namespace CityWatch.Kpi.Services
                 //p2-145 – Telematics Error-end
                 if (monthlyDataGuard.Count > 0)
                 {
-                    // To add 3rd Page 
+                    // To add 3rd Page
                     var HRGroupList = _viewDataService.GetKpiGuardHRGroup();
+                    var ClientSiteState = _clientDataProvider.GetClientSites(null).Where(x => x.Id == clientSiteId).FirstOrDefault().State;
                     for (int i = 0; i < HRGroupList.Count; i++)
                     {
-                        var ClientSiteState = _clientDataProvider.GetClientSites(null).Where(x => x.Id == clientSiteId).FirstOrDefault().State;
                         doc.Add(new AreaBreak());
 
                         doc.Add(headerTable);
