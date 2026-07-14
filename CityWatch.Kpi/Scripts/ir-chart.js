@@ -47,7 +47,7 @@ function drawChart(callback, options, data) {
             drawBarChart(data)
             break;
         case 3:
-            drawColumnChart(data)
+            drawColumnChart(data, options.width)
             break;
     }
 
@@ -250,10 +250,10 @@ function drawChart(callback, options, data) {
     *  Mirrors the look of drawBarChartUsingChartJsDailyWandStrikeData in
     *  CityWatch.Web\wwwroot\js\reports.js (chronological bars, value above each bar).
     *****************************************************************************************/
-    function drawColumnChart(data) {
+    function drawColumnChart(data, chartWidth) {
 
         var margin = { top: 25, right: 15, bottom: 35, left: 45 },
-            width = 500 - margin.left - margin.right,
+            width = (chartWidth || 500) - margin.left - margin.right,
             height = 320 - margin.top - margin.bottom;
 
         var svg = d3.select("svg")
@@ -278,8 +278,11 @@ function drawChart(callback, options, data) {
             .range([height, 0]);
 
         // The PNG is downscaled hard in the PDF (320px tall -> ~150pt), so these sizes are
-        // deliberately larger than they would be for an on-screen chart.
-        var labelFontSize = data.length > 20 ? '10px' : '12px';
+        // deliberately larger than they would be for an on-screen chart. "Dense" is judged
+        // by the actual bar width, not the bar count: 31 bars on a full-page chart still
+        // have room for straight 12px labels.
+        var dense = x.bandwidth() < 20;
+        var labelFontSize = dense ? '10px' : '12px';
 
         svg.append('g')
             .attr('transform', 'translate(0,' + height + ')')
@@ -317,9 +320,8 @@ function drawChart(callback, options, data) {
             .attr('fill', '#4682b4');
 
         // value above each bar (hidden for zero so the axis stays clean).
-        // On dense charts (a full month = ~31 bars) every other label is raised a little
-        // so neighbouring values don't overlap each other.
-        var dense = data.length > 20;
+        // On dense charts every other label is raised a little so neighbouring
+        // values don't overlap each other.
         svg.selectAll('text.columnbar')
             .data(data)
             .enter().append('text')

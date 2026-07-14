@@ -2239,34 +2239,33 @@ namespace CityWatch.Kpi.Services
        (double)x.Strikes))
    .OrderByDescending(x => x.Key)
    .ToArray();
-            chartDataTable.AddCell(GetChartHeaderCell("SITE COMBINED WAND STRIKES", "\nCount: " + totalStrikes));
+            // SITE COMBINED WAND STRIKES is stretched across the full page width (client
+            // feedback: "would be better on eye if stretched across"), so its header and
+            // image span all three columns and the FQ pie moves to the row below.
+            chartDataTable.AddCell(GetChartHeaderCell("SITE COMBINED WAND STRIKES", "\nCount: " + totalStrikes, colspan: 3));
 
-            // row 1 blank cell
-            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
-
-            chartDataTable.AddCell(GetChartHeaderCell("INDIVIDUAL WAND POINT FQ", "Count: " + individualFQWandStrikeDataList.Count));
-
-            // row 1 blank cell
-          
             // Chronological series - do NOT re-sort by value, and use the Column chart:
             // day labels repeat (M T W T F S S), and the horizontal Bar chart's label-keyed
             // band scale collapses duplicate labels onto a single bar.
-            // displayHeight 150 (not the default 101): a full month is ~31 bars, and at 101pt
-            // the value printed above each bar is unreadable. 150pt keeps the image within
-            // its 49%-wide cell (500x320 source aspect -> ~234pt wide).
-            var sitesPieChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, displayHeight: 150f);
-            chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
+            // chartWidth 1100 (not the default 500): at displayHeight 150 the 1100x320
+            // source keeps its aspect ratio -> ~516pt wide, i.e. the full printable width,
+            // so the PNG is rendered wide instead of being upscaled and blurred.
+            var sitesColumnChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, chartWidth: 1100, displayHeight: 150f);
+            chartDataTable.AddCell(GetChartImageCell(sitesColumnChartImage, colspan: 3));
 
-            // row 2 blank cell
+            chartDataTable.AddCell(GetChartHeaderCell("INDIVIDUAL WAND POINT FQ", "Count: " + individualFQWandStrikeDataList.Count));
+
+            // row blank cells to the right of the FQ header
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
             var areaPieChartImage = GetChartImage(individualFQWandStrikeData.OrderByDescending(z => z.Value).ToArray());
             chartDataTable.AddCell(GetChartImageCell(areaPieChartImage));
 
-            // row 2 blank cell
+            // row blank cells to the right of the FQ pie
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
-         
             return chartDataTable;
         }
         /// <summary>
@@ -2275,6 +2274,8 @@ namespace CityWatch.Kpi.Services
         /// ("always 4 weeks", dropping days 29-31 of a month) and sorted by value, which
         /// destroyed the chronological order. Buckets adapt to the range so the bars stay
         /// readable: daily up to ~1 month, weekly up to ~6 months, monthly beyond that.
+        /// The daily bucket is padded to a fixed 31 slots (max month length) per client
+        /// request, so every monthly chart has the same shape.
         /// </summary>
         private static KeyValuePair<string, double>[] BuildWandStrikeChartSeries(List<DateTime> hitDates, DateTime fromDate, DateTime toDate)
         {
@@ -2292,6 +2293,12 @@ namespace CityWatch.Kpi.Services
                     byDay.TryGetValue(day, out int strikes);
                     series.Add(new KeyValuePair<string, double>(day.ToString("dddd")[0].ToString(), strikes)); // MTWTFSS
                 }
+
+                // Client feedback: a month has 31 days MAX, so the daily axis is FIXED at
+                // 31 slots. Shorter months / ranges get unlabeled empty slots at the end,
+                // keeping the bar width and chart shape identical from month to month.
+                while (series.Count < 31)
+                    series.Add(new KeyValuePair<string, double>(string.Empty, 0));
             }
             else if (totalDays <= 182)
             {
@@ -2334,9 +2341,9 @@ namespace CityWatch.Kpi.Services
             return cell;
         }
 
-        private Cell GetChartImageCell(Image chartImage)
+        private Cell GetChartImageCell(Image chartImage, int colspan = 1)
         {
-            var imageCell = new Cell();
+            var imageCell = new Cell(1, colspan);
             if (chartImage != null)
                 imageCell.Add(chartImage).SetVerticalAlignment(VerticalAlignment.MIDDLE);
 
