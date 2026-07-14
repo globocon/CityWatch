@@ -74,6 +74,9 @@
     .shift-license { font-size: 9px; color: rgba(255,255,255,0.85); margin-top: 2px; }
     .status-stamp-img { max-width: 80px; height: auto; display: block; margin: 8px auto 0; }
     .project-header { background: #f8f9fa; font-weight: bold; padding: 10px 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #667eea; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    /* Single page-level legend used by the stacked mobile layout; hidden on desktop where
+       the legend still renders inside each site cell exactly as before. */
+    .mobile-legend { display: none; }
 
     /* --- Mobile responsiveness (external link only; desktop/web is unchanged) --- */
     /* Let the wide 8-column grid scroll sideways instead of squashing into the phone width. */
@@ -104,6 +107,34 @@
         #weekRangeDisplay { min-width: 0 !important; }
         /* A subtle hint that the grid can be swiped sideways. */
         .roster-grid-scroll { border: 1px solid #e9ecef; border-radius: 8px; }
+
+        /* --- P9-74 part 2: stacked mobile layout ---
+           Reported issue: white space on both sides of the grid and every project table
+           needing its own sideways scroll. On phones each site now becomes a vertical list:
+           site header, then one block per day THAT HAS SHIFTS (empty days are hidden), all
+           at full screen width. No horizontal scrolling at all. Desktop (>768px) untouched. */
+        .roster-grid-table { min-width: 0; }
+        .roster-grid-table thead { display: none; }
+        .roster-grid-table, .roster-grid-table tbody,
+        .roster-grid-table tr, .roster-grid-table td { display: block; width: 100% !important; }
+        .roster-grid-table tr { border-bottom: 6px solid #f4f7f6; }
+        .roster-grid-table tbody td { padding: 8px 10px !important; }
+        /* Day label (e.g. "MON 29 JUN") drawn above the day's shift cards, since thead is hidden. */
+        .roster-grid-table td.day-cell { position: relative; padding-top: 26px !important; }
+        .roster-grid-table td.day-cell::before {
+            content: attr(data-day-label);
+            position: absolute; top: 5px; left: 10px;
+            font-weight: 700; font-size: 10px; letter-spacing: 0.5px;
+            color: #667eea; text-transform: uppercase;
+        }
+        /* The whole point: days with no shifts take no space at all. */
+        .roster-grid-table td.day-cell.empty-day { display: none; }
+        /* Site cell becomes a compact header; the repeated legend is hidden (shown once below). */
+        .roster-grid-table tbody td:first-child { display: flex; flex-wrap: wrap; align-items: center; }
+        .roster-grid-table tbody td:first-child .site-legend { display: none; }
+        .status-stamp-img { max-width: 55px; margin: 0 0 0 auto; }
+        /* One legend for the whole page instead of one per site row. */
+        .mobile-legend { display: block !important; background: #fff; border-radius: 8px; padding: 10px 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     }
 </style>
 
@@ -245,7 +276,7 @@
             }
 
             function renderRoster(projects) {
-                var legendHtml = '<div class="mt-3 pt-2 border-top" style="font-size: 9px; line-height: 1.2; text-shadow: none;">' +
+                var legendHtml = '<div class="site-legend mt-3 pt-2 border-top" style="font-size: 9px; line-height: 1.2; text-shadow: none;">' +
                     '<div class="d-flex align-items-center mb-1"><span style="color: #9E9E9E; margin-right: 4px; font-size: 10px;">&#9679;</span> Unassigned - UNKNOWN</div>' +
                     '<div class="d-flex align-items-center mb-1"><span style="color: #FFA726; margin-right: 4px; font-size: 10px;">&#9679;</span> Unassigned - FIXED</div>' +
                     '<div class="d-flex align-items-center mb-1"><span style="color: #E65100; margin-right: 4px; font-size: 10px;">&#9679;</span> Unassigned - ADHOC</div>' +
@@ -287,8 +318,13 @@
                             var dayClass = 'day-cell';
                             if (i === 5) dayClass += ' sat-bg';
                             if (i === 6) dayClass += ' sun-bg';
-                            
-                            html += '<td class="' + dayClass + '">';
+                            // Stacked mobile layout: empty days are hidden entirely, and each
+                            // day block carries its own label because the header row is hidden.
+                            if (!site.days[i] || site.days[i].length === 0) dayClass += ' empty-day';
+                            var dd = new Date(currentStartDate); dd.setDate(dd.getDate() + i);
+                            var dayLabel = dd.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+
+                            html += '<td class="' + dayClass + '" data-day-label="' + dayLabel + '">';
                             if (site.days[i]) {
                                 site.days[i].forEach(function(shift) {
                                     var classes = 'shift-card';
@@ -338,6 +374,12 @@
                 
                 if (projects.length === 0) {
                     html = '<div class="alert alert-info">No projects assigned to this group.</div>';
+                } else {
+                    // Shown only by the stacked mobile layout (CSS); desktop keeps the
+                    // per-site legend inside the grid as before.
+                    html += '<div class="mobile-legend mb-4">' +
+                        '<div class="font-weight-bold text-uppercase mb-1" style="font-size: 10px; letter-spacing: 0.5px; color: #667eea;">Legend</div>' +
+                        legendHtml + '</div>';
                 }
                 $('#roster-grid-content').html(html);
             }
