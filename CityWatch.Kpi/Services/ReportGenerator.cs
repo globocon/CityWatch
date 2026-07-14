@@ -641,13 +641,30 @@ namespace CityWatch.Kpi.Services
             table.AddCell(CreateHeaderCell("EXPECTED\nHOURS"));
             table.AddCell(CreateHeaderCell("HOURS\nCHANGE"));
 
-            var hourlyImageUnit = clientSiteKpiSetting.ClientSiteDayKpiSettings.All(z => z.PatrolFrequency == 1) ? "p/24 hr" : "p/hr";
+            // PatrolFrequency: 1 = per day, 0 = per hr (the toggle in site settings).
+            // Only days the site actually operates count: on part-week sites (e.g. weekend
+            // only) the unused days keep the default per-hr toggle with all-zero values and
+            // must not drag the header back to p/hr. Genuinely mixed sites keep p/hr.
+            var activeDays = clientSiteKpiSetting.ClientSiteDayKpiSettings
+                .Where(z => z.EmpHours.GetValueOrDefault() > 0
+                         || z.ImagesTarget.GetValueOrDefault() > 0
+                         || z.WandScansTarget.GetValueOrDefault() > 0
+                         || z.NoOfPatrols.GetValueOrDefault() > 0)
+                .ToList();
+            var perDayAllDays = activeDays.Any() && activeDays.All(z => z.PatrolFrequency == 1);
+            var hourlyUnit = perDayAllDays ? "p/day" : "p/hr";
+            // 14-07-2026: images column changed from "p/24 hr" to "p/day" so all per-day
+            // column headers use the same wording as the target text and the wand/patrol
+            // columns ("p/24 hr" and "p/day" mean the same thing; the mixed wording was
+            // confusing on the client-facing report). Old line kept for reference:
+            //var hourlyImageUnit = perDayAllDays ? "p/24 hr" : "p/hr";
+            var hourlyImageUnit = hourlyUnit;
             var hourlyImagesHeader = clientSiteKpiSetting.IsThermalCameraSite ? "Ti Only" : string.Empty;
             table.AddCell(CreateHeaderCell(clientSiteKpiSetting.IsThermalCameraSite ? "Day + Ti Total" : "Day + Total"));
             table.AddCell(CreateHeaderCell($"{hourlyImagesHeader} {hourlyImageUnit}"));
             table.AddCell(CreateHeaderCell("Total"));
-            table.AddCell(CreateHeaderCell("p/hr"));
-            table.AddCell(CreateHeaderCell("p/hr"));
+            table.AddCell(CreateHeaderCell(hourlyUnit));
+            table.AddCell(CreateHeaderCell(hourlyUnit));
             table.AddCell(CreateHeaderCell("Fq"));
 
             table.AddCell(CreateHeaderCell("DAILY LOG 2HR TIMER"));
