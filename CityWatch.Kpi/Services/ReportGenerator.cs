@@ -642,11 +642,23 @@ namespace CityWatch.Kpi.Services
             table.AddCell(CreateHeaderCell("HOURS\nCHANGE"));
 
             // PatrolFrequency: 1 = per day, 0 = per hr (the toggle in site settings).
-            // Labels only follow the setting when EVERY weekday agrees, mirroring the
-            // long-standing hourlyImageUnit rule below; mixed sites keep p/hr as before.
-            var perDayAllDays = clientSiteKpiSetting.ClientSiteDayKpiSettings.All(z => z.PatrolFrequency == 1);
+            // Only days the site actually operates count: on part-week sites (e.g. weekend
+            // only) the unused days keep the default per-hr toggle with all-zero values and
+            // must not drag the header back to p/hr. Genuinely mixed sites keep p/hr.
+            var activeDays = clientSiteKpiSetting.ClientSiteDayKpiSettings
+                .Where(z => z.EmpHours.GetValueOrDefault() > 0
+                         || z.ImagesTarget.GetValueOrDefault() > 0
+                         || z.WandScansTarget.GetValueOrDefault() > 0
+                         || z.NoOfPatrols.GetValueOrDefault() > 0)
+                .ToList();
+            var perDayAllDays = activeDays.Any() && activeDays.All(z => z.PatrolFrequency == 1);
             var hourlyUnit = perDayAllDays ? "p/day" : "p/hr";
-            var hourlyImageUnit = perDayAllDays ? "p/24 hr" : "p/hr";
+            // 14-07-2026: images column changed from "p/24 hr" to "p/day" so all per-day
+            // column headers use the same wording as the target text and the wand/patrol
+            // columns ("p/24 hr" and "p/day" mean the same thing; the mixed wording was
+            // confusing on the client-facing report). Old line kept for reference:
+            //var hourlyImageUnit = perDayAllDays ? "p/24 hr" : "p/hr";
+            var hourlyImageUnit = hourlyUnit;
             var hourlyImagesHeader = clientSiteKpiSetting.IsThermalCameraSite ? "Ti Only" : string.Empty;
             table.AddCell(CreateHeaderCell(clientSiteKpiSetting.IsThermalCameraSite ? "Day + Ti Total" : "Day + Total"));
             table.AddCell(CreateHeaderCell($"{hourlyImagesHeader} {hourlyImageUnit}"));
