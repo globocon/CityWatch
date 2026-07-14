@@ -176,11 +176,11 @@ namespace CityWatch.Kpi.Services
                 //p2-145 – Telematics Error-end
                 if (monthlyDataGuard.Count > 0)
                 {
-                    // To add 3rd Page 
+                    // To add 3rd Page
                     var HRGroupList = _viewDataService.GetKpiGuardHRGroup();
+                    var ClientSiteState = _clientDataProvider.GetClientSites(null).Where(x => x.Id == clientSiteId).FirstOrDefault().State;
                     for (int i = 0; i < HRGroupList.Count; i++)
                     {
-                        var ClientSiteState = _clientDataProvider.GetClientSites(null).Where(x => x.Id == clientSiteId).FirstOrDefault().State;
                         doc.Add(new AreaBreak());
 
                         doc.Add(headerTable);
@@ -2246,16 +2246,15 @@ namespace CityWatch.Kpi.Services
 
             chartDataTable.AddCell(GetChartHeaderCell("INDIVIDUAL WAND POINT FQ", "Count: " + individualFQWandStrikeDataList.Count));
 
-            // row 1 blank cell
-          
             // Chronological series - do NOT re-sort by value, and use the Column chart:
             // day labels repeat (M T W T F S S), and the horizontal Bar chart's label-keyed
             // band scale collapses duplicate labels onto a single bar.
-            // displayHeight 150 (not the default 101): a full month is ~31 bars, and at 101pt
-            // the value printed above each bar is unreadable. 150pt keeps the image within
-            // its 49%-wide cell (500x320 source aspect -> ~234pt wide).
-            var sitesPieChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, displayHeight: 150f);
-            chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
+            // Client feedback: the chart must be stretched across its cell, so the image is
+            // scaled to 100% of the cell width (fitCellWidth) instead of a fixed height.
+            // chartWidth 800 (not the default 500) matches the source aspect ratio to the
+            // ~377pt-wide cell on landscape A4, keeping the rendered height at ~150pt.
+            var sitesColumnChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, chartWidth: 800, fitCellWidth: true);
+            chartDataTable.AddCell(GetChartImageCell(sitesColumnChartImage));
 
             // row 2 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
@@ -2266,7 +2265,6 @@ namespace CityWatch.Kpi.Services
             // row 2 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
-         
             return chartDataTable;
         }
         /// <summary>
@@ -2275,6 +2273,8 @@ namespace CityWatch.Kpi.Services
         /// ("always 4 weeks", dropping days 29-31 of a month) and sorted by value, which
         /// destroyed the chronological order. Buckets adapt to the range so the bars stay
         /// readable: daily up to ~1 month, weekly up to ~6 months, monthly beyond that.
+        /// The daily bucket is padded to a fixed 31 slots (max month length) per client
+        /// request, so every monthly chart has the same shape.
         /// </summary>
         private static KeyValuePair<string, double>[] BuildWandStrikeChartSeries(List<DateTime> hitDates, DateTime fromDate, DateTime toDate)
         {
@@ -2292,6 +2292,12 @@ namespace CityWatch.Kpi.Services
                     byDay.TryGetValue(day, out int strikes);
                     series.Add(new KeyValuePair<string, double>(day.ToString("dddd")[0].ToString(), strikes)); // MTWTFSS
                 }
+
+                // Client feedback: a month has 31 days MAX, so the daily axis is FIXED at
+                // 31 slots. Shorter months / ranges get unlabeled empty slots at the end,
+                // keeping the bar width and chart shape identical from month to month.
+                while (series.Count < 31)
+                    series.Add(new KeyValuePair<string, double>(string.Empty, 0));
             }
             else if (totalDays <= 182)
             {
@@ -2334,15 +2340,15 @@ namespace CityWatch.Kpi.Services
             return cell;
         }
 
-        private Cell GetChartImageCell(Image chartImage)
+        private Cell GetChartImageCell(Image chartImage, int colspan = 1)
         {
-            var imageCell = new Cell();
+            var imageCell = new Cell(1, colspan);
             if (chartImage != null)
                 imageCell.Add(chartImage).SetVerticalAlignment(VerticalAlignment.MIDDLE);
 
             return imageCell;
         }
-        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f)
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f, bool fitCellWidth = false)
         {
             var modifiedData = data;
             if (data.All(z => z.Value == 0))
@@ -2369,7 +2375,13 @@ namespace CityWatch.Kpi.Services
                 if (success && !IO.File.Exists(graphFileName))
                     throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
 
-                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(displayHeight);
+                // fitCellWidth: stretch across the full cell width, height follows the
+                // source aspect ratio. Otherwise fixed height, width follows.
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName));
+                if (fitCellWidth)
+                    graphImage.SetWidth(UnitValue.CreatePercentValue(100));
+                else
+                    graphImage.SetHeight(displayHeight);
 
                 IO.File.Delete(graphFileName);
 
