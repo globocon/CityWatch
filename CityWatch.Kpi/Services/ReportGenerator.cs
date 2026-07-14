@@ -641,13 +641,18 @@ namespace CityWatch.Kpi.Services
             table.AddCell(CreateHeaderCell("EXPECTED\nHOURS"));
             table.AddCell(CreateHeaderCell("HOURS\nCHANGE"));
 
-            var hourlyImageUnit = clientSiteKpiSetting.ClientSiteDayKpiSettings.All(z => z.PatrolFrequency == 1) ? "p/24 hr" : "p/hr";
+            // PatrolFrequency: 1 = per day, 0 = per hr (the toggle in site settings).
+            // Labels only follow the setting when EVERY weekday agrees, mirroring the
+            // long-standing hourlyImageUnit rule below; mixed sites keep p/hr as before.
+            var perDayAllDays = clientSiteKpiSetting.ClientSiteDayKpiSettings.All(z => z.PatrolFrequency == 1);
+            var hourlyUnit = perDayAllDays ? "p/day" : "p/hr";
+            var hourlyImageUnit = perDayAllDays ? "p/24 hr" : "p/hr";
             var hourlyImagesHeader = clientSiteKpiSetting.IsThermalCameraSite ? "Ti Only" : string.Empty;
             table.AddCell(CreateHeaderCell(clientSiteKpiSetting.IsThermalCameraSite ? "Day + Ti Total" : "Day + Total"));
             table.AddCell(CreateHeaderCell($"{hourlyImagesHeader} {hourlyImageUnit}"));
             table.AddCell(CreateHeaderCell("Total"));
-            table.AddCell(CreateHeaderCell("p/hr"));
-            table.AddCell(CreateHeaderCell("p/hr"));
+            table.AddCell(CreateHeaderCell(hourlyUnit));
+            table.AddCell(CreateHeaderCell(hourlyUnit));
             table.AddCell(CreateHeaderCell("Fq"));
 
             table.AddCell(CreateHeaderCell("DAILY LOG 2HR TIMER"));
