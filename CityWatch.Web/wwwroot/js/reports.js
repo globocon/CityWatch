@@ -1499,7 +1499,11 @@ $(function () {
             .text(function (d, i) {
                 if (data[i].key.toLowerCase() == 'no/data')
                     return ' (0%)';
-                return truncate(data[i].key) + " (" + data[i].value + "%)";
+                // 14-07-2026: 65 chars (not the 25-char default the small charts use):
+                // the enlarged modal is 1200px wide with ~395px of legend space, so the
+                // full description fits; the cap only guards against extreme labels
+                // running off the right edge.
+                return truncate(data[i].key, 65) + " (" + data[i].value + "%)";
             })
             .style("font-size", "10px")
             .attr("x", 11)
