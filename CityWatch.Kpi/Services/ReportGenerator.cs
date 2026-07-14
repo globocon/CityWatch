@@ -2239,31 +2239,30 @@ namespace CityWatch.Kpi.Services
        (double)x.Strikes))
    .OrderByDescending(x => x.Key)
    .ToArray();
-            // SITE COMBINED WAND STRIKES is stretched across the full page width (client
-            // feedback: "would be better on eye if stretched across"), so its header and
-            // image span all three columns and the FQ pie moves to the row below.
-            chartDataTable.AddCell(GetChartHeaderCell("SITE COMBINED WAND STRIKES", "\nCount: " + totalStrikes, colspan: 3));
+            chartDataTable.AddCell(GetChartHeaderCell("SITE COMBINED WAND STRIKES", "\nCount: " + totalStrikes));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("INDIVIDUAL WAND POINT FQ", "Count: " + individualFQWandStrikeDataList.Count));
 
             // Chronological series - do NOT re-sort by value, and use the Column chart:
             // day labels repeat (M T W T F S S), and the horizontal Bar chart's label-keyed
             // band scale collapses duplicate labels onto a single bar.
-            // chartWidth 1100 (not the default 500): at displayHeight 150 the 1100x320
-            // source keeps its aspect ratio -> ~516pt wide, i.e. the full printable width,
-            // so the PNG is rendered wide instead of being upscaled and blurred.
-            var sitesColumnChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, chartWidth: 1100, displayHeight: 150f);
-            chartDataTable.AddCell(GetChartImageCell(sitesColumnChartImage, colspan: 3));
+            // Client feedback: the chart must be stretched across its cell, so the image is
+            // scaled to 100% of the cell width (fitCellWidth) instead of a fixed height.
+            // chartWidth 800 (not the default 500) matches the source aspect ratio to the
+            // ~377pt-wide cell on landscape A4, keeping the rendered height at ~150pt.
+            var sitesColumnChartImage = GetChartImage(dailySiteControllerWandStrikeData, ChartType.Column, chartWidth: 800, fitCellWidth: true);
+            chartDataTable.AddCell(GetChartImageCell(sitesColumnChartImage));
 
-            chartDataTable.AddCell(GetChartHeaderCell("INDIVIDUAL WAND POINT FQ", "Count: " + individualFQWandStrikeDataList.Count));
-
-            // row blank cells to the right of the FQ header
-            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+            // row 2 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
             var areaPieChartImage = GetChartImage(individualFQWandStrikeData.OrderByDescending(z => z.Value).ToArray());
             chartDataTable.AddCell(GetChartImageCell(areaPieChartImage));
 
-            // row blank cells to the right of the FQ pie
-            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+            // row 2 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
             return chartDataTable;
@@ -2349,7 +2348,7 @@ namespace CityWatch.Kpi.Services
 
             return imageCell;
         }
-        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f)
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f, bool fitCellWidth = false)
         {
             var modifiedData = data;
             if (data.All(z => z.Value == 0))
@@ -2376,7 +2375,13 @@ namespace CityWatch.Kpi.Services
                 if (success && !IO.File.Exists(graphFileName))
                     throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
 
-                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(displayHeight);
+                // fitCellWidth: stretch across the full cell width, height follows the
+                // source aspect ratio. Otherwise fixed height, width follows.
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName));
+                if (fitCellWidth)
+                    graphImage.SetWidth(UnitValue.CreatePercentValue(100));
+                else
+                    graphImage.SetHeight(displayHeight);
 
                 IO.File.Delete(graphFileName);
 
