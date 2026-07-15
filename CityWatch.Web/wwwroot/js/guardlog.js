@@ -2936,6 +2936,11 @@ $(function () {
             window.myChart12.destroy();
         if (window.myChart13 != undefined)
             window.myChart13.destroy();
+        // p3 Part 2: per-day KV charts (small + enlarged popup)
+        if (window.myChart14 != undefined)
+            window.myChart14.destroy();
+        if (window.myChart15 != undefined)
+            window.myChart15.destroy();
         //calculate month difference-start
         var date1 = new Date($('#vklAudtitFromDate').val());
         var date2 = new Date($('#vklAudtitToDate').val());
@@ -2967,6 +2972,11 @@ $(function () {
             loaderProgress.step('Drawing charts...');
             keyVehicleLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
 
+            // p3 Part 2: arrange the cards BEFORE drawing so each canvas gets its final
+            // width. Day visible -> row1: Day+Week, row2: Month+Year (all half width).
+            // Day hidden -> original layout: row1: Week+Month, row2: Year (full width).
+            arrangeKvChartCards(response.showPerDayChart);
+
             $('#count_by_kventriesperweek').html(response.kvtruckentriesForWeekNewCount);
             if (response.kvtruckentriesForWeekNewCount != 0) {
                 drawPieChartUsingChartJsKVEntriesForWeek(response.chartData.kvtruckentriesForWeekNew);
@@ -2980,10 +2990,111 @@ $(function () {
             if (response.kvtruckentriesForYearNewCount != 0) {
                 drawPieChartUsingChartJsKVEntriesForYear(response.chartData.kvtruckentriesForYearNew);
             }
+            // per-day chart only for ranges within ~1 month
+            if (response.showPerDayChart) {
+                $('#count_by_kventriesperday').html(response.kvtruckentriesForDayNewCount);
+                if (response.kvtruckentriesForDayNewCount != 0) {
+                    drawChartJsKVEntriesForDay(response.chartData.kvtruckentriesForDayNew);
+                }
+            }
         }).always(function () {
             loaderProgress.finish();
         });
     });
+    // p3 Part 2: place the four KV chart cards depending on whether the per-day chart is
+    // shown. appendTo moves each element to the end of its target row, so listing them in
+    // the desired order yields the correct final order regardless of the previous layout.
+    //   showPerDay  -> row1: Day + Week   | row2: Month + Year   (all col-md-6)
+    //   !showPerDay -> row1: Week + Month | row2: Year (col-md-12)  [original layout]
+    function arrangeKvChartCards(showPerDay) {
+        if (showPerDay) {
+            $('#kvcol_day').show().appendTo('#kvrow1');
+            $('#kvcol_week').appendTo('#kvrow1');
+            $('#kvcol_month').appendTo('#kvrow2');
+            $('#kvcol_year').removeClass('col-md-12').addClass('col-md-6').appendTo('#kvrow2');
+        } else {
+            $('#kvcol_day').hide();
+            $('#kvcol_week').appendTo('#kvrow1');
+            $('#kvcol_month').appendTo('#kvrow1');
+            $('#kvcol_year').removeClass('col-md-6').addClass('col-md-12').appendTo('#kvrow2');
+        }
+    }
+
+    // p3 Part 2: per-day KV entries as a vertical bar chart (one bar per day, date on
+    // the x axis, KV count on the y axis) — same style as the weekly bar chart. Draws
+    // the small card chart and the enlarged popup from the same data.
+    function drawChartJsKVEntriesForDay(dataValue) {
+        // full "dd-MM-yyyy" kept for the tooltip; axis shows a compact "01 May"
+        var labels = dataValue.map(function (e) {
+            return e.dateRange;
+        });
+        var data2 = dataValue.map(function (e) {
+            return e.recordCount;
+        });
+        var kvMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var dayLabels = dataValue.map(function (e) {
+            var p = ('' + (e.dateRange || '')).split('-');
+            return p.length === 3 ? p[0] + ' ' + kvMonthNames[parseInt(p[1], 10) - 1] : e.dateRange;
+        });
+
+        var dayChartOptions = {
+            layout: { padding: { left: 10, right: 10, top: 24, bottom: 2 } },
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Day' },
+                    ticks: { font: { size: 10 }, autoSkip: false, maxRotation: 90, minRotation: 45 }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'KV count' }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        title: function (items) { return labels[items[0].dataIndex]; },
+                        label: function (context) { return context.formattedValue + ' entries'; }
+                    }
+                },
+                legend: { display: false },
+                labels: {
+                    render: (args) => { return args.value; },
+                    outsidePadding: 4,
+                    textMargin: 4
+                }
+            }
+        };
+
+        var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_forday");
+        var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_forday1");
+        if (canvas !== null) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            window.myChart14 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dayLabels,
+                    datasets: [{ label: 'KV count', data: data2, backgroundColor: '#4682b4', borderWidth: 0 }]
+                },
+                options: dayChartOptions
+            });
+        }
+        if (canvas2 !== null) {
+            const ctx2 = canvas2.getContext('2d');
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            window.myChart15 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: dayLabels,
+                    datasets: [{ label: 'KV count', data: data2, backgroundColor: '#4682b4', borderWidth: 0 }]
+                },
+                options: dayChartOptions
+            });
+        }
+    }
+
     function drawPieChartUsingChartJsKVEntriesForWeek(dataValue) {
 
         var labels = dataValue.map(function (e) {
@@ -3358,8 +3469,8 @@ $(function () {
                 options: {
                     layout: {
                         padding: {
-                            left: 45,
-                            right: 45,
+                            left: 10,
+                            right: 10,
                             top: 18,
                             bottom: 18
                         }
@@ -3419,15 +3530,17 @@ $(function () {
                             }
                         },
                         labels: {
-                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
+                            // show month name + share INSIDE each slice (e.g. "Jun 52%"),
+                            // matching the approved mock-up; the full "Jun 2026 (682)" total
+                            // stays in the legend. Inside placement can't overlap the legend.
                             render: (args) => {
 
-                                return args.label + ' ' + args.percentage + '%';
+                                return ('' + args.label).split(' ')[0] + ' ' + args.percentage + '%';
 
                             },
-                            position: 'outside',
-                            outsidePadding: 10,
-                            textMargin: 10
+                            position: 'default',
+                            fontColor: '#fff',
+                            overlap: false
 
                         },
 
@@ -3530,15 +3643,17 @@ $(function () {
                             }
                         },
                         labels: {
-                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
+                            // show month name + share INSIDE each slice (e.g. "Jun 52%"),
+                            // matching the approved mock-up; the full "Jun 2026 (682)" total
+                            // stays in the legend. Inside placement can't overlap the legend.
                             render: (args) => {
 
-                                return args.label + ' ' + args.percentage + '%';
+                                return ('' + args.label).split(' ')[0] + ' ' + args.percentage + '%';
 
                             },
-                            position: 'outside',
-                            outsidePadding: 10,
-                            textMargin: 10
+                            position: 'default',
+                            fontColor: '#fff',
+                            overlap: false
 
                         },
 
@@ -4096,6 +4211,9 @@ $(function () {
         //}
 
     }
+    $('#btncount_by_kventriesPerDay').on('click', function () {
+        $('#modelKVEntriesForday').modal('show');
+    });
     $('#btncount_by_kventriesPerWeek').on('click', function () {
         $('#modelKVEntriesForweek').modal('show');
     });

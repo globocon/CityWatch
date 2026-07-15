@@ -259,42 +259,51 @@
                     <a href="#" class="btn btn-outline-secondary" id="btnDownloadKvChartsPdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download Pdf</a>
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-md-6">
+            @* p3 Part 2: chart layout is rearranged from JS depending on whether the per-day
+               chart is shown (range within ~1 month):
+                 day visible   -> row1: Day + Week   | row2: Month + Year (all col-md-6)
+                 day hidden    -> row1: Week + Month  | row2: Year (col-md-12)  [original]
+               Initial markup below is the "day hidden" (original) layout; the per-day
+               column starts hidden and JS moves the cards as needed. *@
+            <div class="row mt-3" id="kvrow1">
+                <div class="col-md-6" id="kvcol_day" style="display:none;">
                     <div class="card">
                         <div class="card-header">
-                            Number of Truck Entries Per Week (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerWeek"><span id="count_by_kventriesperweek" class="p-0 b-0"></span></a>)
-                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                            Number of Key, Visitor, or Vehicle Manual Entries Per Day (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerDay"><span id="count_by_kventriesperday" class="p-0 b-0"></span></a>)
+                        </div>
+                        <div class="card-body" style="height: 235px; width: 100%;">
+                            <canvas id="bar_chart_by_kv_vehicleentries_forday"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6" id="kvcol_week">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Key, Visitor, or Vehicle Manual Entries Per Week (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerWeek"><span id="count_by_kventriesperweek" class="p-0 b-0"></span></a>)
                         </div>
                         <div class="card-body" style="height: 235px; width: 400px;">
-                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
                             <canvas id="bar_chart_by_kv_vehicleentries_forweek"></canvas>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" id="kvcol_month">
                     <div class="card">
                         <div class="card-header">
-                            Number of Truck Entries Per Month (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerMonth"><span id="count_by_kventriespermonth" class="p-0 b-0"></span></a>)
-                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                            Number of Key, Visitor, or Vehicle Manual Entries Per Month (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerMonth"><span id="count_by_kventriespermonth" class="p-0 b-0"></span></a>)
                         </div>
                         <div class="card-body" style="height: 235px; width: 400px;">
-                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
                             <canvas id="bar_chart_by_kv_vehicleentries_formonth"></canvas>
                         </div>
                     </div>
                 </div>
-                
             </div>
-            <div class="row mt-3">
-                <div class="col-md-12">
+            <div class="row mt-3" id="kvrow2">
+                <div class="col-md-12" id="kvcol_year">
                     <div class="card">
                         <div class="card-header">
-                            Number of Truck Entries Per Year (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerYear"><span id="count_by_kventriesperyear" class="p-0 b-0"></span></a>)
-                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                            Number of Key, Visitor, or Vehicle Manual Entries Per Year (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerYear"><span id="count_by_kventriesperyear" class="p-0 b-0"></span></a>)
                         </div>
                         <div class="card-body" style="height: 235px; width: 400px;">
-                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
                             <canvas id="bar_chart_by_kv_vehicleentries_foryear"></canvas>
                         </div>
                     </div>

@@ -2541,9 +2541,9 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
                     data: data2,
                     backgroundColor: colors,
                     borderColor: [
-                        'rgba(0, 0, 0, 1)'
+                        'rgba(120, 120, 120, 1)'
                     ],
-                    borderWidth: 0.1
+                    borderWidth: 1.5
                 }]
             },
             options: {
@@ -2638,9 +2638,9 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
                     data: data2,
                     backgroundColor: colors,
                     borderColor: [
-                        'rgba(0, 0, 0, 1)'
+                        'rgba(120, 120, 120, 1)'
                     ],
-                    borderWidth: 0.1
+                    borderWidth: 1.5
                 }]
             },
             options: {
@@ -2733,9 +2733,9 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
                     data: data2,
                     backgroundColor: colors,
                     borderColor: [
-                        'rgba(0, 0, 0, 1)'
+                        'rgba(120, 120, 120, 1)'
                     ],
-                    borderWidth: 0.1
+                    borderWidth: 1.5
                 }]
             },
             options: {

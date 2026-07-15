@@ -247,14 +247,26 @@ namespace CityWatch.Web.Pages.Admin
                 kvtruckentriesForMonthNewCount += count;
             }
 
-            // truck entries per year
+            // entries per year — independent of the selected from/to dates: the yearly
+            // chart must show the full calendar year(s), not just the filtered range
+            // (previously it reused entryDates, so "2026" always equalled the range total).
+            // Same site/downselect filters apply; only the date window is widened.
+            var savedLogFromDate = keyVehicleLogAuditLogRequest.LogFromDate;
+            var savedLogToDate = keyVehicleLogAuditLogRequest.LogToDate;
+            keyVehicleLogAuditLogRequest.LogFromDate = new DateTime(fromDate.Year, 1, 1);
+            keyVehicleLogAuditLogRequest.LogToDate = new DateTime(toDate.Year, 12, 31);
+            var yearEntryDates = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest)
+                .Where(v => v.Detail != null && v.Detail.EntryTime.HasValue)
+                .Select(v => v.Detail.EntryTime.Value.Date)
+                .ToList();
+            keyVehicleLogAuditLogRequest.LogFromDate = savedLogFromDate;
+            keyVehicleLogAuditLogRequest.LogToDate = savedLogToDate;
+
             var kvtruckentriesForYearNew = new List<KeyVehicleLogAuditLogRequest>();
             int kvtruckentriesForYearNewCount = 0;
             for (var year = new DateTime(fromDate.Year, 1, 1); year <= toDate; year = year.AddYears(1))
             {
-                var start = year;
-                var end = year.AddYears(1).AddDays(-1);
-                var count = entryDates.Count(d => d >= start && d <= end);
+                var count = yearEntryDates.Count(d => d.Year == year.Year);
                 kvtruckentriesForYearNew.Add(new KeyVehicleLogAuditLogRequest
                 {
                     DateRange = year.Year.ToString(),
@@ -263,7 +275,29 @@ namespace CityWatch.Web.Pages.Admin
                 kvtruckentriesForYearNewCount += count;
             }
 
-            return new JsonResult(new { keyVehicleAuditLogRequest, chartData = new { kvtruckentriesForWeekNew, kvtruckentriesForMonthNew, kvtruckentriesForYearNew }, kvtruckentriesForWeekNewCount, kvtruckentriesForMonthNewCount, kvtruckentriesForYearNewCount });
+            // entries per day (one bar per calendar day in the range). Only produced when
+            // the range falls within a SINGLE calendar month (same month and year) — as soon
+            // as the range spans two months the per-month pie already splits into 2+ slices
+            // and a per-day view is disabled (showPerDayChart = false) and hidden on the client.
+            var kvtruckentriesForDayNew = new List<KeyVehicleLogAuditLogRequest>();
+            int kvtruckentriesForDayNewCount = 0;
+            bool showPerDayChart = fromDate.Year == toDate.Year && fromDate.Month == toDate.Month;
+            if (showPerDayChart)
+            {
+                for (var day = fromDate; day <= toDate; day = day.AddDays(1))
+                {
+                    var current = day;
+                    var count = entryDates.Count(d => d == current);
+                    kvtruckentriesForDayNew.Add(new KeyVehicleLogAuditLogRequest
+                    {
+                        DateRange = day.ToString("dd-MM-yyyy"),
+                        RecordCount = count
+                    });
+                    kvtruckentriesForDayNewCount += count;
+                }
+            }
+
+            return new JsonResult(new { keyVehicleAuditLogRequest, chartData = new { kvtruckentriesForWeekNew, kvtruckentriesForMonthNew, kvtruckentriesForYearNew, kvtruckentriesForDayNew }, kvtruckentriesForWeekNewCount, kvtruckentriesForMonthNewCount, kvtruckentriesForYearNewCount, kvtruckentriesForDayNewCount, showPerDayChart });
         }
 
         /*
