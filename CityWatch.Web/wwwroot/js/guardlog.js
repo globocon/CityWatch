@@ -2972,6 +2972,11 @@ $(function () {
             loaderProgress.step('Drawing charts...');
             keyVehicleLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
 
+            // p3 Part 2: arrange the cards BEFORE drawing so each canvas gets its final
+            // width. Day visible -> row1: Day+Week, row2: Month+Year (all half width).
+            // Day hidden -> original layout: row1: Week+Month, row2: Year (full width).
+            arrangeKvChartCards(response.showPerDayChart);
+
             $('#count_by_kventriesperweek').html(response.kvtruckentriesForWeekNewCount);
             if (response.kvtruckentriesForWeekNewCount != 0) {
                 drawPieChartUsingChartJsKVEntriesForWeek(response.chartData.kvtruckentriesForWeekNew);
@@ -2985,21 +2990,36 @@ $(function () {
             if (response.kvtruckentriesForYearNewCount != 0) {
                 drawPieChartUsingChartJsKVEntriesForYear(response.chartData.kvtruckentriesForYearNew);
             }
-            // p3 Part 2: per-day chart only for ranges within ~1 month; hide the whole
-            // card otherwise (a wider dump would be an unreadable wall of bars)
+            // per-day chart only for ranges within ~1 month
             if (response.showPerDayChart) {
-                $('#col_kventriesperday').show();
                 $('#count_by_kventriesperday').html(response.kvtruckentriesForDayNewCount);
                 if (response.kvtruckentriesForDayNewCount != 0) {
                     drawChartJsKVEntriesForDay(response.chartData.kvtruckentriesForDayNew);
                 }
-            } else {
-                $('#col_kventriesperday').hide();
             }
         }).always(function () {
             loaderProgress.finish();
         });
     });
+    // p3 Part 2: place the four KV chart cards depending on whether the per-day chart is
+    // shown. appendTo moves each element to the end of its target row, so listing them in
+    // the desired order yields the correct final order regardless of the previous layout.
+    //   showPerDay  -> row1: Day + Week   | row2: Month + Year   (all col-md-6)
+    //   !showPerDay -> row1: Week + Month | row2: Year (col-md-12)  [original layout]
+    function arrangeKvChartCards(showPerDay) {
+        if (showPerDay) {
+            $('#kvcol_day').show().appendTo('#kvrow1');
+            $('#kvcol_week').appendTo('#kvrow1');
+            $('#kvcol_month').appendTo('#kvrow2');
+            $('#kvcol_year').removeClass('col-md-12').addClass('col-md-6').appendTo('#kvrow2');
+        } else {
+            $('#kvcol_day').hide();
+            $('#kvcol_week').appendTo('#kvrow1');
+            $('#kvcol_month').appendTo('#kvrow1');
+            $('#kvcol_year').removeClass('col-md-6').addClass('col-md-12').appendTo('#kvrow2');
+        }
+    }
+
     // p3 Part 2: per-day KV entries as a vertical bar chart (one bar per day, date on
     // the x axis, KV count on the y axis) — same style as the weekly bar chart. Draws
     // the small card chart and the enlarged popup from the same data.
@@ -3510,13 +3530,12 @@ $(function () {
                             }
                         },
                         labels: {
-                            // slice shows the share only ("52%"); month + total live in the
-                            // legend. Rendered INSIDE the slice (position 'default') so the
-                            // label sits on the pie and can never overlap the legend, and the
-                            // pie stays full size.
+                            // show the month name INSIDE each slice (e.g. "May"), matching the
+                            // approved mock-up; the full "May 2026 (729)" and the % still live
+                            // in the legend. Inside placement can't overlap the legend.
                             render: (args) => {
 
-                                return args.percentage + '%';
+                                return ('' + args.label).split(' ')[0];
 
                             },
                             position: 'default',
@@ -3624,13 +3643,12 @@ $(function () {
                             }
                         },
                         labels: {
-                            // slice shows the share only ("52%"); month + total live in the
-                            // legend. Rendered INSIDE the slice (position 'default') so the
-                            // label sits on the pie and can never overlap the legend, and the
-                            // pie stays full size.
+                            // show the month name INSIDE each slice (e.g. "May"), matching the
+                            // approved mock-up; the full "May 2026 (729)" and the % still live
+                            // in the legend. Inside placement can't overlap the legend.
                             render: (args) => {
 
-                                return args.percentage + '%';
+                                return ('' + args.label).split(' ')[0];
 
                             },
                             position: 'default',
