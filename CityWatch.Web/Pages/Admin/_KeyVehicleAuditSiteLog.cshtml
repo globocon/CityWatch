@@ -259,6 +259,21 @@
                     <a href="#" class="btn btn-outline-secondary" id="btnDownloadKvChartsPdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download Pdf</a>
                 </div>
             </div>
+            @* p3 Part 2: per-day chart (one bar per day for the selected month). Its own
+               full-width row so up to ~31 daily bars stay readable. The whole column is
+               hidden from JS when the range is wider than ~1 month (showPerDayChart=false). *@
+            <div class="row mt-3" id="col_kventriesperday" style="display:none;">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Key, Visitor, or Vehicle Manual Entries Per Day (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_kventriesPerDay"><span id="count_by_kventriesperday" class="p-0 b-0"></span></a>)
+                        </div>
+                        <div class="card-body" style="height: 260px; width: 100%;">
+                            <canvas id="bar_chart_by_kv_vehicleentries_forday"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="row mt-3">
                 <div class="col-md-6">
                     <div class="card">

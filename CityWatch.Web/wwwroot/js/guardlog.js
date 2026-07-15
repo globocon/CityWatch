@@ -2936,6 +2936,11 @@ $(function () {
             window.myChart12.destroy();
         if (window.myChart13 != undefined)
             window.myChart13.destroy();
+        // p3 Part 2: per-day KV charts (small + enlarged popup)
+        if (window.myChart14 != undefined)
+            window.myChart14.destroy();
+        if (window.myChart15 != undefined)
+            window.myChart15.destroy();
         //calculate month difference-start
         var date1 = new Date($('#vklAudtitFromDate').val());
         var date2 = new Date($('#vklAudtitToDate').val());
@@ -2980,10 +2985,96 @@ $(function () {
             if (response.kvtruckentriesForYearNewCount != 0) {
                 drawPieChartUsingChartJsKVEntriesForYear(response.chartData.kvtruckentriesForYearNew);
             }
+            // p3 Part 2: per-day chart only for ranges within ~1 month; hide the whole
+            // card otherwise (a wider dump would be an unreadable wall of bars)
+            if (response.showPerDayChart) {
+                $('#col_kventriesperday').show();
+                $('#count_by_kventriesperday').html(response.kvtruckentriesForDayNewCount);
+                if (response.kvtruckentriesForDayNewCount != 0) {
+                    drawChartJsKVEntriesForDay(response.chartData.kvtruckentriesForDayNew);
+                }
+            } else {
+                $('#col_kventriesperday').hide();
+            }
         }).always(function () {
             loaderProgress.finish();
         });
     });
+    // p3 Part 2: per-day KV entries as a vertical bar chart (one bar per day, date on
+    // the x axis, KV count on the y axis) — same style as the weekly bar chart. Draws
+    // the small card chart and the enlarged popup from the same data.
+    function drawChartJsKVEntriesForDay(dataValue) {
+        // full "dd-MM-yyyy" kept for the tooltip; axis shows a compact "01 May"
+        var labels = dataValue.map(function (e) {
+            return e.dateRange;
+        });
+        var data2 = dataValue.map(function (e) {
+            return e.recordCount;
+        });
+        var kvMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var dayLabels = dataValue.map(function (e) {
+            var p = ('' + (e.dateRange || '')).split('-');
+            return p.length === 3 ? p[0] + ' ' + kvMonthNames[parseInt(p[1], 10) - 1] : e.dateRange;
+        });
+
+        var dayChartOptions = {
+            layout: { padding: { left: 10, right: 10, top: 24, bottom: 2 } },
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Day' },
+                    ticks: { font: { size: 10 }, autoSkip: false, maxRotation: 90, minRotation: 45 }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'KV count' }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        title: function (items) { return labels[items[0].dataIndex]; },
+                        label: function (context) { return context.formattedValue + ' entries'; }
+                    }
+                },
+                legend: { display: false },
+                labels: {
+                    render: (args) => { return args.value; },
+                    outsidePadding: 4,
+                    textMargin: 4
+                }
+            }
+        };
+
+        var canvas = document.getElementById("bar_chart_by_kv_vehicleentries_forday");
+        var canvas2 = document.getElementById("bar_chart_by_kv_vehicleentries_forday1");
+        if (canvas !== null) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            window.myChart14 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dayLabels,
+                    datasets: [{ label: 'KV count', data: data2, backgroundColor: '#4682b4', borderWidth: 0 }]
+                },
+                options: dayChartOptions
+            });
+        }
+        if (canvas2 !== null) {
+            const ctx2 = canvas2.getContext('2d');
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            window.myChart15 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: dayLabels,
+                    datasets: [{ label: 'KV count', data: data2, backgroundColor: '#4682b4', borderWidth: 0 }]
+                },
+                options: dayChartOptions
+            });
+        }
+    }
+
     function drawPieChartUsingChartJsKVEntriesForWeek(dataValue) {
 
         var labels = dataValue.map(function (e) {
@@ -4102,6 +4193,9 @@ $(function () {
         //}
 
     }
+    $('#btncount_by_kventriesPerDay').on('click', function () {
+        $('#modelKVEntriesForday').modal('show');
+    });
     $('#btncount_by_kventriesPerWeek').on('click', function () {
         $('#modelKVEntriesForweek').modal('show');
     });

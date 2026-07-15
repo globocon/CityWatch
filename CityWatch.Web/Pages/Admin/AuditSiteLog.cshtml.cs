@@ -275,7 +275,29 @@ namespace CityWatch.Web.Pages.Admin
                 kvtruckentriesForYearNewCount += count;
             }
 
-            return new JsonResult(new { keyVehicleAuditLogRequest, chartData = new { kvtruckentriesForWeekNew, kvtruckentriesForMonthNew, kvtruckentriesForYearNew }, kvtruckentriesForWeekNewCount, kvtruckentriesForMonthNewCount, kvtruckentriesForYearNewCount });
+            // entries per day (one bar per calendar day in the range). Only produced when
+            // the selected range is within ~1 month — a wider dump would render 60+ tiny
+            // unreadable bars, so the chart is disabled (showPerDayChart = false) and the
+            // card is hidden on the client instead.
+            var kvtruckentriesForDayNew = new List<KeyVehicleLogAuditLogRequest>();
+            int kvtruckentriesForDayNewCount = 0;
+            bool showPerDayChart = (toDate - fromDate).Days <= 31;
+            if (showPerDayChart)
+            {
+                for (var day = fromDate; day <= toDate; day = day.AddDays(1))
+                {
+                    var current = day;
+                    var count = entryDates.Count(d => d == current);
+                    kvtruckentriesForDayNew.Add(new KeyVehicleLogAuditLogRequest
+                    {
+                        DateRange = day.ToString("dd-MM-yyyy"),
+                        RecordCount = count
+                    });
+                    kvtruckentriesForDayNewCount += count;
+                }
+            }
+
+            return new JsonResult(new { keyVehicleAuditLogRequest, chartData = new { kvtruckentriesForWeekNew, kvtruckentriesForMonthNew, kvtruckentriesForYearNew, kvtruckentriesForDayNew }, kvtruckentriesForWeekNewCount, kvtruckentriesForMonthNewCount, kvtruckentriesForYearNewCount, kvtruckentriesForDayNewCount, showPerDayChart });
         }
 
         /*
