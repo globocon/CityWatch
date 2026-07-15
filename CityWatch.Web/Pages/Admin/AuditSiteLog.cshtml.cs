@@ -276,12 +276,12 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             // entries per day (one bar per calendar day in the range). Only produced when
-            // the selected range is within ~1 month — a wider dump would render 60+ tiny
-            // unreadable bars, so the chart is disabled (showPerDayChart = false) and the
-            // card is hidden on the client instead.
+            // the range falls within a SINGLE calendar month (same month and year) — as soon
+            // as the range spans two months the per-month pie already splits into 2+ slices
+            // and a per-day view is disabled (showPerDayChart = false) and hidden on the client.
             var kvtruckentriesForDayNew = new List<KeyVehicleLogAuditLogRequest>();
             int kvtruckentriesForDayNewCount = 0;
-            bool showPerDayChart = (toDate - fromDate).Days <= 31;
+            bool showPerDayChart = fromDate.Year == toDate.Year && fromDate.Month == toDate.Month;
             if (showPerDayChart)
             {
                 for (var day = fromDate; day <= toDate; day = day.AddDays(1))
