@@ -247,14 +247,26 @@ namespace CityWatch.Web.Pages.Admin
                 kvtruckentriesForMonthNewCount += count;
             }
 
-            // truck entries per year
+            // entries per year — independent of the selected from/to dates: the yearly
+            // chart must show the full calendar year(s), not just the filtered range
+            // (previously it reused entryDates, so "2026" always equalled the range total).
+            // Same site/downselect filters apply; only the date window is widened.
+            var savedLogFromDate = keyVehicleLogAuditLogRequest.LogFromDate;
+            var savedLogToDate = keyVehicleLogAuditLogRequest.LogToDate;
+            keyVehicleLogAuditLogRequest.LogFromDate = new DateTime(fromDate.Year, 1, 1);
+            keyVehicleLogAuditLogRequest.LogToDate = new DateTime(toDate.Year, 12, 31);
+            var yearEntryDates = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest)
+                .Where(v => v.Detail != null && v.Detail.EntryTime.HasValue)
+                .Select(v => v.Detail.EntryTime.Value.Date)
+                .ToList();
+            keyVehicleLogAuditLogRequest.LogFromDate = savedLogFromDate;
+            keyVehicleLogAuditLogRequest.LogToDate = savedLogToDate;
+
             var kvtruckentriesForYearNew = new List<KeyVehicleLogAuditLogRequest>();
             int kvtruckentriesForYearNewCount = 0;
             for (var year = new DateTime(fromDate.Year, 1, 1); year <= toDate; year = year.AddYears(1))
             {
-                var start = year;
-                var end = year.AddYears(1).AddDays(-1);
-                var count = entryDates.Count(d => d >= start && d <= end);
+                var count = yearEntryDates.Count(d => d.Year == year.Year);
                 kvtruckentriesForYearNew.Add(new KeyVehicleLogAuditLogRequest
                 {
                     DateRange = year.Year.ToString(),

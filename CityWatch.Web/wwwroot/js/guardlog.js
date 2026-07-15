@@ -3419,10 +3419,11 @@ $(function () {
                             }
                         },
                         labels: {
-                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
+                            // slice shows the share only ("52%"); the month name and total
+                            // already live in the legend, and the combined text overlapped it
                             render: (args) => {
 
-                                return args.label + ' ' + args.percentage + '%';
+                                return args.percentage + '%';
 
                             },
                             position: 'outside',
@@ -3530,10 +3531,11 @@ $(function () {
                             }
                         },
                         labels: {
-                            // like the approved sample: month name + share, e.g. "Jul 2025 4.8%"
+                            // slice shows the share only ("52%"); the month name and total
+                            // already live in the legend, and the combined text overlapped it
                             render: (args) => {
 
-                                return args.label + ' ' + args.percentage + '%';
+                                return args.percentage + '%';
 
                             },
                             position: 'outside',
