@@ -3530,12 +3530,12 @@ $(function () {
                             }
                         },
                         labels: {
-                            // show the month name INSIDE each slice (e.g. "May"), matching the
-                            // approved mock-up; the full "May 2026 (729)" and the % still live
-                            // in the legend. Inside placement can't overlap the legend.
+                            // show month name + share INSIDE each slice (e.g. "Jun 52%"),
+                            // matching the approved mock-up; the full "Jun 2026 (682)" total
+                            // stays in the legend. Inside placement can't overlap the legend.
                             render: (args) => {
 
-                                return ('' + args.label).split(' ')[0];
+                                return ('' + args.label).split(' ')[0] + ' ' + args.percentage + '%';
 
                             },
                             position: 'default',
@@ -3643,12 +3643,12 @@ $(function () {
                             }
                         },
                         labels: {
-                            // show the month name INSIDE each slice (e.g. "May"), matching the
-                            // approved mock-up; the full "May 2026 (729)" and the % still live
-                            // in the legend. Inside placement can't overlap the legend.
+                            // show month name + share INSIDE each slice (e.g. "Jun 52%"),
+                            // matching the approved mock-up; the full "Jun 2026 (682)" total
+                            // stays in the legend. Inside placement can't overlap the legend.
                             render: (args) => {
 
-                                return ('' + args.label).split(' ')[0];
+                                return ('' + args.label).split(' ')[0] + ' ' + args.percentage + '%';
 
                             },
                             position: 'default',
