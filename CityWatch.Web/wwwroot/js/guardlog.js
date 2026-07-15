@@ -3364,6 +3364,9 @@ $(function () {
                             bottom: 18
                         }
                     },
+                    // pie drawn at 75% radius so the outside % labels fit in the gap
+                    // between the pie and the legend instead of overlapping it
+                    radius: '75%',
                     maintainAspectRatio: false,
                     plugins: {
                         tooltip: {
@@ -3477,6 +3480,9 @@ $(function () {
                             bottom: 20
                         }
                     },
+                    // pie drawn at 75% radius so the outside % labels fit in the gap
+                    // between the pie and the legend instead of overlapping it
+                    radius: '75%',
                     maintainAspectRatio: false,
                     plugins: {
                         tooltip: {
