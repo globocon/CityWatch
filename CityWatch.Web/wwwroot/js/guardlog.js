@@ -3358,15 +3358,12 @@ $(function () {
                 options: {
                     layout: {
                         padding: {
-                            left: 45,
-                            right: 45,
+                            left: 10,
+                            right: 10,
                             top: 18,
                             bottom: 18
                         }
                     },
-                    // pie drawn at 75% radius so the outside % labels fit in the gap
-                    // between the pie and the legend instead of overlapping it
-                    radius: '75%',
                     maintainAspectRatio: false,
                     plugins: {
                         tooltip: {
@@ -3422,16 +3419,18 @@ $(function () {
                             }
                         },
                         labels: {
-                            // slice shows the share only ("52%"); the month name and total
-                            // already live in the legend, and the combined text overlapped it
+                            // slice shows the share only ("52%"); month + total live in the
+                            // legend. Rendered INSIDE the slice (position 'default') so the
+                            // label sits on the pie and can never overlap the legend, and the
+                            // pie stays full size.
                             render: (args) => {
 
                                 return args.percentage + '%';
 
                             },
-                            position: 'outside',
-                            outsidePadding: 10,
-                            textMargin: 10
+                            position: 'default',
+                            fontColor: '#fff',
+                            overlap: false
 
                         },
 
@@ -3480,9 +3479,6 @@ $(function () {
                             bottom: 20
                         }
                     },
-                    // pie drawn at 75% radius so the outside % labels fit in the gap
-                    // between the pie and the legend instead of overlapping it
-                    radius: '75%',
                     maintainAspectRatio: false,
                     plugins: {
                         tooltip: {
@@ -3537,16 +3533,18 @@ $(function () {
                             }
                         },
                         labels: {
-                            // slice shows the share only ("52%"); the month name and total
-                            // already live in the legend, and the combined text overlapped it
+                            // slice shows the share only ("52%"); month + total live in the
+                            // legend. Rendered INSIDE the slice (position 'default') so the
+                            // label sits on the pie and can never overlap the legend, and the
+                            // pie stays full size.
                             render: (args) => {
 
                                 return args.percentage + '%';
 
                             },
-                            position: 'outside',
-                            outsidePadding: 10,
-                            textMargin: 10
+                            position: 'default',
+                            fontColor: '#fff',
+                            overlap: false
 
                         },
 
