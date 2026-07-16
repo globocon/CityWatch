@@ -2189,7 +2189,10 @@ namespace CityWatch.Kpi.Services
             var eventTypeCount = patrolDataReport.EventTypeQuantity.Sum(z => z.Value);
             chartDataTable.AddCell(GetChartHeaderCell("IR EVENT TYPE QUANTITY", "Total IR Count: " + eventTypeCount, 2));
 
-            var eventTypePieChartImage = GetChartImage(patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray(), chartWidth: 615);
+            // 1015 (not 615): the old "options.width | 500" bitwise bug in ir-chart.js turned
+            // 615 into 1015, and this chart's approved layout grew around that. Now that the
+            // bug is fixed, pass the effective width explicitly so the chart stays identical.
+            var eventTypePieChartImage = GetChartImage(patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray(), chartWidth: 1015);
             chartDataTable.AddCell(GetChartImageCell(eventTypePieChartImage).SetBorderRight(Border.NO_BORDER));
 
             var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
@@ -2276,7 +2279,12 @@ namespace CityWatch.Kpi.Services
             // row 2 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
-            var areaPieChartImage = GetChartImage(individualFQWandStrikeData.OrderByDescending(z => z.Value).ToArray());
+            // Client feedback: the pie must fill its cell like the column chart beside it.
+            // Render on a 800x320 canvas (same 2.5:1 aspect as the ~377pt cell) and stretch
+            // to the cell width: both charts come out the same height, the pie is centred in
+            // the left half at near-full height, and the legend gets the right half with
+            // clear margins instead of being squeezed into a 101pt thumbnail.
+            var areaPieChartImage = GetChartImage(individualFQWandStrikeData.OrderByDescending(z => z.Value).ToArray(), ChartType.Pie, chartWidth: 800, fitCellWidth: true);
             chartDataTable.AddCell(GetChartImageCell(areaPieChartImage));
 
             // row 2 blank cell
