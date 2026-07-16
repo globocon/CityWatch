@@ -1,10 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CityWatch.Data.Models
 {
@@ -95,10 +92,10 @@ namespace CityWatch.Data.Models
 
         public int SmartWandId { get; set; }
         public int SiteId { get; set; }
-        public int GuardId { get; set; }
+        public int? GuardId { get; set; }
 
-        public int LoginUserId { get; set; }
-        public int LoginSiteId { get; set; }
+        public int? LoginUserId { get; set; }
+        public int? LoginSiteId { get; set; }
 
         public string VisitName { get; set; }
         public int VisitNumber { get; set; }
@@ -112,6 +109,29 @@ namespace CityWatch.Data.Models
 
         public string GpsCoordinates { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime VisitDate { get; set; }
+        public Enums.PcarVisitStatusEnum Status { get; set; }
+        public int? ParentVisitId { get; set; }
+        public bool IsVisitPickedUp { get; set; } = false;
     }
 
+    public class PcarVisitHistory
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int VisitId { get; set; }
+        public int SmartWandId { get; set; }
+        public int SiteId { get; set; }
+        public string Action { get; set; } // e.g. "Accepted", "Cancelled", "Started", "Completed", "Pushed"
+
+        public DateTime ServerUtcTime { get; set; }
+        public DateTime? EventDateTimeLocal { get; set; }
+        public DateTimeOffset? EventDateTimeLocalWithOffset { get; set; }
+        public string EventDateTimeZone { get; set; }
+        public string EventDateTimeZoneShort { get; set; }
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
+        public DateTime? EventMobileUtcDateTime { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
 }
