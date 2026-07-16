@@ -260,9 +260,12 @@ namespace CityWatch.Data.Providers
                 var pushedTasks = new List<PcarRouteDailyVisits>();
                 if (currentPatrolCarId.HasValue)
                 {
+                    var yesterday = DateTime.Today.AddDays(-1);
+                    var tomorrow = DateTime.Today.AddDays(1);
                     pushedTasks = _context.PcarRouteDailyVisits
-                        .Where(v => (v.PushedTo == currentPatrolCarId.Value || v.Status == Enums.PcarVisitStatusEnum.PushedToPcar) && 
-                                    v.CreatedAt.Date == dateToUse.Date)
+                        .Where(v => v.PushedTo == currentPatrolCarId.Value && 
+                                    v.CreatedAt.Date >= yesterday && 
+                                    v.CreatedAt.Date <= tomorrow)
                         .ToList();
                 }
 

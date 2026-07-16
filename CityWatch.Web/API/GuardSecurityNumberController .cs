@@ -4117,7 +4117,7 @@ namespace CityWatch.Web.API
                     TimeOff = dto.TimeOff,
 
                     GpsCoordinates = dto.GpsCoordinates,
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = dto.TargetDate ?? DateTime.Now,
                     Status = visitStatus,
                     PushedTo = pushedToId
                 };
@@ -6043,6 +6043,7 @@ namespace CityWatch.Web.API
         public string TimeOff { get; set; }
         public Data.Enums.PcarVisitStatusEnum? Status { get; set; }
         public int? PushedTo { get; set; }
+        public DateTime? TargetDate { get; set; }
     }
 
 
