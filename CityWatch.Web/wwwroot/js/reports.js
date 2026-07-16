@@ -1555,14 +1555,16 @@ $(function () {
             .attr('stroke', function (d, i) {
                 if (data[i].key.toLowerCase() == 'no/data')
                     return 'black'
-                else
-                    return '';
+                // hairline border like the on-screen chart, so white/light colour-code
+                // slices stay visible against the white PDF page
+                return '#9e9e9e';
             })
+            .attr('stroke-width', 0.75)
             .attr('fill', function (d, i) {
                 if (customColors && customColors.length > i) {
                     return customColors[i];
                 }
-                return getFillColor(d, i, data[i].key); 
+                return getFillColor(d, i, data[i].key);
             })
             .attr('d', arc);
 
@@ -1653,11 +1655,13 @@ $(function () {
         legend.append("rect")
             .attr("width", 8)
             .attr("height", 8)
-            .attr("fill", function (d, i) { 
+            .attr("stroke", "#9e9e9e")
+            .attr("stroke-width", 0.5)
+            .attr("fill", function (d, i) {
                 if (customColors && customColors.length > i) {
                     return customColors[i];
                 }
-                return getFillColor(d, i, data[i].key); 
+                return getFillColor(d, i, data[i].key);
             });
 
         //Append legend text

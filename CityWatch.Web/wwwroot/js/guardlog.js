@@ -4242,13 +4242,13 @@ $(function () {
             wrapper.style.cssText = 'width:1px;height:1px;border:0 none;position:relative;overflow:hidden;';
             try {
                 var dateRange = formatDate($('#vklAudtitFromDate').val()) + ' to ' + formatDate($('#vklAudtitToDate').val());
-                var element = buildStatsPdfElement('Key & Vehicle Logs - Truck Entries', pane, 2, dateRange);
+                var element = buildStatsPdfElement('Key, Visitor, or Vehicle Manual Entries', pane, 2, dateRange);
                 wrapper.appendChild(element);
                 document.body.appendChild(wrapper);
                 loaderProgress.step('Rendering PDF...');
                 html2pdf(element, {
                     margin: [0.2, 0.2, 0.2, 0.2],
-                    filename: formatDate(new Date()) + ' - Key & Vehicle Truck Entries.pdf',
+                    filename: formatDate(new Date()) + ' - Key, Visitor, or Vehicle Manual Entries.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, scrollY: 0 },
                     jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
