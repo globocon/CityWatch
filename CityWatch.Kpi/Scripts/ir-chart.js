@@ -62,8 +62,11 @@ function drawChart(callback, options, data) {
 
     var body = d3.select(document).select("body");
 
+    // "||" not "|": the old bitwise OR turned width 800 into 1012 (800|500). The bar and
+    // column charts overwrite the svg width themselves, but drawPieChart READS it to lay
+    // out the pie and legend, so it must be the real requested width.
     body.append("svg")
-        .attr("width", options.width | 500)
+        .attr("width", options.width || 500)
         .attr("height", 320);
 
     // 1 = Pie chart 2 = Bar chart 3 = Column chart (vertical, time-ordered)
