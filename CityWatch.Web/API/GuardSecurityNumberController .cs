@@ -12,32 +12,23 @@ using CityWatch.Web.Pages.Incident;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.SignalR;
 using CityWatch.Common.Models;
-using CityWatch.Data.Services;
 using ConvertApiDotNet;
-using Dropbox.Api.Files;
-
-//using iText.Kernel.Geom;
 using iText.Layout;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Emit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Office.Interop.Access;
 using MimeKit;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -49,10 +40,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
-using static Dropbox.Api.TeamLog.SpaceCapsType;
 using CityWatch.Data;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 
 namespace CityWatch.Web.API
@@ -4045,6 +4033,8 @@ namespace CityWatch.Web.API
             }
         }
 
+        #region "Pcar Route"
+
         [HttpGet("GetPcarDetails")]
         public IActionResult GetPcarDetails(string deviceId, string? date = null)
         {
@@ -4057,7 +4047,7 @@ namespace CityWatch.Web.API
                 targetDate = parsedDate;
             }
 
-            var result = _viewDataService.GetPcarDetailsFromDevice(deviceId, targetDate);
+            var result = _appConfigurationProvider.GetPcarDetails(deviceId, targetDate);
 
             if (!result.Success)
                 return BadRequest(result);
@@ -4065,9 +4055,63 @@ namespace CityWatch.Web.API
             return Ok(result);
         }
 
+        [HttpPost("CancelOrDelegateVisit")]
+        public async Task<IActionResult> CancelOrDelegateVisit([FromBody] VisitSaveDto visit)
+        {
+            if (visit.VisitId == 0)
+            {
+                return BadRequest(new { Success = false, Message = "Invalid visit." });
+            }
 
-        [HttpPost]
-        [Route("SaveVisitTime")]
+            try
+            {
+                var visitdetails = _context.PcarRouteDailyVisits.FirstOrDefault(x => x.Id == visit.VisitId && x.SmartWandId == visit.SmartWandId);
+                if (visitdetails != null)
+                {
+                    visitdetails.Status = PcarVisitStatusEnum.CancelledOrDelegated;
+                    await _context.SaveChangesAsync();
+
+                    var history = new PcarVisitHistory
+                    {
+                        VisitId = visit.VisitId,
+                        SmartWandId = visit.SmartWandId,
+                        SiteId = visit.SiteId,
+                        Action = PcarVisitStatusEnum.CancelledOrDelegated.ToString(),
+                        ServerUtcTime = DateTime.UtcNow,
+                        EventDateTimeLocal = visit.EventDateTimeLocal,
+                        EventDateTimeLocalWithOffset = visit.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = visit.EventDateTimeZone,
+                        EventDateTimeZoneShort = visit.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = visit.EventDateTimeUtcOffsetMinute,
+                        EventMobileUtcDateTime = visit.EventMobileUtcDateTime,
+                        CreatedAt = DateTime.Now
+                    };
+
+                    _context.PcarVisitHistory.Add(history);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new
+                    {
+                        Success = true,
+                        Message = "Visit cancelled successfully.",
+                        Data = visitdetails
+                    });
+                }
+
+                return Ok(new
+                {
+                    Success = false,
+                    Message = "Visit not found.",
+                    Data = visitdetails
+                });
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost("SaveVisitTime")]
         public async Task<IActionResult> SaveVisitTime([FromBody] VisitSaveDto dto)
         {
             if (dto == null)
@@ -4075,95 +4119,193 @@ namespace CityWatch.Web.API
                 return BadRequest(new { Success = false, Message = "Invalid request" });
             }
 
+            // if dto.VisitId == 0 and current smartwand id != dto.smartwandid and status == PcarVisitStatusEnum.Accepted
+
             try
             {
                 var visitStatus = dto.Status;
-                int? pushedToId = dto.PushedTo;
-                if (pushedToId.HasValue || visitStatus == Data.Enums.PcarVisitStatusEnum.PushedToPcar)
-                {
-                    visitStatus = Data.Enums.PcarVisitStatusEnum.PushedToPcar;
-                }
-                else if (visitStatus == Data.Enums.PcarVisitStatusEnum.Completed || 
-                         visitStatus == Data.Enums.PcarVisitStatusEnum.InProgress || 
-                         visitStatus == null)
+
+                if (visitStatus == PcarVisitStatusEnum.Completed ||
+                         visitStatus == PcarVisitStatusEnum.InProgress ||
+                         visitStatus == PcarVisitStatusEnum.Assigned)
                 {
                     if (!string.IsNullOrEmpty(dto.TimeOn) && !string.IsNullOrEmpty(dto.TimeOff))
                     {
-                        visitStatus = Data.Enums.PcarVisitStatusEnum.Completed;
+                        visitStatus = PcarVisitStatusEnum.Completed;
                     }
                     else if (!string.IsNullOrEmpty(dto.TimeOn) && string.IsNullOrEmpty(dto.TimeOff))
                     {
-                        visitStatus = Data.Enums.PcarVisitStatusEnum.InProgress;
+                        visitStatus = PcarVisitStatusEnum.InProgress;
                     }
                 }
 
-                var visit = new PcarRouteDailyVisits
+                if (dto.VisitId == 0 && visitStatus == PcarVisitStatusEnum.Accepted)
                 {
-                    SmartWandId = dto.SmartWandId,
-                    SiteId = dto.SiteId,
-                    GuardId = dto.GuardId,
-
-                    LoginUserId = dto.LoginUserId,
-                    LoginSiteId = dto.LoginSiteId,
-
-                    VisitName = dto.VisitName,
-                    VisitNumber = dto.VisitNumber,
-                    DayName = dto.DayName,
-
-                    PcarRouteId = dto.PcarRouteId,
-                    PcarRouteDetailsId = dto.PcarRouteDetailsId,
-
-                    TimeOn = dto.TimeOn,
-                    TimeOff = dto.TimeOff,
-
-                    GpsCoordinates = dto.GpsCoordinates,
-                    CreatedAt = dto.TargetDate ?? DateTime.Now,
-                    Status = visitStatus,
-                    PushedTo = pushedToId
-                };
-
-                await _guardLogDataProvider.SavePcarSaveVisitTimeAsync(visit);
-
-
-                return Ok(new
-                {
-                    Success = true,
-                    Message = "Saved successfully",
-                    Data = visit
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = "Error saving data: " + ex.Message
-                });
-            }
-        }
-
-
-        [HttpGet("GetPcarRoutes")]
-        public IActionResult GetPcarRoutes(int clientSiteId)
-        {
-            try
-            {
-                var patrolCars = _viewDataService.GetClientSiteSmartWands(clientSiteId)
-                    .Select(x => new
+                    //Mark current record as [IsVisitPickedUp] true for [ParentVisitId]
+                    var ParentVisit = _context.PcarRouteDailyVisits.FirstOrDefault(x => x.Id == dto.ParentVisitId);
+                    if (ParentVisit != null)
                     {
-                        Id = Convert.ToInt32(x.Id),
-                        Pcarroutename = $"{x.SmartWandId} - {x.PhoneNumber}"
-                    })
-                    .ToList();
+                        if(ParentVisit.IsVisitPickedUp != null && ParentVisit.IsVisitPickedUp)
+                        {
+                            return Ok(new
+                            {
+                                Success = false,
+                                RefreshData = true,
+                                Message = "Task already pickedup by another Patrol car."
+                            });
+                        }
+                        ParentVisit.IsVisitPickedUp = true;
+                        var newVisit = new PcarRouteDailyVisits()
+                        {
+                            SmartWandId = dto.SmartWandId,
+                            SiteId = dto.SiteId,
+                            GuardId = dto.GuardId,
+                            LoginUserId = dto.LoginUserId,
+                            LoginSiteId = dto.LoginSiteId,
+                            VisitName = dto.VisitName,
+                            VisitNumber = dto.VisitNumber,
+                            DayName = dto.DayName,
+                            PcarRouteId = ParentVisit.PcarRouteId,
+                            PcarRouteDetailsId = ParentVisit.PcarRouteDetailsId,
+                            TimeOn = dto.TimeOn,
+                            TimeOff = dto.TimeOff,
+                            GpsCoordinates = dto.GpsCoordinates,
+                            Status = visitStatus,
+                            VisitDate = ParentVisit.VisitDate,
+                            ParentVisitId = ParentVisit.Id,
+                            IsVisitPickedUp = false,
+                            CreatedAt = DateTime.Now
+                        };
 
-                return Ok(new { success = true, data = patrolCars });
+                        _context.Add(newVisit);
+                        await _context.SaveChangesAsync();
+
+                        var history = new PcarVisitHistory
+                        {
+                            VisitId = newVisit.Id,
+                            SmartWandId = dto.SmartWandId,
+                            SiteId = dto.SiteId,
+                            Action = visitStatus.ToDisplayName(),
+                            ServerUtcTime = DateTime.UtcNow,
+                            EventDateTimeLocal = dto.EventDateTimeLocal,
+                            EventDateTimeLocalWithOffset = dto.EventDateTimeLocalWithOffset,
+                            EventDateTimeZone = dto.EventDateTimeZone,
+                            EventDateTimeZoneShort = dto.EventDateTimeZoneShort,
+                            EventDateTimeUtcOffsetMinute = dto.EventDateTimeUtcOffsetMinute,
+                            EventMobileUtcDateTime = dto.EventMobileUtcDateTime,
+                            CreatedAt = DateTime.Now
+                        };
+
+                        _context.PcarVisitHistory.Add(history);
+                        await _context.SaveChangesAsync();
+
+                        return Ok(new
+                        {
+                            Success = true,
+                            Message = "Saved successfully",
+                            RefreshData = true,
+                            Data = newVisit
+                        });
+                    }
+
+                    return Ok(new
+                    {
+                        Success = false,
+                        RefreshData = false,
+                        Message = "Failed to save changes."
+                    });
+                }
+                else
+                {
+                    var visit = _context.PcarRouteDailyVisits.FirstOrDefault(x => x.Id == dto.VisitId);
+
+                    bool isNew = false;
+                    if (visit == null)
+                    {
+                        isNew = true;
+                        visit = new PcarRouteDailyVisits
+                        {
+                            SmartWandId = dto.SmartWandId,
+                            SiteId = dto.SiteId,
+                            VisitName = dto.VisitName,
+                            VisitNumber = dto.VisitNumber,
+                            DayName = dto.DayName,
+                            PcarRouteId = dto.PcarRouteId,
+                            PcarRouteDetailsId = dto.PcarRouteDetailsId,
+                            VisitDate = dto.VisitDate,
+                            CreatedAt = DateTime.Now
+                        };
+                    }
+
+                    visit.GuardId = dto.GuardId;
+                    visit.LoginUserId = dto.LoginUserId;
+                    visit.LoginSiteId = dto.LoginSiteId;
+
+                    if (!string.IsNullOrEmpty(dto.TimeOn))
+                    {
+                        visit.TimeOn = dto.TimeOn;
+                    }
+                    if (!string.IsNullOrEmpty(dto.TimeOff))
+                    {
+                        visit.TimeOff = dto.TimeOff;
+                    }
+
+                    visit.GpsCoordinates = dto.GpsCoordinates;
+                    visit.Status = visitStatus;
+                    visit.ParentVisitId = dto.ParentVisitId;
+
+                    if (isNew)
+                    {
+                        _context.PcarRouteDailyVisits.Add(visit);
+                    }
+                    else
+                    {
+                        _context.PcarRouteDailyVisits.Update(visit);
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    var history = new PcarVisitHistory
+                    {
+                        VisitId = visit.Id,
+                        SmartWandId = dto.SmartWandId,
+                        SiteId = dto.SiteId,
+                        Action = visitStatus.ToDisplayName(),
+                        ServerUtcTime = DateTime.UtcNow,
+                        EventDateTimeLocal = dto.EventDateTimeLocal,
+                        EventDateTimeLocalWithOffset = dto.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = dto.EventDateTimeZone,
+                        EventDateTimeZoneShort = dto.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = dto.EventDateTimeUtcOffsetMinute,
+                        EventMobileUtcDateTime = dto.EventMobileUtcDateTime,
+                        CreatedAt = DateTime.Now
+                    };
+
+                    _context.PcarVisitHistory.Add(history);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new
+                    {
+                        Success = true,
+                        RefreshData = true,
+                        Message = "Saved successfully",
+                        Data = visit
+                    });
+                }
+
+
+
+                
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return BadRequest(new { Success = false,
+                    RefreshData = false,
+                    Message = ex.Message });
             }
         }
 
+        #endregion "Pcar Route"
 
         [HttpGet("GetStates")]
         public IActionResult GetStates()
@@ -5962,9 +6104,9 @@ namespace CityWatch.Web.API
                 // First try to find a current or future shift (closest to today)
                 var shift = await _context.RosterSchedules
                     .Include(x => x.Callsign)
-                    .Where(x => x.ClientSiteId == siteId && 
-                                (x.GuardId == guardId || x.ReliefGuardId == guardId) && 
-                                !x.IsDeleted && 
+                    .Where(x => x.ClientSiteId == siteId &&
+                                (x.GuardId == guardId || x.ReliefGuardId == guardId) &&
+                                !x.IsDeleted &&
                                 x.CallsignId != null &&
                                 x.ShiftStart.Date >= DateTime.Today)
                     .OrderBy(x => x.ShiftStart)
@@ -5975,9 +6117,9 @@ namespace CityWatch.Web.API
                 {
                     shift = await _context.RosterSchedules
                         .Include(x => x.Callsign)
-                        .Where(x => x.ClientSiteId == siteId && 
-                                    (x.GuardId == guardId || x.ReliefGuardId == guardId) && 
-                                    !x.IsDeleted && 
+                        .Where(x => x.ClientSiteId == siteId &&
+                                    (x.GuardId == guardId || x.ReliefGuardId == guardId) &&
+                                    !x.IsDeleted &&
                                     x.CallsignId != null &&
                                     x.ShiftStart.Date < DateTime.Today)
                         .OrderByDescending(x => x.ShiftStart)
@@ -6019,31 +6161,32 @@ namespace CityWatch.Web.API
     }
 
 
-
     public class VisitSaveDto
     {
+        public int VisitId { get; set; }
         public int SmartWandId { get; set; }
         public int SiteId { get; set; }
         public string DayName { get; set; }
-
         public int PcarRouteId { get; set; }
         public int PcarRouteDetailsId { get; set; }
-
         public string VisitName { get; set; }
         public int VisitNumber { get; set; }
-
         public int GuardId { get; set; }
-
-        // NEW FIELDS
         public string GpsCoordinates { get; set; }
         public int LoginUserId { get; set; }
         public int LoginSiteId { get; set; }
-
         public string TimeOn { get; set; }
         public string TimeOff { get; set; }
-        public Data.Enums.PcarVisitStatusEnum? Status { get; set; }
-        public int? PushedTo { get; set; }
-        public DateTime? TargetDate { get; set; }
+        public PcarVisitStatusEnum Status { get; set; }
+        public DateTime VisitDate { get; set; }
+        public int? ParentVisitId { get; set; }
+        public DateTime? EventDateTimeLocal { get; set; }
+        public DateTimeOffset? EventDateTimeLocalWithOffset { get; set; }
+        public string EventDateTimeZone { get; set; }
+        public string EventDateTimeZoneShort { get; set; }
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
+        public DateTime? EventMobileUtcDateTime { get; set; }
+        public bool IsVisitPickedUp { get; set; }
     }
 
 

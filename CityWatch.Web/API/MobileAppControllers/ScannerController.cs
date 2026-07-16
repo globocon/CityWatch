@@ -243,6 +243,20 @@ namespace CityWatch.Web.API
             }
         }
 
+        [HttpPost("GetSmartWandByDeviceId")]
+        public IActionResult GetSmartWandByDeviceId([FromBody] string deviceid)
+        {
+            try
+            {
+                var res = _viewDataService.GetSmartWandIdFromDeviceId(deviceid);
+                return Ok(res);
+            }
+            catch (Exception)
+            {
+                return Ok(0);
+            }
+        }
+
         [HttpGet("GetClientSiteSmartWands")]
         public IActionResult GetClientSiteSmartWands(int siteId)
         {

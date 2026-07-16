@@ -243,6 +243,7 @@ namespace CityWatch.Data
         public DbSet<DailyWandFq> DailyWandFq { get; set; }
 
         public DbSet<PcarRouteDailyVisits> PcarRouteDailyVisits { get; set; }
+        public DbSet<Models.PcarVisitHistory> PcarVisitHistory { get; set; }
         
 
 

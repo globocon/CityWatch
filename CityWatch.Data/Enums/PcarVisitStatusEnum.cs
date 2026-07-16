@@ -4,13 +4,19 @@ namespace CityWatch.Data.Enums
 {
     public enum PcarVisitStatusEnum
     {
+        [Display(Name = "Assigned")]
+        Assigned = 1,
+
+        [Display(Name = "Accepted")]
+        Accepted = 2,
+
         [Display(Name = "InProgress")]
-        InProgress = 1,
+        InProgress = 3,
 
         [Display(Name = "Completed")]
-        Completed = 2,
+        Completed = 4,
 
-        [Display(Name = "Pushed To PCAR")]
-        PushedToPcar = 3
+        [Display(Name = "Cancelled or Delegated")]
+        CancelledOrDelegated = 5
     }
 }

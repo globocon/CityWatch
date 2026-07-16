@@ -212,6 +212,7 @@ namespace CityWatch.Web.Services
         public List<DropdownItem> GetClientSiteSmartWandListForMobile(int clientSiteId);
         public SmartWandDeviceRegister CheckAndRegisterDeviceWithSmartWand(SmartWandDeviceRegister DeviceToRegister);
         public bool CheckIfSmartWandIsDeRegisteredAsync(string DeviceIdToCheck);
+        public int GetSmartWandIdFromDeviceId(string DeviceIdToCheck);
         public List<Dictionary<string, string>> GetCustomFieldLogs(int logBookId, int clientSiteId);
         public bool SaveCustomFieldLog(int logBookId, Dictionary<string, string> records);
         public List<PatrolCarLog> GetPatrolCarLogs(int logBookId, int clientSiteId);
@@ -223,7 +224,6 @@ namespace CityWatch.Web.Services
         public void DeleteMobileAppUpgrade(int id);
         public void UpdateDownloadCount(int id);
         public void RollBackToVersion(int recordId);
-        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId, DateTime targetDate);
         public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key);
         public List<Guard> GetLicenseAndCompliancForGuards(int guardId);
         public List<GuardComplianceAndLicense> GetGuardLicenseAndComplianceData(int guardId);
@@ -3109,6 +3109,23 @@ namespace CityWatch.Web.Services
             return smartWand == null; // true = deregistered
         }
 
+        public int GetSmartWandIdFromDeviceId(string DeviceIdToCheck)
+        {
+            // Get Details of SmartWand from ClientSiteSmartWand table
+
+            if (string.IsNullOrWhiteSpace(DeviceIdToCheck))
+                return 0; // invalid deviceId
+
+            var allSmartWands = _clientSiteWandDataProvider.GetClientSiteSmartWands();
+
+            if (allSmartWands == null)
+                return 0; // no data available means treat as deregistered
+
+            var smartWand = allSmartWands.FirstOrDefault(x => x.DeviceId != null && x.DeviceId.Trim() == DeviceIdToCheck.Trim());
+
+            return smartWand.Id; // true = registered
+        }
+
         public Dictionary<string, string> GetCustomFieldConfig(int clientSiteId)
         {
 
@@ -3254,12 +3271,7 @@ namespace CityWatch.Web.Services
             _appConfigurationProvider.RollBackToVersion(recordId);
         }
 
-
-        public PcarRouteResult GetPcarDetailsFromDevice(string deviceId, DateTime targetDate)
-        {
-            return _appConfigurationProvider.GetPcarDetails(deviceId, targetDate);
-        }
-
+        
         public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key)
         {
             bool AccessPermission = false;
