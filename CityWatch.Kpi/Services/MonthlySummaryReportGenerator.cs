@@ -585,15 +585,17 @@ namespace CityWatch.Kpi.Services
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
             frontCoverTable.AddCell(coverPageReleaseDate);
 
+            // Sized by width (height scales with the aspect ratio) so the banner keeps a small
+            // side padding on the A4 cover the way the previous banner did, whatever its shape.
             var coverPageImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "cwsbanner.png")))
-               .SetHeight(250)
+               .SetWidth(510)
                .SetHorizontalAlignment(HorizontalAlignment.CENTER);
             var cellCoverPageImage = new Cell()
                 .Add(coverPageImage)
                 .SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY))
                 .SetBorder(Border.NO_BORDER)
-                .SetPaddingTop(40f)
-                .SetPaddingBottom(40f);
+                .SetPaddingTop(25f)
+                .SetPaddingBottom(25f);
             frontCoverTable.AddCell(cellCoverPageImage);
 
             var isoImage = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "ISOv3.jpg")))
@@ -602,7 +604,7 @@ namespace CityWatch.Kpi.Services
             var cellIsoImage = new Cell()
                .Add(isoImage)
                .SetBorder(Border.NO_BORDER)
-               .SetPaddingTop(40f)
+               .SetPaddingTop(20f)
                .SetPaddingRight(40f);
             frontCoverTable.AddCell(cellIsoImage);
 
