@@ -78,6 +78,10 @@ namespace CityWatch.Web.Pages.Admin
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly EmailOptions _EmailOptions;
         private readonly CityWatchDbContext _context;
+
+        /* p7-141 Multimedia uploads accept images / video / audio in addition to the existing document types */
+        public const string MultimediaFileExtensions = ".pdf,.docx,.xlsx,.mp4,.jpg,.jpeg,.png,.gif,.bmp,.webp,.webm,.mov,.avi,.mp3,.wav";
+
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -579,14 +583,27 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());
         }
-        public JsonResult OnGetStaffDocsUsingType(int type, string query,string companyProfile)
+        public JsonResult OnGetStaffDocsUsingType(int type, string query,string companyProfile, int? categoryId = null)
         {
+            /* p7-141 categoryId is optional - types without categories keep the existing behaviour */
+            var staffDocs = categoryId.HasValue
+                ? _configDataProvider.GetStaffDocumentsUsingTypeAndCategory(type, query, categoryId)
+                : _configDataProvider.GetStaffDocumentsUsingType(type, query);
+
             if(companyProfile!=null)
             {
-                return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query).Where(x=>x.SubDomainId == Convert.ToInt32(companyProfile)));
+                return new JsonResult(staffDocs.Where(x=>x.SubDomainId == Convert.ToInt32(companyProfile)));
             }
-            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type, query));
+            return new JsonResult(staffDocs);
         }
+
+        /* p7-141 Multimedia & Training categories-start */
+        public JsonResult OnGetStaffDocumentCategories(int type)
+        {
+            return new JsonResult(_configDataProvider.GetStaffDocumentCategories(type)
+                .Select(x => new { x.Id, x.Name }));
+        }
+        /* p7-141 Multimedia & Training categories-end */
 
         [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDoc()
@@ -646,8 +663,14 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
+                        var type = Convert.ToInt32(Request.Form["type"]);
+
                         // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
-                        if (".pdf,.docx,.xlsx,.mp4".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                        // p7-141 - Multimedia additionally accepts images and other video/audio formats
+                        var allowedExtensions = type == (int)StaffDocumentType.Multimedia
+                            ? MultimediaFileExtensions
+                            : ".pdf,.docx,.xlsx,.mp4";
+                        if (allowedExtensions.IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
 
                         var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
@@ -660,12 +683,18 @@ namespace CityWatch.Web.Pages.Admin
                         }
 
                         var documentId = Convert.ToInt32(Request.Form["doc-id"]);
-                        var type = Convert.ToInt32(Request.Form["type"]);
                         int subdomainid = 0;
                         var domain = Request.Form["profile"].ToString();
                         if (Request.Form["profile"].ToString()!=null && Request.Form["profile"].ToString() !="")
                         {
                             subdomainid = Convert.ToInt32(Request.Form["profile"]);
+                        }
+                        /* p7-141 category is only sent by the modules that use categories (Training, Multimedia) */
+                        int? categoryId = null;
+                        var category = Request.Form["category"].ToString();
+                        if (!string.IsNullOrEmpty(category) && category != "0")
+                        {
+                            categoryId = Convert.ToInt32(category);
                         }
                         _configDataProvider.SaveStaffDocument(new StaffDocument()
                         {
@@ -673,7 +702,8 @@ namespace CityWatch.Web.Pages.Admin
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now,
                             DocumentType = type,
-                            SubDomainId = subdomainid
+                            SubDomainId = subdomainid,
+                            CategoryId = categoryId
 
                         });
 

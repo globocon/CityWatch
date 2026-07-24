@@ -102,6 +102,7 @@ namespace CityWatch.Data
         public DbSet<FeedbackType> FeedbackType { get; set; }
         public DbSet<ReportTemplate> ReportTemplates { get; set; }
         public DbSet<StaffDocument> StaffDocuments { get; set; }
+        public DbSet<StaffDocumentCategory> StaffDocumentCategories { get; set; }
         public DbSet<IncidentReport> IncidentReports { get; set; }
         public DbSet<UserClientSiteAccess> UserClientSiteAccess { get; set; }
         public DbSet<DailyClientSiteKpi> DailyClientSiteKpis { get; set; }

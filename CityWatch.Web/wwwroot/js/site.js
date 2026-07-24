@@ -1,3 +1,20 @@
+/* p7-141 StaffDocuments.DocumentType values shared by the settings and downloads screens */
+const STAFF_DOC_TYPE_COMPANY_SOP = 1;
+const STAFF_DOC_TYPE_TRAINING = 2;
+const STAFF_DOC_TYPE_TEMPLATES_AND_FORMS = 3;
+const STAFF_DOC_TYPE_MULTIMEDIA = 7;
+
+/* Files the built in video player can play - everything else is opened/downloaded in a new tab */
+function isPlayableMediaFile(fileName) {
+    if (!fileName)
+        return false;
+
+    const name = fileName.toLowerCase();
+    return ['.mp4', '.webm', '.mov', '.avi', '.mp3', '.wav'].some(function (extn) {
+        return name.endsWith(extn);
+    });
+}
+
 $(function () {
 
     $('#Report_DateLocation_ClientType').on('change', function () {
@@ -3190,6 +3207,8 @@ $(function () {
     let gridStaffDocsTypeCompanySop;
     let gridStaffDocsTypeTraining;
     let gridStaffDocsTypeTemplatesAndForms;
+    /* p7-141 Multimedia module */
+    let gridStaffDocsTypeMultimedia;
 
 
 
@@ -3355,7 +3374,8 @@ $(function () {
             data: function () {
                 return {
                     query: $('#searchBoxTempAndForms').val(),
-                    companyProfile: $('#report_training_Profile').val()
+                    companyProfile: $('#report_training_Profile').val(),
+                    categoryId: $('#report_training_Category').val() /* p7-141 Training / Fire Training */
                 }; // Include query dynamically
             }
         },
@@ -3502,6 +3522,170 @@ $(function () {
     }
 
 
+
+    /* p7-141 Multimedia module-start : same upload/download flow as the other staff document types */
+    var editManagerstaffDocsButtonRendererMultimedia;
+    editManagerstaffDocsButtonRendererMultimedia = function (value, record, $cell, $displayEl, id, $grid) {
+        var isVideo = isPlayableMediaFile(record.fileName);
+        var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + encodeURIComponent(record.fileName) + '\')" title="Play"><i class="fa fa-play"></i></button>' : '';
+        var data = $grid.data(),
+            $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_multimedia" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+                '<input type="file" name="upload_staff_file_multimedia" accept=".pdf, .docx, .xlsx, .mp4, .jpg, .jpeg, .png, .gif, .bmp, .webp, .webm, .mov, .avi, .mp3, .wav" hidden data-doc-id="' + record.id + '">' +
+                '</form></label>').attr('data-key', id),
+            $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $play = $(playBtn).attr('data-key', id),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_multimedia" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+        $edit.on('click', function (e) {
+            $grid.edit($(this).data('key'));
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        });
+        $delete.on('click', function (e) {
+            $grid.removeRow($(this).data('key'));
+        });
+        $update.on('click', function (e) {
+            $grid.update($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $cancel.on('click', function (e) {
+            $grid.cancel($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $displayEl.empty().append($replace).append($downlaod).append($play).append($edit).append($delete).append($update).append($cancel);
+    }
+
+    gridStaffDocsTypeMultimedia = $('#staff_document_files_type_Multimedia').grid({
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=' + STAFF_DOC_TYPE_MULTIMEDIA,
+            data: function () {
+                return {
+                    query: $('#searchBoxTempAndForms').val(),
+                    companyProfile: $('#report_multimedia_Profile').val(),
+                    categoryId: $('#report_multimedia_Category').val()
+                };
+            }
+        },
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        inlineEditing: { mode: 'command', managementColumn: false },
+        primaryKey: 'id',
+        columns: [
+            { field: 'fileName', title: 'File Name', width: 390 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
+            { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
+            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererMultimedia }
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    if (gridStaffDocsTypeMultimedia) {
+        gridStaffDocsTypeMultimedia.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=UpdateDocumentModuleType',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                if (result.status) {
+                    showStatusNotification(true, 'Updated Successfully');
+                    gridStaffDocsTypeMultimedia.clear();
+                    gridStaffDocsTypeMultimedia.reload();
+                } else {
+                    showStatusNotification(false, 'Please try again');
+                    gridStaffDocsTypeMultimedia.edit(id);
+                }
+            }).fail(function () {
+                console.log('error');
+            });
+        });
+    }
+
+    $('#staff_document_files_type_Multimedia').on('click', '.delete_staff_file_multimedia', function () {
+        if (confirm('Are you sure want to delete this file?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteStaffDoc',
+                data: { id: $(this).attr('data-doc-id') },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridStaffDocsTypeMultimedia.reload();
+            }).fail(function () {
+                console.log('error')
+            });
+        }
+    });
+
+    $('#staff_document_files_type_Multimedia').on('change', 'input[name="upload_staff_file_multimedia"]', function () {
+        uploadStafDocUsingType($(this), true, STAFF_DOC_TYPE_MULTIMEDIA);
+    });
+
+    $('#add_staff_document_file_multimedia').on('change', function () {
+        uploadStafDocUsingType($(this), false, STAFF_DOC_TYPE_MULTIMEDIA);
+    });
+
+    /* Category dropdowns (Training / Multimedia) are filled from the StaffDocumentCategories lookup */
+    function loadStaffDocCategories(documentType, $select, onLoaded) {
+        if ($select.length === 0)
+            return;
+
+        $.ajax({
+            url: '/Admin/Settings?handler=StaffDocumentCategories&type=' + documentType,
+            type: 'GET'
+        }).done(function (result) {
+            const selectedValue = $select.val();
+            $select.empty();
+            $.each(result, function (i, item) {
+                $select.append($('<option></option>').attr('value', item.id).text(item.name));
+            });
+            if (selectedValue) {
+                $select.val(selectedValue);
+            }
+            if (typeof onLoaded === 'function') {
+                onLoaded();
+            }
+        }).fail(function () {
+            console.log('error');
+        });
+    }
+
+    if ($('#report_training_Category').length > 0) {
+        loadStaffDocCategories(STAFF_DOC_TYPE_TRAINING, $('#report_training_Category'), function () {
+            gridStaffDocsTypeTraining.clear();
+            gridStaffDocsTypeTraining.reload();
+        });
+    }
+    if ($('#report_multimedia_Category').length > 0) {
+        loadStaffDocCategories(STAFF_DOC_TYPE_MULTIMEDIA, $('#report_multimedia_Category'), function () {
+            gridStaffDocsTypeMultimedia.clear();
+            gridStaffDocsTypeMultimedia.reload();
+        });
+    }
+
+    $('#report_training_Category').on('change', function () {
+        gridStaffDocsTypeTraining.clear();
+        gridStaffDocsTypeTraining.reload();
+    });
+
+    $('#report_multimedia_Profile,#report_multimedia_Category').on('change', function () {
+        gridStaffDocsTypeMultimedia.clear();
+        gridStaffDocsTypeMultimedia.reload();
+    });
+    /* p7-141 Multimedia module-end */
 
     function staffDocsButtonRenderer(value, record) {
         var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
@@ -3677,7 +3861,14 @@ $(function () {
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
         // 07-05-2026 - MP4 support added to allow video SOPs and Training resources
-        if (!fileExtn || '.pdf,.docx,.xlsx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
+        // p7-141 - Multimedia additionally accepts images and other video/audio formats
+        if (type == STAFF_DOC_TYPE_MULTIMEDIA) {
+            if (!fileExtn || '.pdf,.docx,.xlsx,.mp4,.jpg,.jpeg,.png,.gif,.bmp,.webp,.webm,.mov,.avi,.mp3,.wav'.indexOf(fileExtn.toLowerCase()) < 0) {
+                showModal('Unsupported file type. Please upload a document, image, video or audio file');
+                return false;
+            }
+        }
+        else if (!fileExtn || '.pdf,.docx,.xlsx,.mp4'.indexOf(fileExtn.toLowerCase()) < 0) {
             showModal('Unsupported file type. Please upload a .pdf, .docx, .xlsx or .mp4 file');
             return false;
         }
@@ -3690,9 +3881,14 @@ $(function () {
         }
         else if (type == 2) {
             fileForm.append('profile', $('#report_training_Profile').val());
+            fileForm.append('category', $('#report_training_Category').val()); /* p7-141 */
         }
         else if (type == 3) {
             fileForm.append('profile', $('#report_templatesandforms_Profile').val());
+        }
+        else if (type == STAFF_DOC_TYPE_MULTIMEDIA) {
+            fileForm.append('profile', $('#report_multimedia_Profile').val());
+            fileForm.append('category', $('#report_multimedia_Category').val()); /* p7-141 */
         }
         else {
             fileForm.append('profile', '');
@@ -3723,6 +3919,7 @@ $(function () {
                 gridStaffDocsTypeCompanySop.reload();
                 gridStaffDocsTypeTraining.reload();
                 gridStaffDocsTypeTemplatesAndForms.reload();
+                gridStaffDocsTypeMultimedia.reload(); /* p7-141 */
             }
             showStatusNotification(data.success, data.message);
         }).fail(function () {
@@ -3812,7 +4009,13 @@ $(function () {
     let gridFileDownloads;
     gridFileDownloads = $('#file_downloads').grid({
         /* dataSource: '/Admin/Settings?handler=StaffDocs',*/
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=' + type,
+        dataSource: {
+            url: '/Admin/Settings?handler=StaffDocsUsingType&&type=' + type,
+            /* p7-141 category tabs (Training / Multimedia) filter the same file list */
+            data: function () {
+                return { categoryId: $('#sop_catg_id').val() };
+            }
+        },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -3823,10 +4026,28 @@ $(function () {
     });
 
     function fileDownloadsButtonRenderer(value, record) {
+        /* p7-141 View opens/plays the file, Download saves it - both go through guard authentication */
+        var viewLabel = isPlayableMediaFile(record.fileName) ? 'Play' : 'View';
+        var viewIcon = isPlayableMediaFile(record.fileName) ? 'fa-play' : 'fa-eye';
         return '<div class="button-container-div">' +
+            '<button id="btnSopView" data-sop-filename="' + record.fileName + '" class="btn btn-outline-secondary ml-2"><i class="fa ' + viewIcon + ' mr-2"></i>' + viewLabel + '</button>' +
             '<button id="btnSopDownload" data-sop-filename="' + record.fileName + '" class="btn btn-outline-primary ml-2"><i class="fa fa-download mr-2"></i>Download</button>' +
             '</div>'
     }
+
+    /* p7-141 category tabs */
+    $('#downloadCategoryTabs').on('click', '.nav-link', function (e) {
+        e.preventDefault();
+        const tab = $(this);
+        if (tab.hasClass('active'))
+            return;
+
+        $('#downloadCategoryTabs .nav-link').removeClass('active');
+        tab.addClass('active');
+        $('#sop_catg_id').val(tab.attr('data-category-id'));
+        gridFileDownloads.clear();
+        gridFileDownloads.reload();
+    });
 
     $('#mdlAuthGuardForSopDownload').on('show.bs.modal', function (event) {
         $('#GuardDownloadSop_SecurityNo').val('');
@@ -3835,9 +4056,10 @@ $(function () {
         $('#sop_filename').val('');
     });
 
-    $('#file_downloads tbody').on('click', '#btnSopDownload', function () {
+    $('#file_downloads tbody').on('click', '#btnSopDownload, #btnSopView', function () {
         const btn = $(this);
         $('#sop_filename').val(btn.attr('data-sop-filename'));
+        $('#sop_file_action').val(btn.attr('id') === 'btnSopView' ? 'view' : 'download');
         $('#AuthGuardForSopDwnldValidationSummary').html('');
         $('#mdlAuthGuardForSopDownload').modal('show');
     });
@@ -3847,6 +4069,11 @@ $(function () {
         const btn = $(this);
         var filename_todownload = $('#sop_filename').val();
         var Catg_todownload = $('#sop_catg_type').val();
+        /* p7-141 record the selected category in the audit log as well */
+        var selectedCategory = $('#downloadCategoryTabs .nav-link.active').text();
+        if (selectedCategory) {
+            Catg_todownload = Catg_todownload + ' - ' + selectedCategory;
+        }
 
         $('#loader').show();
 
@@ -3893,7 +4120,13 @@ $(function () {
                 //a.click();
                 //a.remove();
                 var URL = "/StaffDocs/" + encodeURIComponent(filename_todownload);
-                window.open(URL, "_blank")
+                /* p7-141 videos/audio play in the existing player, everything else opens in a new tab */
+                if ($('#sop_file_action').val() === 'view' && isPlayableMediaFile(filename_todownload)) {
+                    openVideoPlayer(URL);
+                }
+                else {
+                    window.open(URL, "_blank")
+                }
             }
             else {
                 $('#AuthGuardForSopDwnldValidationSummary').html(result.message);
@@ -5472,6 +5705,7 @@ $(function () {
         gridSchedules.reload({ query: query });
         gridStaffDocsTypeCompanySop.reload({ query: query });
         gridStaffDocsTypeTraining.reload({ query: query });
+        gridStaffDocsTypeMultimedia.reload({ query: query }); /* p7-141 */
         gridSchedulesAlarm.reload({ query: query });
 
     });
@@ -7944,6 +8178,7 @@ if ($('#report_module_types_irtemplate').val() == 1) {
     $('#incident_report_pdf_template').show();
     $('#company_sop').hide();
     $('#training').hide();
+    $('#multimedia').hide(); /* p7-141 */
     $('#templatesandforms').hide();
     $('#clientSOP').hide();
     $('#ClientSOPAlarm').hide();
@@ -7960,6 +8195,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#incident_report_pdf_template').show();
         $('#company_sop').hide();
         $('#training').hide();
+        $('#multimedia').hide(); /* p7-141 */
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').hide();
@@ -7972,6 +8208,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#incident_report_pdf_template').hide();
         $('#company_sop').show();
         $('#training').hide();
+        $('#multimedia').hide(); /* p7-141 */
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').show();
@@ -7983,6 +8220,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#incident_report_pdf_template').hide();
         $('#company_sop').hide();
         $('#training').show();
+        $('#multimedia').hide(); /* p7-141 */
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').show();
@@ -7993,6 +8231,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#incident_report_pdf_template').hide();
         $('#company_sop').hide();
         $('#training').hide();
+        $('#multimedia').hide(); /* p7-141 */
         $('#templatesandforms').show();
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').show();
@@ -8004,6 +8243,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#incident_report_pdf_template').hide();
         $('#company_sop').hide();
         $('#training').hide();
+        $('#multimedia').hide(); /* p7-141 */
         $('#templatesandforms').hide();
         $('#clientSOP').show();
         $('#searchBoxTempAndForms').show();
@@ -8015,6 +8255,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#incident_report_pdf_template').hide();
         $('#company_sop').hide();
         $('#training').hide();
+        $('#multimedia').hide(); /* p7-141 */
         $('#templatesandforms').hide();
         $('#clientSOP').hide();
         $('#searchBoxTempAndForms').show();
@@ -8022,6 +8263,19 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#ClientSOPAlarm').show();
 
     }
+    /* p7-141 Multimedia module-start */
+    else if ($('#report_module_types_irtemplate').val() == 7) {
+        $('#incident_report_pdf_template').hide();
+        $('#company_sop').hide();
+        $('#training').hide();
+        $('#multimedia').show();
+        $('#templatesandforms').hide();
+        $('#clientSOP').hide();
+        $('#searchBoxTempAndForms').show();
+        $('#btnGroupAddon2').show();
+        $('#ClientSOPAlarm').hide();
+    }
+    /* p7-141 Multimedia module-end */
     else {
         $('#searchBoxTempAndForms').hide();
         $('#btnGroupAddon2').hide();
