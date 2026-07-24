@@ -16,6 +16,9 @@ namespace CityWatch.Web.Pages.Incident
         private readonly ILogger<DownloadsModel> _logger;
         private readonly IConfigDataProvider _configDataProvider;
         public string ClientNameTitle { get; set; }
+
+        /* p7-141 used by the page to render the category tabs (Training / Multimedia) */
+        public IConfigDataProvider ConfigDataProvider { get { return _configDataProvider; } }
         public DownloadsModel(IGuardDataProvider guardDataProvider,
            IGuardLogDataProvider guardLogDataProvider,
              ILogger<DownloadsModel> logger, IConfigDataProvider configDataProvider)

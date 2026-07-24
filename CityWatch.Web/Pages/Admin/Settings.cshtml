@@ -361,10 +361,12 @@
                         <select class="form-control" id="report_module_types_irtemplate">
                             @*  <option value="">None</option> *@
                             <option value="1" selected>Details of Incident Report Pdf Template</option>
-                            <option value="6">Client(Alarm) SOP</option>
-                            <option value="5">Client(Site) SOP</option>
+                            <option value="6">Client (Alarm) SOP</option>
+                            <option value="5">Client (Site) SOP</option>
                             <option value="2">Company SOP</option>
                             <option value="3">Training</option>
+                            @* p7-141 Multimedia module *@
+                            <option value="7">Multimedia</option>
                             <option value="4">Templates & Forms</option>
                         </select>
                     </div>
@@ -514,6 +516,13 @@
                             </select>
                         </div>
                     </div>
+                    @* p7-141 Training categories (Training / Fire Training) *@
+                    <div class="row mb-2">
+                        <label class="col-form-label col-md-3">Category</label>
+                        <div class="col-md-4 ">
+                            <select class="form-control" id="report_training_Category"></select>
+                        </div>
+                    </div>
                    <div class="row mb-2">
                         <div class="col-md-6 position-relative">
                             <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
@@ -534,6 +543,8 @@
                         </div>
                     </div>
                 </div>
+                @* p7-141 Multimedia module *@
+                <partial name="_MultimediaDocsSettings" model="Model" />
                 <div  id="templatesandforms">
                     <div class="row mb-2">
 
@@ -578,7 +589,7 @@
 
                 <div class="row mb-2" id="clientSOP">
                     <div class="col-md-9 position-relative">
-                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
+                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client (Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
                     </div>
                     <div class="col-md-3 text-right">
                         @* 07-05-2026 - MP4 support added to allow video SOPs *@
@@ -599,7 +610,7 @@
 
                 <div class="row mb-2" id="ClientSOPAlarm">
                     <div class="col-md-9 position-relative">
-                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
+                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client (Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
                     </div>
                     <div class="col-md-3 text-right">
                         <button class="btn btn-success mb-3" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modalAlarm"><i class="fa fa-plus mr-2"></i>Add File</button>
@@ -2245,9 +2256,11 @@
                                 <select class="form-control" id="report_module_types_irtemplate">
                                     @*  <option value="">None</option> *@
                                     <option value="1" selected>Details of Incident Report Pdf Template</option>
-                                    <option value="5">Client(Site) SOP</option>
+                                    <option value="5">Client (Site) SOP</option>
                                     <option value="2">Company SOP</option>
                                     <option value="3">Training</option>
+                                    @* p7-141 Multimedia module *@
+                                    <option value="7">Multimedia</option>
                                     <option value="4">Templates & Forms</option>
                                 </select>
                             </div>
@@ -2396,6 +2409,13 @@
                         </div>
                         
                     </div>
+                    @* p7-141 Training categories (Training / Fire Training) *@
+                    <div class="row mb-2">
+                        <label class="col-form-label col-md-3">Category</label>
+                        <div class="col-md-4 ">
+                            <select class="form-control" id="report_training_Category"></select>
+                        </div>
+                    </div>
                     <div class="row mb-2">
                             <div class="col-md-6 position-relative">
                                 <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
@@ -2416,6 +2436,8 @@
                                 </div>
                             </div>
                         </div>
+                        @* p7-141 Multimedia module *@
+                        <partial name="_MultimediaDocsSettings" model="Model" />
                         <div  id="templatesandforms">
                             <div class="row mb-2">
 
@@ -2460,7 +2482,7 @@
 
                         <div class="row mb-2" id="clientSOP">
                             <div class="col-md-9 position-relative">
-                                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
+                                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client (Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
                             </div>
                             <div class="col-md-3 text-right">
                                 <button class="btn btn-success mb-3" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
@@ -3887,9 +3909,11 @@
                                 <select class="form-control" id="report_module_types_irtemplate">
                                     @*  <option value="">None</option> *@
                                     <option value="1" selected>Details of Incident Report Pdf Template</option>
-                                    <option value="5">Client(Site) SOP</option>
+                                    <option value="5">Client (Site) SOP</option>
                                     <option value="2">Company SOP</option>
                                     <option value="3">Training</option>
+                                    @* p7-141 Multimedia module *@
+                                    <option value="7">Multimedia</option>
                                     <option value="4">Templates & Forms</option>
                                 </select>
                             </div>
@@ -4037,6 +4061,13 @@
                                     </select>
                                 </div>
                             </div>
+                            @* p7-141 Training categories (Training / Fire Training) *@
+                            <div class="row mb-2">
+                                <label class="col-form-label col-md-3">Category</label>
+                                <div class="col-md-4 ">
+                                    <select class="form-control" id="report_training_Category"></select>
+                                </div>
+                            </div>
                             <div class="row mb-2">
                                 <div class="col-md-6 position-relative">
                                     <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
@@ -4058,6 +4089,8 @@
                                 </div>
                             </div>
                         </div>
+                        @* p7-141 Multimedia module *@
+                        <partial name="_MultimediaDocsSettings" model="Model" />
                         <div  id="templatesandforms">
                             <div class="row mb-2">
 
@@ -4104,7 +4137,7 @@
 
                         <div class="row mb-2" id="clientSOP">
                             <div class="col-md-9 position-relative">
-                                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
+                                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client (Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
                             </div>
                             <div class="col-md-3 text-right">
                                 <button class="btn btn-success mb-3" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
@@ -5669,7 +5702,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header p-2">
-                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Client(Site) SOP</h5>
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Client (Site) SOP</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -5728,7 +5761,7 @@
                 <div class="spinner-border pl-2" role="status" id="loadinDiv" style="display:none">
                     <span class="sr-only">Loading...</span>
                 </div>
-                <button type="button" id="btnSaveSiteSOP" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client(Site) SOP</button>
+                <button type="button" id="btnSaveSiteSOP" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client (Site) SOP</button>
             </div>
         </div>
     </div>
@@ -5738,7 +5771,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header p-2">
-                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Client(Alarm) SOP</h5>
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Client (Alarm) SOP</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -5797,7 +5830,7 @@
                 <div class="spinner-border pl-2" role="status" id="loadinDiv" style="display:none">
                     <span class="sr-only">Loading...</span>
                 </div>
-                <button type="button" id="btnSaveSiteSOPAlarm" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client(Alarm) SOP</button>
+                <button type="button" id="btnSaveSiteSOPAlarm" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client (Alarm) SOP</button>
             </div>
         </div>
     </div>
