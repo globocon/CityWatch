@@ -531,24 +531,160 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
 /* -- */
 /* -- DownloadSelecter Page -- */
+/* p7-141 GUI update - responsive card grid for the Downloads main menu */
 #dvDownloadSelecterOuter {
     width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+    text-align: center;
+    margin: 1rem auto 2rem;
+    max-width: 1180px;
+}
+
+.dwnl-card-col {
     display: flex;
-    justify-content: space-between;
-    text-align: center
 }
 
-#dvcompanysop {
-    width: 25%;
+a.dwnl-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 200px;
+    border: 1px solid #dbe2ea;
+    border-radius: 10px;
+    background-color: #fff;
+    overflow: hidden;
+    text-decoration: none;
+    color: #212529;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .06);
+    transition: transform .15s ease-in-out, box-shadow .15s ease-in-out, border-color .15s ease-in-out;
 }
 
-#dvtraining {
-    width: 25%;
+    a.dwnl-card:hover,
+    a.dwnl-card:focus {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(24, 97, 172, .22);
+        border-color: #1b6ec2;
+        text-decoration: none;
+        color: #212529;
+    }
+
+    a.dwnl-card:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
+    }
+
+    a.dwnl-card:focus-visible {
+        outline: 3px solid #eb804d;
+        outline-offset: 2px;
+    }
+
+.dwnl-card-title {
+    display: block;
+    background-color: #1861ac;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    padding: .75rem .5rem;
 }
 
-#dvformsandtemplates {
-    width: 25%;
+a.dwnl-card:hover .dwnl-card-title {
+    background-color: #1b6ec2;
 }
+
+.dwnl-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem .75rem;
+}
+
+.dwnl-card-icon {
+    font-size: 3rem;
+    line-height: 1;
+    color: #1861ac;
+    margin-bottom: .75rem;
+    transition: color .15s ease-in-out;
+}
+
+a.dwnl-card:hover .dwnl-card-icon {
+    color: #eb804d;
+}
+
+.dwnl-card-text {
+    display: block;
+    font-size: .875rem;
+    color: #6c757d;
+}
+
+@media (max-width:1199px) {
+    #dvDownloadSelecterOuter {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width:575px) {
+    #dvDownloadSelecterOuter {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+    }
+
+    a.dwnl-card {
+        min-height: 130px;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .dwnl-card-title {
+        display: flex;
+        align-items: center;
+        text-align: left;
+        width: 45%;
+        padding: 1rem;
+    }
+
+    .dwnl-card-body {
+        padding: 1rem;
+    }
+}
+
+/* p7-141 Breadcrumb on the Downloads detail pages */
+.dwnl-breadcrumb {
+    background-color: transparent;
+    padding: 0 0 .25rem 0;
+    margin-bottom: .25rem;
+    font-size: .9rem;
+}
+
+    .dwnl-breadcrumb .breadcrumb-item a {
+        color: #1861ac;
+    }
+
+    .dwnl-breadcrumb .breadcrumb-item.active {
+        color: #6c757d;
+    }
+
+/* p7-141 Category tabs on the Downloads page (Training / Multimedia) */
+.dwnl-catg-tabs .nav-link {
+    color: #1861ac;
+    font-weight: 500;
+    padding: .6rem 1.25rem;
+    cursor: pointer;
+}
+
+    .dwnl-catg-tabs .nav-link.active {
+        color: #212529;
+        font-weight: 600;
+        border-bottom-color: transparent;
+    }
+
+    .dwnl-catg-tabs .nav-link:hover {
+        background-color: #f1f5fa;
+    }
 
 .center {
     display: block;
@@ -563,13 +699,9 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     align-items: center;
 }
 
+/* p7-141 - card grid handles its own breakpoints, only the legacy image links need stacking */
 @media (max-width:992px) {
-    #dvDownloadSelecterOuter {
-        flex-direction: column;
-    }
-
-    #dvcompanysop, #dvtraining, #dvformsandtemplates {
-        width: 100%;
+    #dvcompanysop, #dvtraining, #dvmultimedia, #dvformsandtemplates {
         margin-bottom: 7px;
     }
 }
@@ -591,6 +723,11 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 .button-container-div {
     text-align: center;
 }
+
+    /* p7-141 keep the Downloads page View/Download buttons on a single line */
+    .button-container-div.text-nowrap {
+        white-space: nowrap;
+    }
 
 .grouped-column {
     background-color: #EFEFEF;

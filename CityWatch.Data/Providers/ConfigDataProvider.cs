@@ -143,6 +143,10 @@ namespace CityWatch.Data.Providers
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type, string query);
 
+        /* p7-141 Multimedia & Training categories-start */
+        public List<StaffDocument> GetStaffDocumentsUsingTypeAndCategory(int type, string query, int? categoryId);
+        public List<StaffDocumentCategory> GetStaffDocumentCategories(int documentType);
+        /* p7-141 Multimedia & Training categories-end */
 
         public List<StaffDocument> GetStaffDocumentsUsingTypeNew(int type, int ClientSiteID);
 
@@ -712,6 +716,48 @@ namespace CityWatch.Data.Providers
 
             return staffDocList;
         }
+
+        /* p7-141 Multimedia & Training categories-start */
+        public List<StaffDocument> GetStaffDocumentsUsingTypeAndCategory(int type, string query, int? categoryId)
+        {
+            /* Re-uses the existing type/query filtering and then narrows down to a single category.
+               Documents saved before categories existed (CategoryId is null) are shown under the
+               default (first) category of the type so nothing disappears from the field. */
+            var staffDocList = GetStaffDocumentsUsingType(type, query);
+
+            if (categoryId.HasValue && categoryId.Value != 0)
+            {
+                var defaultCategoryId = GetDefaultStaffDocumentCategoryId(type);
+                staffDocList = staffDocList
+                    .Where(x => x.CategoryId == categoryId.Value ||
+                                (!x.CategoryId.HasValue && categoryId.Value == defaultCategoryId))
+                    .ToList();
+            }
+
+            var categories = GetStaffDocumentCategories(type);
+            foreach (var doc in staffDocList)
+            {
+                doc.CategoryName = categories.SingleOrDefault(x => x.Id == doc.CategoryId)?.Name;
+            }
+
+            return staffDocList;
+        }
+
+        public List<StaffDocumentCategory> GetStaffDocumentCategories(int documentType)
+        {
+            return _context.StaffDocumentCategories
+                .Where(x => x.DocumentType == documentType && x.IsActive)
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Name)
+                .ToList();
+        }
+
+        /* The first (lowest sort order) category of a type is the default one */
+        private int GetDefaultStaffDocumentCategoryId(int documentType)
+        {
+            return GetStaffDocumentCategories(documentType).Select(x => x.Id).FirstOrDefault();
+        }
+        /* p7-141 Multimedia & Training categories-end */
 
         public List<StaffDocument> GetStaffDocumentsUsingTypeNew(int type, int ClientSiteID)
         {

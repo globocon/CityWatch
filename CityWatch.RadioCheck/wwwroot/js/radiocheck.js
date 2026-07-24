@@ -473,7 +473,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             action: function (e, dt, node, config) {
                 // Redirect to the new page with query parameters
                 const clientSiteIds = 'test'; // Replace this with dynamic values if needed
-                const newPageUrl = '/GlobeMap';
+                const newPageUrl = '/ControlRoomMap'; // new Control Room Map (replaces the old /GlobeMap)
                 window.open(newPageUrl, '_blank');
             }
         },
@@ -1208,7 +1208,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 // Redirect to the new page with query parameters
                 const clientSiteIds = 'test'; // Replace this with dynamic values if needed
                 /*const newPageUrl = '/GlobeMapNoActivity';*/
-                const newPageUrl = '/GlobeMap';
+                const newPageUrl = '/ControlRoomMap'; // new Control Room Map (replaces the old /GlobeMap)
                 window.open(newPageUrl, '_blank');
             }
         },
@@ -4257,7 +4257,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                 // Redirect to the new page with query parameters
                 const clientSiteIds = 'test'; // Replace this with dynamic values if needed
                 //const newPageUrl = '/GlobeMapNoActivity';
-                const newPageUrl = '/GlobeMap';
+                const newPageUrl = '/ControlRoomMap'; // new Control Room Map (replaces the old /GlobeMap)
                 window.open(newPageUrl, '_blank');
             }
         },
@@ -4778,7 +4778,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 // Redirect to the new page with query parameters
                 const clientSiteIds = 'test'; // Replace this with dynamic values if needed
                 //const newPageUrl = '/GlobeMapNoActivity';
-                const newPageUrl = '/GlobeMap';
+                const newPageUrl = '/ControlRoomMap'; // new Control Room Map (replaces the old /GlobeMap)
                 window.open(newPageUrl, '_blank');
             }
         },

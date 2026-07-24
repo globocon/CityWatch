@@ -21,6 +21,12 @@ namespace CityWatch.Data.Models
         public int? ClientSite { get; set; }
         public string FilePath { get; set; }
 
+        /* Category within the document type (eg Training / Fire Training) - null for types without categories */
+        public int? CategoryId { get; set; }
+
+        [NotMapped]
+        public string CategoryName { get; set; }
+
         [NotMapped]
         public List<SelectListItem> ClientSites { get; set; }
 
