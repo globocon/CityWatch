@@ -652,6 +652,22 @@ a.dwnl-card:hover .dwnl-card-icon {
     }
 }
 
+/* p7-141 Breadcrumb on the Downloads detail pages */
+.dwnl-breadcrumb {
+    background-color: transparent;
+    padding: 0 0 .25rem 0;
+    margin-bottom: .25rem;
+    font-size: .9rem;
+}
+
+    .dwnl-breadcrumb .breadcrumb-item a {
+        color: #1861ac;
+    }
+
+    .dwnl-breadcrumb .breadcrumb-item.active {
+        color: #6c757d;
+    }
+
 /* p7-141 Category tabs on the Downloads page (Training / Multimedia) */
 .dwnl-catg-tabs .nav-link {
     color: #1861ac;
@@ -707,6 +723,11 @@ a.dwnl-card:hover .dwnl-card-icon {
 .button-container-div {
     text-align: center;
 }
+
+    /* p7-141 keep the Downloads page View/Download buttons on a single line */
+    .button-container-div.text-nowrap {
+        white-space: nowrap;
+    }
 
 .grouped-column {
     background-color: #EFEFEF;

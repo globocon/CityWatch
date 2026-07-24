@@ -3374,8 +3374,7 @@ $(function () {
             data: function () {
                 return {
                     query: $('#searchBoxTempAndForms').val(),
-                    companyProfile: $('#report_training_Profile').val(),
-                    categoryId: $('#report_training_Category').val() /* p7-141 Training / Fire Training */
+                    companyProfile: $('#report_training_Profile').val()
                 }; // Include query dynamically
             }
         },
@@ -3568,13 +3567,8 @@ $(function () {
     gridStaffDocsTypeMultimedia = $('#staff_document_files_type_Multimedia').grid({
         dataSource: {
             url: '/Admin/Settings?handler=StaffDocsUsingType&&type=' + STAFF_DOC_TYPE_MULTIMEDIA,
-            data: function () {
-                return {
-                    query: $('#searchBoxTempAndForms').val(),
-                    companyProfile: $('#report_multimedia_Profile').val(),
-                    categoryId: $('#report_multimedia_Category').val()
-                };
-            }
+            /* gijgo passes dataSource.data to $.ajax as is - filters are applied through reload({..}) */
+            data: {}
         },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
@@ -3663,28 +3657,34 @@ $(function () {
         });
     }
 
-    if ($('#report_training_Category').length > 0) {
-        loadStaffDocCategories(STAFF_DOC_TYPE_TRAINING, $('#report_training_Category'), function () {
-            gridStaffDocsTypeTraining.clear();
-            gridStaffDocsTypeTraining.reload();
+    function reloadTrainingDocs() {
+        gridStaffDocsTypeTraining.clear();
+        gridStaffDocsTypeTraining.reload({
+            query: $('#searchBoxTempAndForms').val(),
+            companyProfile: $('#report_training_Profile').val(),
+            categoryId: $('#report_training_Category').val()
         });
+    }
+
+    function reloadMultimediaDocs() {
+        gridStaffDocsTypeMultimedia.clear();
+        gridStaffDocsTypeMultimedia.reload({
+            query: $('#searchBoxTempAndForms').val(),
+            companyProfile: $('#report_multimedia_Profile').val(),
+            categoryId: $('#report_multimedia_Category').val()
+        });
+    }
+
+    if ($('#report_training_Category').length > 0) {
+        loadStaffDocCategories(STAFF_DOC_TYPE_TRAINING, $('#report_training_Category'), reloadTrainingDocs);
     }
     if ($('#report_multimedia_Category').length > 0) {
-        loadStaffDocCategories(STAFF_DOC_TYPE_MULTIMEDIA, $('#report_multimedia_Category'), function () {
-            gridStaffDocsTypeMultimedia.clear();
-            gridStaffDocsTypeMultimedia.reload();
-        });
+        loadStaffDocCategories(STAFF_DOC_TYPE_MULTIMEDIA, $('#report_multimedia_Category'), reloadMultimediaDocs);
     }
 
-    $('#report_training_Category').on('change', function () {
-        gridStaffDocsTypeTraining.clear();
-        gridStaffDocsTypeTraining.reload();
-    });
+    $('#report_training_Category').on('change', reloadTrainingDocs);
 
-    $('#report_multimedia_Profile,#report_multimedia_Category').on('change', function () {
-        gridStaffDocsTypeMultimedia.clear();
-        gridStaffDocsTypeMultimedia.reload();
-    });
+    $('#report_multimedia_Profile,#report_multimedia_Category').on('change', reloadMultimediaDocs);
     /* p7-141 Multimedia module-end */
 
     function staffDocsButtonRenderer(value, record) {
@@ -4011,17 +4011,17 @@ $(function () {
         /* dataSource: '/Admin/Settings?handler=StaffDocs',*/
         dataSource: {
             url: '/Admin/Settings?handler=StaffDocsUsingType&&type=' + type,
-            /* p7-141 category tabs (Training / Multimedia) filter the same file list */
-            data: function () {
-                return { categoryId: $('#sop_catg_id').val() };
-            }
+            /* p7-141 category tabs (Training / Multimedia) filter the same file list.
+               gijgo passes dataSource.data straight to $.ajax, so the params are set here
+               on load and through reload({..}) when a tab is clicked. */
+            data: { categoryId: $('#sop_catg_id').val() }
         },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
             { field: 'fileName', title: 'Files', width: 400 },
-            { width: 100, renderer: fileDownloadsButtonRenderer },
+            { width: 240, align: 'center', renderer: fileDownloadsButtonRenderer },
         ]
     });
 
@@ -4029,8 +4029,8 @@ $(function () {
         /* p7-141 View opens/plays the file, Download saves it - both go through guard authentication */
         var viewLabel = isPlayableMediaFile(record.fileName) ? 'Play' : 'View';
         var viewIcon = isPlayableMediaFile(record.fileName) ? 'fa-play' : 'fa-eye';
-        return '<div class="button-container-div">' +
-            '<button id="btnSopView" data-sop-filename="' + record.fileName + '" class="btn btn-outline-secondary ml-2"><i class="fa ' + viewIcon + ' mr-2"></i>' + viewLabel + '</button>' +
+        return '<div class="button-container-div text-nowrap">' +
+            '<button id="btnSopView" data-sop-filename="' + record.fileName + '" class="btn btn-outline-secondary"><i class="fa ' + viewIcon + ' mr-2"></i>' + viewLabel + '</button>' +
             '<button id="btnSopDownload" data-sop-filename="' + record.fileName + '" class="btn btn-outline-primary ml-2"><i class="fa fa-download mr-2"></i>Download</button>' +
             '</div>'
     }
@@ -4046,7 +4046,7 @@ $(function () {
         tab.addClass('active');
         $('#sop_catg_id').val(tab.attr('data-category-id'));
         gridFileDownloads.clear();
-        gridFileDownloads.reload();
+        gridFileDownloads.reload({ categoryId: tab.attr('data-category-id') });
     });
 
     $('#mdlAuthGuardForSopDownload').on('show.bs.modal', function (event) {
@@ -6052,8 +6052,12 @@ $(function () {
 
 
         if ($('#report_module_types_irtemplate').val() == 3) {
+            /* p7-141 keep the selected category when the profile changes */
             gridStaffDocsTypeTraining.clear();
-            gridStaffDocsTypeTraining.reload({ companyProfile: $('#report_training_Profile').val() });
+            gridStaffDocsTypeTraining.reload({
+                companyProfile: $('#report_training_Profile').val(),
+                categoryId: $('#report_training_Category').val()
+            });
         }
         if ($('#report_module_types_irtemplate').val() == 4) {
             gridStaffDocsTypeTemplatesAndForms.clear();
