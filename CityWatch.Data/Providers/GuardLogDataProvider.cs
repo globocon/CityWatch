@@ -1261,114 +1261,23 @@ namespace CityWatch.Data.Providers
 
         public void InsertPreviousLogBook(KeyVehicleLog keyVehicleLog)
         {
-
             try
             {
                 /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep
-                  the insert with entity framework shows some key reference issue ,so query using
+                  If any Entity Instance tracking issue make the ForiegnKey null. Refer calling function.
                  */
                 var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.InitialCallTime == keyVehicleLog.InitialCallTime
-            && x.EntryTime == keyVehicleLog.EntryTime && x.SentInTime == keyVehicleLog.SentInTime && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
+            && x.EntryTime == keyVehicleLog.EntryTime && x.SentInTime == keyVehicleLog.SentInTime && x.VehicleRego == keyVehicleLog.VehicleRego).AsNoTracking().ToList();
                 if (checkifAlreadyExist.Count == 0)
                 {
-
-                    _context.Database.ExecuteSqlRaw(
-                    " INSERT INTO VehicleKeyLogs (ClientSiteLogBookId, GuardLoginId, EntryTime, SentInTime, ExitTime, VehicleRego, Trailer1Rego, " +
-                    " Trailer2Rego, Trailer3Rego, Plate, KeyNo, CompanyName, PersonName, PersonType, MobileNumber, PurposeOfEntry, InWeight, OutWeight, " +
-                    " TareWeight, Notes, TimeSlotNo, TruckConfig, TrailerType, MaxWeight, Trailer4Rego, EntryReason, ClientSitePocId, ClientSiteLocationId," +
-                    " KeyDescription, InitialCallTime, ReportReference, PlateId, MoistureDeduction, RubbishDeduction, DeductionPercentage, CopiedFromId," +
-                    " IsTimeSlotNo, Reels, CustomerRef, Wvi, IsSender, Sender, DocketSerialNo, POIImage, PersonOfInterest, IsBDM, IndividualTitle, Gender, " +
-                    " CompanyABN, CompanyLandline, Email, Website, CRMId, BDMList, Trailer5Rego, Trailer6Rego, Trailer7Rego, Trailer8Rego, IsISOVIN, IsISO, IsVin, IsTrailerRego, IsCarsStock, HasLoadVariation, IsLoadVariationDuplicate, CopiedFromKVLogId, " +
-                    " Trailer1PlateId, Trailer2PlateId, Trailer3PlateId, Trailer4PlateId, Trailer5PlateId, Trailer6PlateId, Trailer7PlateId, Trailer8PlateId ) " +
-                    " VALUES (@ClientSiteLogBookId, @GuardLoginId, @EntryTime, @SentInTime, @ExitTime, @VehicleRego, @Trailer1Rego, @Trailer2Rego, @Trailer3Rego, @Plate," +
-                    " @KeyNo, @CompanyName, @PersonName, @PersonType, @MobileNumber, @PurposeOfEntry, @InWeight, @OutWeight,@TareWeight, @Notes, @TimeSlotNo, @TruckConfig, @TrailerType, @MaxWeight, @Trailer4Rego, @EntryReason, @ClientSitePocId," +
-                    " @ClientSiteLocationId, @KeyDescription, @InitialCallTime, @ReportReference, @PlateId, @MoistureDeduction, @RubbishDeduction, @DeductionPercentage, @CopiedFromId, @IsTimeSlotNo, @Reels, @CustomerRef, @Wvi, @IsSender, @Sender," +
-                    " @DocketSerialNo, @POIImage, @PersonOfInterest, @IsBDM, @IndividualTitle, @Gender, @CompanyABN, @CompanyLandline, @Email, @Website, @CRMId, @BDMList, " +
-                    " @Trailer5Rego, @Trailer6Rego, @Trailer7Rego, @Trailer8Rego, @IsISOVIN, @IsVin, @IsTrailerRego, @IsCarsStock, @HasLoadVariation, @IsLoadVariationDuplicate, @CopiedFromKVLogId," +
-                    " @Trailer1PlateId, @Trailer2PlateId, @Trailer3PlateId, @Trailer4PlateId, @Trailer5PlateId, @Trailer6PlateId, @Trailer7PlateId, @Trailer8PlateId )",
-                     new SqlParameter("@ClientSiteLogBookId", keyVehicleLog.ClientSiteLogBookId == null ? DBNull.Value : keyVehicleLog.ClientSiteLogBookId),
-                     new SqlParameter("@GuardLoginId", keyVehicleLog.GuardLoginId == null ? DBNull.Value : keyVehicleLog.GuardLoginId),
-                     new SqlParameter("@EntryTime", keyVehicleLog.EntryTime == null ? DBNull.Value : keyVehicleLog.EntryTime),
-                     new SqlParameter("@SentInTime", keyVehicleLog.SentInTime == null ? DBNull.Value : keyVehicleLog.SentInTime),
-                     new SqlParameter("@ExitTime", keyVehicleLog.ExitTime == null ? DBNull.Value : keyVehicleLog.ExitTime),
-                     new SqlParameter("@VehicleRego", keyVehicleLog.VehicleRego == null ? DBNull.Value : keyVehicleLog.VehicleRego),
-                     new SqlParameter("@Trailer1Rego", keyVehicleLog.Trailer1Rego == null ? DBNull.Value : keyVehicleLog.Trailer1Rego),
-                     new SqlParameter("@Trailer2Rego", keyVehicleLog.Trailer2Rego == null ? DBNull.Value : keyVehicleLog.Trailer2Rego),
-                     new SqlParameter("@Trailer3Rego", keyVehicleLog.Trailer3Rego == null ? DBNull.Value : keyVehicleLog.Trailer3Rego),
-                     new SqlParameter("@Plate", DBNull.Value),
-                     new SqlParameter("@KeyNo", keyVehicleLog.KeyNo == null ? DBNull.Value : keyVehicleLog.KeyNo),
-                     new SqlParameter("@CompanyName", keyVehicleLog.CompanyName == null ? DBNull.Value : keyVehicleLog.CompanyName),
-                     new SqlParameter("@PersonName", keyVehicleLog.PersonName == null ? DBNull.Value : keyVehicleLog.PersonName),
-                     new SqlParameter("@PersonType", keyVehicleLog.PersonType == null ? DBNull.Value : keyVehicleLog.PersonType),
-                     new SqlParameter("@MobileNumber", keyVehicleLog.MobileNumber == null ? DBNull.Value : keyVehicleLog.MobileNumber),
-                     new SqlParameter("@PurposeOfEntry", DBNull.Value),
-                     new SqlParameter("@InWeight", keyVehicleLog.InWeight == null ? DBNull.Value : keyVehicleLog.InWeight),
-                     new SqlParameter("@OutWeight", keyVehicleLog.OutWeight == null ? DBNull.Value : keyVehicleLog.OutWeight),
-                     new SqlParameter("@TareWeight", keyVehicleLog.TareWeight == null ? DBNull.Value : keyVehicleLog.TareWeight),
-                     new SqlParameter("@Notes", keyVehicleLog.Notes == null ? DBNull.Value : keyVehicleLog.Notes),
-                     new SqlParameter("@TimeSlotNo", keyVehicleLog.TimeSlotNo == null ? DBNull.Value : keyVehicleLog.TimeSlotNo),
-                     new SqlParameter("@TruckConfig", keyVehicleLog.TruckConfig == null ? DBNull.Value : keyVehicleLog.TruckConfig),
-                     new SqlParameter("@TrailerType", keyVehicleLog.TrailerType == null ? DBNull.Value : keyVehicleLog.TrailerType),
-                     new SqlParameter("@MaxWeight", keyVehicleLog.MaxWeight == null ? DBNull.Value : keyVehicleLog.MaxWeight),
-                     new SqlParameter("@Trailer4Rego", keyVehicleLog.Trailer4Rego == null ? DBNull.Value : keyVehicleLog.Trailer4Rego),
-                     new SqlParameter("@EntryReason", keyVehicleLog.EntryReason == null ? DBNull.Value : keyVehicleLog.EntryReason),
-                     new SqlParameter("@ClientSitePocId", keyVehicleLog.ClientSitePocId == null ? DBNull.Value : keyVehicleLog.ClientSitePocId),
-                     new SqlParameter("@ClientSiteLocationId", keyVehicleLog.ClientSiteLocationId == null ? DBNull.Value : keyVehicleLog.ClientSiteLocationId),
-                     new SqlParameter("@KeyDescription", DBNull.Value),
-                     new SqlParameter("@InitialCallTime", keyVehicleLog.InitialCallTime == null ? DBNull.Value : keyVehicleLog.InitialCallTime),
-                     new SqlParameter("@ReportReference", keyVehicleLog.ReportReference == null ? DBNull.Value : keyVehicleLog.ReportReference),
-                     new SqlParameter("@PlateId", keyVehicleLog.PlateId == null ? DBNull.Value : keyVehicleLog.PlateId),
-                     new SqlParameter("@MoistureDeduction", keyVehicleLog.MoistureDeduction == null ? DBNull.Value : keyVehicleLog.MoistureDeduction),
-                     new SqlParameter("@RubbishDeduction", keyVehicleLog.RubbishDeduction == null ? DBNull.Value : keyVehicleLog.RubbishDeduction),
-                     new SqlParameter("@DeductionPercentage", keyVehicleLog.DeductionPercentage == null ? DBNull.Value : keyVehicleLog.DeductionPercentage),
-                     new SqlParameter("@CopiedFromId", keyVehicleLog.CopiedFromId == null ? DBNull.Value : keyVehicleLog.CopiedFromId),
-                     new SqlParameter("@IsTimeSlotNo", keyVehicleLog.IsTimeSlotNo == null ? DBNull.Value : keyVehicleLog.IsTimeSlotNo),
-                     new SqlParameter("@Reels", keyVehicleLog.Reels == null ? DBNull.Value : keyVehicleLog.Reels),
-                     new SqlParameter("@CustomerRef", keyVehicleLog.CustomerRef == null ? DBNull.Value : keyVehicleLog.CustomerRef),
-                     new SqlParameter("@Wvi", keyVehicleLog.Vwi == null ? DBNull.Value : keyVehicleLog.Vwi),
-                     new SqlParameter("@IsSender", keyVehicleLog.IsSender == null ? DBNull.Value : keyVehicleLog.IsSender),
-                     new SqlParameter("@Sender", keyVehicleLog.Sender == null ? DBNull.Value : keyVehicleLog.Sender),
-                     new SqlParameter("@DocketSerialNo", keyVehicleLog.DocketSerialNo == null ? DBNull.Value : keyVehicleLog.DocketSerialNo),
-                     new SqlParameter("@POIImage", keyVehicleLog.POIImage == null ? DBNull.Value : keyVehicleLog.POIImage),
-                     new SqlParameter("@PersonOfInterest", keyVehicleLog.PersonOfInterest == null ? DBNull.Value : keyVehicleLog.PersonOfInterest),
-                     new SqlParameter("@IsBDM", keyVehicleLog.IsBDM == null ? DBNull.Value : keyVehicleLog.IsBDM),
-                     new SqlParameter("@IndividualTitle", keyVehicleLog.IndividualTitle == null ? DBNull.Value : keyVehicleLog.IndividualTitle),
-                     new SqlParameter("@Gender", keyVehicleLog.Gender == null ? DBNull.Value : keyVehicleLog.Gender),
-                     new SqlParameter("@CompanyABN", keyVehicleLog.CompanyABN == null ? DBNull.Value : keyVehicleLog.CompanyABN),
-                     new SqlParameter("@CompanyLandline", keyVehicleLog.CompanyLandline == null ? DBNull.Value : keyVehicleLog.CompanyLandline),
-                     new SqlParameter("@Email", keyVehicleLog.Email == null ? DBNull.Value : keyVehicleLog.Email),
-                     new SqlParameter("@Website", keyVehicleLog.Website == null ? DBNull.Value : keyVehicleLog.Website),
-                     new SqlParameter("@CRMId", keyVehicleLog.CRMId == null ? DBNull.Value : keyVehicleLog.CRMId),
-                     new SqlParameter("@BDMList", keyVehicleLog.BDMList == null ? DBNull.Value : keyVehicleLog.BDMList),
-                     new SqlParameter("@Trailer5Rego", keyVehicleLog.Trailer5Rego == null ? DBNull.Value : keyVehicleLog.Trailer5Rego),
-                     new SqlParameter("@Trailer6Rego", keyVehicleLog.Trailer6Rego == null ? DBNull.Value : keyVehicleLog.Trailer6Rego),
-                     new SqlParameter("@Trailer7Rego", keyVehicleLog.Trailer7Rego == null ? DBNull.Value : keyVehicleLog.Trailer7Rego),
-                     new SqlParameter("@Trailer8Rego", keyVehicleLog.Trailer8Rego == null ? DBNull.Value : keyVehicleLog.Trailer8Rego),
-                     new SqlParameter("@IsISOVIN", keyVehicleLog.IsISOVIN),
-                     new SqlParameter("@IsVin", keyVehicleLog.IsVin == null ? DBNull.Value : keyVehicleLog.IsVin),
-                     new SqlParameter("@IsTrailerRego", keyVehicleLog.IsTrailerRego == null ? DBNull.Value : keyVehicleLog.IsTrailerRego),
-                     new SqlParameter("@IsCarsStock", keyVehicleLog.IsCarsStock == null ? DBNull.Value : keyVehicleLog.IsCarsStock),
-                     new SqlParameter("@HasLoadVariation", keyVehicleLog.HasLoadVariation),
-                     new SqlParameter("@IsLoadVariationDuplicate", keyVehicleLog.IsLoadVariationDuplicate),
-                     new SqlParameter("@CopiedFromKVLogId", keyVehicleLog.CopiedFromKVLogId == null ? DBNull.Value : keyVehicleLog.CopiedFromKVLogId),
-                     new SqlParameter("@Trailer1PlateId", keyVehicleLog.Trailer1PlateId == null ? DBNull.Value : keyVehicleLog.Trailer1PlateId),
-                     new SqlParameter("@Trailer2PlateId", keyVehicleLog.Trailer2PlateId == null ? DBNull.Value : keyVehicleLog.Trailer2PlateId),
-                     new SqlParameter("@Trailer3PlateId", keyVehicleLog.Trailer3PlateId == null ? DBNull.Value : keyVehicleLog.Trailer3PlateId),
-                     new SqlParameter("@Trailer4PlateId", keyVehicleLog.Trailer4PlateId == null ? DBNull.Value : keyVehicleLog.Trailer4PlateId),
-                     new SqlParameter("@Trailer5PlateId", keyVehicleLog.Trailer5PlateId == null ? DBNull.Value : keyVehicleLog.Trailer5PlateId),
-                     new SqlParameter("@Trailer6PlateId", keyVehicleLog.Trailer6PlateId == null ? DBNull.Value : keyVehicleLog.Trailer6PlateId),
-                     new SqlParameter("@Trailer7PlateId", keyVehicleLog.Trailer7PlateId == null ? DBNull.Value : keyVehicleLog.Trailer7PlateId),
-                     new SqlParameter("@Trailer8PlateId", keyVehicleLog.Trailer8PlateId == null ? DBNull.Value : keyVehicleLog.Trailer8PlateId)
-                     );
+                    _context.KeyVehicleLogs.Add(keyVehicleLog);
+                    _context.SaveChanges();
                 }
-
-
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine(ex.ToString());
             }
-
         }
 
 
