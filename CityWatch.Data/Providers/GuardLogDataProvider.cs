@@ -7026,8 +7026,27 @@ namespace CityWatch.Data.Providers
                             var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
                             item.IrEntryType = tmplog?.IrEntryType ?? null;
                             item.gpsCoordinates = tmplog?.GpsCoordinates ?? string.Empty;
+                            if (tmplog.IsOfflineRecord && item.EventDateTimeLocal.HasValue)
+                            {
+                                item.EventDateTime = item.EventDateTimeLocal.Value;
+                            }
+                            else
+                            {
+                                if(item.EventDateTimeServerOffsetMinute.HasValue && item.EventDateTimeUtcOffsetMinute.HasValue)
+                                {
+                                    if(item.EventDateTimeServerOffsetMinute.Value != item.EventDateTimeUtcOffsetMinute.Value)
+                                    { 
+                                        // In case of Timezone Difference
+                                        // Convert server datetime to utc time
+                                        var server_utc_datetime = item.EventDateTime.AddMinutes(-item.EventDateTimeServerOffsetMinute.Value);                                       
+                                        // Convert UTC -> Local
+                                        DateTime localTime = server_utc_datetime.AddMinutes(item.EventDateTimeUtcOffsetMinute.Value);
+                                        item.EventDateTime = localTime;
+                                    }
+                                }
+                            }
                         }
-                        if (item.EventDateTimeLocal != null)
+                        else if(item.EventDateTimeLocal != null)
                         {
                             item.EventDateTime = item.EventDateTimeLocal.Value;
                         }
