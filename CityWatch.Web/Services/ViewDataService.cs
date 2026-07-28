@@ -34,6 +34,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Schema;
@@ -1288,7 +1289,7 @@ namespace CityWatch.Web.Services
                 items.Add(new SelectListItem("Select", "", true));
             }
 
-            foreach (var item in kvlFields.OrderBy(x=> x.Name))
+            foreach (var item in kvlFields.OrderBy(x => x.Name))
             {
                 items.Add(new SelectListItem(item.Name, item.Id.ToString()));
             }
@@ -1552,22 +1553,32 @@ namespace CityWatch.Web.Services
             {
                 foreach (var logToCopy in logsToCopy)
                 {
-                    var test = logToCopy;
-                    logToCopy.Id = 0;
-                    logToCopy.InitialCallTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
-                    logToCopy.EntryTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
-                    logToCopy.SentInTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
-                    logToCopy.ClientSiteLogBookId = logBookId;
-                    logToCopy.GuardLoginId = guardLoginId;
-                    logToCopy.CopiedFromId = logToCopy.Id;
+                    // Create new Keyvechilelog using Json to avoid the reference issue. This done so the new fields automatically gets copied.
+                    var newLog = JsonSerializer.Deserialize<KeyVehicleLog>(JsonSerializer.Serialize(logToCopy));
+                    var newtime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
+
+                    newLog.Id = 0;
+                    newLog.InitialCallTime = newtime;
+                    newLog.EntryTime = newtime;
+                    newLog.SentInTime = newtime;
+                    newLog.ClientSiteLogBookId = logBookId;
+                    newLog.GuardLoginId = guardLoginId;
+                    newLog.CopiedFromId = logToCopy.Id;
+
+                    //Make all ForeignKey null for new entry otherwise add will fail with Instance tracking issue. 
+                    // #########  Any new ForeignKey added in KeyVehicleLog must be made null here to avoid Instance tracking issue  ########
+                    newLog.ClientSiteLogBook = null;
+                    newLog.GuardLogin = null;
+                    newLog.ClientSiteLocation = null;
+                    newLog.ClientSitePoc = null;
 
                     try
                     {
-                        _guardLogDataProvider.InsertPreviousLogBook(logToCopy);
+                        _guardLogDataProvider.InsertPreviousLogBook(newLog);
                     }
                     catch (Exception ex)
                     {
-
+                        Console.WriteLine(ex.ToString());
                     }
                 }
             }
@@ -1578,19 +1589,30 @@ namespace CityWatch.Web.Services
             {
                 foreach (var logToCopy in pendinglogentries)
                 {
-                    logToCopy.Id = 0;
-                    logToCopy.InitialCallTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
-                    logToCopy.ClientSiteLogBookId = logBookId;
-                    logToCopy.GuardLoginId = guardLoginId;
-                    logToCopy.CopiedFromId = logToCopy.Id;
+                    // Create new Keyvechilelog using Json to avoid the reference issue This done so the new fields automatically gets copied.
+                    var newLog = JsonSerializer.Deserialize<KeyVehicleLog>(JsonSerializer.Serialize(logToCopy));
+                    var newtime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
+
+                    newLog.Id = 0;
+                    newLog.InitialCallTime = newtime;
+                    newLog.ClientSiteLogBookId = logBookId;
+                    newLog.GuardLoginId = guardLoginId;
+                    newLog.CopiedFromId = logToCopy.Id;
+
+                    //Make all ForeignKey null for new entry otherwise add will fail with Instance tracking issue
+                    // #########  Any new ForeignKey added in KeyVehicleLog must be made null here to avoid Instance tracking issue  ########
+                    newLog.ClientSiteLogBook = null;
+                    newLog.GuardLogin = null;
+                    newLog.ClientSiteLocation = null;
+                    newLog.ClientSitePoc = null;
 
                     try
                     {
-                        _guardLogDataProvider.InsertPreviousLogBook(logToCopy);
+                        _guardLogDataProvider.InsertPreviousLogBook(newLog);
                     }
                     catch (Exception ex)
                     {
-
+                        Console.WriteLine(ex.ToString());
                     }
                 }
             }
@@ -1827,7 +1849,7 @@ namespace CityWatch.Web.Services
 
             return items;
         }
-        
+
         public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName)
         {
             var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(PersonName);
@@ -3271,7 +3293,7 @@ namespace CityWatch.Web.Services
             _appConfigurationProvider.RollBackToVersion(recordId);
         }
 
-        
+
         public (bool AccessPermission, int? LoggedInUserId, int? GuId, int? SuccessCode, string SuccessMessage) ValidateGuardHrPin(int guardId, string key)
         {
             bool AccessPermission = false;
@@ -3608,7 +3630,7 @@ namespace CityWatch.Web.Services
             }
 
             return filteredResults;
-}
+        }
 
         public List<SelectListItem> GetClientSitePatrolCarIds(int[] clientSiteIds)
         {
@@ -3620,7 +3642,7 @@ namespace CityWatch.Web.Services
         public List<SelectListItem> GetAllPatrolCars()
         {
             var sitePatrolCars = new List<SelectListItem>();
-            sitePatrolCars.AddRange(_clientSiteWandDataProvider.GetPatrolCars().OrderBy(x=> x.Name).Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+            sitePatrolCars.AddRange(_clientSiteWandDataProvider.GetPatrolCars().OrderBy(x => x.Name).Select(z => new SelectListItem(z.Name, z.Id.ToString())));
             return sitePatrolCars;
 
         }
@@ -3653,7 +3675,7 @@ namespace CityWatch.Web.Services
         public string Name { get; set; }
 
         public string Label { get; set; }
-    }   
+    }
 
     public class Mp3File
     {
