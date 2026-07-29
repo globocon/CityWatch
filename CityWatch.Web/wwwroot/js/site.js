@@ -3728,11 +3728,14 @@ $(function () {
                 uiLibrary: 'bootstrap4',
                 iconsLibrary: 'fontawesome',
                 primaryKey: 'id',
-                inlineEditing: { mode: 'command' },
+                /* The default management column is 200-280px wide, which squeezes the name and
+                   count. Only the width is overridden - gijgo deep-merges, so the built-in
+                   edit/delete renderer is kept. */
+                inlineEditing: { mode: 'command', managementColumnConfig: { width: 150 } },
                 columns: [
                     { field: 'id', hidden: true },
-                    { field: 'name', title: 'Sub Category', width: '65%', editor: true },
-                    { field: 'fileCount', title: 'Files', width: '15%', cssClass: 'text-center' }
+                    { field: 'name', title: 'Sub Category', width: '100%', editor: true },
+                    { field: 'fileCount', title: 'No. of Files', width: 110, cssClass: 'text-center' }
                 ],
                 initialized: function (e) {
                     $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3761,12 +3764,14 @@ $(function () {
                 });
             });
 
-            gridStaffDocCategories.on('rowRemoving', function (e, id, record) {
+            /* gijgo raises rowRemoving with ($row, id, record) - the id is the THIRD argument,
+               not the second. Reading it off the wrong one sent no id at all. */
+            gridStaffDocCategories.on('rowRemoving', function (e, $row, id, record) {
                 if (!confirm('Are you sure you want to remove this sub category?'))
                     return;
                 $.ajax({
                     url: '/Admin/Settings?handler=DeleteStaffDocumentCategory',
-                    data: { id: record.id },
+                    data: { id: id },
                     type: 'POST',
                     headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                 }).done(function (result) {
