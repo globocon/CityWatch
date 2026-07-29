@@ -1,4 +1,38 @@
 
+//p1-issue-compliance-date-utc-start
+// "Today" for the compliance Issue/Expiry date limits.
+// This used to be new Date().toJSON().split('T')[0], which is UTC - ten hours behind
+// Australia - so before 10am it returned yesterday and the picker refused today's date.
+// The server stamps the business date into the page; we measure it against this
+// browser's own date once at load, then keep applying that difference. Reading the
+// clock on every call means the limit still rolls over if the page is left open.
+var complianceDateOffsetDays = 0;
+
+function complianceDateToText(dateValue) {
+    var month = ('0' + (dateValue.getMonth() + 1)).slice(-2);
+    var day = ('0' + dateValue.getDate()).slice(-2);
+    return dateValue.getFullYear() + '-' + month + '-' + day;
+}
+
+function complianceToday() {
+    var now = new Date();
+    if (complianceDateOffsetDays !== 0)
+        now.setDate(now.getDate() + complianceDateOffsetDays);
+    return complianceDateToText(now);
+}
+
+$(function () {
+    var serverToday = $('#ServerBusinessToday').val();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(serverToday || ''))
+        return; // No server date on this page - fall back to the browser's local date.
+    var parts = serverToday.split('-');
+    var now = new Date();
+    var difference = Date.UTC(+parts[0], parts[1] - 1, +parts[2]) -
+                     Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    complianceDateOffsetDays = Math.round(difference / 86400000);
+});
+//p1-issue-compliance-date-utc-end
+
 var FileuploadFileChanged = null;
 $(function () {
     //p4-147-lb shade-start
@@ -6287,9 +6321,7 @@ $(function () {
         $('#ComplianceDate').text('Expiry Date (DOE)');
         $('#IsDateFilterEnabledHidden').val(false)
         $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
-            return new Date().toJSON().split('T')[0];
-        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', complianceToday());
         $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
         $('#HRGroup').val('');
         $(".es-list").empty();
@@ -8329,9 +8361,7 @@ $(function () {
             $('#ComplianceDate').text('Issue Date (DOI)');
             $('#IsDateFilterEnabledHidden').val(true)
             if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-            $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
-                return new Date().toJSON().split('T')[0];
-            });
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', complianceToday());
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', '');
         }
         if (filter == 2) {
@@ -8339,9 +8369,7 @@ $(function () {
             $('#ComplianceDate').text('Expiry Date (DOE)');
             if (!keepValue) $("#GuardComplianceAndLicense_ExpiryDate1").val('');
 
-            $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
-                return new Date().toJSON().split('T')[0];
-            });
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', complianceToday());
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
         }
 

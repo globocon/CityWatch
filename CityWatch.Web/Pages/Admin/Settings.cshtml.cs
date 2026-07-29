@@ -3070,7 +3070,8 @@ namespace CityWatch.Web.Pages.Admin
                         if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
                         var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
-                        int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
+                        if (!int.TryParse(Request.Form["hrsettingsid"].ToString(), out int hrsettingsid) || hrsettingsid <= 0)
+                            throw new ArgumentException("Please save the HR record before uploading a certificate.");
                         string filename = Request.Form["filename"].ToString();
                         var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate");
                         if (!Directory.Exists(CourseDocsFolder))
@@ -3087,7 +3088,7 @@ namespace CityWatch.Web.Pages.Admin
                         var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Certificate/{file.FileName}");
                         var dbxUploaded = true;
                         dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, file.FileName), dbxFilePath);
-                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        int.TryParse(Request.Form["doc-id"].ToString(), out int documentId);
                         bool isrpl = false;
                         var rpldetails = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == documentId).FirstOrDefault();
                         if (rpldetails != null)

@@ -8917,6 +8917,12 @@ $('#btn_save_hr_settings').on('click', function () {
         }).done(function (result) {
             if (result.status) {
 
+                // Keep the saved Id so a brand new record can take course /
+                // test question / certificate uploads without being reopened.
+                if (result.id > 0)
+                    $('#HrSettings_Id').val(result.id);
+                if (typeof refreshTrainingAndAssessmentButtons === 'function')
+                    refreshTrainingAndAssessmentButtons();
 
                 $('#hrSettingsModal').modal('hide');
                 gridHr1Settings.clear();

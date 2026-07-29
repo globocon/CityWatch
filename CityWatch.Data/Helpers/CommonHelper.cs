@@ -246,6 +246,22 @@ namespace CityWatch.Data.Helpers
             return CurrLocalTime;
         }
 
+        // The business date as staff in Australia see it. Worked out from UTC against an
+        // explicit zone, so it stays correct whichever timezone the server itself runs in.
+        public static DateTime GetBusinessToday()
+        {
+            try
+            {
+                var ausEasternZone = TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
+                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ausEasternZone).Date;
+            }
+            catch (Exception)
+            {
+                // Zone data unavailable - fall back to the server's own date.
+                return DateTime.Today;
+            }
+        }
+
         public static DateTime ConvertToSystemLocalTime(DateTime eventDateTimeLocal, int utcOffsetMinutes)
         {
             // Create DateTimeOffset using supplied local time and offset
