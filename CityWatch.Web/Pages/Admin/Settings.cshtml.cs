@@ -605,6 +605,58 @@ namespace CityWatch.Web.Pages.Admin
         }
         /* p7-141 Multimedia & Training categories-end */
 
+        /* p1-sub-category-maintenance-start */
+        /* Sub categories shown in the maintenance grid, with the file count so the user can
+           see why a row refuses to be removed. */
+        public JsonResult OnGetStaffDocumentCategoriesForEdit(int type)
+        {
+            return new JsonResult(_configDataProvider.GetStaffDocumentCategories(type)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Name,
+                    FileCount = _configDataProvider.GetStaffDocumentCountForCategory(x.Id)
+                }));
+        }
+
+        public JsonResult OnPostSaveStaffDocumentCategory(int id, string name, int type)
+        {
+            var success = false;
+            var message = "Saved successfully";
+            try
+            {
+                _configDataProvider.SaveStaffDocumentCategory(new StaffDocumentCategory()
+                {
+                    Id = id,
+                    Name = name,
+                    DocumentType = type
+                });
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteStaffDocumentCategory(int id)
+        {
+            var success = false;
+            var message = "Removed successfully";
+            try
+            {
+                _configDataProvider.DeleteStaffDocumentCategory(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        /* p1-sub-category-maintenance-end */
+
         [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDoc()
         {
