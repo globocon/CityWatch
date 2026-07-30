@@ -701,7 +701,7 @@ namespace CityWatch.Web.Pages.Guard
                 _guardLogDataProvider.SaveKeyVehicleLog(newEntry);   // sets newEntry.Id via EF
                 newkvid = newEntry.Id;
 
-                
+
                 var newProfileId = 0;
                 if (!string.IsNullOrEmpty(newEntry.VehicleRego))
                     newProfileId = GetKvlProfileId(newEntry);
@@ -740,14 +740,14 @@ namespace CityWatch.Web.Pages.Guard
                 return;
 
             var fromFolder = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", old_ID.ToString(), "ComplianceDocuments");
-            var toFolder   = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", kvl.Id.ToString(), "ComplianceDocuments");
+            var toFolder = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", kvl.Id.ToString(), "ComplianceDocuments");
 
             if (!Directory.Exists(toFolder))
                 Directory.CreateDirectory(toFolder);
 
             foreach (var file in files)
             {
-                var src  = IO.Path.Combine(fromFolder, file);
+                var src = IO.Path.Combine(fromFolder, file);
                 var dest = IO.Path.Combine(toFolder, file);
                 if (IO.File.Exists(src))
                     IO.File.Copy(src, dest, overwrite: true);
@@ -843,7 +843,31 @@ namespace CityWatch.Web.Pages.Guard
         public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego, string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego,
                     string trailer5Rego, string trailer6Rego, string trailer7Rego, string trailer8Rego)
         {
+            if (!string.IsNullOrEmpty(vehicleRego))
+            {
+                var r = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).ToList();
+                var isOpenInThisSite = r.Any(x => x.Detail.VehicleRego != null && x.Detail.VehicleRego.ToUpper() == vehicleRego.ToUpper());
+                if (isOpenInThisSite)
+                    return new JsonResult(new { status = 1 });
 
+                var logBook_Date = _guardDataProvider.GetLogbookDateFromLogbook(logbookId);
+
+                var query = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRego(vehicleRego).Where(z => z.ClientSiteLogBookId != logbookId);
+
+                if (logBook_Date.HasValue)
+                {
+                    query = query.Where(z => z.ClientSiteLogBook.Date >= logBook_Date.Value);
+                }
+
+                var keyVehicleLogFromOtherSite = query.FirstOrDefault();
+
+                if (keyVehicleLogFromOtherSite != null)
+                    return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+
+            }
+
+            /*
+            // ##########  Old code disabled by Binoy on 30-07-2026  ##################
             if (!string.IsNullOrEmpty(vehicleRego))
             {
                 //Old code 21032024 dileep
@@ -973,6 +997,8 @@ namespace CityWatch.Web.Pages.Guard
                 }
 
             }
+
+            */
 
 
             return new JsonResult(new { status = 0 });
@@ -1455,7 +1481,7 @@ namespace CityWatch.Web.Pages.Guard
         }
 
         public JsonResult OnGetTrailerCarsRegos(string regoPart)
-        {            
+        {
             return new JsonResult(_guardLogDataProvider.GetTrailerCarsRegosForKVL(regoPart).ToList());
         }
 
@@ -2144,7 +2170,7 @@ namespace CityWatch.Web.Pages.Guard
         {
             int profileId;
             var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
-            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego                (
+            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego(
                 keyVehicleLog.Trailer1Rego, keyVehicleLog.Trailer2Rego, keyVehicleLog.Trailer3Rego, keyVehicleLog.Trailer4Rego,
                 keyVehicleLog.Trailer5Rego, keyVehicleLog.Trailer6Rego, keyVehicleLog.Trailer7Rego, keyVehicleLog.Trailer8Rego,
                 keyVehicleLog.Trailer1PlateId, keyVehicleLog.Trailer2PlateId, keyVehicleLog.Trailer3PlateId, keyVehicleLog.Trailer4PlateId,
