@@ -2541,12 +2541,12 @@ $('#LicanseTypeFilter').on('change', function (event, keepValue) {
     if (isDOI) {
         $label.text('Issue Date (DOI)');
         $dateInput.prop('min', ''); // No minimum for Issue Date
-        $dateInput.prop('max', new Date().toJSON().split('T')[0]); // Cannot be in the future
+        $dateInput.prop('max', complianceToday()); // Cannot be in the future
         $('#doePendingToggleContainer').css('visibility', 'hidden');
 
     } else {
         $label.text('Expiry Date (DOE)');
-        $dateInput.prop('min', new Date().toJSON().split('T')[0]); // Cannot be in the past
+        $dateInput.prop('min', complianceToday()); // Cannot be in the past
         $dateInput.prop('max', ''); // No maximum for Expiry Date
         $('#doePendingToggleContainer').css('visibility', 'visible');
     }
@@ -2579,9 +2579,7 @@ function resetGuardLicenseandComplianceAddModal() {
     $('#doiNoteContainer').css('visibility', 'visible');
     $('#IsDateFilterEnabledHidden').val(false)
     $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-    $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
-        return new Date().toJSON().split('T')[0];
-    });
+    $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', complianceToday());
     $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
     $('#HRGroup').val('');
     $(".es-list").empty();

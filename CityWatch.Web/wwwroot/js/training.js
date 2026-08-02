@@ -1,9 +1,38 @@
 $(function () {
     
 });
+//p1-issue-unsaved-hrsettings-start
+// A new HR record has no Id until it is saved, so the Course / Test Questions /
+// Certificate uploads have nothing to attach to. Keep them shut until then.
+function hasSavedHrSettings() {
+    var hrSettingsId = parseInt($('#HrSettings_Id').val(), 10);
+    return !isNaN(hrSettingsId) && hrSettingsId > 0;
+}
+function refreshTrainingAndAssessmentButtons() {
+    var isSaved = hasSavedHrSettings();
+    $('#btnCourse,#btnTestQuestions,#btnCourseCertificates')
+        .toggleClass('disabled', !isSaved)
+        .attr('title', isSaved ? '' : 'Save this HR record first');
+}
+function blockedByUnsavedHrSettings() {
+    if (hasSavedHrSettings())
+        return false;
+    refreshTrainingAndAssessmentButtons();
+    alert('Please save this HR record first, then add the course, test questions or certificate.');
+    return true;
+}
+$('#hrSettingsModal').on('shown.bs.modal', function () {
+    // This modal has no 'fade' class, so Bootstrap raises shown.bs.modal
+    // synchronously - before the caller has filled in the record Id. Wait a
+    // tick so we read the Id the caller is about to set, not the old one.
+    setTimeout(refreshTrainingAndAssessmentButtons, 0);
+});
+//p1-issue-unsaved-hrsettings-end
 //p5-Issue3-start
 $('#btnCourse').on('click', function (e) {
     e.preventDefault();
+    if (blockedByUnsavedHrSettings())
+        return;
 
     $('#trainingandAssessmentmodal').modal('show');
     var referenceNumber = $('#list_ReferenceNoNumber').find('option:selected').text() + $('#list_ReferenceNoAlphabet').find('option:selected').text();
@@ -31,6 +60,8 @@ $('#btnCourse').on('click', function (e) {
 
 $('#btnTestQuestions').on('click', function (e) {
     e.preventDefault();
+    if (blockedByUnsavedHrSettings())
+        return;
     $('#trainingandAssessmentmodal').modal('show');
     $('#trainingCourseTab').removeClass('active');
     $('#trainingTestQuestionstab').addClass('active');
@@ -68,6 +99,8 @@ $('#btnTestQuestions').on('click', function (e) {
 });
 $('#btnCourseCertificates').on('click', function (e) {
     e.preventDefault();
+    if (blockedByUnsavedHrSettings())
+        return;
     $('#trainingandAssessmentmodal').modal('show');
     $('#trainingCourseTab').removeClass('active');
     $('#trainingCertificateTab').addClass('active');

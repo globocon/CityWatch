@@ -148,6 +148,12 @@ namespace CityWatch.Data.Providers
         public List<StaffDocumentCategory> GetStaffDocumentCategories(int documentType);
         /* p7-141 Multimedia & Training categories-end */
 
+        /* p1-sub-category-maintenance-start */
+        public void SaveStaffDocumentCategory(StaffDocumentCategory staffDocumentCategory);
+        public void DeleteStaffDocumentCategory(int id);
+        public int GetStaffDocumentCountForCategory(int categoryId);
+        /* p1-sub-category-maintenance-end */
+
         public List<StaffDocument> GetStaffDocumentsUsingTypeNew(int type, int ClientSiteID);
 
         public ClientSite GetClientSiteLandline(int ClientSiteID);
@@ -758,6 +764,91 @@ namespace CityWatch.Data.Providers
             return GetStaffDocumentCategories(documentType).Select(x => x.Id).FirstOrDefault();
         }
         /* p7-141 Multimedia & Training categories-end */
+
+        /* p1-sub-category-maintenance-start */
+        /* Add or rename a sub category. Files point at the Id, so a rename never moves a file. */
+        public void SaveStaffDocumentCategory(StaffDocumentCategory staffDocumentCategory)
+        {
+            var name = staffDocumentCategory.Name?.Trim();
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("Please enter a name.");
+            if (name.Length > 100)
+                throw new ArgumentException("Name cannot be longer than 100 characters.");
+
+            var isDuplicate = _context.StaffDocumentCategories
+                .Any(x => x.DocumentType == staffDocumentCategory.DocumentType &&
+                          x.IsActive &&
+                          x.Id != staffDocumentCategory.Id &&
+                          x.Name.Trim().ToLower() == name.ToLower());
+            if (isDuplicate)
+                throw new ArgumentException("That name is already used. Please choose a different one.");
+
+            if (staffDocumentCategory.Id <= 0)
+            {
+                var lastSortOrder = _context.StaffDocumentCategories
+                    .Where(x => x.DocumentType == staffDocumentCategory.DocumentType)
+                    .Select(x => (int?)x.SortOrder)
+                    .Max() ?? 0;
+
+                _context.StaffDocumentCategories.Add(new StaffDocumentCategory()
+                {
+                    Name = name,
+                    DocumentType = staffDocumentCategory.DocumentType,
+                    SortOrder = lastSortOrder + 1,
+                    IsActive = true
+                });
+            }
+            else
+            {
+                var categoryToUpdate = _context.StaffDocumentCategories
+                    .SingleOrDefault(x => x.Id == staffDocumentCategory.Id);
+                if (categoryToUpdate == null)
+                    throw new ArgumentException("That sub category no longer exists.");
+                categoryToUpdate.Name = name;
+            }
+
+            _context.SaveChanges();
+        }
+
+        /* Soft remove - the row stays so any file still pointing at it can be recovered. */
+        public void DeleteStaffDocumentCategory(int id)
+        {
+            var categoryToDelete = _context.StaffDocumentCategories.SingleOrDefault(x => x.Id == id);
+            if (categoryToDelete == null)
+                throw new ArgumentException("That sub category no longer exists.");
+
+            if (GetStaffDocumentCountForCategory(id) > 0)
+                throw new ArgumentException("This sub category still has files in it. Move or delete the files first.");
+
+            /* Uploads need somewhere to land, so never remove the last one of a module. */
+            var remaining = GetStaffDocumentCategories(categoryToDelete.DocumentType).Count(x => x.Id != id);
+            if (remaining == 0)
+                throw new ArgumentException("At least one sub category must be kept.");
+
+            categoryToDelete.IsActive = false;
+            _context.SaveChanges();
+        }
+
+        /* Counts the files the user can actually see under this sub category. Documents saved
+           before sub categories existed have a null CategoryId and are displayed under the
+           default one, so they have to be counted against it. */
+        public int GetStaffDocumentCountForCategory(int categoryId)
+        {
+            var category = _context.StaffDocumentCategories.SingleOrDefault(x => x.Id == categoryId);
+            if (category == null)
+                return 0;
+
+            var count = _context.StaffDocuments.Count(x => x.CategoryId == categoryId);
+
+            if (categoryId == GetDefaultStaffDocumentCategoryId(category.DocumentType))
+            {
+                count += _context.StaffDocuments
+                    .Count(x => x.DocumentType == category.DocumentType && x.CategoryId == null);
+            }
+
+            return count;
+        }
+        /* p1-sub-category-maintenance-end */
 
         public List<StaffDocument> GetStaffDocumentsUsingTypeNew(int type, int ClientSiteID)
         {

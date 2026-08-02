@@ -3687,6 +3687,123 @@ $(function () {
     $('#report_multimedia_Profile,#report_multimedia_Category').on('change', reloadMultimediaDocs);
     /* p7-141 Multimedia module-end */
 
+    /* p1-sub-category-maintenance-start
+       Add / rename / remove the sub categories of the Training and Multimedia modules.
+       Follows the same inline-edit grid pattern as the Licence Types list. */
+    let gridStaffDocCategories = null;
+    let isStaffDocCategoryAdding = false;
+
+    function currentStaffDocCategoryType() {
+        return parseInt($('#staffDocCategoryDocType').val(), 10);
+    }
+
+    /* After any change, refresh the dropdown and the file list of the module we edited. */
+    function refreshStaffDocCategoryDropdown() {
+        const isTraining = currentStaffDocCategoryType() === STAFF_DOC_TYPE_TRAINING;
+        const $select = isTraining ? $('#report_training_Category') : $('#report_multimedia_Category');
+        const reloadDocs = isTraining ? reloadTrainingDocs : reloadMultimediaDocs;
+
+        loadStaffDocCategories(isTraining ? STAFF_DOC_TYPE_TRAINING : STAFF_DOC_TYPE_MULTIMEDIA, $select, function () {
+            /* The sub category that was selected may have just been removed or renamed away,
+               which would leave the dropdown on nothing. Fall back to the first one. */
+            if ($select.val() === null)
+                $select.val($select.find('option:first').val());
+            reloadDocs();
+        });
+    }
+
+    function reloadStaffDocCategoryGrid() {
+        gridStaffDocCategories.clear();
+        gridStaffDocCategories.reload({ type: currentStaffDocCategoryType() });
+    }
+
+    $('.btn_edit_staffdoc_categories').on('click', function () {
+        const docType = parseInt($(this).attr('data-doc-type'), 10);
+        $('#staffDocCategoryDocType').val(docType);
+        $('#staffDocCategoryModuleName').text(docType === STAFF_DOC_TYPE_TRAINING ? 'Training' : 'Multimedia');
+
+        if (gridStaffDocCategories === null) {
+            gridStaffDocCategories = $('#tbl_staffdoc_categories').grid({
+                dataSource: '/Admin/Settings?handler=StaffDocumentCategoriesForEdit',
+                uiLibrary: 'bootstrap4',
+                iconsLibrary: 'fontawesome',
+                primaryKey: 'id',
+                /* The default management column is 200-280px wide, which squeezes the name and
+                   count. Only the width is overridden - gijgo deep-merges, so the built-in
+                   edit/delete renderer is kept. */
+                inlineEditing: { mode: 'command', managementColumnConfig: { width: 150 } },
+                columns: [
+                    { field: 'id', hidden: true },
+                    { field: 'name', title: 'Sub Category', width: '100%', editor: true },
+                    { field: 'fileCount', title: 'No. of Files', width: 110, cssClass: 'text-center' }
+                ],
+                initialized: function (e) {
+                    $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+                }
+            });
+
+            gridStaffDocCategories.on('rowDataChanged', function (e, id, record) {
+                $.ajax({
+                    url: '/Admin/Settings?handler=SaveStaffDocumentCategory',
+                    data: {
+                        id: record.id > 0 ? record.id : 0,
+                        name: record.name,
+                        type: currentStaffDocCategoryType()
+                    },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                }).done(function (result) {
+                    if (!result.success)
+                        alert(result.message);
+                    reloadStaffDocCategoryGrid();
+                    refreshStaffDocCategoryDropdown();
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    isStaffDocCategoryAdding = false;
+                });
+            });
+
+            /* gijgo raises rowRemoving with ($row, id, record) - the id is the THIRD argument,
+               not the second. Reading it off the wrong one sent no id at all. */
+            gridStaffDocCategories.on('rowRemoving', function (e, $row, id, record) {
+                if (!confirm('Are you sure you want to remove this sub category?'))
+                    return;
+                $.ajax({
+                    url: '/Admin/Settings?handler=DeleteStaffDocumentCategory',
+                    data: { id: id },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                }).done(function (result) {
+                    if (!result.success)
+                        alert(result.message);
+                    reloadStaffDocCategoryGrid();
+                    refreshStaffDocCategoryDropdown();
+                }).fail(function () {
+                    console.log('error');
+                });
+            });
+        }
+
+        reloadStaffDocCategoryGrid();
+        $('#staffDocCategoryModal').modal('show');
+    });
+
+    $('#btn_add_staffdoc_category').on('click', function () {
+        if (isStaffDocCategoryAdding) {
+            alert('Finish the row you are already adding first.');
+            return;
+        }
+        isStaffDocCategoryAdding = true;
+        gridStaffDocCategories.addRow({ id: -1, name: '', fileCount: 0 }).edit(-1);
+    });
+
+    /* Closing the popup mid-add would otherwise leave the Add New button stuck. */
+    $('#staffDocCategoryModal').on('hidden.bs.modal', function () {
+        isStaffDocCategoryAdding = false;
+    });
+    /* p1-sub-category-maintenance-end */
+
     function staffDocsButtonRenderer(value, record) {
         var isVideo = record.fileName.toLowerCase().endsWith('.mp4');
         var playBtn = isVideo ? '<button type="button" class="btn btn-outline-success ml-2" onclick="openVideoPlayer(\'/StaffDocs/' + record.fileName + '\')" title="Play Video"><i class="fa fa-play"></i></button>' : '';
@@ -8917,6 +9034,12 @@ $('#btn_save_hr_settings').on('click', function () {
         }).done(function (result) {
             if (result.status) {
 
+                // Keep the saved Id so a brand new record can take course /
+                // test question / certificate uploads without being reopened.
+                if (result.id > 0)
+                    $('#HrSettings_Id').val(result.id);
+                if (typeof refreshTrainingAndAssessmentButtons === 'function')
+                    refreshTrainingAndAssessmentButtons();
 
                 $('#hrSettingsModal').modal('hide');
                 gridHr1Settings.clear();

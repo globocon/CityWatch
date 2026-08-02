@@ -605,6 +605,58 @@ namespace CityWatch.Web.Pages.Admin
         }
         /* p7-141 Multimedia & Training categories-end */
 
+        /* p1-sub-category-maintenance-start */
+        /* Sub categories shown in the maintenance grid, with the file count so the user can
+           see why a row refuses to be removed. */
+        public JsonResult OnGetStaffDocumentCategoriesForEdit(int type)
+        {
+            return new JsonResult(_configDataProvider.GetStaffDocumentCategories(type)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Name,
+                    FileCount = _configDataProvider.GetStaffDocumentCountForCategory(x.Id)
+                }));
+        }
+
+        public JsonResult OnPostSaveStaffDocumentCategory(int id, string name, int type)
+        {
+            var success = false;
+            var message = "Saved successfully";
+            try
+            {
+                _configDataProvider.SaveStaffDocumentCategory(new StaffDocumentCategory()
+                {
+                    Id = id,
+                    Name = name,
+                    DocumentType = type
+                });
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteStaffDocumentCategory(int id)
+        {
+            var success = false;
+            var message = "Removed successfully";
+            try
+            {
+                _configDataProvider.DeleteStaffDocumentCategory(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        /* p1-sub-category-maintenance-end */
+
         [DisableRequestSizeLimit]
         public JsonResult OnPostUploadStaffDoc()
         {
@@ -3070,7 +3122,8 @@ namespace CityWatch.Web.Pages.Admin
                         if (".pdf,.ppt,.pptx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
                         var hrreferenceNumber = Request.Form["hrreferenceNumber"].ToString();
-                        int hrsettingsid = Convert.ToInt32(Request.Form["hrsettingsid"]);
+                        if (!int.TryParse(Request.Form["hrsettingsid"].ToString(), out int hrsettingsid) || hrsettingsid <= 0)
+                            throw new ArgumentException("Please save the HR record before uploading a certificate.");
                         string filename = Request.Form["filename"].ToString();
                         var CourseDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "TA", hrreferenceNumber, "Certificate");
                         if (!Directory.Exists(CourseDocsFolder))
@@ -3087,7 +3140,7 @@ namespace CityWatch.Web.Pages.Admin
                         var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/{hrreferenceNumber}/Certificate/{file.FileName}");
                         var dbxUploaded = true;
                         dbxUploaded = UpoadDocumentToDropbox(Path.Combine(CourseDocsFolder, file.FileName), dbxFilePath);
-                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        int.TryParse(Request.Form["doc-id"].ToString(), out int documentId);
                         bool isrpl = false;
                         var rpldetails = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == documentId).FirstOrDefault();
                         if (rpldetails != null)

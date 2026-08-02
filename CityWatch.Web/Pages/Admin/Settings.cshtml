@@ -520,7 +520,14 @@
                     <div class="row mb-2">
                         <label class="col-form-label col-md-3">Category</label>
                         <div class="col-md-4 ">
-                            <select class="form-control" id="report_training_Category"></select>
+                            <div class="d-flex">
+                                <select class="form-control" id="report_training_Category"></select>
+                                @* Add / rename / remove the sub categories of this module *@
+                                <button type="button" class="btn btn-outline-primary ml-2 btn_edit_staffdoc_categories"
+                                        data-doc-type="2" title="Add, rename or remove sub categories">
+                                    <i class="fa fa-cogs" aria-hidden="true"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                    <div class="row mb-2">
@@ -2413,7 +2420,14 @@
                     <div class="row mb-2">
                         <label class="col-form-label col-md-3">Category</label>
                         <div class="col-md-4 ">
-                            <select class="form-control" id="report_training_Category"></select>
+                            <div class="d-flex">
+                                <select class="form-control" id="report_training_Category"></select>
+                                @* Add / rename / remove the sub categories of this module *@
+                                <button type="button" class="btn btn-outline-primary ml-2 btn_edit_staffdoc_categories"
+                                        data-doc-type="2" title="Add, rename or remove sub categories">
+                                    <i class="fa fa-cogs" aria-hidden="true"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="row mb-2">
@@ -4065,7 +4079,14 @@
                             <div class="row mb-2">
                                 <label class="col-form-label col-md-3">Category</label>
                                 <div class="col-md-4 ">
-                                    <select class="form-control" id="report_training_Category"></select>
+                                    <div class="d-flex">
+                                        <select class="form-control" id="report_training_Category"></select>
+                                        @* Add / rename / remove the sub categories of this module *@
+                                        <button type="button" class="btn btn-outline-primary ml-2 btn_edit_staffdoc_categories"
+                                                data-doc-type="2" title="Add, rename or remove sub categories">
+                                            <i class="fa fa-cogs" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row mb-2">
@@ -6134,6 +6155,30 @@
 <partial name="_irSettingsPopup" />
 <partial name="_TrainingAndAssessmentSettings" />
 @*/*<partial name="_LinkedDuressPopup" />*/*@
+
+@* p1-sub-category-maintenance - add / rename / remove sub categories for Training and Multimedia *@
+<div class="modal fade" id="staffDocCategoryModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title"><i class="fa fa-cogs mr-2"></i>Sub Categories - <span id="staffDocCategoryModuleName"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="staffDocCategoryDocType" />
+                <div class="text-right">
+                    <button type="button" class="btn btn-success mb-3" id="btn_add_staffdoc_category">
+                        <i class="fa fa-plus mr-2"></i>Add New
+                    </button>
+                </div>
+                <table class="table" id="tbl_staffdoc_categories"></table>
+                <small class="text-muted">A sub category can only be removed once it has no files in it.</small>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="viewLeavesModal" tabindex="-1" role="dialog" style="z-index: 1060;">
     <div class="modal-dialog modal-lg" role="document">
