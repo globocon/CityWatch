@@ -72,13 +72,13 @@ function drawChart(callback, options, data) {
     // 1 = Pie chart 2 = Bar chart 3 = Column chart (vertical, time-ordered)
     switch (options.type) {
         case 1:
-            drawPieChart(data);
+            drawPieChart(data, options);
             break;
         case 2:
             drawBarChart(data)
             break;
         case 3:
-            drawColumnChart(data, options.width)
+            drawColumnChart(data, options.width, options)
             break;
     }
 
@@ -89,8 +89,11 @@ function drawChart(callback, options, data) {
     /****************************************************************************************
     *  IMPORTANT: This is a copy of drawPieChart() in CityWatch.Web\wwwroot\js\report.js
     *  Any changes - should be done in both places
-    *****************************************************************************************/    
-    function drawPieChart(data) {
+    *  KPI extension (this file only): opts.rawValues - data values are raw counts, not
+    *  percentages. Slices are labeled with the count and the legend shows "key (count)".
+    *****************************************************************************************/
+    function drawPieChart(data, opts) {
+        opts = opts || {};
 
         var svg = d3.select("svg"),
             width = svg.attr('width'),
@@ -137,9 +140,9 @@ function drawChart(callback, options, data) {
             .attr("text-anchor", "middle")
             .text(function (d, i) {
                 if (data[i].key.toLowerCase() == 'no/data')
-                    return '0%';
+                    return opts.rawValues ? '0' : '0%';
                 if (data[i].value > 0)
-                    return data[i].value + '%';
+                    return opts.rawValues ? data[i].value : data[i].value + '%';
             });
 
         //Generate legend
@@ -159,7 +162,9 @@ function drawChart(callback, options, data) {
         legend.append("text")
             .text(function (d, i) {
                 if (data[i].key.toLowerCase() == 'no/data')
-                    return ' (0%)';
+                    return opts.rawValues ? ' (0)' : ' (0%)';
+                if (opts.rawValues)
+                    return truncate(data[i].key) + " (" + data[i].value + ")";
                 return truncate(data[i].key) + " (" + data[i].value + "%)";
             })
             .style("font-size", "11px")
@@ -281,14 +286,20 @@ function drawChart(callback, options, data) {
     *  Mirrors the look of drawBarChartUsingChartJsDailyWandStrikeData in
     *  CityWatch.Web\wwwroot\js\reports.js (chronological bars, value above each bar).
     *****************************************************************************************/
-    function drawColumnChart(data, chartWidth) {
+    function drawColumnChart(data, chartWidth, opts) {
+        opts = opts || {};
+
+        // opts.showLegend reserves a right-hand strip for a legend (key + percentage),
+        // opts.multiColor colours each bar from the shared d3 palette - both mirror the
+        // Chart.js HR charts on the web PatrolData page.
+        var legendWidth = opts.showLegend ? 170 : 0;
 
         var margin = { top: 25, right: 15, bottom: 35, left: 45 },
-            width = (chartWidth || 500) - margin.left - margin.right,
+            width = (chartWidth || 500) - margin.left - margin.right - legendWidth,
             height = 320 - margin.top - margin.bottom;
 
         var svg = d3.select("svg")
-            .attr('width', width + margin.left + margin.right)
+            .attr('width', width + margin.left + margin.right + legendWidth)
             .attr('height', height + margin.top + margin.bottom)
             .append('g')
             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -348,7 +359,33 @@ function drawChart(callback, options, data) {
             .attr('y', function (d) { return y(d.value); })
             .attr('width', x.bandwidth())
             .attr('height', function (d) { return height - y(d.value); })
-            .attr('fill', '#4682b4');
+            .attr('fill', function (d, i) {
+                return opts.multiColor ? getFillColor(d, i, data[i].key) : '#4682b4';
+            });
+
+        if (opts.showLegend) {
+            var total = d3.sum(data, function (d) { return d.value; });
+            var legend = d3.select('svg').selectAll('columnlegend')
+                .data(data)
+                .enter()
+                .append('g')
+                .attr('transform', function (d, i) { return 'translate(' + (margin.left + width + 20) + ',' + (margin.top + i * 15) + ')'; });
+
+            legend.append('rect')
+                .attr('width', 10)
+                .attr('height', 10)
+                .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); });
+
+            legend.append('text')
+                .text(function (d) {
+                    var pct = total > 0 ? (d.value / total * 100).toFixed(2) : '0.00';
+                    return truncate(d.key) + ' (' + pct + '%)';
+                })
+                .style('font-size', '11px')
+                .style('font-family', 'Arial')
+                .attr('x', 12)
+                .attr('y', 8);
+        }
 
         // value above each bar (hidden for zero so the axis stays clean).
         // On dense charts every other label is raised a little so neighbouring

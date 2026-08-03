@@ -23,6 +23,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -157,6 +158,16 @@ namespace CityWatch.Kpi.Services
             ReportRequest.ClientTypes = new string[] { _clientSiteKpiSetting.ClientSite.ClientType.Name };
             var wandGraphsTable = CreateWandGraphsTables(ReportRequest);
             doc.Add(wandGraphsTable);
+
+            // Key Vehicle Log KPI graphs (daily/weekly/monthly/yearly by EntryTime).
+            // Page is skipped entirely when the site has no key vehicle log data.
+            var kvlGraphsTable = CreateKvlGraphsTables(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
+            if (kvlGraphsTable != null)
+            {
+                doc.Add(new AreaBreak());
+                doc.Add(headerTable);
+                doc.Add(kvlGraphsTable);
+            }
             if (_settings.GuardListOn)
             {
                 //doc.Add(new AreaBreak());
@@ -1949,14 +1960,18 @@ namespace CityWatch.Kpi.Services
             //chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
             //chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+            // Value = Count: bars and bar labels show counts (like the web HR charts);
+            // the chart legend derives the percentage from the counts itself.
             var hrChartData1 = yearOfOnBoradingBarChart.Cast<dynamic>()
     .Select(x => new KeyValuePair<string, double>(
         (string)x.Status,
-        (double)x.Percentage))
-    .OrderByDescending(x => x.Key)
+        (double)x.Count))
+    .OrderBy(x => x.Key)
     .ToArray();
 
-            var hrChartData1BarChartImage = GetChartImage(hrChartData1,ChartType.Bar);
+            // Multicolour columns with a right-hand legend - same look as the Chart.js
+            // HR Status charts on the web PatrolData page.
+            var hrChartData1BarChartImage = GetChartImage(hrChartData1, ChartType.Column, chartWidth: 800, fitCellWidth: true, multiColor: true, showLegend: true);
             chartDataTable.AddCell(GetChartImageCell(hrChartData1BarChartImage));
 
             // row 2 blank cell
@@ -1964,12 +1979,12 @@ namespace CityWatch.Kpi.Services
             var hrChartData2 = attributionReport.Cast<dynamic>()
     .Select(x => new KeyValuePair<string, double>(
         (string)x.Year,
-        (double)x.Percentage))
-    .OrderByDescending(x => x.Key)
+        (double)x.Count))
+    .OrderBy(x => x.Key)
     .ToArray();
 
-            var hrChartData2PieChartImage = GetChartImage(hrChartData2);
-            chartDataTable.AddCell(GetChartImageCell(hrChartData2PieChartImage));
+            var hrChartData2BarChartImage = GetChartImage(hrChartData2, ChartType.Column, chartWidth: 800, fitCellWidth: true, multiColor: true, showLegend: true);
+            chartDataTable.AddCell(GetChartImageCell(hrChartData2BarChartImage));
 
             // row 2 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
@@ -2347,6 +2362,147 @@ namespace CityWatch.Kpi.Services
             return series.ToArray();
         }
 
+        private Table CreateKvlGraphsTables(int clientSiteId, DateTime fromDate, DateTime toDate)
+        {
+            // Monthly/yearly stats run from 1 Jan of the report year, so load once for the
+            // widest range and slice the report range out of it for the daily/weekly charts.
+            // Per-day counts aggregated in SQL - loading the full entities timed out.
+            var yearStart = new DateTime(fromDate.Year, 1, 1);
+            var entryCounts = _guardLogDataProvider.GetKeyVehicleLogDailyEntryCounts(clientSiteId, yearStart, toDate);
+
+            if (entryCounts.Count == 0)
+                return null;
+
+            var rangeCounts = entryCounts.Where(x => x.Key >= fromDate.Date && x.Key <= toDate.Date).ToList();
+
+            var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
+                .SetMarginTop(5)
+                .SetKeepTogether(true);
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateKvlGraphsTable1(rangeCounts, fromDate, toDate)));
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateKvlGraphsTable2(entryCounts, fromDate, toDate)));
+            return graphTable;
+        }
+
+        private Table CreateKvlGraphsTable1(List<KeyValuePair<DateTime, int>> rangeCounts, DateTime fromDate, DateTime toDate)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            var totalCount = rangeCounts.Sum(x => x.Value);
+            chartDataTable.AddCell(GetChartHeaderCell("Number of Truck Entries Per Day", "\nCount: " + totalCount));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("Number of Truck Entries Per Week", "\nCount: " + totalCount));
+
+            var dailyChartImage = GetChartImage(BuildKvlEntryChartSeries(rangeCounts, fromDate, toDate, KvlChartPeriod.Daily), ChartType.Column, chartWidth: 800, fitCellWidth: true);
+            chartDataTable.AddCell(GetChartImageCell(dailyChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var weeklyChartImage = GetChartImage(BuildKvlEntryChartSeries(rangeCounts, fromDate, toDate, KvlChartPeriod.Weekly), ChartType.Column, chartWidth: 800, fitCellWidth: true);
+            chartDataTable.AddCell(GetChartImageCell(weeklyChartImage));
+
+            return chartDataTable;
+        }
+
+        private Table CreateKvlGraphsTable2(List<KeyValuePair<DateTime, int>> entryCounts, DateTime fromDate, DateTime toDate)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 49, 2, 49 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            var totalCount = entryCounts.Sum(x => x.Value);
+            chartDataTable.AddCell(GetChartHeaderCell("Number of Truck Entries Per Month", "\nCount: " + totalCount));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("Number of Truck Entries Per Year", "\nCount: " + totalCount));
+
+            // Pie charts of raw counts; zero months/years are dropped so they don't clutter the legend
+            var monthlySeries = BuildKvlEntryChartSeries(entryCounts, fromDate, toDate, KvlChartPeriod.Monthly).Where(x => x.Value > 0).ToArray();
+            var monthlyChartImage = GetChartImage(monthlySeries, ChartType.Pie, chartWidth: 800, fitCellWidth: true, rawValues: true);
+            chartDataTable.AddCell(GetChartImageCell(monthlyChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var yearlySeries = BuildKvlEntryChartSeries(entryCounts, fromDate, toDate, KvlChartPeriod.Yearly).Where(x => x.Value > 0).ToArray();
+            var yearlyChartImage = GetChartImage(yearlySeries, ChartType.Pie, chartWidth: 800, fitCellWidth: true, rawValues: true);
+            chartDataTable.AddCell(GetChartImageCell(yearlyChartImage));
+
+            return chartDataTable;
+        }
+
+        private enum KvlChartPeriod { Daily, Weekly, Monthly, Yearly }
+
+        /// <summary>
+        /// Key Vehicle Log entry-count series from per-day counts (aggregated in SQL).
+        /// Daily = day-of-month (01, 02, ...) padded to a fixed 31 slots, weekly =
+        /// week-of-year ("Wk 23"), monthly = MMM yyyy (from 1 Jan of the report year),
+        /// yearly = yyyy.
+        /// </summary>
+        private static KeyValuePair<string, double>[] BuildKvlEntryChartSeries(List<KeyValuePair<DateTime, int>> dailyCounts, DateTime fromDate, DateTime toDate, KvlChartPeriod period)
+        {
+            if (toDate < fromDate)
+                toDate = fromDate;
+
+            var series = new List<KeyValuePair<string, double>>();
+
+            switch (period)
+            {
+                case KvlChartPeriod.Daily:
+                    var byDay = dailyCounts.ToDictionary(x => x.Key, x => x.Value);
+                    for (var day = fromDate.Date; day <= toDate.Date; day = day.AddDays(1))
+                    {
+                        byDay.TryGetValue(day, out int dayCount);
+                        series.Add(new KeyValuePair<string, double>(day.ToString("dd"), dayCount));
+                    }
+                    while (series.Count < 31)
+                        series.Add(new KeyValuePair<string, double>(string.Empty, 0));
+                    break;
+
+                case KvlChartPeriod.Weekly:
+                    var calendar = CultureInfo.InvariantCulture.Calendar;
+                    var byWeek = dailyCounts.GroupBy(x => (x.Key - fromDate.Date).Days / 7).ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
+                    var weekCount = ((toDate.Date - fromDate.Date).Days + 7) / 7;
+                    for (var week = 0; week < weekCount; week++)
+                    {
+                        byWeek.TryGetValue(week, out int count);
+                        var weekStart = fromDate.Date.AddDays(week * 7);
+                        var weekOfYear = calendar.GetWeekOfYear(weekStart, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                        series.Add(new KeyValuePair<string, double>("Wk " + weekOfYear, count));
+                    }
+                    break;
+
+                case KvlChartPeriod.Monthly:
+                    var byMonth = dailyCounts.GroupBy(x => new DateTime(x.Key.Year, x.Key.Month, 1)).ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
+                    for (var month = new DateTime(fromDate.Year, 1, 1); month <= toDate.Date; month = month.AddMonths(1))
+                    {
+                        byMonth.TryGetValue(month, out int monthCount);
+                        series.Add(new KeyValuePair<string, double>(month.ToString("MMM yyyy"), monthCount));
+                    }
+                    break;
+
+                case KvlChartPeriod.Yearly:
+                    var byYear = dailyCounts.GroupBy(x => x.Key.Year).ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
+                    for (var year = fromDate.Year; year <= toDate.Year; year++)
+                    {
+                        byYear.TryGetValue(year, out int yearCount);
+                        series.Add(new KeyValuePair<string, double>(year.ToString(), yearCount));
+                    }
+                    break;
+            }
+
+            return series.ToArray();
+        }
+
         private Cell GetChartHeaderCell(string leftText, string rightText, int colspan = 1)
         {
             var cell = new Cell(1, colspan)
@@ -2373,7 +2529,7 @@ namespace CityWatch.Kpi.Services
 
             return imageCell;
         }
-        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f, bool fitCellWidth = false)
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, float displayHeight = 101f, bool fitCellWidth = false, bool multiColor = false, bool showLegend = false, bool rawValues = false)
         {
             var modifiedData = data;
             if (data.All(z => z.Value == 0))
@@ -2389,7 +2545,7 @@ namespace CityWatch.Kpi.Services
             {
                 var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now:ddMMyyyy_HHmmss}.png");
               
-                var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
+                var options = new { type = chartType, fileName = graphFileName, width = chartWidth, multiColor, showLegend, rawValues };
 
                 var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, modifiedData });
                 var success = task.Result == "OK";
