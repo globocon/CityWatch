@@ -162,7 +162,7 @@ $(function () {
                     if (data) {
                         return '<a href="/Reports/PatrolData?handler=DownloadManualDocket&kvLogId=' + row.kvLogId
                             + '&fileName=' + encodeURIComponent(data)
-                            + '"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                            + '" target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
                     } else {
                         return '';
                     }
