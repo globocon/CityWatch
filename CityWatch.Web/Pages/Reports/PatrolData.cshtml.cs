@@ -1,4 +1,6 @@
 using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -22,6 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Office.Interop.Excel;
@@ -59,12 +62,15 @@ namespace CityWatch.Web.Pages.Reports
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly string _downloadsFolderPath;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
+        private readonly IDropboxService _dropboxService;
+        private readonly ILogger<PatrolDataModel> _logger;
         public string ClientNameTitle { get; set; }
 
-        public PatrolDataModel(IViewDataService viewDataService, 
+        public PatrolDataModel(IViewDataService viewDataService,
             IWebHostEnvironment webHostEnvironment,
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider, IClientSiteWandDataProvider clientSiteWandDataProvider)
+            IGuardLogDataProvider guardLogDataProvider, IClientSiteWandDataProvider clientSiteWandDataProvider,
+            IDropboxService dropboxService, ILogger<PatrolDataModel> logger)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -77,6 +83,8 @@ namespace CityWatch.Web.Pages.Reports
             _guardLogDataProvider = guardLogDataProvider;
             _downloadsFolderPath = System.IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
+            _dropboxService = dropboxService;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -2226,6 +2234,71 @@ namespace CityWatch.Web.Pages.Reports
             //return new JsonResult(new { "fileName" });
             return new JsonResult(new {  keyVehicleAuditLogRequest });
         }
+        public IActionResult OnPostGetKeyVehicleSiteDockets()
+        {
+            var keyVehicleAuditLogRequest = _viewDataService.GetKeyVehicleLogDocketHistory(ReportRequest);
+            return new JsonResult(new { keyVehicleAuditLogRequest });
+        }
+
+        public async Task<IActionResult> OnGetDownloadManualDocket(int kvLogId, string fileName)
+        {
+            if (kvLogId <= 0 || string.IsNullOrWhiteSpace(fileName))
+                return BadRequest("kvLogId and fileName are required");
+
+            // Only serve files recorded as dockets of this key vehicle log
+            var docket = _guardLogDataProvider.GetKeyVehicleLogsDocketsHistory(kvLogId)
+                .FirstOrDefault(x => string.Equals(x.FileName, fileName, StringComparison.OrdinalIgnoreCase));
+            if (docket == null)
+                return NotFound("Docket not found for this key vehicle log");
+
+            // Serve from the local output folder when the generated pdf is still there
+            var localFilePath = System.IO.Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", docket.FileName);
+            if (System.IO.File.Exists(localFilePath))
+                return File(await System.IO.File.ReadAllBytesAsync(localFilePath), "application/pdf", docket.FileName);
+
+            // Otherwise fall back to Dropbox
+            var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(kvLogId);
+            if (keyVehicleLog == null)
+                return NotFound("Key vehicle log not found");
+
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(keyVehicleLog.ClientSiteLogBook.ClientSiteId);
+            if (clientSiteKpiSettings == null || string.IsNullOrEmpty(clientSiteKpiSettings.DropboxImagesDir))
+                return NotFound("Dropbox directory is not configured for this client site");
+
+            // The Dropbox day folder is the docket generation date, which prefixes the file name (yyyyMMdd_...)
+            var docketDate = DateTime.Today;
+            var dateMatch = Regex.Match(docket.FileName, @"^\d{8}");
+            if (dateMatch.Success && DateTime.TryParseExact(dateMatch.Value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                docketDate = parsedDate;
+
+            var dbxFilePath = DocketDropboxHelper.GetManualDocketDbxFilePath(clientSiteKpiSettings, docket.FileName,
+                keyVehicleLog.ClientSiteLocation?.Name, docketDate);
+
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                      _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            try
+            {
+                var fileBytes = await _dropboxService.DownloadAsBytes(dropboxSettings, dbxFilePath);
+                if (fileBytes == null)
+                {
+                    _logger.LogWarning("Manual docket pdf not found in Dropbox. KvLogId: {KvLogId}, Path: {Path}", kvLogId, dbxFilePath);
+                    return NotFound("Docket PDF not found in Dropbox");
+                }
+
+                return File(fileBytes, "application/pdf", docket.FileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to download manual docket pdf from Dropbox. KvLogId: {KvLogId}, Path: {Path}", kvLogId, dbxFilePath);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to download docket PDF");
+            }
+        }
+
+
+        
+
+
         //p3-36-hrcharts partial-start
         public IEnumerable<object> GetGuardLanguagesHrReport(int[]? guardIds)
         {

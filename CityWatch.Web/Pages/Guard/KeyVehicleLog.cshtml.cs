@@ -2017,15 +2017,9 @@ namespace CityWatch.Web.Pages.Guard
             if (string.IsNullOrEmpty(siteBasePath))
                 throw new ArgumentException($"Dropbox directory missing for this client site");
             if (!clientSiteKpiSettings.DropboxScheduleisActive)
-                throw new ArgumentException($"DropboxScheduleisActive:Desabled");
+                throw new ArgumentException($"DropboxScheduleisActive:Disabled");
             var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
-            var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
-            var folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - General/{fileName}"; ;
-            if (!string.IsNullOrEmpty(clientSiteLocation))
-            {
-                folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - {string.Join("_", clientSiteLocation.Split(Path.GetInvalidFileNameChars()))}/{fileName}";
-
-            }
+            var folderPathToCreate = DocketDropboxHelper.GetManualDocketDbxFilePath(clientSiteKpiSettings, fileName, clientSiteLocation, DateTime.Today);
 
             var dropBoxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
                                                       _settings.DropboxRefreshToken, _settings.DropboxUserEmail);

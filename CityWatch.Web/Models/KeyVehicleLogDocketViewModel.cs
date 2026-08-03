@@ -2,7 +2,8 @@
 using CityWatch.Web.Services;
 using System.Collections.Generic;
 using System.Linq;
-using CityWatch.Data.Providers; 
+using CityWatch.Data.Providers;
+using System;
 namespace CityWatch.Web.Models
 {
     public class KeyVehicleLogDocketViewModel
@@ -33,7 +34,7 @@ namespace CityWatch.Web.Models
         {
             get
             {
-                if (Detail.KeyVehicleLog.ExitTime.HasValue)
+                if (Detail.KeyVehicleLog.ExitTime.HasValue || Detail.KeyVehicleLog.HasLoadVariation)
                     return KvlStatusFilter.Closed;
 
                 if (Detail.KeyVehicleLog.EntryTime.HasValue)
@@ -200,5 +201,23 @@ namespace CityWatch.Web.Models
         }
         
         
+    }
+
+    public class KVLogDocketsViewModel
+    {
+        public int Id { get; set; }
+        public int KvLogId { get; set; }
+        public string FileNametodownload { get; set; }
+        public string DateOfLog { get; set; }
+        public string DocketSerialNo { get; set; }
+        public string VehicleRego { get; set; }
+        public string Plate { get; set; }
+        public string TruckConfigText { get; set; }
+        public string DocketReason { get; set; }
+        public string PurposeOfEntry { get; set; }
+        public string IntialCall { get; set; }
+        public string EntryTime { get; set; }
+        public string SentInTime { get; set; }
+        public string ExitTime { get; set; }
     }
 }
