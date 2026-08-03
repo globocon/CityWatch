@@ -257,14 +257,18 @@ namespace CityWatch.Kpi.Services
             //chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
 
             //chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+            // Value = Count: bars and bar labels show counts (like the web HR charts);
+            // the chart legend derives the percentage from the counts itself.
             var hrChartData1 = yearOfOnBoradingBarChart.Cast<dynamic>()
     .Select(x => new KeyValuePair<string, double>(
         (string)x.Status,
-        (double)x.Percentage))
-    .OrderByDescending(x => x.Key)
+        (double)x.Count))
+    .OrderBy(x => x.Key)
     .ToArray();
 
-            var hrChartData1BarChartImage = GetChartImage(hrChartData1, ChartType.Bar);
+            // Multicolour columns with a right-hand legend - same look as the Chart.js
+            // HR Status charts on the web PatrolData page.
+            var hrChartData1BarChartImage = GetChartImage(hrChartData1, ChartType.Column, chartWidth: 800, fitCellWidth: true, multiColor: true, showLegend: true);
             chartDataTable.AddCell(GetChartImageCell(hrChartData1BarChartImage));
 
             // row 2 blank cell
@@ -272,12 +276,12 @@ namespace CityWatch.Kpi.Services
             var hrChartData2 = attributionReport.Cast<dynamic>()
     .Select(x => new KeyValuePair<string, double>(
         (string)x.Year,
-        (double)x.Percentage))
-    .OrderByDescending(x => x.Key)
+        (double)x.Count))
+    .OrderBy(x => x.Key)
     .ToArray();
 
-            var hrChartData2PieChartImage = GetChartImage(hrChartData2);
-            chartDataTable.AddCell(GetChartImageCell(hrChartData2PieChartImage));
+            var hrChartData2BarChartImage = GetChartImage(hrChartData2, ChartType.Column, chartWidth: 800, fitCellWidth: true, multiColor: true, showLegend: true);
+            chartDataTable.AddCell(GetChartImageCell(hrChartData2BarChartImage));
 
             // row 2 blank cell
             chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
@@ -876,7 +880,7 @@ namespace CityWatch.Kpi.Services
             table.AddHeaderCell(new Paragraph().Add("Notes")).SetBackgroundColor(WebColors.GetRGBColor(HEADER_COLOR_BLUE)).SetFontSize(CELL_FONT_SIZE);
         }
 
-        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null, bool fitCellWidth = false, bool multiColor = false, bool showLegend = false)
         {
             var modifiedData = data;
             if (data.All(z => z.Value == 0))
@@ -890,7 +894,7 @@ namespace CityWatch.Kpi.Services
             try
             {
                 var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
-                var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
+                var options = new { type = chartType, fileName = graphFileName, width = chartWidth, multiColor, showLegend };
 
                 var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, modifiedData });
                 var success = task.Result == "OK";
@@ -901,7 +905,13 @@ namespace CityWatch.Kpi.Services
                 if (success && !IO.File.Exists(graphFileName))
                     throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
 
-                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(101);
+                // fitCellWidth: stretch across the full cell width, height follows the
+                // source aspect ratio. Otherwise fixed height, width follows.
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName));
+                if (fitCellWidth)
+                    graphImage.SetWidth(UnitValue.CreatePercentValue(100));
+                else
+                    graphImage.SetHeight(101);
 
                 IO.File.Delete(graphFileName);
 

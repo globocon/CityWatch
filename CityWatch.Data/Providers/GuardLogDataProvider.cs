@@ -59,6 +59,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
         List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId);
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
+        List<KeyValuePair<DateTime, int>> GetKeyVehicleLogDailyEntryCounts(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
         KeyVehcileLogField GetIndividualType(int PersonType);
@@ -1019,6 +1020,23 @@ namespace CityWatch.Data.Providers
                .OrderBy(z => z.EntryTime)
                .ToList();
         }
+        // Lean aggregate for the KPI report charts: per-day entry counts only, grouped in
+        // SQL — no entities, no includes. The full GetKeyVehicleLogs query times out on
+        // year-wide ranges. Day bucket is the logbook's business day (ClientSiteLogBook.Date).
+        public List<KeyValuePair<DateTime, int>> GetKeyVehicleLogDailyEntryCounts(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+        {
+            return _context.KeyVehicleLogs
+                .AsNoTracking()
+                .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId
+                            && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
+                            && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date < logToDate.AddDays(1))
+                .GroupBy(z => z.ClientSiteLogBook.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToList()
+                .Select(x => new KeyValuePair<DateTime, int>(x.Date.Date, x.Count))
+                .ToList();
+        }
+
         public List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate)
 
         {
