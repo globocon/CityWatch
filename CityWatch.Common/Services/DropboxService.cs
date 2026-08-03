@@ -15,6 +15,8 @@ namespace CityWatch.Common.Services
 
         Task<bool> Download(DropboxSettings settings, string downloadToFolder, string[] filesToDownload);
 
+        Task<byte[]> DownloadAsBytes(DropboxSettings settings, string fileToDownload);
+
         Task<bool> CreateFolder(DropboxSettings settings, string newfolderNameIncludingPath);
     }
 
@@ -68,6 +70,33 @@ namespace CityWatch.Common.Services
             }
 
             return true;
+        }
+
+        public async Task<byte[]> DownloadAsBytes(DropboxSettings settings, string fileToDownload)
+        {
+            using var dbxTeam = new DropboxTeamClient(settings.AccessToken, settings.RefreshToken, settings.AppKey, settings.AppSecret, new DropboxClientConfig());
+            var team = await dbxTeam.Team.MembersListAsync();
+            if (team.Members.Count == 0)
+                return null;
+
+            var cwsMember = team.Members.SingleOrDefault(z => z.Profile.Email == settings.UserEmail);
+            if (cwsMember == null)
+                return null;
+
+            var dbx = dbxTeam.AsMember(cwsMember.Profile.TeamMemberId);
+            var account = await dbx.Users.GetCurrentAccountAsync();
+            var nsId = new PathRoot.NamespaceId(account.RootInfo.RootNamespaceId);
+
+            try
+            {
+                using var response = await dbx.WithPathRoot(nsId).Files.DownloadAsync(fileToDownload);
+                return await response.GetContentAsByteArrayAsync();
+            }
+            catch (ApiException<DownloadError> ex) when (ex.ErrorResponse.IsPath && ex.ErrorResponse.AsPath.Value.IsNotFound)
+            {
+                // File does not exist in Dropbox
+                return null;
+            }
         }
 
         public async Task<bool> CreateFolder(DropboxSettings settings, string newfolderNameIncludingPath)

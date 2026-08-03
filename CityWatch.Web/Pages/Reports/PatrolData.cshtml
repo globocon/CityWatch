@@ -144,8 +144,7 @@
                                 <th>Date</th>
                                 <th>IR S/No</th>
                                 <th>
-                                    <button class="btn" id="btnPatrolIncidentReportBatchDownload"><span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span></button>
-                                    @* <a class="btn btn-outline-primary mt-2"  id="download_IncidentReportBatch" href="#" target="_blank" style="display:none" hidden></a>
+                                    <button class="btn" id="btnPatrolIncidentReportBatchDownload"><span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span></button>                                    
                                 </th>
                                 <th>Control Room Job No</th>
                                 <th>Site</th>
@@ -162,33 +161,7 @@
                                 <th>Notified By</th>
                                 <th>Bill To</th>
                             </tr>
-                        </thead>
-
-                        <tfoot style="background-color: #C8C8C8; color:black">
-                            <tr>
-                                <th>Day</th>
-                                <th>Date</th>
-                                <th>IR S/No</th>
-                                <th>
-                                    <button class="btn" id="btnPatrolIncidentReportBatchDownload"><span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span></button>
-                                    @* <a class="btn btn-outline-primary mt-2" id="download_IncidentReportBatch" href="#" target="_blank" style="display:none" hidden></a> *@
-                                </th>
-                                <th>Control Room Job No</th>
-                                <th>Site</th>
-                                <th>Address</th>
-                                <th>Desp. Time</th>
-                                <th>Arrival</th>
-                                <th>Depart</th>
-                                <th>CWS SNo.</th>
-                                <th>Total Mins on Site</th>
-                                <th>Resp. Time</th>
-                                <th>Alarm</th>
-                                <th>Patrol Att.</th>
-                                <th>Action Taken</th>
-                                <th>Notified By</th>
-                                <th>Bill To</th>
-                            </tr>
-                            <!-- Footer content here (will be styled to look like the header) -->
+                            @* <!-- Footer content here (will be styled to look like the header) --> *@
                         </tfoot>
                     </table>
                     <table class="table table-bordered table-sm" width="100%" id="monthly_kvl_docket_data" hidden>
@@ -248,6 +221,32 @@
                                 <th>Max (t)</th> 
                                 @* <th>Contamination Deduction</th> *@
                             </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div id="kvl_docket_data_container" hidden>
+                <div class="large-table-container-2">
+                    <table class="table table-bordered table-sm" width="100%" id="kvl_docket_data">
+                        <thead style="background-color: #C8C8C8; color:black">
+                            <tr>
+                                <th style="display:none"></th>
+                                <th style="display:none"></th>
+                                <th>
+                                    <button class="btn" id="btnKvDocketDownload"><span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span></button>
+                                </th>
+                                <th>Date Of Log</th>
+                                <th>Serial Number</th>
+                                <th>ID No / Vehicle Rego</th>
+                                <th>ID / Plate</th> 
+                                <th>Vehicle Description</th>
+                                <th>Docket Reason</th>
+                                <th>Purpose Of Entry</th>
+                                <th>Initial Call</th>
+                                <th>Entry Time</th>
+                                <th>Sent In Time</th>
+                                <th>Exit Time</th>
+                             </tr>
                         </thead>
                     </table>
                 </div>

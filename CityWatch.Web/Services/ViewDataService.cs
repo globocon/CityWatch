@@ -236,6 +236,7 @@ namespace CityWatch.Web.Services
         public void DeleteGuardHrDocument(int hrDocId);
 
         //p3-42-Dockets-start
+        public List<KVLogDocketsViewModel> GetKeyVehicleLogDocketHistory(PatrolRequest patrolRequest);
         List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest);
         //p3-42-Dockets-end
 
@@ -3506,6 +3507,53 @@ namespace CityWatch.Web.Services
             {
                 return false;
             }
+        }
+        public List<KVLogDocketsViewModel> GetKeyVehicleLogDocketHistory(PatrolRequest patrolRequest)
+        {
+            int[] clientSiteIds = _clientDataProvider
+                .GetClientSiteDetailsWithName(patrolRequest.ClientSites)
+                .Select(x => x.Id)
+                .ToArray();
+
+            var kvlFields = _guardLogDataProvider
+                .GetKeyVehicleLogFields()
+                .ToDictionary(x => x.Id, x => x.Name);
+
+            string Lookup(int? id) => id is int value && kvlFields.TryGetValue(value, out var name) ? name : null;
+
+            var query = _irDataProvider
+                .GetKeyVehicleLogsWithDocketsWithoutDate()
+                .Where(x =>
+                    x.KeyVehicleLog.EntryTime >= patrolRequest.FromDate &&
+                    x.KeyVehicleLog.EntryTime < patrolRequest.ToDate.AddDays(1) &&
+                    clientSiteIds.Contains(x.KeyVehicleLog.ClientSiteLogBook.ClientSiteId));
+
+            if (!string.IsNullOrWhiteSpace(patrolRequest.SerialNo))
+            {
+                query = query.Where(x => x.DocketSerialNo.Contains(patrolRequest.SerialNo));
+            }
+            var res = query
+                .ToList()
+                .Select(r => new KVLogDocketsViewModel
+                {
+                    Id = r.Id,
+                    KvLogId = r.KeyVehicleLogId,
+                    FileNametodownload = r.FileName,
+                    DateOfLog = r.KeyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd").ToUpper(),
+                    DocketSerialNo = r.DocketSerialNo,
+                    VehicleRego = r.KeyVehicleLog.VehicleRego,
+                    Plate = Lookup(r.KeyVehicleLog.PlateId),
+                    TruckConfigText = Lookup(r.KeyVehicleLog.TruckConfig),
+                    DocketReason = r.DocketReason,
+                    PurposeOfEntry = Lookup(r.KeyVehicleLog.EntryReason),
+                    IntialCall = r.KeyVehicleLog.InitialCallTime?.ToString("HH:mm"),
+                    EntryTime = r.KeyVehicleLog.EntryTime?.ToString("HH:mm"),
+                    SentInTime = r.KeyVehicleLog.SentInTime?.ToString("HH:mm"),
+                    ExitTime = r.KeyVehicleLog.ExitTime?.ToString("HH:mm")
+                })
+                .ToList();
+
+            return res;
         }
 
         public List<KeyVehicleLogDocketViewModel> GetKeyVehicleLogDocketHistoryWithIR(PatrolRequest patrolRequest)

@@ -75,12 +75,12 @@ $(function () {
             { data: 'detail.id', visible: false },
             {
                 data: 'detail.keyVehicleLog.clientSiteLogBook.clientSite.name',
-                
+
                 width: "5%",
                 orderable: true
             },
             { data: 'dateOfLog', width: "10%" },
-           
+
             { data: 'detail.docketSerialNo', width: "15%" },
             { data: 'detail.keyVehicleLog.guardLogin.guard.initial', width: "5%" },
             { data: 'intialCall', width: "20%" },
@@ -98,7 +98,7 @@ $(function () {
             { data: 'plate4', width: "15%" },
             { data: 'detail.keyVehicleLog.sender', width: "15%" },
             { data: 'detail.keyVehicleLog.keyNo', width: "15%" },
-            
+
             { data: 'detail.keyVehicleLog.reels', width: "15%" },
             { data: 'detail.keyVehicleLog.customerRef', width: "15%" },
             { data: 'detail.keyVehicleLog.vwi', width: "15%" },
@@ -142,9 +142,50 @@ $(function () {
         //        });
         //},
     });
+
+    let keyVehicleDocketReport = $('#kvl_docket_data').DataTable({
+        paging: false,
+        ordering: false,
+        order: [[1, 'asc']],
+        info: false,
+        searching: false,
+        scrollX: true,
+        autoWidth: true,
+        fixedHeader: true,
+        data: [],
+        columns: [
+            { data: 'id', visible: false },
+            { data: 'kvLogId', visible: false },
+            {
+                data: 'fileNametodownload',
+                render: function (data, type, row) {
+                    if (data) {
+                        return '<a href="/Reports/PatrolData?handler=DownloadManualDocket&kvLogId=' + row.kvLogId
+                            + '&fileName=' + encodeURIComponent(data)
+                            + '"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                    } else {
+                        return '';
+                    }
+                }
+            },
+            { data: 'dateOfLog', width: "10%" },
+            { data: 'docketSerialNo', width: "10%" },
+            { data: 'vehicleRego', width: "10%" },
+            { data: 'plate', width: "10%" },
+            { data: 'truckConfigText', width: "15%" },
+            { data: 'docketReason', width: "15%" },
+            { data: 'purposeOfEntry', width: "15%" },
+            { data: 'intialCall', width: "5%" },
+            { data: 'entryTime', width: "5%" },
+            { data: 'sentInTime', width: "5%" },
+            { data: 'exitTime', width: "5%" },
+        ],
+    });
+
+
     $("#btnExportExcelDocket").on('click', function () {
 
-       
+
         $('#loader-p').show();
         $.ajax({
             url: '/Reports/PatrolData?handler=KeyVehicleSiteLogsWithDocket',
@@ -207,14 +248,37 @@ $(function () {
 
             // Use XLSX.writeFile to generate and download the Excel file
             XLSX.writeFile(excelFile, name + type);
-           
-           
+
+
         });
 
     });
+
+    function GenerateDocketsReport() {
+        //$('#btnExportExcelDocket').attr('hidden', true);
+        loaderProgress.start(1, 'Generating report...');
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GetKeyVehicleSiteDockets',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+
+            keyVehicleDocketReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            //$('#btnExportExcelDocket').attr('hidden', false);
+
+        }).fail(function () {
+        }).always(function () {
+            loaderProgress.finish();
+        });
+
+    }
+
+
     $("#convert-to-pdf-docket").on('click', function () {
 
-       
+
         $('#loader-p').show();
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateManualDocketBulk',
@@ -277,8 +341,8 @@ $(function () {
 
             // Use XLSX.writeFile to generate and download the Excel file
             XLSX.writeFile(excelFile, name + type);
-           
-           
+
+
         });
 
     });
@@ -298,6 +362,11 @@ $(function () {
             $('#btnExportExcel').attr('hidden', false);
             $('#convert-to-pdf').attr('hidden', false);
             $('#convert-to-pdf-docket').attr('hidden', true);
+            $('#monthly_kvl_docket_data').attr('hidden', true);
+            $('#monthly_patrol_data').attr('hidden', false);
+            $('#kvl_docket_data').attr('hidden', true);
+            $('#kvl_docket_data_container').attr('hidden', true);
+            $('#monthly_patrol_data_wrapper').show();
         }
 
         else if (reportType === '3') {
@@ -305,7 +374,12 @@ $(function () {
             $('#btnExportExcelDocket').attr('hidden', false);
             $('#btnExportExcel').attr('hidden', true);
             $('#convert-to-pdf').attr('hidden', false);
-            //$('#convert-to-pdf-docket').attr('hidden', false);
+            $('#monthly_kvl_docket_data').attr('hidden', true);
+            $('#monthly_patrol_data').attr('hidden', true);
+            $('#kvl_docket_data').attr('hidden', false);
+            $('#kvl_docket_data_container').attr('hidden', false);
+            $('#monthly_patrol_data_wrapper').hide();
+            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
         }
         else {
             $('#patrol_report_controls').hide();
@@ -313,6 +387,11 @@ $(function () {
             $('#btnExportExcel').attr('hidden', false);
             $('#convert-to-pdf').attr('hidden', false);
             $('#convert-to-pdf-docket').attr('hidden', true);
+            $('#monthly_kvl_docket_data').attr('hidden', true);
+            $('#monthly_patrol_data').attr('hidden', false);
+            $('#kvl_docket_data').attr('hidden', true);
+            $('#kvl_docket_data_container').attr('hidden', true);
+            $('#monthly_patrol_data_wrapper').show();
         }
         $('#ReportRequest_ClientType option:first').prop('selected', true);
         $('#ReportRequest_ClientSites option:first').prop('selected', true);
@@ -946,6 +1025,7 @@ $(function () {
             $('#loader-p').hide();
         });
     });
+
     $('#btnPatrolReportSumbitReport').on('click', function () {
         window.patrolReportMode = 'report_only';
 
@@ -973,7 +1053,7 @@ $(function () {
         $('#count_hr_numberofYearofOnboarding2').html(0);
         $('#count_hr_GuardLanguages').html(0);
         $('#count_hr_AttributionPerAnnum').html(0);
-        
+
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
         const toDate = $('#date_to').val();
@@ -992,23 +1072,29 @@ $(function () {
         }
         $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
         $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
-
-        loaderProgress.start(1, 'Generating report...');
-        $.ajax({
-            url: '/Reports/PatrolData?handler=GenerateReport',
-            type: 'POST',
-            dataType: 'json',
-            data: $('#frm_patrol_report_request').serialize(),
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (response) {
-            patrolReport.clear().rows.add(response.results).draw();
-            $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
-            $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
-        }).fail(function () {
-        }).always(function () {
-            loaderProgress.finish();
-        });
+        const reportType = $('#ReportRequest_DataFilter').val();
+        if (reportType === '3') {
+            GenerateDocketsReport();
+        }
+        else {
+            loaderProgress.start(1, 'Generating report...');
+            $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReport',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                patrolReport.clear().rows.add(response.results).draw();
+                $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+                $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
+            }).fail(function () {
+            }).always(function () {
+                loaderProgress.finish();
+            });
+        }
     });
+
     $('#btnPatrolReportSumbit').on('click', function () {
         window.patrolReportMode = 'both';
     });
@@ -1038,7 +1124,7 @@ $(function () {
         $('#count_hr_numberofYearofOnboarding2').html(0);
         $('#count_hr_GuardLanguages').html(0);
         $('#count_hr_AttributionPerAnnum').html(0);
-        
+
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
         const toDate = $('#date_to').val();
