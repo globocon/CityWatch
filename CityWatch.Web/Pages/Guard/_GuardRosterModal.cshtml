@@ -2628,7 +2628,13 @@
                 executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
                 if (res.success) {
                     $('#guardRolloverModal').modal('hide');
-                    alert('Roster operation completed successfully.');
+                    //p7-RolloverOverlapFix-start
+                    // Same as the Booking page rollover: the server now skips shifts that would
+                    // double-book a guard and sends back a message listing them. Show it so nothing
+                    // is dropped silently. This popup uses the SAME handler (RolloverRoster), so the
+                    // overlap check, audit rows and refresh broadcast all apply here too.
+                    alert(res.message ? res.message : 'Roster operation completed successfully.');
+                    //p7-RolloverOverlapFix-end
                     loadGuardRoster();
                 } else {
                     alert(res.message);
