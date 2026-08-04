@@ -1555,8 +1555,8 @@ namespace CityWatch.Web.Pages.roster
                     await _context.SaveChangesAsync();
 
                     //p7-RolloverAuditFix-start
-                    WriteRolloverAuditLogs(rolloverErasedShiftIds, "Deleted", "Shift removed by roster rollover (erase future).");
-                    await _context.SaveChangesAsync();
+                    // Saves inside the helper, guarded, so an audit failure cannot fail the rollover.
+                    await WriteRolloverAuditLogsAsync(rolloverErasedShiftIds, "Deleted", "Shift removed by roster rollover (erase future).");
                     //p7-RolloverAuditFix-end
                 }
 
@@ -1679,8 +1679,8 @@ namespace CityWatch.Web.Pages.roster
 
                 //p7-RolloverAuditFix-start
                 // Shift Ids only exist after the save above, so the audit rows are written here.
-                WriteRolloverAuditLogs(rolloverCreatedShifts.Select(x => x.Id).ToList(), "Created", "Shift created by roster rollover.");
-                await _context.SaveChangesAsync();
+                // Saves inside the helper, guarded, so an audit failure cannot fail the rollover.
+                await WriteRolloverAuditLogsAsync(rolloverCreatedShifts.Select(x => x.Id).ToList(), "Created", "Shift created by roster rollover.");
                 //p7-RolloverAuditFix-end
 
                 //p7-RolloverRefreshFix-start
@@ -1731,12 +1731,22 @@ namespace CityWatch.Web.Pages.roster
 
         //p7-RolloverAuditFix-start
         // Writes one audit row per shift so rollover leaves the same trail every other action leaves.
-        // Failures are swallowed on purpose: a logging problem must never fail the rollover itself
-        // (same approach already used by OnPostAddShift and OnPostDeleteShift).
-        private void WriteRolloverAuditLogs(List<int> shiftIds, string action, string details)
+        //
+        // The SAVE is done in here, inside the try/catch, on purpose. A logging problem must never
+        // fail the rollover itself (same approach already used by OnPostAddShift and
+        // OnPostDeleteShift, which also save inside their try). If the save does fail, the audit
+        // entries are detached again so they cannot poison a later SaveChanges in the same request.
+        //
+        // Values are trimmed to the column widths in RosterScheduleAuditLogs:
+        //   Platform NVARCHAR(100), IPAddress NVARCHAR(50), ActionSource NVARCHAR(20), Action NVARCHAR(50).
+        // User-Agent strings are routinely longer than 100 characters, which would otherwise throw
+        // "String or binary data would be truncated" on save.
+        private async Task WriteRolloverAuditLogsAsync(List<int> shiftIds, string action, string details)
         {
             if (shiftIds == null || shiftIds.Count == 0)
                 return;
+
+            var addedLogs = new List<RosterScheduleAuditLog>();
 
             try
             {
@@ -1747,27 +1757,47 @@ namespace CityWatch.Web.Pages.roster
                     parsedUserId = uid;
                 }
 
+                var ipAddress = Trim(HttpContext.Connection.RemoteIpAddress?.ToString(), 50);
+                var platform = Trim(Request.Headers["User-Agent"].ToString(), 100);
+
                 foreach (var shiftId in shiftIds)
                 {
-                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    var log = new RosterScheduleAuditLog
                     {
                         RosterScheduleId = shiftId,
                         ActionTime = DateTime.Now,
                         UserId = parsedUserId,
                         ActionSource = "Web",
-                        Action = action,
+                        Action = Trim(action, 50),
                         Details = details,
-                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                        Platform = Request.Headers["User-Agent"].ToString(),
+                        IPAddress = ipAddress,
+                        Platform = platform,
                         OldStatus = null,
                         NewStatus = null
-                    });
+                    };
+                    _context.RosterScheduleAuditLogs.Add(log);
+                    addedLogs.Add(log);
                 }
+
+                await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create roster audit logs for Rollover.");
+
+                // Drop the failed audit entries so the rest of the request is unaffected.
+                foreach (var log in addedLogs)
+                {
+                    _context.Entry(log).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                }
             }
+        }
+
+        private static string Trim(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+                return value;
+            return value.Substring(0, maxLength);
         }
         //p7-RolloverAuditFix-end
 
