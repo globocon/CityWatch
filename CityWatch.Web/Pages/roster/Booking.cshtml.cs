@@ -560,6 +560,34 @@ namespace CityWatch.Web.Pages.roster
             return null;
         }
 
+        //p7-RolloverOverlapFix-start
+        // Shared "is this guard already rostered at this time?" check.
+        //
+        // WHY THIS EXISTS: the same rule already lives inline inside OnPostAddShift (Validation 3),
+        // so adding/editing a shift by hand is protected. OnPostRolloverRoster had NO such check at
+        // all - its only guard was a DUPLICATE test (x.ShiftStart == newStart), which needs the start
+        // times to match to the minute. Real case: guard already had 22:00-23:59, rollover copied a
+        // 21:29-23:59 shift on top of it. 21:29 != 22:00 so it was not a "duplicate" and went straight
+        // in, double-booking the guard. Both shifts had no audit rows, which is how we traced them
+        // back to rollover.
+        //
+        // The clauses below are copied EXACTLY as they are in OnPostAddShift so both paths behave
+        // identically. OnPostAddShift is deliberately left untouched in this change so the existing
+        // add/edit screen keeps working exactly as before; it can be migrated onto this method later.
+        // If the rule is ever changed, change it in BOTH places.
+        private async Task<RosterSchedule> FindConflictingShiftAsync(int guardIdToCheck, DateTime start, DateTime end, int excludeShiftId)
+        {
+            return await _context.RosterSchedules
+                .Where(x => ((x.GuardId == guardIdToCheck && x.ReliefGuardId == null) || x.ReliefGuardId == guardIdToCheck) &&
+                            !x.IsDeleted && x.Id != excludeShiftId && x.Status != RosterShiftStatus.Cancelled &&
+                            ((start >= x.ShiftStart && start < x.ShiftEnd) ||
+                             (end > x.ShiftStart && end <= x.ShiftEnd) ||
+                             (start <= x.ShiftStart && end >= x.ShiftEnd)))
+                .Include(x => x.ClientSite)
+                .FirstOrDefaultAsync();
+        }
+        //p7-RolloverOverlapFix-end
+
         public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, decimal? payRate = null, bool ignoreUnavailability = false)
         {
             if (payRateId.HasValue && payRate.HasValue)
@@ -1445,6 +1473,17 @@ namespace CityWatch.Web.Pages.roster
 
         public async Task<IActionResult> OnPostRolloverRoster(int groupId, DateTime startDate, string option, bool eraseFuture = false, bool clearNames = false)
         {
+            //p7-RolloverOverlapFix-start
+            // Tracking for the three rollover fixes: shifts skipped because the guard was already
+            // rostered, shifts queued in this run (not yet in the database), shifts created/erased so
+            // they can be audit-logged, and the sites to tell open screens to refresh.
+            var rolloverSkipped = new List<string>();
+            var rolloverPendingShifts = new List<(int GuardId, DateTime Start, DateTime End)>();
+            var rolloverCreatedShifts = new List<RosterSchedule>();
+            var rolloverErasedShiftIds = new List<int>();
+            var rolloverAffectedSiteIds = new HashSet<int>();
+            //p7-RolloverOverlapFix-end
+
             try
             {
                 var endDate = startDate.AddDays(7);
@@ -1503,8 +1542,22 @@ namespace CityWatch.Web.Pages.roster
                     foreach (var shift in shiftsAllowedToDelete)
                     {
                         shift.IsDeleted = true;
+                        //p7-RolloverAuditFix-start
+                        // Rollover used to erase shifts silently - no audit row at all, unlike
+                        // OnPostDeleteShift which always logs "Deleted". That is why a shift removed
+                        // by rollover had zero history and could not be traced. Log it like every
+                        // other path does. Wrapped in its own try/catch below so a logging problem can
+                        // never break the rollover itself.
+                        rolloverErasedShiftIds.Add(shift.Id);
+                        rolloverAffectedSiteIds.Add(shift.ClientSiteId);
+                        //p7-RolloverAuditFix-end
                     }
                     await _context.SaveChangesAsync();
+
+                    //p7-RolloverAuditFix-start
+                    WriteRolloverAuditLogs(rolloverErasedShiftIds, "Deleted", "Shift removed by roster rollover (erase future).");
+                    await _context.SaveChangesAsync();
+                    //p7-RolloverAuditFix-end
                 }
 
                 while (currentTargetStart < copyUntil)
@@ -1545,7 +1598,48 @@ namespace CityWatch.Web.Pages.roster
 
                         if (existingShift == null)
                         {
-                            _context.RosterSchedules.Add(new RosterSchedule
+                            //p7-RolloverOverlapFix-start
+                            // The check above only spots an EXACT duplicate (same start minute). It does
+                            // not spot an OVERLAP, so rollover could copy a shift on top of one the guard
+                            // was already rostered for. Run the same conflict rule the Add Shift screen
+                            // uses before inserting; if it clashes, skip this one shift and report it.
+                            // We deliberately SKIP rather than overwrite - overwriting could silently
+                            // wipe a shift a manager assigned by hand, which is worse than not copying.
+                            var newReliefGuardId = clearNames ? null : source.ReliefGuardId;
+                            var newReliefProviderName = clearNames ? null : source.ReliefProviderName;
+
+                            // Same rule as OnPostAddShift: when a relief is assigned the main guard is
+                            // not actually working the shift, so only the relief is checked.
+                            int? guardToCheck = null;
+                            if (newReliefGuardId.HasValue)
+                                guardToCheck = newReliefGuardId;
+                            else if (checkGuardId.HasValue && string.IsNullOrEmpty(newReliefProviderName))
+                                guardToCheck = checkGuardId;
+
+                            if (guardToCheck.HasValue)
+                            {
+                                // Already-saved shifts (previous weeks, or shifts added by hand)
+                                var rolloverConflict = await FindConflictingShiftAsync(guardToCheck.Value, newStart, newEnd, 0);
+
+                                // Shifts queued earlier in THIS rollover are not in the database yet,
+                                // so they must be checked in memory as well.
+                                var pendingConflict = rolloverPendingShifts.Any(p => p.GuardId == guardToCheck.Value &&
+                                        ((newStart >= p.Start && newStart < p.End) ||
+                                         (newEnd > p.Start && newEnd <= p.End) ||
+                                         (newStart <= p.Start && newEnd >= p.End)));
+
+                                if (rolloverConflict != null || pendingConflict)
+                                {
+                                    var clashGuard = await _context.Guards.FindAsync(guardToCheck.Value);
+                                    rolloverSkipped.Add($"{clashGuard?.Name ?? "Guard"} {newStart:dd MMM} {newStart:HH:mm}-{newEnd:HH:mm} (already rostered)");
+                                    continue; // do not copy this shift
+                                }
+
+                                rolloverPendingShifts.Add((guardToCheck.Value, newStart, newEnd));
+                            }
+                            //p7-RolloverOverlapFix-end
+
+                            var newShift = new RosterSchedule
                             {
                                 RosterGroupId = groupId,
                                 ClientSiteId = source.ClientSiteId,
@@ -1561,7 +1655,12 @@ namespace CityWatch.Web.Pages.roster
                                 ReliefReason = clearNames ? null : source.ReliefReason,
                                 ReliefReasonOther = clearNames ? null : source.ReliefReasonOther,
                                 ShiftType = source.ShiftType
-                            });
+                            };
+                            _context.RosterSchedules.Add(newShift);
+                            //p7-RolloverAuditFix-start
+                            rolloverCreatedShifts.Add(newShift);   // Ids only exist after SaveChanges
+                            rolloverAffectedSiteIds.Add(source.ClientSiteId);
+                            //p7-RolloverAuditFix-end
                         }
                         else
                         {
@@ -1577,6 +1676,50 @@ namespace CityWatch.Web.Pages.roster
                 }
 
                 await _context.SaveChangesAsync();
+
+                //p7-RolloverAuditFix-start
+                // Shift Ids only exist after the save above, so the audit rows are written here.
+                WriteRolloverAuditLogs(rolloverCreatedShifts.Select(x => x.Id).ToList(), "Created", "Shift created by roster rollover.");
+                await _context.SaveChangesAsync();
+                //p7-RolloverAuditFix-end
+
+                //p7-RolloverRefreshFix-start
+                // Rollover used to notify nobody, so anyone with a roster open kept seeing the old
+                // week - including shifts rollover had just removed. Every other handler broadcasts;
+                // do the same here. Same pattern as OnPostSaveProjectRosterStatus.
+                try
+                {
+                    var rolloverHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Common.Models.UpdateHub>));
+                    var rolloverMobileHub = (Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>)HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<CityWatch.Data.Services.MobileAppSignalRHub>));
+
+                    foreach (var affectedSiteId in rolloverAffectedSiteIds)
+                    {
+                        if (rolloverHub != null)
+                            await rolloverHub.Clients.All.SendAsync("UpdateRoster", new { siteId = affectedSiteId });
+                        if (rolloverMobileHub != null)
+                            await rolloverMobileHub.Clients.All.SendAsync("RefreshRoster", new { siteId = affectedSiteId });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to broadcast roster refresh after rollover.");
+                }
+                //p7-RolloverRefreshFix-end
+
+                //p7-RolloverOverlapFix-start
+                // Tell the user what did NOT copy. Skipping quietly would look like a clean rollover
+                // while shifts were missing, which is worse than the original bug.
+                if (rolloverSkipped.Any())
+                {
+                    var skippedMessage = $"Roster operation completed. {rolloverSkipped.Count} shift(s) were NOT copied because the guard was already rostered at that time:"
+                                         + Environment.NewLine + Environment.NewLine
+                                         + string.Join(Environment.NewLine, rolloverSkipped.Take(20))
+                                         + (rolloverSkipped.Count > 20 ? Environment.NewLine + $"...and {rolloverSkipped.Count - 20} more." : string.Empty);
+
+                    return new JsonResult(new { success = true, message = skippedMessage, skippedCount = rolloverSkipped.Count });
+                }
+                //p7-RolloverOverlapFix-end
+
                 return new JsonResult(new { success = true });
             }
             catch (Exception ex)
@@ -1585,6 +1728,48 @@ namespace CityWatch.Web.Pages.roster
                 return new JsonResult(new { success = false, message = "An error occurred during rollover." });
             }
         }
+
+        //p7-RolloverAuditFix-start
+        // Writes one audit row per shift so rollover leaves the same trail every other action leaves.
+        // Failures are swallowed on purpose: a logging problem must never fail the rollover itself
+        // (same approach already used by OnPostAddShift and OnPostDeleteShift).
+        private void WriteRolloverAuditLogs(List<int> shiftIds, string action, string details)
+        {
+            if (shiftIds == null || shiftIds.Count == 0)
+                return;
+
+            try
+            {
+                var userIdString = HttpContext.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
+                int? parsedUserId = null;
+                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out int uid))
+                {
+                    parsedUserId = uid;
+                }
+
+                foreach (var shiftId in shiftIds)
+                {
+                    _context.RosterScheduleAuditLogs.Add(new RosterScheduleAuditLog
+                    {
+                        RosterScheduleId = shiftId,
+                        ActionTime = DateTime.Now,
+                        UserId = parsedUserId,
+                        ActionSource = "Web",
+                        Action = action,
+                        Details = details,
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        Platform = Request.Headers["User-Agent"].ToString(),
+                        OldStatus = null,
+                        NewStatus = null
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create roster audit logs for Rollover.");
+            }
+        }
+        //p7-RolloverAuditFix-end
 
         public async Task<JsonResult> OnGetGuardDailySchedule(int guardId, DateTime date)
         {
