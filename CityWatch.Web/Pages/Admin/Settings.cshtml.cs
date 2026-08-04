@@ -3520,7 +3520,12 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetTrainingCourses(bool isOnboardingUser = false)
         {
-            var hrGroups = ConfigDataProiver.GetHRGroupsDropDown();
+            //p7-CourseLibraryPopupFix-start
+            // OLD - HR groups came back in database order:
+            // var hrGroups = ConfigDataProiver.GetHRGroupsDropDown();
+            // NEW - c) groups listed A-Z, same as the Admin "HR Groups - Course Library Only" screen
+            var hrGroups = ConfigDataProiver.GetHRGroupsDropDown().OrderBy(x => x.Text).ToList();
+            //p7-CourseLibraryPopupFix-end
 
             List<int> allowedCourseIds = null;
             if (isOnboardingUser)
@@ -3537,8 +3542,18 @@ namespace CityWatch.Web.Pages.Admin
             var result = hrGroups.Select(group => new
             {
                 GroupId = group.Value,
-                Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+                //p7-CourseLibraryPopupFix-start
+                // OLD - showed an HR record if ANY TrainingCourses row existed. That single check let HR
+                // documents in (a - "Employment Contract", created automatically by a certificate upload)
+                // and pushed real courses out (b - "Level 3", whose course document row was deleted), and
+                // it sorted by database record number instead of A-Z (c - Level 5 shown after Level X):
+                // Courses = ConfigDataProiver.GetTrainingCoursesStatusWithOutcome(Convert.ToInt32(group.Value))
+                // NEW - popup now shows the SAME list as the Admin "HR Groups - Course Library Only" screen
+                // (hr.cs - OnGetHRSettingsWithCourseLibrary): course document with a real file extension,
+                // OR test questions, OR a certificate, OR an instructor - and sorted A-Z.
+                Courses = ConfigDataProiver.GetCourseLibraryHrSettings(Convert.ToInt32(group.Value))
                     .Where(course => allowedCourseIds == null || allowedCourseIds.Contains(course.Id))
+                //p7-CourseLibraryPopupFix-end
                     .Select(course => new
                     {
                         course.Id,
