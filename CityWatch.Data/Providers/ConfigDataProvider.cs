@@ -164,6 +164,11 @@ namespace CityWatch.Data.Providers
         //p5-Issue-2-start
         List<HrSettings> GetTrainingCoursesStatusWithOutcome(int hrgroupid);
 
+        //p7-CourseLibraryPopupFix-start
+        // Course Library popup only - same rule as the Admin "HR Groups - Course Library Only" screen
+        List<HrSettings> GetCourseLibraryHrSettings(int hrgroupid);
+        //p7-CourseLibraryPopupFix-end
+
         List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true);
         void SaveGuardTrainingAndAssessmentTab(GuardTrainingAndAssessment trainingAssessment);
         //p5-Issue-2-end
@@ -2127,6 +2132,62 @@ namespace CityWatch.Data.Providers
             //}
             return hrsettings.OrderBy(x => Convert.ToInt32(x.Id)).ToList();
         }
+
+        //p7-CourseLibraryPopupFix-start
+        // WHY THIS NEW METHOD EXISTS (Course Library popup - selectCoursesForGuardByAdmin)
+        //
+        // The popup used to call GetTrainingCoursesStatusWithOutcome (just above). That method decides
+        // "is this a course?" using ONE check only: does any non-deleted row exist in TrainingCourses.
+        // That single check was wrong in BOTH directions and caused the 3 issues reported by the client:
+        //
+        //   a) "Employment Contract" appeared as a course.
+        //      Uploading a CERTIFICATE against an HR record auto-creates a TrainingCourses row
+        //      (Settings.cshtml.cs - OnPostUploadCourseCertificateDocUsingHR). That auto-created row
+        //      stores the HR Description as the file name, so it has NO file extension. The old check
+        //      accepted it, so an HR document became a "course".
+        //
+        //   b) "Level 3" went missing.
+        //      Deleting/replacing the course document soft-deletes its only TrainingCourses row
+        //      (DeleteCourseDocument), so the whole course vanished from the popup even though its
+        //      certificate, instructor and test questions were all still set up.
+        //
+        //   c) The list was not A-Z.
+        //      The old method ended with OrderBy(x => x.Id) - database record number, i.e. the order the
+        //      HR records were created. That is why Level 5 was shown after Level X.
+        //
+        // The Admin screen "HR Groups - Course Library Only" (hr.cs - OnGetHRSettingsWithCourseLibrary)
+        // already uses the correct rule and already shows the right list. So the popup now uses the SAME
+        // rule as that Admin screen, and the two screens finally show the same thing:
+        //   include the HR record if it has a course document WITH a real file extension,
+        //   OR test questions, OR a course certificate, OR a course instructor.
+        // Result: Employment Contract (0 of 4) drops out, Level 3 (certificate + instructor) comes back.
+        //
+        // NOTE: this is added as a SEPARATE method on purpose. GetTrainingCoursesStatusWithOutcome is
+        // left completely untouched because _TrainingAndAssessmentSettings.cshtml still uses it, and we
+        // must not change those other areas.
+        public List<HrSettings> GetCourseLibraryHrSettings(int hrgroupid)
+        {
+            var hrSettingsInGroup = GetHRSettings().Where(x => x.HRGroupId == hrgroupid).ToList();
+
+            // the same 4 checks used by the Admin "HR Groups - Course Library Only" screen
+            var idsWithCourseDocs = GetCourseDocuments().Where(x => System.IO.Path.HasExtension(x.FileName)).Select(x => x.HRSettingsId);
+            var idsWithQuestions = GetTrainingTestQuestions().Select(x => x.HRSettingsId);
+            var idsWithCertificates = GetCourseCertificateDocuments().Select(x => x.HRSettingsId);
+            var idsWithInstructors = GetCourseAllInstructor().Select(x => x.HRSettingsId);
+
+            var courseLibraryIds = idsWithCourseDocs
+                                   .Concat(idsWithQuestions)
+                                   .Concat(idsWithCertificates)
+                                   .Concat(idsWithInstructors)
+                                   .Distinct()
+                                   .ToList();
+
+            // c) sorted A-Z by name instead of by database record number
+            return hrSettingsInGroup.Where(x => courseLibraryIds.Contains(x.Id))
+                                    .OrderBy(x => x.Description)
+                                    .ToList();
+        }
+        //p7-CourseLibraryPopupFix-end
 
         public List<SelectListItem> GetHRGroupsDropDown(bool withoutSelect = true)
         {
