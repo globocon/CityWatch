@@ -402,7 +402,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientsiteId, LogBookType type, DateTime logbookDate);
 
         public List<FeedbackTemplateViewModel> GetFeedbackTemplates();
-        List<string> GetIRSerialNumbers(string regoStart = null);
+        List<string> GetDocketSerialNumbers(string regoStart = null);
 
         public MobileLogActivityProfile SaveLogActivityProfile(string profileName, out string msg);
         public List<MobileLogActivityProfile> GetMobileLogActivityProfiles();
@@ -8231,13 +8231,13 @@ namespace CityWatch.Data.Providers
        .ToList();
             return result;
         }
-        public List<string> GetIRSerialNumbers(string irStart = null)
+        public List<string> GetDocketSerialNumbers(string irStart = null)
         {
-            return _context.IncidentReports
+            return _context.KeyVehicleLogDocketHistory
                 .Where(z => string.IsNullOrEmpty(irStart) ||
-                            (!string.IsNullOrEmpty(z.SerialNo) &&
-                                z.SerialNo.Contains(irStart)))
-                .Select(z => z.SerialNo)
+                            (!string.IsNullOrEmpty(z.DocketSerialNo) &&
+                                z.DocketSerialNo.Contains(irStart)))
+                .Select(z => z.DocketSerialNo)
                 .Distinct()
                 .OrderBy(z => z)
                 .ToList();

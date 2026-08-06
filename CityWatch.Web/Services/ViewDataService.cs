@@ -3510,27 +3510,31 @@ namespace CityWatch.Web.Services
         }
         public List<KVLogDocketsViewModel> GetKeyVehicleLogDocketHistory(PatrolRequest patrolRequest)
         {
-            int[] clientSiteIds = _clientDataProvider
-                .GetClientSiteDetailsWithName(patrolRequest.ClientSites)
-                .Select(x => x.Id)
-                .ToArray();
-
             var kvlFields = _guardLogDataProvider
                 .GetKeyVehicleLogFields()
                 .ToDictionary(x => x.Id, x => x.Name);
 
             string Lookup(int? id) => id is int value && kvlFields.TryGetValue(value, out var name) ? name : null;
 
-            var query = _irDataProvider
-                .GetKeyVehicleLogsWithDocketsWithoutDate()
-                .Where(x =>
-                    x.KeyVehicleLog.EntryTime >= patrolRequest.FromDate &&
-                    x.KeyVehicleLog.EntryTime < patrolRequest.ToDate.AddDays(1) &&
-                    clientSiteIds.Contains(x.KeyVehicleLog.ClientSiteLogBook.ClientSiteId));
-
+            IEnumerable<KeyVehicleLogDocketHistory> query;
             if (!string.IsNullOrWhiteSpace(patrolRequest.SerialNo))
             {
-                query = query.Where(x => x.DocketSerialNo.Contains(patrolRequest.SerialNo));
+                // Serial number search: match on serial alone, ignoring date range and sites
+                query = _irDataProvider.GetKeyVehicleLogsWithDocketNumber(patrolRequest.SerialNo);
+            }
+            else
+            {
+                int[] clientSiteIds = _clientDataProvider
+                    .GetClientSiteDetailsWithName(patrolRequest.ClientSites)
+                    .Select(x => x.Id)
+                    .ToArray();
+
+                query = _irDataProvider
+                    .GetKeyVehicleLogsWithDocketsWithoutDate()
+                    .Where(x =>
+                        x.KeyVehicleLog.EntryTime >= patrolRequest.FromDate &&
+                        x.KeyVehicleLog.EntryTime < patrolRequest.ToDate.AddDays(1) &&
+                        clientSiteIds.Contains(x.KeyVehicleLog.ClientSiteLogBook.ClientSiteId));
             }
             var res = query
                 .ToList()

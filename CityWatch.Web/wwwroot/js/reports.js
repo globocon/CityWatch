@@ -1053,6 +1053,15 @@ $(function () {
         $('#count_hr_numberofYearofOnboarding2').html(0);
         $('#count_hr_GuardLanguages').html(0);
         $('#count_hr_AttributionPerAnnum').html(0);
+        const reportType = $('#ReportRequest_DataFilter').val();
+
+        if (
+            reportType === '3' &&
+            ($('#ReportRequest_IRSeriaNo').val() || '').trim().length > 0
+        ) {
+            GenerateDocketsReport();
+            return false;
+        }
 
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
@@ -1072,7 +1081,7 @@ $(function () {
         }
         $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
         $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
-        const reportType = $('#ReportRequest_DataFilter').val();
+
         if (reportType === '3') {
             GenerateDocketsReport();
         }
@@ -8264,7 +8273,7 @@ $('#ReportRequest_IRSeriaNo').typeahead({
     autoSelect: true,
     source: function (request, response) {
         $.ajax({
-            url: '/Reports/PatrolData?handler=IRSerialNumbers',
+            url: '/Reports/PatrolData?handler=DocketSerialNumbers',
             data: { snoPart: request },
             type: 'GET',
             dataType: 'json',
