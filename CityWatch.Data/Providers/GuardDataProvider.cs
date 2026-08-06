@@ -78,6 +78,7 @@ namespace CityWatch.Data.Providers
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicense(int guardId);
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseList(string hrGroup);
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup);
+        List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int[] guardIds, HrGroup hrGroup);
         List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
         ClientSite GetClientSiteID(string ClientSite);
         public DropboxDirectory GetDrobox();
@@ -929,6 +930,17 @@ namespace CityWatch.Data.Providers
             return _context.GuardComplianceLicense
                  .Include(z => z.Guard)
                  .Where(x => x.GuardId == guardId && x.HrGroup == hrGroup)
+                 .ToList();
+        }
+
+        // Bulk variant for the KPI report: one query for all guards of a site instead of
+        // one query per guard per HR group (profiled at ~17k round trips per report run)
+        public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int[] guardIds, HrGroup hrGroup)
+        {
+            return _context.GuardComplianceLicense
+                 .AsNoTracking()
+                 .Include(z => z.Guard)
+                 .Where(x => guardIds.Contains(x.GuardId) && x.HrGroup == hrGroup)
                  .ToList();
         }
         public List<HrSettings> GetHRDesc(int HRid)

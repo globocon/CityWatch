@@ -100,6 +100,27 @@ namespace CityWatch.Kpi.Services
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
         }
 
+        // HR settings are static config data re-read by every HR table/header builder
+        // (7 call sites x HR groups x sites x table variants) - profiling showed the same
+        // query executing thousands of times per report run. Memoized for the lifetime of
+        // this (scoped) generator instance.
+        private readonly Dictionary<int, List<HrSettings>> _hrSettingsCache = new();
+        private readonly Dictionary<(int, int), List<HrSettings>> _hrSettingsCriticalDocCache = new();
+
+        private List<HrSettings> GetHRSettingsCached(int hrGroupId)
+        {
+            if (!_hrSettingsCache.TryGetValue(hrGroupId, out var settings))
+                _hrSettingsCache[hrGroupId] = settings = _viewDataService.GetHRSettings(hrGroupId);
+            return settings;
+        }
+
+        private List<HrSettings> GetHRSettingsCriticalDocCached(int hrGroupId, int criticalDocumentId)
+        {
+            if (!_hrSettingsCriticalDocCache.TryGetValue((hrGroupId, criticalDocumentId), out var settings))
+                _hrSettingsCriticalDocCache[(hrGroupId, criticalDocumentId)] = settings = _viewDataService.GetHRSettingsCriticalDoc(hrGroupId, criticalDocumentId);
+            return settings;
+        }
+
         public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused, bool IsDownselect, int CriticalDocumentID)
         {
             var _clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
@@ -1089,14 +1110,18 @@ namespace CityWatch.Kpi.Services
 
             if (Enum.TryParse<HrGroup>(hrGrpStr, out var hrGrpVal))
             {
+                // One bulk query for all guards instead of one query per guard
+                var compsByGuard = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guards.Select(g => g.Id).ToArray(), hrGrpVal)
+                    .GroupBy(c => c.GuardId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
                 foreach (var guard in guards)
                 {
-                    var comps = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGrpVal);
-                    allGuardComps[guard.Id] = comps;
+                    allGuardComps[guard.Id] = compsByGuard.TryGetValue(guard.Id, out var comps) ? comps : new List<GuardComplianceAndLicense>();
                 }
             }
 
-            var HTList = IsDownselect ? _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID) : _viewDataService.GetHRSettings(Id);
+            var HTList = IsDownselect ? GetHRSettingsCriticalDocCached(Id, CriticalDocumentID) : GetHRSettingsCached(Id);
 
             var refinedHTList = HTList.Where(item => item.hrSettingsClientStates.Any(x => x.State == ClientSiteState) || item.hrSettingsClientSites.Any(x => x.ClientSiteId == clientSiteId)).ToList();
             HTList = refinedHTList;
@@ -1235,7 +1260,7 @@ namespace CityWatch.Kpi.Services
         {
             try
             {
-                var HTList = IsDownselect ? _viewDataService.GetHRSettingsCriticalDoc(id, CriticalDocumentID) : _viewDataService.GetHRSettings(id);
+                var HTList = IsDownselect ? GetHRSettingsCriticalDocCached(id, CriticalDocumentID) : GetHRSettingsCached(id);
 
                 var refinedHTList = HTList.Where(item => item.hrSettingsClientStates.Any(x => x.State == ClientSiteState) || item.hrSettingsClientSites.Any(x => x.ClientSiteId == clientSiteId)).ToList();
 
@@ -1321,11 +1346,11 @@ namespace CityWatch.Kpi.Services
             var HTList = new List<HrSettings>();
             if (IsDownselect == true)
             {
-                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+                HTList = GetHRSettingsCriticalDocCached(Id, CriticalDocumentID);
             }
             else
             {
-                HTList = _viewDataService.GetHRSettings(Id);
+                HTList = GetHRSettingsCached(Id);
             }
 
             var refinedHTList = HTList.Where(item => item.hrSettingsClientStates.Any(x => x.State == ClientSiteState) || item.hrSettingsClientSites.Any(x => x.ClientSiteId == clientSiteId)).ToList();
@@ -1441,11 +1466,11 @@ namespace CityWatch.Kpi.Services
             var HTList = new List<HrSettings>();
             if (IsDownselect == true)
             {
-                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+                HTList = GetHRSettingsCriticalDocCached(Id, CriticalDocumentID);
             }
             else
             {
-                HTList = _viewDataService.GetHRSettings(Id);
+                HTList = GetHRSettingsCached(Id);
             }
 
             var refinedHTList = HTList.Where(item => item.hrSettingsClientStates.Any(x => x.State == ClientSiteState) || item.hrSettingsClientSites.Any(x => x.ClientSiteId == clientSiteId)).ToList();
@@ -1513,8 +1538,8 @@ namespace CityWatch.Kpi.Services
             CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
 
             var HTList = IsDownselect
-                ? _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID)
-                : _viewDataService.GetHRSettings(Id);
+                ? GetHRSettingsCriticalDocCached(Id, CriticalDocumentID)
+                : GetHRSettingsCached(Id);
 
             var refinedHTList = HTList.Where(item => item.hrSettingsClientStates.Any(x => x.State == ClientSiteState) || item.hrSettingsClientSites.Any(x => x.ClientSiteId == clientSiteId)).ToList();
 
@@ -1548,11 +1573,11 @@ namespace CityWatch.Kpi.Services
             var HTList = new List<HrSettings>();
             if (IsDownselect == true)
             {
-                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+                HTList = GetHRSettingsCriticalDocCached(Id, CriticalDocumentID);
             }
             else
             {
-                HTList = _viewDataService.GetHRSettings(Id);
+                HTList = GetHRSettingsCached(Id);
             }
 
             var refinedHTList = HTList.Where(item => item.hrSettingsClientStates.Any(x => x.State == ClientSiteState) || item.hrSettingsClientSites.Any(x => x.ClientSiteId == clientSiteId)).ToList();
@@ -1657,11 +1682,11 @@ namespace CityWatch.Kpi.Services
             var HTList = new List<HrSettings>();
             if (IsDownselect == true)
             {
-                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+                HTList = GetHRSettingsCriticalDocCached(Id, CriticalDocumentID);
             }
             else
             {
-                HTList = _viewDataService.GetHRSettings(Id);
+                HTList = GetHRSettingsCached(Id);
             }
 
             if (HTList.Count > 0)
