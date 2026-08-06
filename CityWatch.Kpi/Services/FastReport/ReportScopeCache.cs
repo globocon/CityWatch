@@ -45,23 +45,42 @@ namespace CityWatch.Kpi.Services.FastReport
 
         public void Set(string key, object value) => _values[key] = value;
 
+        /// <summary>
+        /// Nesting depth of intercepted calls on the current async flow.
+        ///
+        /// Decorated services call each other - IViewDataService.GetKpiReportData calls
+        /// IClientDataProvider, IPatrolDataReportService.GetDailyPatrolData calls
+        /// IIrDataProvider - so a naive sum counts the same wall-clock once per layer and
+        /// can report more data-access time than the whole report took. Only the outermost
+        /// call contributes to the total; per-method figures still record their own elapsed
+        /// so the breakdown stays useful.
+        /// </summary>
+        private static readonly AsyncLocal<int> CallDepth = new();
+
+        /// <summary>Increments nesting depth and returns the new value (1 = outermost).</summary>
+        public int EnterCall() => CallDepth.Value += 1;
+
+        public void ExitCall() => CallDepth.Value -= 1;
+
         public void RecordHit(string method)
         {
             Interlocked.Increment(ref _hits);
             Counter(method).AddHit();
         }
 
-        public void RecordMiss(string method, long elapsedTicks)
+        public void RecordMiss(string method, long elapsedTicks, bool isOutermost)
         {
             Interlocked.Increment(ref _misses);
-            Interlocked.Add(ref _dataAccessTicks, elapsedTicks);
+            if (isOutermost)
+                Interlocked.Add(ref _dataAccessTicks, elapsedTicks);
             Counter(method).AddCall(elapsedTicks);
         }
 
-        public void RecordPassThrough(string method, long elapsedTicks)
+        public void RecordPassThrough(string method, long elapsedTicks, bool isOutermost)
         {
             Interlocked.Increment(ref _passThrough);
-            Interlocked.Add(ref _dataAccessTicks, elapsedTicks);
+            if (isOutermost)
+                Interlocked.Add(ref _dataAccessTicks, elapsedTicks);
             Counter(method).AddCall(elapsedTicks);
         }
 

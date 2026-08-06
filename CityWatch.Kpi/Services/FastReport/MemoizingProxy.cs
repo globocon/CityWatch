@@ -79,6 +79,11 @@ namespace CityWatch.Kpi.Services.FastReport
             if (isCacheable && !string.IsNullOrEmpty(friendlyLabel))
                 _cache.ReportActivity(friendlyLabel);
 
+            // Decorated services call one another, so only the outermost call may count
+            // toward the total data-access time - otherwise the same wall-clock is summed
+            // once per layer.
+            var isOutermost = _cache.EnterCall() == 1;
+
             var stopwatch = Stopwatch.StartNew();
             object result;
             try
@@ -88,20 +93,22 @@ namespace CityWatch.Kpi.Services.FastReport
             catch (TargetInvocationException tie) when (tie.InnerException != null)
             {
                 stopwatch.Stop();
-                _cache.RecordPassThrough(methodLabel, stopwatch.ElapsedTicks);
+                _cache.ExitCall();
+                _cache.RecordPassThrough(methodLabel, stopwatch.ElapsedTicks, isOutermost);
                 ExceptionDispatchInfo.Capture(tie.InnerException).Throw();
                 throw; // unreachable, keeps the compiler happy
             }
             stopwatch.Stop();
+            _cache.ExitCall();
 
             if (isCacheable)
             {
-                _cache.RecordMiss(methodLabel, stopwatch.ElapsedTicks);
+                _cache.RecordMiss(methodLabel, stopwatch.ElapsedTicks, isOutermost);
                 _cache.Set(key, result);
                 return CloneIfList(result, targetMethod.ReturnType);
             }
 
-            _cache.RecordPassThrough(methodLabel, stopwatch.ElapsedTicks);
+            _cache.RecordPassThrough(methodLabel, stopwatch.ElapsedTicks, isOutermost);
             return result;
         }
 
