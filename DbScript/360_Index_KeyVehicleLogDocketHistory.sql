@@ -10,3 +10,4 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_KeyVehicleLogDocketHis
 CREATE NONCLUSTERED INDEX IX_KeyVehicleLogDocketHistory_DocketSerialNo
     ON KeyVehicleLogDocketHistory (DocketSerialNo)
     INCLUDE (KeyVehicleLogId);
+
