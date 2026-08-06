@@ -2207,10 +2207,10 @@ namespace CityWatch.Web.Pages.Reports
             //    Directory.Delete(zipFolderPath, true);
             return  zipFileName;
         }
-        public JsonResult OnGetIRSerialNumbers(string snoPart)
+        public JsonResult OnGetDocketSerialNumbers(string snoPart)
         {
             
-            return new JsonResult(_guardLogDataProvider.GetIRSerialNumbers(snoPart).ToList());
+            return new JsonResult(_guardLogDataProvider.GetDocketSerialNumbers(snoPart).ToList());
 
         }
         public IActionResult OnPostKeyVehicleSiteLogsWithDocket()
