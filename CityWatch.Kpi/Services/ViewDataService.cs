@@ -44,6 +44,7 @@ namespace CityWatch.Kpi.Services
         List<SelectListItem> ClientTypesUsingLoginUserIdCount(int guardId);
         List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicense(int guardIds);
         List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHR(int guardIds, HrGroup hrGroup);
+        List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHR(int[] guardIds, HrGroup hrGroup);
         List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHRList(string hrGroup);
         List<HrSettings> GetHRSettings(int HRID);
         List<HRGroups> GetKpiGuardHRGroup();
@@ -449,12 +450,15 @@ namespace CityWatch.Kpi.Services
         }
         public List<HrSettings> GetHRSettings(int HRID)
         {
-
+            // AsSplitQuery: two collection includes in single-query mode produce a
+            // cartesian join with a huge memory grant (profiled at ~25s per execution
+            // under memory pressure); split queries keep each statement small.
             return _context.HrSettings.Include(z => z.HRGroups)
             .Include(z => z.hrSettingsClientSites)
             .Include(z => z.hrSettingsClientStates)
             .Include(z => z.ReferenceNoNumbers)
             .Include(z => z.ReferenceNoAlphabets)
+            .AsSplitQuery()
             .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
             ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRID && z.IsDeleted == false).ToList();
 
@@ -471,6 +475,7 @@ namespace CityWatch.Kpi.Services
                 .Include(z => z.hrSettingsClientStates)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
+                .AsSplitQuery()
                 .OrderBy(x => x.HRGroups.Name)
                 .ThenBy(x => x.ReferenceNoNumbers.Name)
                 .ThenBy(x => x.ReferenceNoAlphabets.Name)
@@ -506,6 +511,10 @@ namespace CityWatch.Kpi.Services
             var guardCompliance = _guardDataProvider.GetGuardCompliancesAndLicenseHR(guardIds, hrGroup).ToList();
 
             return guardCompliance.ToList();
+        }
+        public List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHR(int[] guardIds, HrGroup hrGroup)
+        {
+            return _guardDataProvider.GetGuardCompliancesAndLicenseHR(guardIds, hrGroup);
         }
         public List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHRList(string hrGroup)
         {

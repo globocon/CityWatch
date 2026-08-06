@@ -383,9 +383,18 @@ namespace CityWatch.Kpi.Models
 
             //return "Y";
         }
+        // GetHrValue runs once per compliance row per shift, and each call used to re-query
+        // the full HrSettings master list plus the guard's documents - profiled at ~34k DB
+        // round trips per KPI report run. Both lookups are memoized for this instance.
+        private List<HrSettings> _hrDescFullCache;
+        private readonly Dictionary<int, List<HRGroupStatusNew>> _ledStatusCache = new();
+
         public List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
         {
-            var MasterGroup = _guardDataProvider.GetHRDescFull();
+            if (_ledStatusCache.TryGetValue(GuardID, out var cachedStatuses))
+                return cachedStatuses;
+
+            var MasterGroup = _hrDescFullCache ??= _guardDataProvider.GetHRDescFull();
             var GuardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
             var hrGroupStatusesNew = new List<HRGroupStatusNew>();
 
@@ -410,9 +419,9 @@ namespace CityWatch.Kpi.Models
 
 
             }
-            var Temp = hrGroupStatusesNew;
+            _ledStatusCache[GuardID] = hrGroupStatusesNew;
 
-            return Temp;
+            return hrGroupStatusesNew;
         }
         public string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> SelectedList)
         {
