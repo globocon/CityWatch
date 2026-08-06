@@ -1,11 +1,12 @@
 /*
  * fast-report.js
  * ---------------------------------------------------------------------------
- * Client for the "Download Now (Fast Beta)" button.
+ * Client for the "Download Now" button (#btnScheduleDownloadFast), which is now
+ * the default download path on the Run Schedule popup.
  *
- * Completely additive: this file registers one click handler on a button that
- * does not exist in the legacy flow, and talks only to /api/FastKpiReport/*.
- * The existing #btnScheduleDownload handler in site.js is untouched.
+ * Still additive: this file registers one click handler on its own button and
+ * talks only to /api/FastKpiReport/*. The legacy #btnScheduleDownload button is
+ * hidden in the markup but left in place, and its site.js handler is untouched.
  *
  * The overlay is built with plain DOM and inline styles rather than a Bootstrap
  * modal, so it cannot be affected by - or affect - the Bootstrap 4 modal that
@@ -51,8 +52,6 @@
             'box-shadow:0 20px 45px rgba(0,0,0,.3);overflow:hidden">',
             '  <div style="padding:18px 22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">',
             '    <h5 id="fastReportTitle" style="margin:0;font-size:1.05rem;font-weight:600">Generating Report</h5>',
-            '    <span style="font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:#2563eb;',
-            '      border:1px solid #bfdbfe;background:#eff6ff;border-radius:999px;padding:2px 9px">Fast Beta</span>',
             '  </div>',
             '  <div style="padding:22px">',
             '    <div id="fastReportStage" style="font-weight:600;margin-bottom:10px">Preparing report</div>',
