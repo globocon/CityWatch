@@ -134,6 +134,13 @@ namespace CityWatch.Kpi.Services.FastReport
                 var viewDataService = services.GetRequiredService<IViewDataService>();
                 var patrolDataReportService = services.GetRequiredService<IPatrolDataReportService>();
 
+                var isEmailRun = job.Request.Mode == FastReportMode.Email;
+
+                // Only resolved for a Run Now, so a plain download never constructs either of
+                // these and cannot accidentally acquire their side effects.
+                var importDataService = isEmailRun ? services.GetRequiredService<IImportDataService>() : null;
+                var sendScheduleService = isEmailRun ? services.GetRequiredService<ISendScheduleService>() : null;
+
                 // -------- Stage: load schedule --------
                 SetStage(job, FastReportStage.LoadingSchedule, "Loading schedule");
                 cancellationToken.ThrowIfCancellationRequested();
@@ -162,8 +169,13 @@ namespace CityWatch.Kpi.Services.FastReport
                 // -------- Stage: per-site reports --------
                 SetStage(job, FastReportStage.GeneratingSiteReports, "Starting site reports");
 
-                var isDownselect = schedule.IsCriticalDocumentDownselect;
-                var criticalDocumentId = Convert.ToInt32(schedule.CriticalGroupNameID);
+                // The two legacy paths disagree here and that disagreement is preserved, not
+                // fixed: ProcessDownload passes the schedule's critical-document downselect,
+                // while ProcessSchedule ("Run Now") omits both arguments and so always renders
+                // with downselect off. Applying it to an email run would silently change what
+                // clients receive, which is well outside the scope of adding a progress bar.
+                var isDownselect = !isEmailRun && schedule.IsCriticalDocumentDownselect;
+                var criticalDocumentId = isEmailRun ? 0 : Convert.ToInt32(schedule.CriticalGroupNameID);
 
                 for (var index = 0; index < siteIds.Count; index++)
                 {
@@ -203,7 +215,16 @@ namespace CityWatch.Kpi.Services.FastReport
                         ReportDate = reportStartDate,
                         CreatedDate = DateTime.Now
                     };
-                    importJobProvider.SaveKpiDataImportJob(importJob);
+                    var importJobId = importJobProvider.SaveKpiDataImportJob(importJob);
+
+                    // ProcessSchedule refreshes the site's daily KPI rows before rendering;
+                    // ProcessDownload deliberately does not. Keeping that difference means a
+                    // Run Now still emails exactly the figures it emails today.
+                    if (isEmailRun)
+                    {
+                        SetStep(job, $"Site {position} of {siteIds.Count} - Importing KPI data");
+                        await importDataService.Run(importJobId).ConfigureAwait(false);
+                    }
 
                     SetStep(job, $"Site {position} of {siteIds.Count} - Rendering PDF");
 
@@ -279,11 +300,49 @@ namespace CityWatch.Kpi.Services.FastReport
                 PdfHelper.CombinePdfReports(combinedPath, siteReportFiles, summaryFile);
                 job.Append("Documents merged.");
 
-                // -------- Stage: finalise --------
-                SetStage(job, FastReportStage.Finalising, "Preparing download");
-
-                var fileInfo = new FileInfo(combinedPath);
+                // Recorded now so the finally block can clean it up if a later stage throws.
+                // Nothing can download it before the job reaches Completed.
                 job.OutputFilePath = combinedPath;
+
+                // Measured before the email stage, because an email run deletes the file
+                // as soon as it has been sent.
+                var fileInfo = new FileInfo(combinedPath);
+                var outputBytes = fileInfo.Exists ? fileInfo.Length : 0;
+                var outputPages = CountPages(combinedPath);
+
+                // -------- Stage: email (Run Now only) --------
+                if (isEmailRun)
+                {
+                    // Past the point of no return for cancellation: once the message is sent
+                    // it cannot be recalled, so this is the last cancellation check.
+                    cancellationToken.ThrowIfCancellationRequested();
+                    SetStage(job, FastReportStage.SendingEmail, "Sending email");
+
+                    var emailOptions = services.GetRequiredService<Microsoft.Extensions.Options.IOptions<CityWatch.Data.Helpers.EmailOptions>>().Value;
+                    var redirectTo = SendScheduleService.GetTestModeRedirectAddresses(emailOptions);
+
+                    sendScheduleService.SendScheduleEmail(combinedPath, schedule, reportStartDate, job.Request.IgnoreRecipients);
+                    job.EmailSent = true;
+
+                    if (redirectTo.Count > 0)
+                        job.Append($"TEST MODE: report emailed only to {string.Join(", ", redirectTo)}. No client recipient was contacted.");
+                    else
+                        job.Append(job.Request.IgnoreRecipients
+                            ? "Report emailed to the default mailbox (schedule CC/BCC ignored)."
+                            : "Report emailed to the schedule's recipients.");
+                }
+
+                // -------- Stage: finalise --------
+                SetStage(job, FastReportStage.Finalising, isEmailRun ? "Finishing up" : "Preparing download");
+
+                if (isEmailRun)
+                {
+                    // Nothing to download: the report has been delivered, so clear it out the
+                    // way ProcessSchedule does rather than leaving a PDF on disk.
+                    DeleteQuietly(job, combinedPath);
+                    TryRemoveDirectory(jobDir);
+                    job.OutputFilePath = null;
+                }
 
                 totalStopwatch.Stop();
                 peakManagedBytes = Math.Max(peakManagedBytes, GC.GetTotalMemory(false));
@@ -296,8 +355,8 @@ namespace CityWatch.Kpi.Services.FastReport
                     CacheMisses = cache.Misses,
                     PassThroughCalls = cache.PassThrough,
                     PeakManagedMemoryBytes = peakManagedBytes,
-                    OutputFileBytes = fileInfo.Exists ? fileInfo.Length : 0,
-                    OutputPageCount = CountPages(combinedPath),
+                    OutputFileBytes = outputBytes,
+                    OutputPageCount = outputPages,
                     TopMethods = cache.TopMethods()
                 };
 
@@ -335,13 +394,25 @@ namespace CityWatch.Kpi.Services.FastReport
             }
             catch (Exception ex)
             {
-                MarkFailed(job, DescribeFailure(ex), ex);
+                MarkFailed(job, DescribeFailure(ex, job.Stage), ex);
                 _logger.LogError(ex, "FastReport {JobId}: failed.", job.JobId);
             }
             finally
             {
                 cache.OnDataAccess = null;
                 CleanupTempFiles(job, siteReportFiles, summaryFile);
+
+                // An email run that failed or was cancelled after the merge has no one left to
+                // collect its PDF, so it must not be left behind on disk.
+                if (job.Request.Mode == FastReportMode.Email &&
+                    job.Status != FastReportStatus.Completed &&
+                    !string.IsNullOrEmpty(job.OutputFilePath))
+                {
+                    var orphan = job.OutputFilePath;
+                    job.OutputFilePath = null;
+                    DeleteQuietly(job, orphan);
+                    TryRemoveDirectory(Path.GetDirectoryName(orphan));
+                }
             }
         }
 
@@ -426,31 +497,55 @@ namespace CityWatch.Kpi.Services.FastReport
         private void CleanupTempFiles(FastReportJob job, IEnumerable<string> siteReportFiles, string summaryFile)
         {
             foreach (var path in siteReportFiles.Concat(new[] { summaryFile }))
-            {
-                if (string.IsNullOrEmpty(path))
-                    continue;
+                DeleteQuietly(job, path);
+        }
 
-                try
-                {
-                    if (File.Exists(path))
-                        File.Delete(path);
-                }
-                catch (Exception ex)
-                {
-                    // Never let cleanup failure mask the real outcome.
-                    job.Append($"Could not delete temp file '{Path.GetFileName(path)}': {ex.Message}");
-                    _logger.LogWarning("FastReport {JobId}: temp cleanup failed for {Path}. {Message}", job.JobId, path, ex.Message);
-                }
+        private void DeleteQuietly(FastReportJob job, string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch (Exception ex)
+            {
+                // Never let cleanup failure mask the real outcome.
+                job.Append($"Could not delete temp file '{Path.GetFileName(path)}': {ex.Message}");
+                _logger.LogWarning("FastReport {JobId}: temp cleanup failed for {Path}. {Message}", job.JobId, path, ex.Message);
             }
         }
 
-        private static string DescribeFailure(Exception ex) => ex switch
+        private static void TryRemoveDirectory(string path)
         {
-            InvalidOperationException => ex.Message,
-            IOException => "The report file could not be written. The server may be out of disk space.",
-            UnauthorizedAccessException => "The server does not have permission to write the report file.",
-            _ => "The report failed to generate. See the details below."
-        };
+            try
+            {
+                if (Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any())
+                    Directory.Delete(path);
+            }
+            catch
+            {
+                // An orphaned empty folder is harmless; never fail a completed run over it.
+            }
+        }
+
+        private static string DescribeFailure(Exception ex, FastReportStage stage)
+        {
+            // A failure at the email stage means the PDF itself was fine - saying "the report
+            // failed to generate" would send whoever reads this looking in the wrong place.
+            if (stage == FastReportStage.SendingEmail)
+                return "The report was generated, but the email could not be sent. Check the SMTP settings and the log below.";
+
+            return ex switch
+            {
+                InvalidOperationException => ex.Message,
+                IOException => "The report file could not be written. The server may be out of disk space.",
+                UnauthorizedAccessException => "The server does not have permission to write the report file.",
+                _ => "The report failed to generate. See the details below."
+            };
+        }
 
         private void MarkFailed(FastReportJob job, string message, Exception ex)
         {

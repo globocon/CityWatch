@@ -17,8 +17,27 @@ namespace CityWatch.Kpi.Services.FastReport
     }
 
     /// <summary>
+    /// What the caller wants out of the run.
+    ///
+    /// <see cref="Download"/> mirrors <c>SendScheduleService.ProcessDownload</c>: no KPI data
+    /// import, no email, the merged PDF is streamed to the browser.
+    ///
+    /// <see cref="Email"/> mirrors <c>SendScheduleService.ProcessSchedule</c> as invoked by
+    /// "Run Now": the per-site KPI data import runs first and the merged PDF is emailed to
+    /// the schedule's recipients instead of being offered as a download.
+    /// </summary>
+    public enum FastReportMode
+    {
+        Download,
+        Email
+    }
+
+    /// <summary>
     /// The coarse pipeline stages a job moves through. Percentages are allocated
     /// across these so the progress bar advances smoothly and monotonically.
+    ///
+    /// Declaration order matters: <see cref="FastReportJob.EstimateRemainingSeconds"/>
+    /// compares stages with &gt;=.
     /// </summary>
     public enum FastReportStage
     {
@@ -27,6 +46,7 @@ namespace CityWatch.Kpi.Services.FastReport
         GeneratingSiteReports,
         BuildingSummary,
         MergingDocuments,
+        SendingEmail,
         Finalising,
         Completed
     }
@@ -58,6 +78,12 @@ namespace CityWatch.Kpi.Services.FastReport
 
         public bool IsTerminal { get; set; }
         public bool CanDownload { get; set; }
+
+        /// <summary>"Download" or "Email" - the client renders a different outcome for each.</summary>
+        public string Mode { get; set; }
+
+        /// <summary>Email runs only: the message has been handed to the SMTP server.</summary>
+        public bool EmailSent { get; set; }
 
         public string ErrorMessage { get; set; }
 
@@ -112,10 +138,13 @@ namespace CityWatch.Kpi.Services.FastReport
         public int ReportMonth { get; set; }
         public bool IgnoreRecipients { get; set; }
 
+        /// <summary>Defaults to Download, so an older client that omits it behaves as before.</summary>
+        public FastReportMode Mode { get; set; } = FastReportMode.Download;
+
         public DateTime ReportStartDate => new DateTime(ReportYear, ReportMonth, 1);
 
         public override string ToString() =>
-            $"schedule={ScheduleId} period={ReportYear}-{ReportMonth:00} ignoreRecipients={IgnoreRecipients}";
+            $"schedule={ScheduleId} period={ReportYear}-{ReportMonth:00} mode={Mode} ignoreRecipients={IgnoreRecipients}";
     }
 
     /// <summary>
@@ -156,9 +185,15 @@ namespace CityWatch.Kpi.Services.FastReport
         /// <summary>Wall-clock of each completed site, used to project the ETA.</summary>
         public List<double> SiteDurationsSeconds { get; } = new();
 
-        /// <summary>Absolute path of the finished PDF. Streamed then deleted on download.</summary>
+        /// <summary>
+        /// Absolute path of the finished PDF. Streamed then deleted on download; cleared by an
+        /// email run once the message has gone out.
+        /// </summary>
         public string OutputFilePath { get; set; }
         public string DownloadFileName { get; set; }
+
+        /// <summary>True once an email run has actually handed the message to the SMTP server.</summary>
+        public bool EmailSent { get; set; }
 
         public string ErrorMessage { get; set; }
         public string ErrorDetail { get; set; }
@@ -193,7 +228,8 @@ namespace CityWatch.Kpi.Services.FastReport
             const int scheduleLoaded = 5;
             const int sitesBudget = 75;   // 5 -> 80
             const int summaryDone = 85;
-            const int mergeDone = 94;
+            const int mergeDone = 92;
+            const int emailSent = 96;
             const int finaliseDone = 98;
 
             return Stage switch
@@ -207,6 +243,7 @@ namespace CityWatch.Kpi.Services.FastReport
                             (SitesCompleted + Math.Clamp(CurrentSiteFraction, 0d, 0.97d)) / SitesTotal * sitesBudget),
                 FastReportStage.BuildingSummary => summaryDone,
                 FastReportStage.MergingDocuments => mergeDone,
+                FastReportStage.SendingEmail => emailSent,
                 FastReportStage.Finalising => finaliseDone,
                 FastReportStage.Completed => 100,
                 _ => 0
@@ -249,7 +286,7 @@ namespace CityWatch.Kpi.Services.FastReport
                     JobId = JobId,
                     Status = Status.ToString(),
                     Stage = Stage.ToString(),
-                    StageLabel = StageLabelFor(Stage),
+                    StageLabel = StageLabelFor(Stage, Request?.Mode ?? FastReportMode.Download),
                     CurrentStep = CurrentStep,
                     PercentComplete = Status == FastReportStatus.Completed ? 100 : ComputePercent(),
                     SitesTotal = SitesTotal,
@@ -257,21 +294,26 @@ namespace CityWatch.Kpi.Services.FastReport
                     ElapsedSeconds = Math.Round(ElapsedSeconds, 1),
                     EstimatedRemainingSeconds = EstimateRemainingSeconds(),
                     IsTerminal = IsTerminal,
+                    // Email runs delete the merged PDF once it has been sent, so this is
+                    // false for them and the client never offers a download.
                     CanDownload = Status == FastReportStatus.Completed && !string.IsNullOrEmpty(OutputFilePath),
+                    Mode = (Request?.Mode ?? FastReportMode.Download).ToString(),
+                    EmailSent = EmailSent,
                     ErrorMessage = ErrorMessage,
                     Metrics = Metrics
                 };
             }
         }
 
-        public static string StageLabelFor(FastReportStage stage) => stage switch
+        public static string StageLabelFor(FastReportStage stage, FastReportMode mode = FastReportMode.Download) => stage switch
         {
             FastReportStage.Preparing => "Preparing report",
             FastReportStage.LoadingSchedule => "Loading schedule",
             FastReportStage.GeneratingSiteReports => "Generating site reports",
             FastReportStage.BuildingSummary => "Building summary cover page",
             FastReportStage.MergingDocuments => "Merging documents",
-            FastReportStage.Finalising => "Preparing download",
+            FastReportStage.SendingEmail => "Sending email",
+            FastReportStage.Finalising => mode == FastReportMode.Email ? "Finishing up" : "Preparing download",
             FastReportStage.Completed => "Completed",
             _ => stage.ToString()
         };

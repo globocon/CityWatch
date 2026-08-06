@@ -42,7 +42,9 @@ namespace CityWatch.Kpi.API
 
         /// <summary>Queues a report. Returns immediately with a job id to poll.</summary>
         [HttpPost("start")]
-        public IActionResult Start([FromForm] FastReportRequest request)
+        public IActionResult Start(
+            [FromForm] FastReportRequest request,
+            [FromServices] Microsoft.Extensions.Options.IOptions<CityWatch.Data.Helpers.EmailOptions> emailOptions)
         {
             if (request == null || request.ScheduleId <= 0)
                 return BadRequest(new { success = false, message = "A schedule must be selected." });
@@ -56,7 +58,18 @@ namespace CityWatch.Kpi.API
             var job = _fastReportService.Start(request);
             _logger.LogInformation("FastReport: queued job {JobId} for {Request}.", job.JobId, request);
 
-            return Ok(new { success = true, jobId = job.JobId });
+            // Reported up front, minutes before the send, so whoever pressed Run Now can see
+            // where the email is actually going while there is still time to cancel.
+            var redirectTo = request.Mode == FastReportMode.Email
+                ? SendScheduleService.GetTestModeRedirectAddresses(emailOptions.Value)
+                : (System.Collections.Generic.IReadOnlyList<string>)Array.Empty<string>();
+
+            return Ok(new
+            {
+                success = true,
+                jobId = job.JobId,
+                emailRedirectTo = redirectTo.Count > 0 ? string.Join(", ", redirectTo) : null
+            });
         }
 
         /// <summary>Progress snapshot. Polled by the client roughly once a second.</summary>
