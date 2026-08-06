@@ -1,3 +1,4 @@
+using CityWatch.Data;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
@@ -67,7 +68,12 @@ namespace CityWatch.Kpi.Services.FastReport
             // 62.8s of a 76.9s report. Its cost is inside these two providers - the whole
             // month's incident reports reloaded per call, and GetFeedbackTemplates() run
             // once per report row from DailyPatrolData's ColourCode getter.
-            Decorate<IIrDataProvider>(services, FastReportCachePolicy.IrDataProvider);
+            // The incident-report read is additionally swapped for a no-tracking variant:
+            // measured at 20.4s of a 34.6s report, against SQL that returns in under a
+            // second. See ReadOnlyIrDataProvider for the full reasoning.
+            Decorate<IIrDataProvider>(services, FastReportCachePolicy.IrDataProvider,
+                (inner, sp) => new ReadOnlyIrDataProvider(inner, sp.GetRequiredService<CityWatchDbContext>()));
+
             Decorate<IConfigDataProvider>(services, FastReportCachePolicy.ConfigDataProvider);
 
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
@@ -117,7 +123,15 @@ namespace CityWatch.Kpi.Services.FastReport
         /// memoising proxy over the application's real implementation. The concrete type is
         /// registered alongside it so the container still builds it with its own dependencies.
         /// </summary>
-        private void Decorate<TInterface>(IServiceCollection services, System.Collections.Generic.IReadOnlyDictionary<string, string> policy)
+        /// <param name="wrap">
+        /// Optional adapter applied to the real implementation before it is memoised - used
+        /// where the fast path needs a different implementation of one method, not just
+        /// caching. The cache always sits outermost so its counters see every call.
+        /// </param>
+        private void Decorate<TInterface>(
+            IServiceCollection services,
+            System.Collections.Generic.IReadOnlyDictionary<string, string> policy,
+            Func<TInterface, IServiceProvider, TInterface> wrap = null)
             where TInterface : class
         {
             var descriptor = services.LastOrDefault(d => d.ServiceType == typeof(TInterface));
@@ -142,10 +156,17 @@ namespace CityWatch.Kpi.Services.FastReport
             services.Add(new ServiceDescriptor(implementationType, implementationType, descriptor.Lifetime));
             services.Add(new ServiceDescriptor(
                 typeof(TInterface),
-                sp => MemoizingProxy<TInterface>.Create(
-                    (TInterface)sp.GetRequiredService(implementationType),
-                    sp.GetRequiredService<ReportScopeCache>(),
-                    policy),
+                sp =>
+                {
+                    var real = (TInterface)sp.GetRequiredService(implementationType);
+                    if (wrap != null)
+                        real = wrap(real, sp);
+
+                    return MemoizingProxy<TInterface>.Create(
+                        real,
+                        sp.GetRequiredService<ReportScopeCache>(),
+                        policy);
+                },
                 descriptor.Lifetime));
         }
 
