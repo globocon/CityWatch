@@ -16,15 +16,21 @@ unchanged:
 | `CityWatch.Kpi/Services/ReportGenerator.cs` | Renders each site's PDF pages |
 | `CityWatch.Kpi/Services/MonthlySummaryReportGenerator.cs` | Renders the cover sheet |
 | `CityWatch.Kpi/Services/WeeklySummaryReportGenerator.cs` | Weekly cover sheet variant |
-| `CityWatch.Kpi/Services/SendScheduleService.cs` | Legacy orchestration + email + Dropbox |
 | `CityWatch.Data/Helpers/PdfHelper.cs` | Merges the PDFs |
-| `CityWatch.Kpi/Pages/Admin/Settings.cshtml.cs` | Legacy `OnGetDownloadPdf` handler |
-| `CityWatch.Kpi/wwwroot/js/site.js` | Legacy `#btnScheduleDownload` handler |
+| `CityWatch.Kpi/Pages/Admin/Settings.cshtml.cs` | Legacy `OnGetDownloadPdf` / `OnPostRunSchedule` handlers |
+| `CityWatch.Kpi/wwwroot/js/site.js` | Legacy `#btnScheduleDownload` / `#btnScheduleRun` handlers |
 | Every data provider in `CityWatch.Data/Providers/` | Unchanged |
 
-The only edits to pre-existing files are three additive lines:
+`SendScheduleService.cs` has exactly one addition: a public `SendScheduleEmail(...)` that
+forwards to the existing private `SendEmail(...)`. Every legacy method — `ProcessSchedule`,
+`ProcessDownload` and the private email/upload helpers — is otherwise unchanged. The fast
+path calls that one method rather than re-implementing the recipient and attachment rules,
+so a Run Now sends a byte-identical message.
 
-1. `Pages/Admin/_SchedulePopup.cshtml` — one new `<button>` next to the existing one.
+The remaining edits to pre-existing files are additive:
+
+1. `Pages/Admin/_SchedulePopup.cshtml` — two new `<button>`s; the legacy pair is kept in the
+   DOM with `d-none` so their handlers and server flow survive as a fallback.
 2. `Pages/Shared/_Layout.cshtml` — one `<script>` tag for the new JS file.
 3. `Program.cs` — four DI registrations in a clearly marked block at the end.
 
@@ -145,8 +151,9 @@ Coarse stages, with intra-site interpolation so the bar never appears frozen:
 | Loading schedule | 5% |
 | Generating site reports | 5% → 80% |
 | Building summary cover page | 85% |
-| Merging documents | 94% |
-| Preparing download | 98% |
+| Merging documents | 92% |
+| Sending email *(Run Now only)* | 96% |
+| Preparing download / Finishing up | 98% |
 | Completed | 100% |
 
 Within the site stage, progress is interpolated from the number of data-provider calls the
@@ -162,6 +169,31 @@ client additionally clamps it so it can never move backwards.
 reserve of half a site for the summary/merge tail. It returns null (displayed as
 "calculating...") until at least one site has finished, rather than showing a fabricated
 number.
+
+### 5a. The two run modes
+
+Both live buttons on the Run Schedule popup use this pipeline. They differ only by
+`FastReportRequest.Mode`, and each mode reproduces its own legacy counterpart exactly:
+
+| | `Mode=Download` — "Download Now" | `Mode=Email` — "Run Now" |
+|---|---|---|
+| Mirrors | `SendScheduleService.ProcessDownload` | `SendScheduleService.ProcessSchedule` (`upload: false`) |
+| Per-site KPI data import (`IImportDataService.Run`) | no | **yes**, before each site renders |
+| Critical-document downselect | schedule's setting | **off** — `ProcessSchedule` omits both arguments |
+| Cover sheet, merge, file name | identical | identical |
+| Outcome | PDF streamed to the browser | PDF emailed via `SendScheduleEmail`, then deleted |
+| `NextRunOn` update / SharePoint upload | no | no (`upload: false`, same as the button today) |
+
+The downselect row is a **deliberate preservation of an existing inconsistency**, not an
+oversight: `ProcessSchedule` calls `GeneratePdfReport` without the `IsDownselect` /
+`CriticalDocumentID` arguments, so today's emailed report never applies the downselect even
+when the schedule has it enabled. Applying it in the new path would silently change what
+clients receive. If that inconsistency should be fixed, it is a separate decision — remove
+the `isEmailRun` conditional in `FastReportService` and re-run the side-by-side check.
+
+Cancellation is offered until the email stage begins and is then withdrawn, because a sent
+message cannot be recalled. If SMTP fails, the job reports that the report was generated but
+the email could not be sent — the PDF is deleted rather than orphaned on disk.
 
 ---
 
@@ -233,6 +265,66 @@ Run the benchmark against at least: a single-site schedule, a multi-site schedul
 (schedule 46 has 4 sites), a month with dense guard data, and a month with no data. The
 last one matters because both paths must handle the empty case the same way.
 
+### 8d. Email test mode — send everything to yourself first
+
+`Email:TestModeRedirectTo` in `appsettings.json` is the safety valve for testing the send
+without any client receiving anything. It is currently set:
+
+```json
+"TestModeRedirectTo": "addileepsebastian@gmail.com",
+```
+
+While it holds one or more addresses (comma separated), every KPI schedule email —
+monthly, timesheet, key-vehicle and custom-wand — has its **To, CC and BCC discarded** and
+goes only to those addresses, with `[TEST]` prefixed to the subject. That includes the
+standing `globoconsoftware@gmail.com` BCC and any address a schedule defines.
+
+**To go back to live sending:** set the value to `""` and restart. Nothing else changes.
+
+```json
+"TestModeRedirectTo": "",
+```
+
+Three things make it hard to leave switched on by accident:
+
+- the app logs `EMAIL TEST MODE IS ACTIVE` as a warning at startup;
+- pressing **Run Now** shows *"Test mode. This report will be emailed only to …"* in the
+  overlay as soon as the job is queued — minutes before the send, while Cancel still works.
+  If it instead says *"Live send"*, the setting is not in effect on that server;
+- the job log records `TEST MODE: report emailed only to …` on the run itself.
+
+The one trap: this lives in the **deployed** `appsettings.json`. If a deployment does not
+overwrite that file on the server, the key will not exist there and the send will be live.
+Trust the overlay banner, not the repo.
+
+Scope note: the valve is applied inside `CityWatch.Kpi`'s `SendScheduleService` only.
+`CityWatch.Web` and `CityWatch.RadioCheck` have their own email configuration and are not
+affected by it. Also note that while it is on, the **automatic scheduled** KPI sends from
+that server are redirected too, not just the button — which is what you want on test, and
+must never be true on production.
+
+### 8e. Run Now (email mode) — must be verified separately
+
+The benchmark does **not** cover this: it always runs `Mode=Download` and never sends mail.
+Email mode has to be exercised through the button, so:
+
+1. Confirm the overlay shows the **test mode** banner (§8d) before letting the run proceed.
+   Ticking **Ignore email recipients (CC & BCC)** is a useful second belt: it drops the
+   schedule's CC/BCC even when test mode is off.
+2. Click **Run Now** on a small schedule. Confirm the overlay reaches *Sending email* and
+   then *Completed*, the popup line reads "Done. Report sent via email", and the Cancel
+   button disappears at the email stage.
+3. Check the received message: the subject should carry the `[TEST]` prefix, and subject,
+   attachment name and page count must otherwise match what the same schedule and month
+   produce via **Download Now** — with the downselect caveat in §5a for schedules that have
+   `IsCriticalDocumentDownselect` enabled.
+4. Confirm the per-site KPI import ran: `KpiDataImportJob` rows for the period should show a
+   completed status, and `DailyClientSiteKpi` rows should be refreshed. This is the step
+   `Download Now` skips and `Run Now` must not.
+5. Confirm nothing is left behind under `wwwroot/Pdf/Output/fast/`.
+6. Break SMTP deliberately once (bad port in config) and confirm the failure says the report
+   was generated but the email could not be sent, and that no PDF is orphaned.
+
 ---
 
 ## 9. Known limitations and deliberate choices
@@ -255,24 +347,34 @@ the latter would change pixel output and needs sign-off, so it was left alone.
 polling could hit a node that does not know the job. A shared store (Redis or SQL) would
 be needed for a multi-node deployment.
 
-**Endpoint authorisation matches the existing page.** `Program.cs` applies
-`AllowAnonymousToFolder("/")` and there is no global authorisation filter, so the legacy
-`/Admin/Settings?handler=DownloadPdf` handler is already effectively anonymous. The new
-controller matches that posture rather than weakening or unilaterally changing it. If
-report endpoints should require authentication, that is a separate change that should
-cover both paths together.
+**Endpoint authorisation matches the existing page — and that now matters more.**
+`Program.cs` applies `AllowAnonymousToFolder("/")` and there is no global authorisation
+filter, so both legacy handlers — `?handler=DownloadPdf` and `?handler=RunSchedule` — are
+already effectively anonymous, and `POST /api/FastKpiReport/start` matches that posture
+rather than unilaterally changing it. Note what that means with email mode added: an
+unauthenticated caller can trigger a client-facing email, exactly as they can today via
+`?handler=RunSchedule`. It is not a new exposure, but it is a bigger one than a download.
+Putting these endpoints behind authentication is worth doing as its own change, covering
+the legacy handlers and this controller together.
 
-**One legacy side effect is reproduced on purpose.** The legacy download path inserts a
-`KpiDataImportJobs` row per site and never completes it (the import call on
+**One legacy side effect is reproduced on purpose (download mode).** The legacy download
+path inserts a `KpiDataImportJobs` row per site and never completes it (the import call on
 `SendScheduleService.cs:709` is commented out), leaving orphan rows that
-`KpiReportController.Send()` later has to clear. The fast path writes the same row so the
-two are directly comparable. It is a candidate for cleanup, but changing it here would
-have meant the benchmark was not comparing like with like.
+`KpiReportController.Send()` later has to clear. Download mode writes the same row so the
+two are directly comparable; email mode runs the import for real, exactly as
+`ProcessSchedule` does. It is a candidate for cleanup, but changing it here would have
+meant the benchmark was not comparing like with like.
 
 ---
 
 ## 10. Rollback
 
-Delete the button in `_SchedulePopup.cshtml`. The fast path becomes unreachable; nothing
-else references it. Full removal is the four `Program.cs` registrations, the script tag,
-and the `Services/FastReport/` folder plus its controller and JS file.
+In `_SchedulePopup.cshtml`, move the `d-none` class from the legacy `#btnScheduleRun` /
+`#btnScheduleDownload` pair onto `#btnScheduleRunFast` / `#btnScheduleDownloadFast`. The
+original buttons, their `site.js` handlers and the original Razor Page handlers are all
+still present and unmodified, so that single edit restores the previous behaviour with no
+server change and no deployment of anything else.
+
+Full removal is the four `Program.cs` registrations, the script tag, the
+`Services/FastReport/` folder plus its controller and JS file, the two fast buttons, and
+the `SendScheduleEmail` member on `ISendScheduleService` / `SendScheduleService`.

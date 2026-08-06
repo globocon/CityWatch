@@ -39,6 +39,14 @@ namespace CityWatch.Kpi.Services
         Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
         byte[] ProcessDownload(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
 
+        /// <summary>
+        /// Emails an already-generated monthly report. Exposes the same private SendEmail that
+        /// <see cref="ProcessSchedule"/> uses, so the progress-reporting run path in
+        /// <c>FastReportService</c> sends a byte-identical message rather than a second copy of
+        /// the recipient and attachment logic.
+        /// </summary>
+        void SendScheduleEmail(string reportFilePath, KpiSendSchedule schedule, DateTime reportDate, bool ignoreRecipients);
+
         //Kpi TimeSheet
         Task<string> ProcessTimeSheetSchedule(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
         byte[] ProcessDownloadTimeSheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
@@ -398,6 +406,62 @@ namespace CityWatch.Kpi.Services
             return true;
         }
 
+        public void SendScheduleEmail(string reportFilePath, KpiSendSchedule schedule, DateTime reportDate, bool ignoreRecipients)
+        {
+            SendEmail(reportFilePath, schedule, reportDate, ignoreRecipients);
+        }
+
+        /// <summary>
+        /// Parses <c>Email:TestModeRedirectTo</c>. Empty when the setting is absent or blank,
+        /// which is the live configuration.
+        /// </summary>
+        public static IReadOnlyList<string> GetTestModeRedirectAddresses(EmailOptions emailOptions)
+        {
+            if (string.IsNullOrWhiteSpace(emailOptions?.TestModeRedirectTo))
+                return Array.Empty<string>();
+
+            return emailOptions.TestModeRedirectTo
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(z => z.Trim())
+                .Where(z => CommonHelper.IsValidEmail(z))
+                .ToList();
+        }
+
+        /// <summary>
+        /// Test-mode safety valve: when <c>Email:TestModeRedirectTo</c> is set, throws away
+        /// every recipient the caller assembled and replaces them with the configured test
+        /// addresses, so nothing can reach a client while a change is being verified.
+        ///
+        /// Deliberately blunt - it clears To, CC *and* BCC, including the standing
+        /// globoconsoftware BCC - because a partial redirect is worse than none: it reads as
+        /// safe while still delivering. Clearing rather than filtering also means a recipient
+        /// added here in future is covered without anyone remembering to update this method.
+        ///
+        /// To go back to live sending, set the value to "" in appsettings.json and restart.
+        /// </summary>
+        private void ApplyTestModeRedirect(MimeMessage message)
+        {
+            var redirectTo = GetTestModeRedirectAddresses(_emailOptions);
+            if (redirectTo.Count == 0)
+                return;
+
+            var suppressed = message.To.Count + message.Cc.Count + message.Bcc.Count;
+
+            message.To.Clear();
+            message.Cc.Clear();
+            message.Bcc.Clear();
+
+            foreach (var address in redirectTo)
+                message.To.Add(new MailboxAddress(string.Empty, address));
+
+            message.Subject = "[TEST] " + message.Subject;
+
+            _logger.LogWarning(
+                "Email TEST MODE is active: '{Subject}' redirected to {Redirect}. {Count} real recipient(s) suppressed. " +
+                "Clear Email:TestModeRedirectTo in appsettings.json to resume live sending.",
+                message.Subject, string.Join(", ", redirectTo), suppressed);
+        }
+
         private void SendEmail(string fileName, KpiSendSchedule schedule, DateTime reportDate, bool ignoreRecipients)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
@@ -455,6 +519,10 @@ namespace CityWatch.Kpi.Services
                 }
             }
             message.Subject = $"{subject} - {schedule.ProjectName} - {reportDate:MMM yyyy}";
+
+            // Applied last, after every recipient rule above has run, so nothing can slip
+            // past it. No-op unless Email:TestModeRedirectTo is set.
+            ApplyTestModeRedirect(message);
 
             var builder = new BodyBuilder()
             {
@@ -520,6 +588,10 @@ namespace CityWatch.Kpi.Services
             }
             message.Subject = $"{subject} - {schedule.ProjectName} - {reportDate:MMM yyyy}";
 
+            // Applied last, after every recipient rule above has run, so nothing can slip
+            // past it. No-op unless Email:TestModeRedirectTo is set.
+            ApplyTestModeRedirect(message);
+
             var builder = new BodyBuilder()
             {
                 HtmlBody = messageHtml
@@ -570,6 +642,10 @@ namespace CityWatch.Kpi.Services
                 }
             }
             message.Subject = $"{subject} - {schedule.ProjectName} - {reportDate:MMM yyyy}";
+
+            // Applied last, after every recipient rule above has run, so nothing can slip
+            // past it. No-op unless Email:TestModeRedirectTo is set.
+            ApplyTestModeRedirect(message);
 
             var builder = new BodyBuilder()
             {
@@ -995,6 +1071,10 @@ namespace CityWatch.Kpi.Services
                 }
             }
             message.Subject = $"{subject} - {schedule.ProjectName} - {reportDate:MMM yyyy}";
+
+            // Applied last, after every recipient rule above has run, so nothing can slip
+            // past it. No-op unless Email:TestModeRedirectTo is set.
+            ApplyTestModeRedirect(message);
 
             var builder = new BodyBuilder()
             {

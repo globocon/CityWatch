@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using System;
 
@@ -81,6 +82,24 @@ builder.Services.AddSignalR();
 
 
 var app = builder.Build();
+
+// ---------------------------------------------------------------------------
+// Email test-mode banner. Logged loudly at boot so a redirect left switched on
+// is visible in the log the moment the app starts, not discovered later when a
+// client asks why their report never arrived.
+// ---------------------------------------------------------------------------
+var emailTestRedirect = CityWatch.Kpi.Services.SendScheduleService.GetTestModeRedirectAddresses(
+    app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<CityWatch.Data.Helpers.EmailOptions>>().Value);
+if (emailTestRedirect.Count > 0)
+{
+    app.Services.GetRequiredService<ILoggerFactory>()
+        .CreateLogger("EmailTestMode")
+        .LogWarning(
+            "EMAIL TEST MODE IS ACTIVE. Every KPI report email will go only to {Redirect}; no client will receive one. " +
+            "Clear Email:TestModeRedirectTo in appsettings.json and restart to resume live sending.",
+            string.Join(", ", emailTestRedirect));
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

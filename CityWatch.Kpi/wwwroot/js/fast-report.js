@@ -1,12 +1,17 @@
 /*
  * fast-report.js
  * ---------------------------------------------------------------------------
- * Client for the "Download Now" button (#btnScheduleDownloadFast), which is now
- * the default download path on the Run Schedule popup.
+ * Client for the two live buttons on the Run Schedule popup:
  *
- * Still additive: this file registers one click handler on its own button and
- * talks only to /api/FastKpiReport/*. The legacy #btnScheduleDownload button is
- * hidden in the markup but left in place, and its site.js handler is untouched.
+ *   #btnScheduleDownloadFast  "Download Now"  - generates and streams the PDF
+ *   #btnScheduleRunFast       "Run Now"       - generates and emails it
+ *
+ * Both run the same job on the server and share this progress overlay; they
+ * differ only by the Mode sent to /api/FastKpiReport/start.
+ *
+ * Still additive: the legacy #btnScheduleDownload and #btnScheduleRun buttons are
+ * hidden in the markup but left in place, and their site.js handlers - along with
+ * the Razor Page handlers behind them - are untouched.
  *
  * The overlay is built with plain DOM and inline styles rather than a Bootstrap
  * modal, so it cannot be affected by - or affect - the Bootstrap 4 modal that
@@ -23,8 +28,11 @@
         polling: false,
         timer: null,
         lastPercent: 0,
-        request: null
+        request: null,
+        mode: 'Download'
     };
+
+    function isEmailRun() { return state.mode === 'Email'; }
 
     // -----------------------------------------------------------------------
     // Overlay
@@ -105,6 +113,7 @@
         el('fastReportRetryBtn').style.display = 'none';
         el('fastReportCloseBtn').style.display = 'none';
         el('fastReportCancelBtn').style.display = '';
+        el('fastReportTitle').textContent = isEmailRun() ? 'Running Schedule' : 'Generating Report';
         setBar(0);
         el('fastReportStage').textContent = 'Preparing report';
         el('fastReportStep').textContent = 'Starting...';
@@ -171,12 +180,18 @@
             ScheduleId: $('#sch-id').val(),
             ReportYear: $('#schRunYear').val(),
             ReportMonth: $('#schRunMonth').val(),
-            IgnoreRecipients: $('#cbIgnoreRecipients').is(':checked')
+            IgnoreRecipients: $('#cbIgnoreRecipients').is(':checked'),
+            Mode: state.mode
         };
     }
 
-    function disableButton() { $('#btnScheduleDownloadFast').prop('disabled', true); }
-    function enableButton() { $('#btnScheduleDownloadFast').prop('disabled', false); }
+    // Both buttons are locked for the duration: each one is an expensive run, and
+    // firing the second while the first is in flight helps nobody.
+    var BUTTONS = '#btnScheduleDownloadFast, #btnScheduleRunFast';
+    function disableButton() { $(BUTTONS).prop('disabled', true); }
+    function enableButton() { $(BUTTONS).prop('disabled', false); }
+
+    function setPopupStatus(html) { $('#schRunStatus').html(html); }
 
     function startJob() {
         state.request = readRequest();
@@ -187,6 +202,7 @@
         }
 
         disableButton();
+        setPopupStatus('');
         showOverlay();
 
         $.ajax({
@@ -199,6 +215,20 @@
                 return;
             }
             state.jobId = response.jobId;
+
+            // Shown now, minutes before the message is actually sent, so there is time to
+            // hit Cancel if this is not where the report was meant to go.
+            if (isEmailRun()) {
+                if (response.emailRedirectTo) {
+                    setAlert('info', '<strong>Test mode.</strong> This report will be emailed only to ' +
+                        escapeHtml(response.emailRedirectTo) +
+                        '. The schedule\'s own recipients are suppressed.');
+                } else {
+                    setAlert('info', '<strong>Live send.</strong> This report will be emailed to the ' +
+                        'schedule\'s recipients when it finishes.');
+                }
+            }
+
             startPolling();
         }).fail(function (xhr) {
             fail(readError(xhr, 'The report could not be queued.'));
@@ -257,6 +287,10 @@
         el('fastReportSites').textContent = progress.sitesTotal > 0
             ? ('Site ' + progress.sitesCompleted + ' of ' + progress.sitesTotal)
             : '';
+
+        // An email cannot be recalled, so stop offering Cancel once it is going out.
+        if (progress.stage === 'SendingEmail')
+            el('fastReportCancelBtn').style.display = 'none';
     }
 
     function finish(progress) {
@@ -266,22 +300,29 @@
         if (progress.status === 'Completed') {
             setBar(100);
             el('fastReportStage').textContent = 'Completed';
-            el('fastReportStep').textContent = 'Your download should begin automatically.';
             el('fastReportEta').textContent = '0s';
 
             var metrics = progress.metrics || {};
-            setAlert('success',
-                '<strong>Report ready.</strong> Generated in ' + formatSeconds(progress.elapsedSeconds) +
+            var detail = formatSeconds(progress.elapsedSeconds) +
                 (metrics.outputPageCount ? ' &middot; ' + metrics.outputPageCount + ' pages' : '') +
-                (metrics.cacheHits ? ' &middot; ' + metrics.cacheHits + ' duplicate queries avoided' : ''));
+                (metrics.cacheHits ? ' &middot; ' + metrics.cacheHits + ' duplicate queries avoided' : '');
 
-            window.location.href = API + '/download/' + encodeURIComponent(progress.jobId);
+            if (progress.mode === 'Email') {
+                el('fastReportStep').textContent = 'The report has been emailed.';
+                setAlert('success', '<strong>Report sent via email.</strong> Generated in ' + detail);
+                setPopupStatus('<i class="fa fa-check-circle-o text-success"></i> Done. Report sent via email');
+            } else {
+                el('fastReportStep').textContent = 'Your download should begin automatically.';
+                setAlert('success', '<strong>Report ready.</strong> Generated in ' + detail);
+                window.location.href = API + '/download/' + encodeURIComponent(progress.jobId);
+            }
+
             enableButton();
             return;
         }
 
         if (progress.status === 'Cancelled') {
-            setAlert('info', 'Report generation was cancelled.');
+            setAlert('info', (isEmailRun() ? 'The run' : 'Report generation') + ' was cancelled.');
             el('fastReportRetryBtn').style.display = '';
             enableButton();
             return;
@@ -297,6 +338,7 @@
         el('fastReportStage').textContent = 'Failed';
         el('fastReportStep').textContent = '';
         setAlert('error', '<strong>Report failed.</strong> ' + escapeHtml(message));
+        setPopupStatus('<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details');
         enableButton();
 
         var id = jobId || state.jobId;
@@ -340,10 +382,22 @@
     // -----------------------------------------------------------------------
 
     $(function () {
-        // Delegated so it works regardless of when the schedule popup is rendered.
+        // Delegated so they work regardless of when the schedule popup is rendered.
         $(document).on('click', '#btnScheduleDownloadFast', function (event) {
             event.preventDefault();
+            state.mode = 'Download';
             startJob();
+        });
+
+        $(document).on('click', '#btnScheduleRunFast', function (event) {
+            event.preventDefault();
+            state.mode = 'Email';
+            startJob();
+        });
+
+        // A fresh popup starts clean even if the previous run left the buttons disabled.
+        $(document).on('shown.bs.modal', '#run-schedule-modal', function () {
+            enableButton();
         });
     });
 })();
