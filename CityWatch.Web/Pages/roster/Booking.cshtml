@@ -3226,7 +3226,12 @@
                         executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteRollover') ? 'Execute Rollover' : 'Confirm Rollover');
                         if (res.success) {
                             $('#rolloverModal').modal('hide');
-                            alert('Roster operation completed successfully.');
+                            //p7-RolloverOverlapFix-start
+                            // Rollover now skips shifts that would double-book a guard. If any were
+                            // skipped the server sends a message listing them - show that instead of
+                            // the plain success text so nothing is dropped silently.
+                            alert(res.message ? res.message : 'Roster operation completed successfully.');
+                            //p7-RolloverOverlapFix-end
                             loadRoster();
                         } else {
                             alert(res.message);

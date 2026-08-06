@@ -93,26 +93,58 @@ namespace CityWatch.Data.Helpers
             return new DateTime(ldtm.Year, ldtm.Month, ldtm.Day, 23, 59, 00);
         }
 
+        //p7-RosterDurationQuarterHourFix-start
+        // WHY THIS LOGIC CHANGED (roster shift duration - reported: 21:29-23:59 showed 2.75h, should be 2.50h)
+        //
+        // The roster does not allow 00:00 or 24:00 to be typed, so midnight is stored as 00:01 (start)
+        // or 23:59 (end)  - see Booking.cshtml "Minimum value is 00:01 and maximum is 23:59".
+        // To undo that, this method used to push those two values back to real midnight BEFORE rounding:
+        //       00:01 -> 00:00        (made the shift 1 minute LONGER)
+        //       23:59 -> 24:00        (made the shift 1 minute LONGER)
+        //
+        // Durations are only ever shown in quarter hours (.00 / .25 / .50 / .75) and the rounding below
+        // is Math.Ceiling - it always rounds UP. So that single extra minute pushed any shift whose real
+        // length already landed exactly on a quarter-hour boundary up by a WHOLE quarter hour:
+        //       21:29 - 23:59  =  2h 30m  =  2.50   ->  +1 min = 2h 31m  ->  rounded up to 2.75   WRONG
+        // and because the roster card multiplies duration x pay rate, the shift was also over-paid
+        // (2.75 x $40 = $110 instead of 2.50 x $40 = $100).
+        // The overnight-split confirmation popup already measured the same shift literally as "2h 30m",
+        // so the app was contradicting itself between the popup and the card.
+        //
+        // The two normalisations are NOT needed: rounding UP to the next quarter already absorbs the
+        // missing minute, so a full day still comes out at exactly 24.00 without them -
+        //       00:01 - 23:59  =  23h 59m  =  23.9833  ->  x4 = 95.93  ->  ceiling 96  ->  24.00  CORRECT
+        // Removing them therefore fixes the over-count and leaves every other shift unchanged.
+        //
+        // This is the ONLY place roster duration is calculated, so this fix applies everywhere at once:
+        // roster board (Booking), external group view, guard roster popup (GuardRosterAction /
+        // _GuardRosterModal), the mobile API, and both PDF reports (RosterReportGenerator and
+        // GuardRosterReportGenerator).
         public static double CalculateDisplayDuration(DateTime start, DateTime end)
         {
-            // Normalize Start: Treat 00:01 as 00:00
-            if (start.TimeOfDay == TimeSpan.FromMinutes(1))
-            {
-                start = start.Date;
-            }
+            // OLD - added 1 minute at each end before rounding, which pushed exact quarter-hour
+            //       shifts up a full 15 minutes (see explanation above):
+            // // Normalize Start: Treat 00:01 as 00:00
+            // if (start.TimeOfDay == TimeSpan.FromMinutes(1))
+            // {
+            //     start = start.Date;
+            // }
+            //
+            // // Normalize End: Treat 23:59 as 24:00 (00:00 of next day)
+            // if (end.Hour == 23 && end.Minute == 59)
+            // {
+            //     end = end.Date.AddDays(1);
+            // }
 
-            // Normalize End: Treat 23:59 as 24:00 (00:00 of next day)
-            if (end.Hour == 23 && end.Minute == 59)
-            {
-                end = end.Date.AddDays(1);
-            }
-
+            // NEW - use the times exactly as they are stored. The round-up below already covers the
+            //       00:01 / 23:59 midnight convention, so no minute is added first.
             double totalHours = (end - start).TotalHours;
 
-            // Round UP to the next 0.25 increment
+            // Round UP to the next 0.25 increment (durations are only ever .00 / .25 / .50 / .75)
             // We multiply by 4, take the Ceiling (rounds up to next whole number), then divide by 4.
             return Math.Ceiling(totalHours * 4) / 4;
         }
+        //p7-RosterDurationQuarterHourFix-end
     }
 
     // Task p6#73_TimeZone issue -- added by Binoy - End
