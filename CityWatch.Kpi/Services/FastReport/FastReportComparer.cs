@@ -137,12 +137,20 @@ namespace CityWatch.Kpi.Services.FastReport
 
             result.IsIdentical = result.TextDifferencePages.Count == 0 && result.ImageDifferencePages.Count == 0;
 
+            var masked = MaskedStamps(legacy.Select(z => z.Text));
+            if (masked.Count > 0)
+            {
+                result.Notes.Add(
+                    "Excluded from the comparison (render-time values that differ between any two " +
+                    $"runs, including two runs of the same generator): {string.Join("; ", masked)}.");
+            }
+
             if (result.IsIdentical && result.LegacyBytes != result.FastBytes)
             {
                 result.Notes.Add(
                     $"File sizes differ by {Math.Abs(result.FastBytes - result.LegacyBytes):N0} bytes. " +
-                    "Content is identical, so this is PDF metadata (creation timestamp and document ID), " +
-                    "which differs between any two runs including two runs of the same generator.");
+                    "Visible content is identical, so this is the render-time stamp above and/or PDF " +
+                    "metadata (creation timestamp and document ID).");
             }
 
             return result;
@@ -241,11 +249,54 @@ namespace CityWatch.Kpi.Services.FastReport
         }
 
         /// <summary>
-        /// Collapses whitespace so that insignificant line-wrapping differences in text
-        /// extraction do not register as content changes.
+        /// Values the report stamps from the wall clock at render time. These differ between
+        /// ANY two runs, including two runs of the same generator, so comparing them would
+        /// only ever measure how far apart the runs started.
+        ///
+        /// Each pattern is deliberately anchored to its label rather than matching bare
+        /// dates or times, so a date that is genuine report *data* is still compared.
         /// </summary>
-        private static string Normalise(string text) =>
-            string.IsNullOrEmpty(text) ? string.Empty : Regex.Replace(text, @"\s+", " ").Trim();
+        private static readonly (string Name, Regex Pattern, string Replacement)[] VolatileStamps =
+        {
+            // ReportGenerator.cs:609 <- MonthlyKpiResult.cs:21 "{DateTime.Now:dd MMM yyyy @ HH:mm} hrs"
+            ("Data Generated timestamp",
+             new Regex(@"Data Generated:\s*\d{1,2} \w{3} \d{4} @ \d{1,2}:\d{2} hrs", RegexOptions.Compiled),
+             "Data Generated: <RENDER-TIME>"),
+
+            // MonthlySummaryReportGenerator.cs:585 "Release : {DateTime.Now:dddd, dd MMMM yyyy}"
+            ("Release date",
+             new Regex(@"Release\s*:\s*\w+day, \d{1,2} \w+ \d{4}", RegexOptions.Compiled),
+             "Release : <RENDER-DATE>")
+        };
+
+        /// <summary>
+        /// Collapses whitespace so that insignificant line-wrapping differences in text
+        /// extraction do not register as content changes, and masks render-time stamps.
+        /// </summary>
+        private static string Normalise(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
+
+            var result = Regex.Replace(text, @"\s+", " ").Trim();
+            foreach (var stamp in VolatileStamps)
+                result = stamp.Pattern.Replace(result, stamp.Replacement);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Which render-time stamps were actually masked, so the report says plainly what it
+        /// excluded rather than quietly hiding a difference.
+        /// </summary>
+        private static List<string> MaskedStamps(IEnumerable<string> pageTexts)
+        {
+            var joined = string.Join(" ", pageTexts);
+            return VolatileStamps
+                .Where(s => s.Pattern.IsMatch(Regex.Replace(joined ?? string.Empty, @"\s+", " ")))
+                .Select(s => s.Name)
+                .ToList();
+        }
 
         private static string Hash(string value)
         {
