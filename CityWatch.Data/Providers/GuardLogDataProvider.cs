@@ -1021,19 +1021,40 @@ namespace CityWatch.Data.Providers
                .ToList();
         }
         // Lean aggregate for the KPI report charts: per-day entry counts only, grouped in
-        // SQL — no entities, no includes. The full GetKeyVehicleLogs query times out on
-        // year-wide ranges. Day bucket is the logbook's business day (ClientSiteLogBook.Date).
+        // SQL — no entities, no includes. Day bucket is the logbook's business day
+        // (ClientSiteLogBook.Date). Split into two simple queries instead of a join+group:
+        // the logbook lookup is tiny, and the log count then groups on the indexed FK
+        // column alone, so SQL never has to join or scan VehicleKeyLogs by date.
         public List<KeyValuePair<DateTime, int>> GetKeyVehicleLogDailyEntryCounts(int clientSiteId, DateTime logFromDate, DateTime logToDate)
         {
-            return _context.KeyVehicleLogs
+            // 1. Logbooks of the site for the range: a few hundred rows of (Id, Date)
+            var logBookDates = _context.ClientSiteLogBooks
                 .AsNoTracking()
-                .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId
-                            && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
-                            && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date < logToDate.AddDays(1))
-                .GroupBy(z => z.ClientSiteLogBook.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
-                .ToList()
-                .Select(x => new KeyValuePair<DateTime, int>(x.Date.Date, x.Count))
+                .Where(x => x.ClientSiteId == clientSiteId
+                            && x.Type == LogBookType.VehicleAndKeyLog
+                            && x.Date >= logFromDate && x.Date < logToDate.AddDays(1))
+                .Select(x => new { x.Id, x.Date })
+                .ToList();
+
+            if (logBookDates.Count == 0)
+                return new List<KeyValuePair<DateTime, int>>();
+
+            // 2. Entry counts per logbook id (single-table GROUP BY on the FK column)
+            var logBookIds = logBookDates.Select(x => x.Id).ToList();
+            var countsByLogBook = _context.KeyVehicleLogs
+                .AsNoTracking()
+                .Where(z => logBookIds.Contains(z.ClientSiteLogBookId))
+                .GroupBy(z => z.ClientSiteLogBookId)
+                .Select(g => new { LogBookId = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.LogBookId, x => x.Count);
+
+            // 3. Stitch in memory: logbook date -> summed count
+            return logBookDates
+                .GroupBy(x => x.Date.Date)
+                .Select(g => new KeyValuePair<DateTime, int>(
+                    g.Key,
+                    g.Sum(x => countsByLogBook.TryGetValue(x.Id, out var count) ? count : 0)))
+                .Where(x => x.Value > 0)
                 .ToList();
         }
 
