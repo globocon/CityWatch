@@ -282,5 +282,41 @@ namespace CityWatch.Kpi.Services.FastReport
         {
             ["GetDailyPatrolData"] = "Loading patrol data"
         };
+
+        /// <summary>
+        /// GetDailyPatrolData loads every incident report for the whole month across all
+        /// sites and then filters in memory, and it is called once per site plus once for
+        /// the summary - with identical date arguments every time. Caching collapses those
+        /// repeats to a single query.
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string> IrDataProvider = new Dictionary<string, string>
+        {
+            ["GetIncidentReports"] = "Loading incident reports",
+            ["GetIncidentReportsForDockets"] = "Loading incident reports",
+            ["GetIncidentReportsPlates"] = "",
+            ["GetPlatesLoaded"] = ""
+        };
+
+        /// <summary>
+        /// The expensive one: DailyPatrolData's ColourCode getter calls GetFeedbackTemplates()
+        /// - a full table load - once per incident report row, and GetPSPFNameFromId per row
+        /// as well. With a month of reports that is thousands of identical queries.
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string> ConfigDataProvider = new Dictionary<string, string>
+        {
+            ["GetFeedbackTemplates"] = "Loading feedback templates",
+            ["GetFeedbackTypes"] = "",
+            ["GetFeedbackTypesId"] = "",
+            ["GetPSPFNameFromId"] = "",
+            ["GetPSPF"] = "",
+            ["GetPositions"] = "",
+            ["GetReportFields"] = "",
+            ["GetReportFieldsByType"] = "",
+            ["GetReportTemplate"] = "",
+            ["GetStates"] = "",
+            ["GetStaffDocuments"] = "",
+            ["GetCrowdSettingForSite"] = "",
+            ["GetSmartWandsDetails"] = ""
+        };
     }
 }

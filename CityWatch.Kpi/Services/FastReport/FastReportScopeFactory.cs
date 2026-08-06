@@ -63,6 +63,13 @@ namespace CityWatch.Kpi.Services.FastReport
             Decorate<IClientSiteWandDataProvider>(services, FastReportCachePolicy.ClientSiteWandDataProvider);
             Decorate<IPatrolDataReportService>(services, FastReportCachePolicy.PatrolDataReportService);
 
+            // Measured on test (schedule 81, Jul 2026): GetDailyPatrolData accounted for
+            // 62.8s of a 76.9s report. Its cost is inside these two providers - the whole
+            // month's incident reports reloaded per call, and GetFeedbackTemplates() run
+            // once per report row from DailyPatrolData's ColourCode getter.
+            Decorate<IIrDataProvider>(services, FastReportCachePolicy.IrDataProvider);
+            Decorate<IConfigDataProvider>(services, FastReportCachePolicy.ConfigDataProvider);
+
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             {
                 ValidateScopes = false,
