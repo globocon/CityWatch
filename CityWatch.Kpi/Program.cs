@@ -4,6 +4,7 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Kpi.Services;
+using CityWatch.Kpi.Services.FastReport;
 using CityWatch.Kpi.Helpers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -49,6 +50,19 @@ builder.Services.AddScoped<IClientSiteViewDataService, ClientSiteViewDataService
 builder.Services.AddScoped<IKeyVehicleGenerator, KeyVehicleGenerator>();
 builder.Services.AddScoped<IWandStrikeReportDataService, WandStrikeReportDataService>();
 builder.Services.AddScoped<ICustomWandExcelReportGenerator, CustomWandExcelReportGenerator>();
+
+// ---------------------------------------------------------------------------
+// Fast report generator (parallel implementation - additive only).
+// Nothing above this block is modified; the existing report path is unchanged.
+// The service collection is exposed so FastReportScopeFactory can mirror these
+// registrations into a child container and decorate the report path's data
+// providers with per-run caching. See docs/FAST-REPORT-GENERATOR.md.
+// ---------------------------------------------------------------------------
+builder.Services.AddSingleton<IServiceCollection>(builder.Services);
+builder.Services.AddSingleton<IFastReportJobStore, FastReportJobStore>();
+builder.Services.AddSingleton<IFastReportScopeFactory, FastReportScopeFactory>();
+builder.Services.AddSingleton<IFastReportService, FastReportService>();
+
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {
