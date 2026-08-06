@@ -22,6 +22,13 @@ namespace CityWatch.Kpi.Services.FastReport
         /// <summary>Pages whose extracted text differs, 1-based.</summary>
         public List<int> TextDifferencePages { get; set; } = new();
 
+        /// <summary>
+        /// The exact differing text for every page in <see cref="TextDifferencePages"/>.
+        /// This is what tells you whether a difference is a harmless clock-dependent value
+        /// or a real data change.
+        /// </summary>
+        public List<TextDifference> TextDifferences { get; set; } = new();
+
         /// <summary>Pages whose embedded-image count differs (a missing chart shows up here).</summary>
         public List<int> ImageDifferencePages { get; set; } = new();
 
@@ -29,6 +36,26 @@ namespace CityWatch.Kpi.Services.FastReport
 
         /// <summary>First concrete difference, for display.</summary>
         public string FirstDifference { get; set; }
+    }
+
+    /// <summary>Pinpointed difference between the same page in the two documents.</summary>
+    public class TextDifference
+    {
+        public int Page { get; set; }
+
+        /// <summary>Character offset into the normalised page text where they diverge.</summary>
+        public int CharacterPosition { get; set; }
+
+        /// <summary>What the legacy document has at that point.</summary>
+        public string LegacyText { get; set; }
+
+        /// <summary>What the fast document has at that point.</summary>
+        public string FastText { get; set; }
+
+        public string ContextBefore { get; set; }
+        public string ContextAfter { get; set; }
+
+        public string Summary { get; set; }
     }
 
     /// <summary>
@@ -91,10 +118,13 @@ namespace CityWatch.Kpi.Services.FastReport
 
             if (result.TextDifferencePages.Count > 0)
             {
-                var page = result.TextDifferencePages[0];
-                result.FirstDifference =
-                    $"Text differs on page {page}. " +
-                    $"Legacy starts '{Preview(legacy[page - 1].Text)}', fast starts '{Preview(fast[page - 1].Text)}'.";
+                foreach (var page in result.TextDifferencePages)
+                {
+                    result.TextDifferences.Add(
+                        DescribeTextDifference(page, legacy[page - 1].Text, fast[page - 1].Text));
+                }
+
+                result.FirstDifference = result.TextDifferences[0].Summary;
             }
             else if (result.ImageDifferencePages.Count > 0)
             {
@@ -118,11 +148,72 @@ namespace CityWatch.Kpi.Services.FastReport
             return result;
         }
 
-        private static string Preview(string text)
+        /// <summary>
+        /// Locates the exact character where two pages diverge and reports the surrounding
+        /// context from both sides.
+        ///
+        /// Printing the start of the page (the previous behaviour) is useless when the pages
+        /// share a heading - both previews look identical and the real difference stays
+        /// hidden further down. A one-character difference has to be pinpointed to be
+        /// diagnosable at all.
+        /// </summary>
+        private static TextDifference DescribeTextDifference(int page, string legacyText, string fastText)
         {
-            if (string.IsNullOrEmpty(text)) return "(empty)";
-            var trimmed = text.Trim();
-            return trimmed.Length <= 60 ? trimmed : trimmed.Substring(0, 60) + "...";
+            const int context = 70;
+
+            var a = Normalise(legacyText);
+            var b = Normalise(fastText);
+
+            // First position where they diverge.
+            var limit = Math.Min(a.Length, b.Length);
+            var start = 0;
+            while (start < limit && a[start] == b[start])
+                start++;
+
+            if (start == limit && a.Length == b.Length)
+            {
+                // Normalised text matches - the hash difference came from whitespace only.
+                return new TextDifference
+                {
+                    Page = page,
+                    Summary = $"Page {page}: only whitespace differs; visible text is identical."
+                };
+            }
+
+            // Walk back from the end to bound the changed region.
+            var endA = a.Length - 1;
+            var endB = b.Length - 1;
+            while (endA >= start && endB >= start && a[endA] == b[endB])
+            {
+                endA--;
+                endB--;
+            }
+
+            var legacyChanged = start <= endA ? a.Substring(start, endA - start + 1) : "(nothing)";
+            var fastChanged = start <= endB ? b.Substring(start, endB - start + 1) : "(nothing)";
+
+            var before = a.Substring(Math.Max(0, start - context), start - Math.Max(0, start - context));
+            var afterFrom = Math.Min(a.Length, endA + 1);
+            var after = a.Substring(afterFrom, Math.Min(context, a.Length - afterFrom));
+
+            return new TextDifference
+            {
+                Page = page,
+                CharacterPosition = start,
+                LegacyText = legacyChanged,
+                FastText = fastChanged,
+                ContextBefore = before,
+                ContextAfter = after,
+                Summary =
+                    $"Page {page} at character {start}: legacy has \"{Truncate(legacyChanged)}\", " +
+                    $"fast has \"{Truncate(fastChanged)}\". Context: ...{Truncate(before, 70)}[HERE]{Truncate(after, 70)}..."
+            };
+        }
+
+        private static string Truncate(string value, int max = 120)
+        {
+            if (string.IsNullOrEmpty(value)) return "(empty)";
+            return value.Length <= max ? value : value.Substring(0, max) + "...";
         }
 
         private static List<PageFingerprint> Read(byte[] pdfBytes)
