@@ -259,11 +259,10 @@
                 <input type="hidden" value="" name="sch-id" id="sch-id" />
                 <div class="btn-toolbar">
                     <button type="button" class="btn btn-primary mr-3" id="btnScheduleRun">Run Now</button>
-                    <button id="btnScheduleDownload" class="btn btn-outline-primary ml-4"><i class="fa fa-download"></i> Download Now</button>
-                    @* Parallel fast generator. The button above is the production path and is unchanged. *@
-                    <button type="button" id="btnScheduleDownloadFast" class="btn btn-outline-success ml-2" title="New high-performance generator with live progress. Produces the same report.">
-                        <i class="fa fa-bolt"></i> Download Now (Fast Beta)
-                    </button>
+                    @* Fast generator is now the default Download Now path. *@
+                    <button type="button" id="btnScheduleDownloadFast" class="btn btn-outline-primary ml-4"><i class="fa fa-download"></i> Download Now</button>
+                    @* Legacy generator kept in the DOM (hidden) so the existing handler and flow remain available if we need to fall back. *@
+                    <button id="btnScheduleDownload" class="btn btn-outline-primary ml-4 d-none"><i class="fa fa-download"></i> Download Now</button>
                 </div>
                 <span id="schRunStatus" class="mt-2"></span>
             </div>

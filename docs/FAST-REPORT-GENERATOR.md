@@ -195,8 +195,9 @@ flat regardless of report size and the temp file cleans itself up.
 ### 8a. Side-by-side check
 
 1. Open a schedule popup on `/Admin/Settings`.
-2. Click **Download Now** (existing) and keep the PDF.
-3. Click **Download Now (Fast Beta)** and keep that PDF.
+2. Click **Download Now** — this is now the fast generator — and keep the PDF.
+3. Produce the legacy PDF for comparison: either un-hide `#btnScheduleDownload`
+   (remove `d-none` in `_SchedulePopup.cshtml`) or use the benchmark endpoint below.
 4. Compare: page count, totals, guard grid, charts, ordering.
 
 ### 8b. Automated comparison + benchmark

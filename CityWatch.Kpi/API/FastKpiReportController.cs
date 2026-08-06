@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace CityWatch.Kpi.API
 {
     /// <summary>
-    /// Endpoints for the "Download Now (Fast Beta)" button.
+    /// Endpoints behind the "Download Now" button on the Run Schedule popup.
     ///
     /// Entirely additive: the legacy Razor Page handler
     /// <c>/Admin/Settings?handler=DownloadPdf</c> is untouched and remains the production
