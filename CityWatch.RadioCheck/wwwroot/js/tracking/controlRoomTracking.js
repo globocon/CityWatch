@@ -286,7 +286,25 @@
         }
     }
 
+    /* The base map is locked to Australia. If a tracked unit reports from outside that
+       envelope the operator could never pan to it, so release the lock once — an operator
+       must always be able to see a unit the system is willing to show. */
+    let boundsReleased = false;
+    function releaseBoundsIfOutside(list) {
+        if (boundsReleased || !list.length) return;
+        const b = map.options.maxBounds;
+        if (!b) { boundsReleased = true; return; }
+        const outside = list.some(u => !b.contains(L.latLng(Number(u.lat), Number(u.lon))));
+        if (outside) {
+            map.setMaxBounds(null);
+            map.setMinZoom(2);
+            boundsReleased = true;
+            console.info('Tracking: a unit is outside the Australia map bounds; pan lock released.');
+        }
+    }
+
     function applySnapshot(list) {
+        releaseBoundsIfOutside(list);
         const nowMs = Date.now();
         const seen = {};
         list.forEach(u => {

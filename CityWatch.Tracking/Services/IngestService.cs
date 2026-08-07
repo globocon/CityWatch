@@ -24,10 +24,6 @@ namespace CityWatch.Tracking.Services
     /// </summary>
     public sealed class IngestService : IIngestService
     {
-        /* Same envelope the control-room map enforces (AU_BOUNDS in controlRoomMap.js).
-           A fix outside the service area is a device fault or a spoof, not data. */
-        private const decimal MinLat = -45.5m, MaxLat = -8.8m, MinLon = 111.0m, MaxLon = 156.5m;
-
         /// <summary>Device clocks ahead of the server beyond this are rejected, not flagged —
         /// a future timestamp cannot be evidence of anything.</summary>
         private static readonly TimeSpan MaxFutureSkew = TimeSpan.FromMinutes(5);
@@ -157,12 +153,23 @@ namespace CityWatch.Tracking.Services
 
         private bool IsAcceptable(PositionPoint p, DateTime serverUtc)
         {
-            if (p.Lat is < MinLat or > MaxLat || p.Lon is < MinLon or > MaxLon)
-                return false;                                  // outside the service envelope
             if (p.Lat == 0 && p.Lon == 0)
                 return false;                                  // the null island fix
+            if (p.Lat < -90 || p.Lat > 90 || p.Lon < -180 || p.Lon > 180)
+                return false;                                  // not a coordinate at all
             if (p.Utc > serverUtc + MaxFutureSkew)
                 return false;                                  // future timestamps are not evidence
+
+            /* Configurable service envelope (defaults to Australia). Off by configuration
+               when testing from elsewhere, or if the service ever operates outside it. */
+            if (_options.EnforceServiceArea)
+            {
+                var area = _options.ServiceArea;
+                if (p.Lat < area.MinLat || p.Lat > area.MaxLat ||
+                    p.Lon < area.MinLon || p.Lon > area.MaxLon)
+                    return false;
+            }
+
             return true;
         }
 

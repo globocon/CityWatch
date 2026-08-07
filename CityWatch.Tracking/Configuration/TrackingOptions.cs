@@ -37,6 +37,25 @@ namespace CityWatch.Tracking.Configuration
         /// <summary>Implied speed above this between consecutive fixes flags a teleport.</summary>
         public int PlausibilityMaxSpeedKph { get; set; } = 250;
 
+        /// <summary>
+        /// Geographic envelope for accepted fixes. Defaults to Australia, which is where the
+        /// service operates — a fix from the other side of the world is a device fault or a
+        /// spoof, not data. It is CONFIGURABLE because hard-coded geography in a validator
+        /// blocks legitimate cases: testing from another country, and any future expansion.
+        /// Set EnforceServiceArea=false to accept fixes from anywhere.
+        /// </summary>
+        public bool EnforceServiceArea { get; set; } = true;
+
+        public ServiceAreaOptions ServiceArea { get; set; } = new();
+
+        public sealed class ServiceAreaOptions
+        {
+            public decimal MinLat { get; set; } = -45.5m;
+            public decimal MaxLat { get; set; } = -8.8m;
+            public decimal MinLon { get; set; } = 111.0m;
+            public decimal MaxLon { get; set; } = 156.5m;
+        }
+
         /// <summary>A unit that has stayed within this radius counts as sitting in place.</summary>
         public int IdleRadiusM { get; set; } = 75;
 
