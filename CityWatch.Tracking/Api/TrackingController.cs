@@ -92,7 +92,17 @@ namespace CityWatch.Tracking.Api
                 request.ClientSiteId, request.PcarRouteId, ct, request.IsPatrolCar, request.Callsign,
                 request.PositionId, request.PositionName);
             if (session == null)
-                return Forbid();
+            {
+                /* Explicit 403, never Forbid(): under cookie auth Forbid() redirects to
+                   /Account/AccessDenied, which does not exist — the caller gets a 404 and
+                   an HTML page instead of a machine-readable refusal. Device endpoints must
+                   answer devices, not browsers. */
+                return StatusCode(403, new
+                {
+                    error = "Unit is not enrolled for tracking, or consent has not been recorded.",
+                    unitId = request.UnitId
+                });
+            }
 
             return Ok(new { sessionId = session.Id, startedUtc = session.StartedUtc, policy = _options.Policy });
         }
@@ -144,7 +154,7 @@ namespace CityWatch.Tracking.Api
             if (request == null || request.UnitId <= 0)
                 return BadRequest();
             if (OperatorUserId() is not { } userId)
-                return Forbid();
+                return StatusCode(403, new { error = "Operator identity not found on the session." });
 
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             var (ok, error, command) = await _commands.RequestLiveAsync(request.UnitId, userId, ip, ct);
@@ -167,7 +177,7 @@ namespace CityWatch.Tracking.Api
             if (unitId <= 0)
                 return BadRequest();
             if (OperatorUserId() is not { } userId)
-                return Forbid();
+                return StatusCode(403, new { error = "Operator identity not found on the session." });
 
             await _commands.CancelAsync(unitId, userId, "Cancelled",
                 HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
@@ -217,7 +227,7 @@ namespace CityWatch.Tracking.Api
             if ((toUtc - fromUtc) > TimeSpan.FromHours(26))
                 return BadRequest("Window too large; request at most 26 hours (one shift with margin).");
             if (OperatorUserId() is not { } userId)
-                return Forbid();
+                return StatusCode(403, new { error = "Operator identity not found on the session." });
 
             _db.TrackingAccessAudits.Add(new Data.Entities.TrackingAccessAudit
             {
