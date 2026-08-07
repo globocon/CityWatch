@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using CityWatch.Events;
 using CityWatch.Tracking.Data;
 using CityWatch.Tracking.Data.Entities;
 using CityWatch.Tracking.Hosted;
@@ -69,6 +70,17 @@ namespace CityWatch.Tracking.Configuration
                enabled is what makes every /api/tracking route a 404 when disabled (RT2).
                The host's existing MapControllerRoute maps attribute-routed controllers. */
             services.AddControllers().AddApplicationPart(typeof(Api.TrackingController).Assembly);
+
+            /* ---- Event subscriptions (§20.3) ----
+               Registering the first handler is what swaps NullDomainEventPublisher for the
+               real bus and starts the dispatcher. With the flag off, none of this runs and
+               every publish site in the platform stays a no-op (RT3/RT4). */
+            services.AddDomainEventHandler<CityWatch.Events.Events.NfcCheckpointScanned, Handlers.NfcAnchorHandler>();
+            services.AddDomainEventHandler<CityWatch.Events.Events.OfficerLoggedIn, Handlers.SessionLifecycleHandler>();
+            services.AddDomainEventHandler<CityWatch.Events.Events.OfficerLoggedOut, Handlers.SessionLifecycleHandler>();
+            services.AddDomainEventHandler<CityWatch.Events.Events.PatrolStarted, Handlers.SessionLifecycleHandler>();
+            services.AddDomainEventHandler<CityWatch.Events.Events.PatrolEnded, Handlers.SessionLifecycleHandler>();
+            services.AddDomainEventHandler<CityWatch.Events.Events.DuressActivated, Handlers.DuressHandler>();
 
             /* M1.7+: hub + broadcast ticker; M1.8: mode command service. Same branch. */
 

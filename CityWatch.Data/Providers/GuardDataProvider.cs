@@ -143,9 +143,15 @@ namespace CityWatch.Data.Providers
     {
         private readonly CityWatchDbContext _context;
 
-        public GuardDataProvider(CityWatchDbContext context)
+        /* Tracking feature pack: optional publisher so DI works with or without the events
+           package registered (RadioCheck/Kpi never register it). Publish is a no-op unless a
+           subscriber activated the bus — see CityWatch.Events.NullDomainEventPublisher. */
+        private readonly CityWatch.Events.IDomainEventPublisher _events;
+
+        public GuardDataProvider(CityWatchDbContext context, CityWatch.Events.IDomainEventPublisher events = null)
         {
             _context = context;
+            _events = events ?? CityWatch.Events.NullDomainEventPublisher.Instance;
         }
 
         public List<Guard> GetGuards()
@@ -602,6 +608,7 @@ namespace CityWatch.Data.Providers
 
         public int SaveGuardLogin(GuardLogin guardLogin)
         {
+            var isNewLogin = guardLogin.Id == 0; // tracking feature pack: publish only for fresh logins
             if (guardLogin.Id == 0)
             {
                 _context.GuardLogins.Add(guardLogin);
@@ -630,6 +637,7 @@ namespace CityWatch.Data.Providers
                 _context.GuardLoginSmartWandUse.Add(guardLoginSmartwanduse);
                 _context.SaveChanges();
             }
+            if (isNewLogin) _events.Publish(new CityWatch.Events.Events.OfficerLoggedIn(guardLogin.GuardId, guardLogin.SmartWandId, guardLogin.ClientSiteId, null, DateTime.UtcNow)); // after commit (D17)
             return guardLogin.Id;
         }
 
@@ -640,6 +648,7 @@ namespace CityWatch.Data.Providers
             {
                 guardLoginToUpdate.OffDuty = offDuty;
                 _context.SaveChanges();
+                _events.Publish(new CityWatch.Events.Events.OfficerLoggedOut(guardLoginToUpdate.GuardId, guardLoginToUpdate.SmartWandId, DateTime.UtcNow)); // after commit (D17); tracking hard-stops on this
             }
         }
 
