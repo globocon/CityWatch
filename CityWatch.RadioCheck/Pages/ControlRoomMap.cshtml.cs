@@ -28,6 +28,11 @@ namespace CityWatch.RadioCheck.Pages
 
         public string SignalRConnectionUrl { get; set; }
 
+        /* Tracking feature pack: gates the two script tags in the view. Off = the page is
+           byte-identical to today (RT9). */
+        public bool TrackingEnabled => _configuration.GetSection("Tracking")["Enabled"] == "True"
+                                       || _configuration.GetSection("Tracking")["Enabled"] == "true";
+
         // AllowAnonymousToFolder("/") in Program.cs suppresses [Authorize], so the page
         // guards itself the same way RadioCheckV2/ClientProfile do.
         private bool IsLoggedIn => User.Identity != null && User.Identity.IsAuthenticated;

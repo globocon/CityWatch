@@ -1350,5 +1350,7 @@
 
     document.getElementById('btnRefreshNow').addEventListener('click', () => { clock = REFRESH_SECONDS; refresh(); });
 
+    window.CRM = { map, carLayer, COL };   /* tracking feature pack reads this; never writes internal state */
+
     refresh();
 })();

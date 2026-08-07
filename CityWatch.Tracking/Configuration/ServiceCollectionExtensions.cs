@@ -60,6 +60,10 @@ namespace CityWatch.Tracking.Configuration
             services.AddSingleton<UnitRateLimiter>();
             services.AddScoped<IIngestService, IngestService>();
             services.AddScoped<ISessionService, SessionService>();
+            services.AddScoped<ILiveSnapshotService, LiveSnapshotService>();
+            services.AddSignalR();
+
+            services.AddHostedService<Hosted.BroadcastTicker>();
 
             services.AddHostedService(sp => new PositionWriter(
                 sp.GetRequiredService<System.Threading.Channels.ChannelReader<TrackPoint>>(),
@@ -97,7 +101,14 @@ namespace CityWatch.Tracking.Configuration
             if (options is not { Enabled: true })
                 return app;
 
-            /* M1.4 maps the ingest controller; M1.7 maps the hub. */
+            /* RadioCheck maps no controllers of its own; this makes /api/tracking/* exist
+               there too. Safe alongside Web's MapControllerRoute — attribute routes are
+               registered once per application model. */
+            app.MapControllers();
+
+            /* Group-scoped push channel; the 1 Hz ticker sends the frames (§10.3).
+               [Authorize] on the hub class enforces the auth stance. */
+            app.MapHub<Hubs.PatrolTrackingHub>("/trackingHub");
 
             return app;
         }

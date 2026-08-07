@@ -667,5 +667,10 @@
     </div>
 
     <script src="~/js/controlRoomMap.js" asp-append-version="true"></script>
+    @if (Model.TrackingEnabled)
+    {
+        <link rel="stylesheet" href="~/js/tracking/controlRoomTracking.css" asp-append-version="true" />
+        <script src="~/js/tracking/controlRoomTracking.js" asp-append-version="true"></script>
+    }
 </body>
 </html>

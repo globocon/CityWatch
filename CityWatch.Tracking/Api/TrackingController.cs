@@ -28,15 +28,15 @@ namespace CityWatch.Tracking.Api
     {
         private readonly IIngestService _ingest;
         private readonly ISessionService _sessions;
-        private readonly ILiveStateStore _liveState;
+        private readonly ILiveSnapshotService _snapshot;
         private readonly TrackingOptions _options;
 
         public TrackingController(IIngestService ingest, ISessionService sessions,
-            ILiveStateStore liveState, TrackingOptions options)
+            ILiveSnapshotService snapshot, TrackingOptions options)
         {
             _ingest = ingest;
             _sessions = sessions;
-            _liveState = liveState;
+            _snapshot = snapshot;
             _options = options;
         }
 
@@ -96,16 +96,19 @@ namespace CityWatch.Tracking.Api
 
         /* ------------------------------ operator ------------------------------ */
 
-        /// <summary>Live snapshot for the control room. Cookie-authenticated; scope filtering
-        /// arrives with the permission table (M1.7/M1.8).</summary>
+        /// <summary>Live snapshot for the control room. Same-origin cookie-authenticated on
+        /// both host apps; memory-fast in the ingest process, DB-backed in the control-room
+        /// process (see LiveSnapshotService). Scope filtering arrives with the permission
+        /// table (Phase 2).</summary>
         [Authorize]
         [HttpGet("live")]
-        public IActionResult Live()
+        public async Task<IActionResult> Live(CancellationToken ct)
         {
-            var now = DateTime.UtcNow;
-            var units = _liveState.Snapshot()
-                .OrderBy(u => u.UnitId)
-                .Select(u => new
+            var units = await _snapshot.GetSnapshotAsync(ct);
+            return Ok(new
+            {
+                serverUtc = DateTime.UtcNow,
+                units = units.Select(u => new
                 {
                     unitId = u.UnitId,
                     lat = u.Lat,
@@ -114,13 +117,11 @@ namespace CityWatch.Tracking.Api
                     headingDeg = u.HeadingDeg,
                     accuracyM = u.AccuracyM,
                     batteryPct = u.BatteryPct,
-                    mode = (byte)u.Mode,
-                    flags = (byte)u.Flags,
-                    ageSeconds = (int)Math.Max(0, (now - u.ReceivedUtc).TotalSeconds)
+                    mode = u.Mode,
+                    flags = u.Flags,
+                    ageSeconds = u.AgeSeconds
                 })
-                .ToList();
-
-            return Ok(new { serverUtc = now, units });
+            });
         }
     }
 }

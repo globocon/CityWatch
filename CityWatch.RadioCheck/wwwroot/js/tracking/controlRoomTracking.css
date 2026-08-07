@@ -1,0 +1,52 @@
+/* CityWatch.Tracking — vehicle marker styling (feature pack M1.7, ADD §11.3).
+   Colour carries urgency only: duress red matches the existing alarm colour, live blue
+   matches the existing accent. Staleness is shape/opacity, never a second colour scale. */
+
+.trk-car {
+    position: relative;
+    width: 46px; height: 46px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #16a34a;               /* normal = ok green */
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    font-family: system-ui, sans-serif;
+}
+.trk-car .trk-arrow { font-size: 14px; line-height: 1; color: #111; transition: transform .9s linear; }
+.trk-car .trk-id { font-size: 9px; font-weight: 700; color: #111; }
+.trk-car .trk-age {
+    position: absolute; top: -8px; right: -10px;
+    background: #475569; color: #fff; border-radius: 8px;
+    font-size: 9px; padding: 1px 5px; font-weight: 700;
+}
+
+/* mode accents */
+.trk-car.trk-transit { border-color: #2563eb; }
+.trk-car.trk-live    { border-color: #2563eb; animation: trkLivePulse 1.6s ease-in-out infinite; }
+.trk-car.trk-duress  { border-color: #dc2626; animation: trkDuressPulse .8s ease-in-out infinite; }
+
+/* staleness degradation (§11.3 rule 2): never render old as current */
+.trk-car.trk-soft   { opacity: .85; }
+.trk-car.trk-soft   { animation: trkSoftPulse 2.4s ease-in-out infinite; }
+.trk-car.trk-hollow { opacity: .6; background: transparent; }
+.trk-car.trk-dead   { opacity: .35; border-style: dashed; filter: grayscale(1); }
+
+@keyframes trkLivePulse   { 50% { box-shadow: 0 0 0 8px rgba(37,99,235,.15); } }
+@keyframes trkDuressPulse { 50% { box-shadow: 0 0 0 10px rgba(220,38,38,.25); } }
+@keyframes trkSoftPulse   { 50% { opacity: .6; } }
+
+.trk-mode-chip {
+    display: inline-block; padding: 0 6px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; color: #fff; background: #16a34a; vertical-align: middle;
+}
+.trk-mode-chip.trk-transit, .trk-mode-chip.trk-live { background: #2563eb; }
+.trk-mode-chip.trk-duress { background: #dc2626; }
+
+/* connection status pill — degrade honestly (§11.3 rule 10) */
+.trk-status {
+    position: fixed; bottom: 14px; left: 14px; z-index: 1200;
+    background: #ffffffee; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 4px 10px; font: 600 12px system-ui, sans-serif; color: #0f172a;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+.trk-status-bad { background: #fef2f2ee; border-color: #dc2626; color: #b91c1c; }
