@@ -30,6 +30,13 @@ namespace CityWatch.Tracking.Configuration
                           ?? new TrackingOptions();
             services.AddSingleton(options);
 
+            /* MVC auto-discovers controllers from every referenced assembly, so the pack's
+               controller must be explicitly REMOVED when disabled — otherwise its routes
+               exist without its services and requests 500 instead of 404 (RT2). This runs on
+               both branches by design. */
+            services.AddControllers().ConfigureApplicationPartManager(apm =>
+                apm.FeatureProviders.Add(new TrackingControllerFeatureProvider(options.Enabled)));
+
             if (!options.Enabled)
                 return services;                       // ← the registration-time branch
 
@@ -73,10 +80,8 @@ namespace CityWatch.Tracking.Configuration
                 connectionString!,
                 sp.GetRequiredService<ILogger<PositionWriter>>()));
 
-            /* The controller lives in this assembly; adding the application part only when
-               enabled is what makes every /api/tracking route a 404 when disabled (RT2).
-               The host's existing MapControllerRoute maps attribute-routed controllers. */
-            services.AddControllers().AddApplicationPart(typeof(Api.TrackingController).Assembly);
+            /* Controller discovery is automatic (see the feature provider above); the host's
+               existing MapControllerRoute maps attribute-routed controllers. */
 
             /* ---- Event subscriptions (§20.3) ----
                Registering the first handler is what swaps NullDomainEventPublisher for the
