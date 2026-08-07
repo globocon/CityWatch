@@ -37,6 +37,9 @@ namespace CityWatch.Tracking.Services
         public int GuardId { get; init; }
 
         public string? GuardName { get; init; }
+
+        /// <summary>Callsign from the login screen ("Romeo 1") — the label operators use.</summary>
+        public string? Callsign { get; init; }
     }
 
     public sealed class LiveSnapshotService : ILiveSnapshotService
@@ -58,7 +61,7 @@ namespace CityWatch.Tracking.Services
 
             var sessions = await _db.TrackingSessions
                 .Where(s => s.Status == "Active")
-                .Select(s => new { s.Id, s.UnitId, s.GuardId })
+                .Select(s => new { s.Id, s.UnitId, s.GuardId, s.IsPatrolCar, s.Callsign })
                 .ToListAsync(ct);
             if (sessions.Count == 0)
                 return Array.Empty<LiveUnitDto>();
@@ -76,16 +79,24 @@ namespace CityWatch.Tracking.Services
                 .Where(g => guardIds.Contains(g.Id))
                 .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
             var carSet = carUnits.ToHashSet();
-            var guardBySession = sessions.ToDictionary(s => s.Id, s => s.GuardId);
+            var sessionById = sessions.ToDictionary(s => s.Id);
 
             LiveUnitDto Decorate(LiveUnitDto dto)
             {
-                var guardId = guardBySession.TryGetValue(dto.SessionId, out var g) ? g : 0;
+                sessionById.TryGetValue(dto.SessionId, out var session);
+                var guardId = session?.GuardId ?? 0;
+
+                /* Kind precedence: the guard's own "Mobile Patrol Car" toggle for THIS shift
+                   wins; the wand's PatrolCarId is only the fallback for sessions opened
+                   before the declaration was captured. */
+                var isCar = session?.IsPatrolCar ?? carSet.Contains(dto.UnitId);
+
                 return dto with
                 {
-                    Kind = carSet.Contains(dto.UnitId) ? "car" : "guard",
+                    Kind = isCar ? "car" : "guard",
                     GuardId = guardId,
-                    GuardName = guardNames.TryGetValue(guardId, out var name) ? name : null
+                    GuardName = guardNames.TryGetValue(guardId, out var name) ? name : null,
+                    Callsign = string.IsNullOrWhiteSpace(session?.Callsign) ? null : session!.Callsign
                 };
             }
 

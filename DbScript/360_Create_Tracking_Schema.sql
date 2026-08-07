@@ -119,6 +119,10 @@ BEGIN
         Status       nvarchar(20)     NOT NULL CONSTRAINT DF_TrackingSession_Status DEFAULT ('Active'),
         EndReason    nvarchar(30)     NULL,
         LastFixUtc   datetime2(0)     NULL,
+        /* The guard's own login declarations — see 364 (kept here so a fresh
+           install needs only this script). */
+        IsPatrolCar  bit              NULL,
+        Callsign     nvarchar(50)     NULL,
         CONSTRAINT PK_TrackingSession PRIMARY KEY CLUSTERED (Id)
     );
 

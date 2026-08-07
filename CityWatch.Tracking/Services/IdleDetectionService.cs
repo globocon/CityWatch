@@ -12,7 +12,11 @@ namespace CityWatch.Tracking.Services
 {
     public sealed record IdleUnitDto(
         int UnitId, string Kind, int GuardId, string? GuardName,
-        decimal Lat, decimal Lon, DateTime IdleSinceUtc, int IdleMinutes);
+        decimal Lat, decimal Lon, DateTime IdleSinceUtc, int IdleMinutes)
+    {
+        /// <summary>Callsign from the login screen, when the unit declared one.</summary>
+        public string? Callsign { get; init; }
+    }
 
     public interface IIdleDetectionService
     {
@@ -56,7 +60,7 @@ namespace CityWatch.Tracking.Services
 
             var sessions = await _db.TrackingSessions
                 .Where(s => s.Status == "Active")
-                .Select(s => new { s.Id, s.UnitId, s.GuardId })
+                .Select(s => new { s.Id, s.UnitId, s.GuardId, s.IsPatrolCar, s.Callsign })
                 .ToListAsync(ct);
             if (sessions.Count == 0)
                 return Array.Empty<IdleUnitDto>();
@@ -104,9 +108,15 @@ namespace CityWatch.Tracking.Services
                     continue;
 
                 result.Add(new IdleUnitDto(
-                    session.UnitId, "guard", session.GuardId, null,
+                    session.UnitId,
+                    /* The guard's own login toggle wins; the wand is only the fallback. */
+                    session.IsPatrolCar == true ? "car" : "guard",
+                    session.GuardId, null,
                     newest.Latitude, newest.Longitude,
-                    idleSince, (int)idleFor.TotalMinutes));
+                    idleSince, (int)idleFor.TotalMinutes)
+                {
+                    Callsign = string.IsNullOrWhiteSpace(session.Callsign) ? null : session.Callsign
+                });
             }
 
             if (result.Count == 0)
@@ -126,7 +136,9 @@ namespace CityWatch.Tracking.Services
             return result
                 .Select(r => r with
                 {
-                    Kind = kinds.TryGetValue(r.UnitId, out var isCar) && isCar ? "car" : "guard",
+                    /* Only fall back to the wand's PatrolCarId when the session made no
+                       declaration (sessions opened before that was captured). */
+                    Kind = r.Kind == "car" || (kinds.TryGetValue(r.UnitId, out var isCar) && isCar) ? "car" : "guard",
                     GuardName = names.TryGetValue(r.GuardId, out var name) ? name : null
                 })
                 .OrderByDescending(r => r.IdleMinutes)

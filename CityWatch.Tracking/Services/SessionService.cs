@@ -13,7 +13,8 @@ namespace CityWatch.Tracking.Services
         /// <summary>Opens a session if the unit is enrolled with consent; returns null otherwise.
         /// Idempotent per unit: an existing active session for the same guard is returned,
         /// a stale one for another guard is closed first (one active session per unit).</summary>
-        Task<TrackingSession?> StartAsync(int unitId, int guardId, int clientSiteId, int? pcarRouteId, CancellationToken ct);
+        Task<TrackingSession?> StartAsync(int unitId, int guardId, int clientSiteId, int? pcarRouteId,
+            CancellationToken ct, bool? isPatrolCar = null, string? callsign = null);
 
         /// <summary>Closes the session and removes the unit from the live map. The hard stop.</summary>
         Task EndAsync(Guid sessionId, string endReason, CancellationToken ct);
@@ -41,7 +42,8 @@ namespace CityWatch.Tracking.Services
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
         }
 
-        public async Task<TrackingSession?> StartAsync(int unitId, int guardId, int clientSiteId, int? pcarRouteId, CancellationToken ct)
+        public async Task<TrackingSession?> StartAsync(int unitId, int guardId, int clientSiteId, int? pcarRouteId,
+            CancellationToken ct, bool? isPatrolCar = null, string? callsign = null)
         {
             var enrolment = await _db.TrackingUnitEnrolments.FirstOrDefaultAsync(e => e.UnitId == unitId, ct);
             if (enrolment is not { IsEnabled: true } || enrolment.ConsentRecordedUtc == null)
@@ -54,7 +56,14 @@ namespace CityWatch.Tracking.Services
             if (active != null)
             {
                 if (active.GuardId == guardId)
-                    return active;   // same officer re-opening (app restart): keep the session
+                {
+                    /* Same officer re-opening (app restart, or re-login after switching the
+                       patrol-car toggle): keep the session but refresh the declarations. */
+                    if (isPatrolCar.HasValue) active.IsPatrolCar = isPatrolCar;
+                    if (!string.IsNullOrWhiteSpace(callsign)) active.Callsign = callsign;
+                    await _db.SaveChangesAsync(ct);
+                    return active;
+                }
 
                 /* Different officer on the same unit: the previous session ends now. Two open
                    sessions on one unit would make the evidentiary record ambiguous. */
@@ -69,7 +78,9 @@ namespace CityWatch.Tracking.Services
                 ClientSiteId = clientSiteId,
                 PcarRouteId = pcarRouteId,
                 StartedUtc = now,
-                Status = "Active"
+                Status = "Active",
+                IsPatrolCar = isPatrolCar,
+                Callsign = string.IsNullOrWhiteSpace(callsign) ? null : callsign.Trim()
             };
             _db.TrackingSessions.Add(session);
             await _db.SaveChangesAsync(ct);

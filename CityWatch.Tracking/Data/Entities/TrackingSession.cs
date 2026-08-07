@@ -40,5 +40,20 @@ namespace CityWatch.Tracking.Data.Entities
 
         /// <summary>Rolling last-fix marker maintained by ingest; what the reaper reads.</summary>
         public DateTime? LastFixUtc { get; set; }
+
+        /// <summary>
+        /// The guard's own "Mobile Patrol Car" toggle from the login screen. This is the
+        /// authority for the map symbol: the same wand can be in a car today and on foot
+        /// tomorrow, so a per-shift declaration beats the wand's static PatrolCarId.
+        /// Null for sessions opened before this was captured — the wand is then the fallback.
+        /// </summary>
+        public bool? IsPatrolCar { get; set; }
+
+        /// <summary>
+        /// Callsign chosen at login ("Romeo 1"). What operators actually say on the radio,
+        /// so it is what the marker is labelled with when present.
+        /// </summary>
+        [MaxLength(50)]
+        public string? Callsign { get; set; }
     }
 }

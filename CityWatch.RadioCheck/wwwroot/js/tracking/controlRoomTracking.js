@@ -53,7 +53,10 @@
            against guards on foot. */
         const isCar = u.kind !== 'guard';
         const glyph = isCar ? '🚓' : '👮';
-        const label = isCar ? `PC-${u.unitId}` : (u.guardName ? u.guardName.split(' ')[0] : `G-${u.guardId || u.unitId}`);
+        /* Callsign first — it is what operators say on the radio ("Romeo 1"). */
+        const label = u.callsign
+            ? u.callsign
+            : (isCar ? `PC-${u.unitId}` : (u.guardName ? u.guardName.split(' ')[0] : `G-${u.guardId || u.unitId}`));
         const idleMin = idleUnits[u.unitId];
         const idleTxt = idleMin ? `<span class="trk-idle-badge">IDLE ${idleMin}m</span>` : '';
         return L.divIcon({
@@ -91,8 +94,10 @@
         const battery = u.batteryPct == null ? '' : ` · 🔋${u.batteryPct}%`;
         const acc = u.accuracyM == null ? '' : ` · ±${u.accuracyM}m`;
         const isCar = u.kind !== 'guard';
-        const title = isCar ? `🚓 Unit ${u.unitId}` : `👮 ${esc(u.guardName || ('Guard ' + (u.guardId || u.unitId)))}`;
-        const who = isCar && u.guardName ? `<small>${esc(u.guardName)}</small><br>` : '';
+        const name = u.callsign || (isCar ? `Unit ${u.unitId}` : (u.guardName || ('Guard ' + (u.guardId || u.unitId))));
+        const title = `${isCar ? '🚓' : '👮'} ${esc(name)}`;
+        /* Show the driver's name under the callsign when both are known. */
+        const who = u.guardName && u.guardName !== name ? `<small>${esc(u.guardName)}</small><br>` : '';
         const idleMin = idleUnits[u.unitId];
         const idleTxt = idleMin ? ` <span class="trk-idle-chip">⏸ idle ${idleMin}m</span>` : '';
         return `<b>${title}</b> <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>${idleTxt}<br>` +
@@ -335,7 +340,7 @@
         idlePanel.innerHTML = `<div class="trk-idle-head">⏸ IDLE UNITS (${list.length})</div>` +
             list.map(u => {
                 const glyph = u.kind === 'car' ? '🚓' : '👮';
-                const name = esc(u.guardName || (u.kind === 'car' ? `Unit ${u.unitId}` : `Guard ${u.guardId}`));
+                const name = esc(u.callsign || u.guardName || (u.kind === 'car' ? `Unit ${u.unitId}` : `Guard ${u.guardId}`));
                 const since = u.idleMinutes >= 60
                     ? `${Math.floor(u.idleMinutes / 60)}h ${u.idleMinutes % 60}m`
                     : `${u.idleMinutes}m`;
