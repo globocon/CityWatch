@@ -699,9 +699,9 @@ Adopted from `PcarVisitHistory` (§1.4): store **device UTC**, **server UTC**, a
 Following the existing `DbScript/` convention:
 
 ```
-DbScript/402_Create_Tracking_Schema.sql          -- tables, indexes, partition function
-DbScript/403_Create_Tracking_Enrolment_Seed.sql  -- enrolment rows, no units enabled
-DbScript/404_Rollback_Tracking_Schema.sql        -- uninstall (§17)
+DbScript/360_Create_Tracking_Schema.sql          -- tables, indexes, partition function
+DbScript/361_Seed_Tracking_Enrolment.sql  -- enrolment rows, no units enabled
+DbScript/362_Rollback_Tracking_Schema.sql        -- uninstall (§17)
 ```
 
 Every script is **idempotent** (`IF NOT EXISTS` guards) and **additive** — no `ALTER` against an existing table appears anywhere in the feature pack.
@@ -1060,7 +1060,7 @@ Each phase deploys alone and leaves the system fully working.
 ### 15.2 Sequence
 
 ```
-1. DB scripts (402, 403) on production        — additive; zero impact; no downtime
+1. DB scripts (360, 361) on production        — additive; zero impact; no downtime
 2. Deploy CityWatch.Web  with Tracking:Enabled = false
 3. Deploy CityWatch.RadioCheck with flag false
    → verify: full regression of existing functionality, flag OFF
@@ -1155,7 +1155,7 @@ Revert the 11 existing lines and redeploy `CityWatch.Web` and `CityWatch.RadioCh
 
 ### Level 4 — Remove the schema (deliberate, last resort)
 
-`DbScript/404_Rollback_Tracking_Schema.sql` drops the tracking tables. Clean and complete **because nothing else references them** — no FKs point in or out (§8.2), no existing table gained a column, no existing index changed. **This is only safe because of the no-FK, no-alter discipline**, which is why that discipline is not negotiable.
+`DbScript/362_Rollback_Tracking_Schema.sql` drops the tracking tables. Clean and complete **because nothing else references them** — no FKs point in or out (§8.2), no existing table gained a column, no existing index changed. **This is only safe because of the no-FK, no-alter discipline**, which is why that discipline is not negotiable.
 
 ### 17.1 Mobile rollback
 
@@ -1180,7 +1180,7 @@ A1–A5, JWT for mobile, CI workflow, Android manifest + iOS plist fixes.
 **Independently deployable. Every item has standalone value even if tracking never ships.**
 
 ### Phase 1 — Tracking MVP · ~6–8 weeks
-`CityWatch.Tracking` project + `TrackingDbContext`; SQL scripts 402–404; ingest API; **Normal Patrol + Transit modes**; mobile `TrackingService` + foreground service + offline queue; session lifecycle; **consent & enrolment workflow**; in-memory live state; `PatrolTrackingHub` with scoped groups + 1 Hz ticker; car layer with heading, speed, fix-age degradation; `IPositionSource` interface defined; flag off by default.
+`CityWatch.Tracking` project + `TrackingDbContext`; SQL scripts 360–362; ingest API; **Normal Patrol + Transit modes**; mobile `TrackingService` + foreground service + offline queue; session lifecycle; **consent & enrolment workflow**; in-memory live state; `PatrolTrackingHub` with scoped groups + 1 Hz ticker; car layer with heading, speed, fix-age degradation; `IPositionSource` interface defined; flag off by default.
 **Exit:** G1–G5, G8. 20-vehicle pilot.
 
 ### Phase 2 — Live Control Room · ~6–8 weeks
@@ -1433,7 +1433,7 @@ This tier exists to make "we didn't break anything" a **test result rather than 
 | RT9 | `ControlRoomMap` renders identically with the flag off (DOM snapshot) |
 | RT10 | `controlRoomTracking.js` failing to load leaves the existing map fully functional |
 | RT11 | `CityWatchDbContext` model builds to the same shape before and after the pack |
-| RT12 | Rollback script 404 leaves zero tracking objects and zero broken references |
+| RT12 | Rollback script 362 leaves zero tracking objects and zero broken references |
 
 **RT5, RT6 and RT7 are the ones that matter.** They test the failure modes that would otherwise be discovered in production at 3 a.m.
 
@@ -1491,7 +1491,7 @@ Each milestone builds, tests, and is independently revertible. **No milestone le
 |---|---|---|
 | **1.1** | `CityWatch.Events` — contracts, `NullDomainEventPublisher`, channel dispatcher, tests | **None** |
 | **1.2** | `CityWatch.Tracking` skeleton — options, DI extensions, flag-off registration | **None** |
-| **1.3** | `TrackingDbContext` + entities + SQL scripts 402–404 | **None** |
+| **1.3** | `TrackingDbContext` + entities + SQL scripts 360–362 | **None** |
 | **1.4** | Ingest service — validate, dedupe, plausibility, channel, `PositionWriter` | **None** |
 | **1.5** | `IPositionSource` contract; phone implementation | **None** |
 | **1.6** | Wire `IDomainEventPublisher` into DI; **6 publish sites** | **~12 lines** |

@@ -1,5 +1,7 @@
+using CityWatch.Tracking.Data;
 using CityWatch.Tracking.Services;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,9 +30,18 @@ namespace CityWatch.Tracking.Configuration
 
             services.AddSingleton<ILiveStateStore, InMemoryLiveStateStore>();
 
-            /* M1.3+: TrackingDbContext, ingest pipeline, hosted services, hub, controller
-               are registered here as each milestone lands. Everything stays behind this
-               same branch so Level-1 rollback always covers the whole pack. */
+            /* Same physical database as the platform, separate context (D1, §3.3).
+               Schema comes from DbScript 360–362, never from migrations.
+               NoTracking by default: this context reads history and small admin rows;
+               the hot write path bypasses it entirely via SqlBulkCopy. */
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<TrackingDbContext>(o => o
+                .UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure())
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+
+            /* M1.4+: ingest pipeline, hosted services, hub, controller are registered here
+               as each milestone lands. Everything stays behind this same branch so Level-1
+               rollback always covers the whole pack. */
 
             return services;
         }
