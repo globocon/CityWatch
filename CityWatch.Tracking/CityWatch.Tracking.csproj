@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- The feature pack references CityWatch.Events only. It must never reference
+       CityWatch.Data: the platform's data layer cannot be allowed to become reachable
+       from the tracking hot path, and the dependency arrow must always point from the
+       host applications inward, never between modules. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CityWatch.Events\CityWatch.Events.csproj" />
+  </ItemGroup>
+
+</Project>
