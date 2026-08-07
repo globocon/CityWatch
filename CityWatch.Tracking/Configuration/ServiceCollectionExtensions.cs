@@ -61,6 +61,7 @@ namespace CityWatch.Tracking.Configuration
             services.AddScoped<IIngestService, IngestService>();
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<ILiveSnapshotService, LiveSnapshotService>();
+            services.AddScoped<IModeCommandService, ModeCommandService>();
             services.AddSignalR();
 
             services.AddHostedService<Hosted.BroadcastTicker>();

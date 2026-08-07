@@ -37,6 +37,7 @@ namespace CityWatch.Tracking.Services
         private readonly ChannelWriter<TrackPoint> _writer;
         private readonly UnitRateLimiter _rateLimiter;
         private readonly TrackingOptions _options;
+        private readonly IModeCommandService? _commands;
         private readonly ILogger<IngestService> _logger;
         private readonly Func<DateTime> _utcNow;
 
@@ -47,6 +48,7 @@ namespace CityWatch.Tracking.Services
             UnitRateLimiter rateLimiter,
             TrackingOptions options,
             ILogger<IngestService> logger,
+            IModeCommandService? commands = null,
             Func<DateTime>? utcNow = null)
         {
             _db = db;
@@ -54,6 +56,7 @@ namespace CityWatch.Tracking.Services
             _writer = writer;
             _rateLimiter = rateLimiter;
             _options = options;
+            _commands = commands;
             _logger = logger;
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
         }
@@ -136,6 +139,17 @@ namespace CityWatch.Tracking.Services
                 session.LastFixUtc = serverUtc;
                 _db.TrackingSessions.Update(session);
                 await _db.SaveChangesAsync(ct);
+            }
+
+            /* Authoritative mode delivery on the device's own heartbeat (§5.3, D5): the
+               batch's ack is applied and the current command comes back with the response.
+               Push only ever accelerates this; it never replaces it. */
+            if (_commands != null)
+            {
+                var resolution = await _commands.ResolveAsync(batch.UnitId, batch.CommandSeqSeen, ct);
+                response.DesiredMode = resolution.DesiredMode;
+                response.CommandSeq = resolution.CommandSeq;
+                response.CommandTtlSeconds = resolution.TtlSecondsRemaining;
             }
 
             return response;

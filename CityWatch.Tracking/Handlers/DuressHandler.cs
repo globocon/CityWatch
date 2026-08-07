@@ -21,14 +21,15 @@ namespace CityWatch.Tracking.Handlers
     public sealed class DuressHandler : IDomainEventHandler<DuressActivated>
     {
         private readonly TrackingDbContext _db;
+        private readonly Services.IModeCommandService _commands;
         private readonly ILogger<DuressHandler> _logger;
-        private readonly Func<DateTime> _utcNow;
 
-        public DuressHandler(TrackingDbContext db, ILogger<DuressHandler> logger, Func<DateTime>? utcNow = null)
+        public DuressHandler(TrackingDbContext db, Services.IModeCommandService commands,
+            ILogger<DuressHandler> logger)
         {
             _db = db;
+            _commands = commands;
             _logger = logger;
-            _utcNow = utcNow ?? (() => DateTime.UtcNow);
         }
 
         public async Task HandleAsync(DuressActivated e, CancellationToken ct)
@@ -47,28 +48,7 @@ namespace CityWatch.Tracking.Handlers
                 return;
             }
 
-            var now = _utcNow();
-
-            /* M1.8 replaces this direct insert with ModeCommandService (concurrency caps,
-               ack tracking). The row shape is already final: Duress has no expiry, ever. */
-            var lastSeq = await _db.TrackingModeCommands
-                .Where(c => c.UnitId == session.UnitId)
-                .MaxAsync(c => (int?)c.CommandSeq, ct) ?? 0;
-
-            _db.TrackingModeCommands.Add(new TrackingModeCommand
-            {
-                UnitId = session.UnitId,
-                CommandSeq = lastSeq + 1,
-                DesiredMode = (byte)TrackingMode.Duress,
-                IssuedByUserId = null,          // system-issued
-                IssuedUtc = now,
-                ExpiresUtc = null,              // duress never times out
-                Status = "Pending"
-            });
-            await _db.SaveChangesAsync(ct);
-
-            _logger.LogWarning("Duress: unit {Unit} commanded to Duress Mode (session {Session}).",
-                session.UnitId, session.Id);
+            await _commands.RequestDuressAsync(session.UnitId, ct);
         }
     }
 }

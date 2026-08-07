@@ -197,11 +197,16 @@ namespace CityWatch.Tracking.Tests
 
         /* ---------------- duress (§20.3, §4.5) ---------------- */
 
+        private DuressHandler Duress()
+            => new(_db, new ModeCommandService(_db, new TrackingOptions(),
+                       NullDomainEventPublisher.Instance, NullLogger<ModeCommandService>.Instance, () => Now),
+                   NullLogger<DuressHandler>.Instance);
+
         [TestMethod]
         public async Task Duress_WithActiveSession_IssuesANeverExpiringCommand()
         {
             var session = await Sessions().StartAsync(Unit, 7, 12, null, CancellationToken.None);
-            var handler = new DuressHandler(_db, NullLogger<DuressHandler>.Instance, () => Now);
+            var handler = Duress();
 
             await handler.HandleAsync(new DuressActivated(7, null, 12, "-33.86,151.20", Now), CancellationToken.None);
 
@@ -215,7 +220,7 @@ namespace CityWatch.Tracking.Tests
         [TestMethod]
         public async Task Duress_WithoutSession_IsObservedButChangesNothing()
         {
-            var handler = new DuressHandler(_db, NullLogger<DuressHandler>.Instance, () => Now);
+            var handler = Duress();
 
             await handler.HandleAsync(new DuressActivated(7, null, 12, null, Now), CancellationToken.None);
 

@@ -42,6 +42,16 @@
 .trk-mode-chip.trk-transit, .trk-mode-chip.trk-live { background: #2563eb; }
 .trk-mode-chip.trk-duress { background: #dc2626; }
 
+/* live mode controls (§11.3 rules 4-5) */
+.trk-btn {
+    margin-top: 4px; padding: 3px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid #2563eb; background: #2563eb; color: #fff;
+    font: 700 11px system-ui, sans-serif;
+}
+.trk-btn:hover { filter: brightness(1.1); }
+.trk-btn-stop { border-color: #dc2626; background: #dc2626; }
+.trk-pending { font: 700 11px system-ui, sans-serif; color: #2563eb; }
+
 /* connection status pill — degrade honestly (§11.3 rule 10) */
 .trk-status {
     position: fixed; bottom: 14px; left: 14px; z-index: 1200;

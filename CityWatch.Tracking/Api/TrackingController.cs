@@ -29,15 +29,25 @@ namespace CityWatch.Tracking.Api
         private readonly IIngestService _ingest;
         private readonly ISessionService _sessions;
         private readonly ILiveSnapshotService _snapshot;
+        private readonly IModeCommandService _commands;
         private readonly TrackingOptions _options;
 
         public TrackingController(IIngestService ingest, ISessionService sessions,
-            ILiveSnapshotService snapshot, TrackingOptions options)
+            ILiveSnapshotService snapshot, IModeCommandService commands, TrackingOptions options)
         {
             _ingest = ingest;
             _sessions = sessions;
             _snapshot = snapshot;
+            _commands = commands;
             _options = options;
+        }
+
+        /// <summary>Existing cookie principal → User.Id (ClaimTypes.Sid, set by both hosts'
+        /// sign-in paths). The permission table refines this in Phase 2.</summary>
+        private int? OperatorUserId()
+        {
+            var sid = User.FindFirst(System.Security.Claims.ClaimTypes.Sid)?.Value;
+            return int.TryParse(sid, out var id) ? id : null;
         }
 
         /* ------------------------------- device ------------------------------- */
@@ -94,7 +104,66 @@ namespace CityWatch.Tracking.Api
         [HttpGet("policy")]
         public ActionResult<TrackingOptions.SamplingPolicyOptions> Policy() => Ok(_options.Policy);
 
+        /// <summary>Device fast-path poll after a silent push (§5.3): "what mode should I be
+        /// in right now?" The ingest response delivers the same answer on every batch.</summary>
+        [HttpGet("mode/{unitId:int}")]
+        public async Task<IActionResult> Mode(int unitId, [FromQuery] int seqSeen, CancellationToken ct)
+        {
+            if (unitId <= 0)
+                return BadRequest();
+
+            var resolution = await _commands.ResolveAsync(unitId, seqSeen, ct);
+            return Ok(new
+            {
+                desiredMode = (byte)resolution.DesiredMode,
+                commandSeq = resolution.CommandSeq,
+                ttlSeconds = resolution.TtlSecondsRemaining,
+                serverUtc = DateTime.UtcNow
+            });
+        }
+
         /* ------------------------------ operator ------------------------------ */
+
+        public sealed record LiveCommandRequest(int UnitId);
+
+        /// <summary>"Track Vehicle Live" (§5.3). TTL-bounded, concurrency-capped, audited.
+        /// The UI shows "Live requested…" until the device acknowledges via its next batch.</summary>
+        [Authorize]
+        [HttpPost("command")]
+        public async Task<IActionResult> RequestLive([FromBody] LiveCommandRequest request, CancellationToken ct)
+        {
+            if (request == null || request.UnitId <= 0)
+                return BadRequest();
+            if (OperatorUserId() is not { } userId)
+                return Forbid();
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var (ok, error, command) = await _commands.RequestLiveAsync(request.UnitId, userId, ip, ct);
+            if (!ok)
+                return Conflict(new { error });
+
+            return Ok(new
+            {
+                commandSeq = command!.CommandSeq,
+                ttlSeconds = _options.LiveModeTtlSeconds,
+                status = command.Status   // "Pending" until the device acks
+            });
+        }
+
+        /// <summary>Ends Live Mode for a unit. Idempotent.</summary>
+        [Authorize]
+        [HttpDelete("command/{unitId:int}")]
+        public async Task<IActionResult> CancelLive(int unitId, CancellationToken ct)
+        {
+            if (unitId <= 0)
+                return BadRequest();
+            if (OperatorUserId() is not { } userId)
+                return Forbid();
+
+            await _commands.CancelAsync(unitId, userId, "Cancelled",
+                HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
+            return Ok();
+        }
 
         /// <summary>Live snapshot for the control room. Same-origin cookie-authenticated on
         /// both host apps; memory-fast in the ingest process, DB-backed in the control-room

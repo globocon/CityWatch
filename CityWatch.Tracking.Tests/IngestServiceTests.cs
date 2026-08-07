@@ -58,7 +58,7 @@ namespace CityWatch.Tracking.Tests
             _channel = Channel.CreateBounded<TrackPoint>(1000);
             _service = new IngestService(_db, _liveState, _channel.Writer,
                 new UnitRateLimiter(new TrackingOptions()), new TrackingOptions(),
-                NullLogger<IngestService>.Instance, () => Now);
+                NullLogger<IngestService>.Instance, commands: null, utcNow: () => Now);
         }
 
         [TestCleanup]
@@ -214,7 +214,8 @@ namespace CityWatch.Tracking.Tests
         {
             var options = new TrackingOptions { IngestRateLimitPerUnitPerMinute = 2 };
             var service = new IngestService(_db, _liveState, _channel.Writer,
-                new UnitRateLimiter(options), options, NullLogger<IngestService>.Instance, () => Now);
+                new UnitRateLimiter(options), options, NullLogger<IngestService>.Instance,
+                commands: null, utcNow: () => Now);
 
             await service.IngestAsync(Batch(Point(1)), CancellationToken.None);
             await service.IngestAsync(Batch(Point(2)), CancellationToken.None);

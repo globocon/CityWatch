@@ -58,6 +58,19 @@
         });
     }
 
+    const liveRequests = {};   // unitId -> epoch ms of an unacknowledged "Track Live" click
+
+    function liveButtonHtml(u) {
+        /* Never claim a state the device has not confirmed (§11.3 rule 5):
+           requested-but-unacked shows as "requested…", not as LIVE. */
+        if (u.mode === 4) return '';                        // duress owns the unit
+        if (u.mode === 3)
+            return `<button class="trk-btn trk-btn-stop" data-trk-stop="${u.unitId}">⏹ Stop Live</button>`;
+        if (liveRequests[u.unitId] && Date.now() - liveRequests[u.unitId] < 90000)
+            return `<span class="trk-pending">◉ Live requested…</span>`;
+        return `<button class="trk-btn" data-trk-live="${u.unitId}">◉ Track Live</button>`;
+    }
+
     function popupHtml(u) {
         const mode = MODE[u.mode] || MODE[1];
         const speed = u.speedKph == null ? '—' : `${u.speedKph} km/h`;
@@ -65,8 +78,36 @@
         const acc = u.accuracyM == null ? '' : ` · ±${u.accuracyM}m`;
         return `<b>Unit ${u.unitId}</b> <span class="trk-mode-chip ${mode.cls}">${mode.label}</span><br>` +
                `${speed}${acc}${battery}<br>` +
-               `<small>Fix ${u.ageSeconds}s ago</small>`;
+               `<small>Fix ${u.ageSeconds}s ago</small><br>` + liveButtonHtml(u);
     }
+
+    /* Live Mode commands — delegated so popup re-renders keep working. */
+    document.addEventListener('click', async ev => {
+        const liveId = ev.target.getAttribute && ev.target.getAttribute('data-trk-live');
+        const stopId = ev.target.getAttribute && ev.target.getAttribute('data-trk-stop');
+        if (!liveId && !stopId) return;
+        ev.preventDefault();
+        try {
+            if (liveId) {
+                const res = await fetch('/api/tracking/command', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ unitId: Number(liveId) })
+                });
+                if (res.ok) {
+                    liveRequests[liveId] = Date.now();
+                } else if (res.status === 409) {
+                    const body = await res.json().catch(() => null);
+                    alert((body && body.error) || 'Live tracking unavailable for this unit.');
+                }
+            } else {
+                await fetch(`/api/tracking/command/${stopId}`, { method: 'DELETE', credentials: 'same-origin' });
+                delete liveRequests[stopId];
+            }
+            const entry = units[liveId || stopId];
+            if (entry) entry.marker.setPopupContent(popupHtml(entry.data));
+        } catch { /* next poll re-renders the truth */ }
+    });
 
     function upsert(u, nowMs) {
         let entry = units[u.unitId];
@@ -108,7 +149,11 @@
     function applySnapshot(list) {
         const nowMs = Date.now();
         const seen = {};
-        list.forEach(u => { seen[u.unitId] = true; upsert(u, nowMs); });
+        list.forEach(u => {
+            seen[u.unitId] = true;
+            if (u.mode === 3) delete liveRequests[u.unitId];   // device acked: LIVE is now the truth
+            upsert(u, nowMs);
+        });
         /* Units gone from the snapshot ended their session: off the map (§13.5). */
         Object.keys(units).forEach(id => {
             if (!seen[id]) {
