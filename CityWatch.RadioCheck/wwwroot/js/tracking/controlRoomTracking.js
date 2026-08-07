@@ -41,21 +41,35 @@
         return 'dead';
     }
 
+    const idleUnits = {};    // unitId -> idleMinutes (refreshed by the idle poll)
+
     function carIcon(u) {
         const mode = MODE[u.mode] || MODE[1];
         const bucket = ageBucket(u.ageSeconds);
         const heading = (u.headingDeg == null) ? 0 : u.headingDeg;
         const ageTxt = u.ageSeconds <= FRESH_S ? '' :
             `<span class="trk-age">${u.ageSeconds < 120 ? Math.round(u.ageSeconds) + 's' : Math.round(u.ageSeconds / 60) + 'm'}</span>`;
+        /* The symbol IS the kind: patrol cars are unmistakable against site markers and
+           against guards on foot. */
+        const isCar = u.kind !== 'guard';
+        const glyph = isCar ? '🚓' : '👮';
+        const label = isCar ? `PC-${u.unitId}` : (u.guardName ? u.guardName.split(' ')[0] : `G-${u.guardId || u.unitId}`);
+        const idleMin = idleUnits[u.unitId];
+        const idleTxt = idleMin ? `<span class="trk-idle-badge">IDLE ${idleMin}m</span>` : '';
         return L.divIcon({
             className: '',
-            html: `<div class="trk-car ${mode.cls} trk-${bucket}">
+            html: `<div class="trk-car ${isCar ? 'trk-kind-car' : 'trk-kind-guard'} ${mode.cls} trk-${bucket}">
+                     <div class="trk-glyph">${glyph}</div>
                      <div class="trk-arrow" style="transform:rotate(${heading}deg)">▲</div>
-                     <span class="trk-id">PC-${u.unitId}</span>${ageTxt}
+                     <span class="trk-id">${esc(label)}</span>${ageTxt}${idleTxt}
                    </div>`,
             iconSize: [46, 46],
             iconAnchor: [23, 23]
         });
+    }
+
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
     const liveRequests = {};   // unitId -> epoch ms of an unacknowledged "Track Live" click
@@ -76,7 +90,13 @@
         const speed = u.speedKph == null ? '—' : `${u.speedKph} km/h`;
         const battery = u.batteryPct == null ? '' : ` · 🔋${u.batteryPct}%`;
         const acc = u.accuracyM == null ? '' : ` · ±${u.accuracyM}m`;
-        return `<b>Unit ${u.unitId}</b> <span class="trk-mode-chip ${mode.cls}">${mode.label}</span><br>` +
+        const isCar = u.kind !== 'guard';
+        const title = isCar ? `🚓 Unit ${u.unitId}` : `👮 ${esc(u.guardName || ('Guard ' + (u.guardId || u.unitId)))}`;
+        const who = isCar && u.guardName ? `<small>${esc(u.guardName)}</small><br>` : '';
+        const idleMin = idleUnits[u.unitId];
+        const idleTxt = idleMin ? ` <span class="trk-idle-chip">⏸ idle ${idleMin}m</span>` : '';
+        return `<b>${title}</b> <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>${idleTxt}<br>` +
+               who +
                `${speed}${acc}${battery}<br>` +
                `<small>Fix ${u.ageSeconds}s ago</small><br>` + liveButtonHtml(u) +
                ` <button class="trk-btn trk-btn-replay" data-trk-replay="${u.unitId}">▶ Replay</button>`;
@@ -290,6 +310,57 @@
             setTimeout(poll, pollMs);
         }
     }
+
+    /* ---- idle units panel: who has been sitting in one spot too long ---- */
+    let idlePanel = null;
+    function renderIdlePanel(list) {
+        if (!idlePanel) {
+            idlePanel = document.createElement('div');
+            idlePanel.className = 'trk-idle-panel';
+            document.body.appendChild(idlePanel);
+            idlePanel.addEventListener('click', ev => {
+                const row = ev.target.closest('[data-trk-goto]');
+                if (!row) return;
+                const [lat, lon] = row.getAttribute('data-trk-goto').split(',').map(Number);
+                map.setView([lat, lon], Math.max(map.getZoom(), 15));
+                const id = Number(row.getAttribute('data-trk-unit'));
+                if (units[id]) units[id].marker.openPopup();
+            });
+        }
+        if (!list.length) {
+            idlePanel.style.display = 'none';
+            return;
+        }
+        idlePanel.style.display = 'block';
+        idlePanel.innerHTML = `<div class="trk-idle-head">⏸ IDLE UNITS (${list.length})</div>` +
+            list.map(u => {
+                const glyph = u.kind === 'car' ? '🚓' : '👮';
+                const name = esc(u.guardName || (u.kind === 'car' ? `Unit ${u.unitId}` : `Guard ${u.guardId}`));
+                const since = u.idleMinutes >= 60
+                    ? `${Math.floor(u.idleMinutes / 60)}h ${u.idleMinutes % 60}m`
+                    : `${u.idleMinutes}m`;
+                return `<div class="trk-idle-row" data-trk-goto="${u.lat},${u.lon}" data-trk-unit="${u.unitId}">
+                          ${glyph} <b>${name}</b><span class="trk-idle-time">${since}</span>
+                        </div>`;
+            }).join('');
+    }
+
+    async function pollIdle() {
+        try {
+            const res = await fetch('/api/tracking/idle', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const body = await res.json();
+            const list = body.units || [];
+            Object.keys(idleUnits).forEach(k => delete idleUnits[k]);
+            list.forEach(u => { idleUnits[u.unitId] = u.idleMinutes; });
+            renderIdlePanel(list);
+        } catch {
+            /* leave the last known idle picture; the live poll's health pill covers outages */
+        } finally {
+            setTimeout(pollIdle, 30000);
+        }
+    }
+    pollIdle();
 
     /* ---- hub fast path (activates when configured; ADD §10) ---- */
     function connectHub(url) {

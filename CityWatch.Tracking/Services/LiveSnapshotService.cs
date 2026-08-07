@@ -28,7 +28,16 @@ namespace CityWatch.Tracking.Services
     public sealed record LiveUnitDto(
         int UnitId, Guid SessionId, decimal Lat, decimal Lon,
         short? SpeedKph, short? HeadingDeg, short? AccuracyM, byte? BatteryPct,
-        byte Mode, byte Flags, DateTime RecordedUtc, int AgeSeconds);
+        byte Mode, byte Flags, DateTime RecordedUtc, int AgeSeconds)
+    {
+        /// <summary>"car" when the wand is allocated to a patrol car, else "guard" —
+        /// this is what picks the map symbol.</summary>
+        public string Kind { get; init; } = "guard";
+
+        public int GuardId { get; init; }
+
+        public string? GuardName { get; init; }
+    }
 
     public sealed class LiveSnapshotService : ILiveSnapshotService
     {
@@ -49,10 +58,36 @@ namespace CityWatch.Tracking.Services
 
             var sessions = await _db.TrackingSessions
                 .Where(s => s.Status == "Active")
-                .Select(s => new { s.Id, s.UnitId })
+                .Select(s => new { s.Id, s.UnitId, s.GuardId })
                 .ToListAsync(ct);
             if (sessions.Count == 0)
                 return Array.Empty<LiveUnitDto>();
+
+            /* Kind + name resolution: two bounded lookups against the read-only platform
+               projections. A wand allocated to a patrol car renders as a car; everything
+               else — a guard on foot with a wand — renders as a guard. */
+            var unitIds = sessions.Select(s => s.UnitId).ToList();
+            var carUnits = await _db.PlatformSmartWands
+                .Where(w => unitIds.Contains(w.Id) && w.PatrolCarId != null)
+                .Select(w => w.Id)
+                .ToListAsync(ct);
+            var guardIds = sessions.Select(s => s.GuardId).Distinct().ToList();
+            var guardNames = await _db.PlatformGuards
+                .Where(g => guardIds.Contains(g.Id))
+                .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
+            var carSet = carUnits.ToHashSet();
+            var guardBySession = sessions.ToDictionary(s => s.Id, s => s.GuardId);
+
+            LiveUnitDto Decorate(LiveUnitDto dto)
+            {
+                var guardId = guardBySession.TryGetValue(dto.SessionId, out var g) ? g : 0;
+                return dto with
+                {
+                    Kind = carSet.Contains(dto.UnitId) ? "car" : "guard",
+                    GuardId = guardId,
+                    GuardName = guardNames.TryGetValue(guardId, out var name) ? name : null
+                };
+            }
 
             var result = new List<LiveUnitDto>(sessions.Count);
             var missing = new List<(int UnitId, Guid SessionId)>();
@@ -62,11 +97,11 @@ namespace CityWatch.Tracking.Services
                 var warm = _memory.Get(session.UnitId);
                 if (warm != null && warm.SessionId == session.Id)
                 {
-                    result.Add(new LiveUnitDto(
+                    result.Add(Decorate(new LiveUnitDto(
                         warm.UnitId, warm.SessionId, warm.Lat, warm.Lon,
                         warm.SpeedKph, warm.HeadingDeg, warm.AccuracyM, warm.BatteryPct,
                         (byte)warm.Mode, (byte)warm.Flags, warm.RecordedUtc,
-                        (int)Math.Max(0, (now - warm.ReceivedUtc).TotalSeconds)));
+                        (int)Math.Max(0, (now - warm.ReceivedUtc).TotalSeconds))));
                 }
                 else
                 {
@@ -86,11 +121,11 @@ namespace CityWatch.Tracking.Services
                 if (point == null)
                     continue;   // session open, no fix yet — the unit is not on the map
 
-                result.Add(new LiveUnitDto(
+                result.Add(Decorate(new LiveUnitDto(
                     point.UnitId, point.SessionId, point.Latitude, point.Longitude,
                     point.SpeedKph, point.HeadingDeg, point.AccuracyM, point.BatteryPct,
                     point.ModeAtCapture, point.Flags, point.RecordedUtc,
-                    (int)Math.Max(0, (now - point.ReceivedUtc).TotalSeconds)));
+                    (int)Math.Max(0, (now - point.ReceivedUtc).TotalSeconds))));
             }
 
             return result.OrderBy(u => u.UnitId).ToList();

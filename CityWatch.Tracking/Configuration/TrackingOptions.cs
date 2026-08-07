@@ -37,6 +37,12 @@ namespace CityWatch.Tracking.Configuration
         /// <summary>Implied speed above this between consecutive fixes flags a teleport.</summary>
         public int PlausibilityMaxSpeedKph { get; set; } = 250;
 
+        /// <summary>A unit that has stayed within this radius counts as sitting in place.</summary>
+        public int IdleRadiusM { get; set; } = 75;
+
+        /// <summary>Default time-in-place before a unit appears on the idle list.</summary>
+        public int IdleThresholdMinutes { get; set; } = 15;
+
         public RetentionOptions RetentionDays { get; set; } = new();
 
         public SamplingPolicyOptions Policy { get; set; } = new();

@@ -12,8 +12,13 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
     font-family: system-ui, sans-serif;
 }
-.trk-car .trk-arrow { font-size: 14px; line-height: 1; color: #111; transition: transform .9s linear; }
-.trk-car .trk-id { font-size: 9px; font-weight: 700; color: #111; }
+.trk-car .trk-glyph { font-size: 16px; line-height: 1; }
+.trk-car .trk-arrow { font-size: 10px; line-height: 1; color: #111; transition: transform .9s linear; }
+.trk-car .trk-id { font-size: 8px; font-weight: 700; color: #111; max-width: 42px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* kind: cars are squared like a vehicle plate, guards stay round like site/person markers */
+.trk-car.trk-kind-car { border-radius: 10px; }
+.trk-car.trk-kind-guard { border-radius: 50%; }
+.trk-car.trk-kind-guard .trk-arrow { display: none; }   /* foot patrol heading is GPS noise */
 .trk-car .trk-age {
     position: absolute; top: -8px; right: -10px;
     background: #475569; color: #fff; border-radius: 8px;
@@ -51,6 +56,27 @@
 .trk-btn:hover { filter: brightness(1.1); }
 .trk-btn-stop { border-color: #dc2626; background: #dc2626; }
 .trk-pending { font: 700 11px system-ui, sans-serif; color: #2563eb; }
+
+/* idle detection: attention amber, distinct from the urgency scale */
+.trk-idle-badge {
+    position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+    background: #d97706; color: #fff; border-radius: 8px;
+    font-size: 8px; padding: 1px 5px; font-weight: 800; white-space: nowrap;
+}
+.trk-idle-chip {
+    display: inline-block; padding: 0 6px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; color: #fff; background: #d97706; vertical-align: middle;
+}
+.trk-idle-panel {
+    position: fixed; top: 70px; right: 14px; z-index: 1200; min-width: 210px; max-width: 280px;
+    background: #ffffffee; border: 1px solid #d97706; border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.15); overflow: hidden;
+    font: 600 12px system-ui, sans-serif; color: #0f172a;
+}
+.trk-idle-head { background: #d97706; color: #fff; padding: 5px 10px; font-weight: 800; font-size: 11px; }
+.trk-idle-row { display: flex; align-items: center; gap: 6px; padding: 6px 10px; cursor: pointer; border-top: 1px solid #f1f5f9; }
+.trk-idle-row:hover { background: #fff7ed; }
+.trk-idle-row .trk-idle-time { margin-left: auto; color: #b45309; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 /* replay (§11.2): one surface, two times */
 .trk-btn-replay { border-color: #7c3aed; background: #7c3aed; }

@@ -169,6 +169,34 @@ namespace CityWatch.Tracking.Api
             return Ok();
         }
 
+        /// <summary>Units sitting in one place too long (§ idle detection). Operator-attention
+        /// surface: "who has been at the same spot for 20 minutes?" Duress units excluded.</summary>
+        [Authorize]
+        [HttpGet("idle")]
+        public async Task<IActionResult> Idle([FromQuery] int? minutes,
+            [FromServices] IIdleDetectionService idleDetection, CancellationToken ct)
+        {
+            var threshold = TimeSpan.FromMinutes(
+                minutes is > 0 and <= 24 * 60 ? minutes.Value : _options.IdleThresholdMinutes);
+
+            var idle = await idleDetection.GetIdleUnitsAsync(threshold, ct);
+            return Ok(new
+            {
+                thresholdMinutes = (int)threshold.TotalMinutes,
+                units = idle.Select(u => new
+                {
+                    unitId = u.UnitId,
+                    kind = u.Kind,
+                    guardId = u.GuardId,
+                    guardName = u.GuardName,
+                    lat = u.Lat,
+                    lon = u.Lon,
+                    idleSinceUtc = u.IdleSinceUtc,
+                    idleMinutes = u.IdleMinutes
+                })
+            });
+        }
+
         /// <summary>Replay/history: a unit's trail for a bounded window. Every call is
         /// audited (§13.4) — who looked at whose movements is the first question in any
         /// workplace-surveillance dispute. Reads the point stream; this endpoint and
@@ -276,6 +304,9 @@ namespace CityWatch.Tracking.Api
                 units = units.Select(u => new
                 {
                     unitId = u.UnitId,
+                    kind = u.Kind,
+                    guardId = u.GuardId,
+                    guardName = u.GuardName,
                     lat = u.Lat,
                     lon = u.Lon,
                     speedKph = u.SpeedKph,

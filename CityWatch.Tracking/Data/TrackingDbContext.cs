@@ -20,6 +20,10 @@ namespace CityWatch.Tracking.Data
         }
 
         public DbSet<TrackPoint> TrackPoints { get; set; } = null!;
+
+        /// <summary>Read-only platform projections (§13.3 boundary). Never written.</summary>
+        public DbSet<PlatformSmartWand> PlatformSmartWands { get; set; } = null!;
+        public DbSet<PlatformGuard> PlatformGuards { get; set; } = null!;
         public DbSet<TrackSegment> TrackSegments { get; set; } = null!;
         public DbSet<TrackingSession> TrackingSessions { get; set; } = null!;
         public DbSet<TrackingUnitEnrolment> TrackingUnitEnrolments { get; set; } = null!;

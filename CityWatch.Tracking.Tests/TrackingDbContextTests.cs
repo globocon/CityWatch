@@ -22,11 +22,21 @@ namespace CityWatch.Tracking.Tests
             return new TrackingDbContext(options);
         }
 
+        /// <summary>Read-only projections of platform tables (§13.3 boundary) — excluded from
+        /// the pack-owns-its-tables assertions below.</summary>
+        private static readonly string[] PlatformProjections =
+        {
+            nameof(PlatformSmartWand), nameof(PlatformGuard)
+        };
+
         [TestMethod]
-        public void Model_Builds_WithAllSixEntities()
+        public void Model_Builds_WithAllSixPackEntities_PlusPlatformProjections()
         {
             using var context = Build();
-            var entityNames = context.Model.GetEntityTypes().Select(e => e.ClrType.Name).OrderBy(n => n).ToList();
+            var entityNames = context.Model.GetEntityTypes()
+                .Select(e => e.ClrType.Name)
+                .Where(n => !PlatformProjections.Contains(n))
+                .OrderBy(n => n).ToList();
 
             CollectionAssert.AreEqual(new[]
             {
@@ -44,11 +54,23 @@ namespace CityWatch.Tracking.Tests
         {
             using var context = Build();
 
-            foreach (var entity in context.Model.GetEntityTypes())
+            foreach (var entity in context.Model.GetEntityTypes()
+                         .Where(e => !PlatformProjections.Contains(e.ClrType.Name)))
             {
                 Assert.AreEqual(entity.ClrType.Name, entity.GetTableName(),
                     $"Entity {entity.ClrType.Name} must map to the singular table name used in DbScript/360.");
             }
+        }
+
+        [TestMethod]
+        public void PlatformProjections_MapToTheExistingPlatformTables()
+        {
+            using var context = Build();
+
+            Assert.AreEqual("ClientSiteSmartWands",
+                context.Model.FindEntityType(typeof(PlatformSmartWand))!.GetTableName());
+            Assert.AreEqual("Guards",
+                context.Model.FindEntityType(typeof(PlatformGuard))!.GetTableName());
         }
 
         [TestMethod]
