@@ -1,5 +1,6 @@
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
+using CityWatch.Tracking.Configuration;
 using CityWatch.Data;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Providers;
@@ -31,6 +32,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.Configure<Settings>(Configuration.GetSection(Settings.Name));
 builder.Services.Configure<EmailOptions>(Configuration.GetSection(EmailOptions.Email));
+builder.Services.AddCityWatchTracking(builder.Configuration); // Tracking feature pack (no-op unless Tracking:Enabled)
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
 builder.Services.AddScoped<IClientDataProvider, ClientDataProvider>();
 builder.Services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
@@ -170,4 +172,5 @@ app.MapControllerRoute(
 // Configure the HTTP request pipeline.
 app.MapHub<UpdateHub>("/updateHub");
 app.MapHub<MobileAppSignalRHub>("/MobileAppSignalRHub");
+app.MapCityWatchTracking(); // Tracking feature pack (no-op unless Tracking:Enabled)
 app.Run();

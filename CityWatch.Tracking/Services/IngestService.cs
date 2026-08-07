@@ -1,0 +1,248 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
+using CityWatch.Tracking.Configuration;
+using CityWatch.Tracking.Contracts;
+using CityWatch.Tracking.Data;
+using CityWatch.Tracking.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace CityWatch.Tracking.Services
+{
+    public interface IIngestService
+    {
+        Task<IngestResponse> IngestAsync(PositionBatch batch, CancellationToken ct);
+    }
+
+    /// <summary>
+    /// The §7.3 pipeline: authorise → rate-limit → validate → flag → live state → enqueue.
+    /// The HTTP response never waits for a database write of points — the channel decouples
+    /// ingest latency from storage, and the bounded writer drains it in bulk.
+    /// </summary>
+    public sealed class IngestService : IIngestService
+    {
+        /* Same envelope the control-room map enforces (AU_BOUNDS in controlRoomMap.js).
+           A fix outside the service area is a device fault or a spoof, not data. */
+        private const decimal MinLat = -45.5m, MaxLat = -8.8m, MinLon = 111.0m, MaxLon = 156.5m;
+
+        /// <summary>Device clocks ahead of the server beyond this are rejected, not flagged —
+        /// a future timestamp cannot be evidence of anything.</summary>
+        private static readonly TimeSpan MaxFutureSkew = TimeSpan.FromMinutes(5);
+
+        private readonly TrackingDbContext _db;
+        private readonly ILiveStateStore _liveState;
+        private readonly ChannelWriter<TrackPoint> _writer;
+        private readonly UnitRateLimiter _rateLimiter;
+        private readonly TrackingOptions _options;
+        private readonly ILogger<IngestService> _logger;
+        private readonly Func<DateTime> _utcNow;
+
+        public IngestService(
+            TrackingDbContext db,
+            ILiveStateStore liveState,
+            ChannelWriter<TrackPoint> writer,
+            UnitRateLimiter rateLimiter,
+            TrackingOptions options,
+            ILogger<IngestService> logger,
+            Func<DateTime>? utcNow = null)
+        {
+            _db = db;
+            _liveState = liveState;
+            _writer = writer;
+            _rateLimiter = rateLimiter;
+            _options = options;
+            _logger = logger;
+            _utcNow = utcNow ?? (() => DateTime.UtcNow);
+        }
+
+        public async Task<IngestResponse> IngestAsync(PositionBatch batch, CancellationToken ct)
+        {
+            var serverUtc = _utcNow();
+            var response = new IngestResponse
+            {
+                ServerUtc = serverUtc,
+                Policy = _options.Policy,
+                DesiredMode = TrackingMode.Normal   // M1.8 replaces this with the command channel
+            };
+
+            /* ---- Gate 1: the unit must be enrolled, enabled, and have consent on file.
+               Consent is the structural guarantee (§13.5): IsEnabled without consent is
+               refused exactly like no enrolment at all. ---- */
+            var enrolment = await _db.TrackingUnitEnrolments
+                .FirstOrDefaultAsync(e => e.UnitId == batch.UnitId, ct);
+            if (enrolment is not { IsEnabled: true } || enrolment.ConsentRecordedUtc == null)
+            {
+                response.Rejected = batch.Points.Count;
+                return response;   // 200 with zero accepted: the device backs off to Normal
+            }
+
+            /* ---- Gate 2: no session, no tracking (§6.5). ---- */
+            var session = await _db.TrackingSessions
+                .FirstOrDefaultAsync(s => s.Id == batch.SessionId && s.UnitId == batch.UnitId && s.Status == "Active", ct);
+            if (session == null)
+            {
+                response.Rejected = batch.Points.Count;
+                return response;
+            }
+
+            /* ---- Gate 3: a runaway device cannot flood the pipeline. ---- */
+            if (!_rateLimiter.TryAcquire(batch.UnitId, serverUtc))
+            {
+                response.Rejected = batch.Points.Count;
+                response.RetryAfterSeconds = 60;
+                return response;
+            }
+
+            var previous = _liveState.Get(batch.UnitId);
+
+            foreach (var p in batch.Points)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                if (!IsAcceptable(p, serverUtc))
+                {
+                    response.Rejected++;
+                    continue;
+                }
+
+                var flags = ComputeFlags(p, previous);
+                var point = ToEntity(batch, p, flags, serverUtc);
+
+                /* TryWrite on a DropOldest bounded channel fails only at shutdown. */
+                if (!_writer.TryWrite(point))
+                {
+                    response.Rejected++;
+                    continue;
+                }
+
+                response.Accepted++;
+
+                /* Backfilled history must never drive the live picture (§6.4); the store
+                   also rejects clock regressions on its own. */
+                if (!p.Backfilled)
+                {
+                    var state = ToLiveState(batch, p, flags, serverUtc);
+                    _liveState.Update(state);
+                    previous = state;
+                }
+            }
+
+            /* One cheap UPDATE per batch, not per point: the reaper reads this. */
+            if (response.Accepted > 0)
+            {
+                session.LastFixUtc = serverUtc;
+                _db.TrackingSessions.Update(session);
+                await _db.SaveChangesAsync(ct);
+            }
+
+            return response;
+        }
+
+        private bool IsAcceptable(PositionPoint p, DateTime serverUtc)
+        {
+            if (p.Lat is < MinLat or > MaxLat || p.Lon is < MinLon or > MaxLon)
+                return false;                                  // outside the service envelope
+            if (p.Lat == 0 && p.Lon == 0)
+                return false;                                  // the null island fix
+            if (p.Utc > serverUtc + MaxFutureSkew)
+                return false;                                  // future timestamps are not evidence
+            return true;
+        }
+
+        /// <summary>Flag, never drop (§13.6): a flagged anomaly is evidence; a dropped point
+        /// is a gap that cannot be explained later.</summary>
+        private TrackPointFlags ComputeFlags(PositionPoint p, UnitLiveState? previous)
+        {
+            var flags = TrackPointFlags.None;
+
+            if (p.IsMock)
+                flags |= TrackPointFlags.MockProvider;
+            if (p.Backfilled)
+                flags |= TrackPointFlags.Backfilled;
+            if (p.AccuracyM is > 0 && p.AccuracyM > _options.MaxAcceptedAccuracyMetres)
+                flags |= TrackPointFlags.LowAccuracy;
+
+            if (previous != null && !p.Backfilled && p.Utc > previous.RecordedUtc)
+            {
+                var impliedKph = ImpliedSpeedKph(previous.Lat, previous.Lon, p.Lat, p.Lon,
+                    (p.Utc - previous.RecordedUtc).TotalHours);
+                if (impliedKph > _options.PlausibilityMaxSpeedKph)
+                    flags |= TrackPointFlags.Implausible;
+            }
+
+            return flags;
+        }
+
+        /// <summary>Haversine, sufficient at patrol scale.</summary>
+        internal static double ImpliedSpeedKph(decimal lat1, decimal lon1, decimal lat2, decimal lon2, double hours)
+        {
+            if (hours <= 0)
+                return double.MaxValue;
+
+            const double r = 6371.0;
+            double la1 = (double)lat1 * Math.PI / 180, la2 = (double)lat2 * Math.PI / 180;
+            double dLa = la2 - la1, dLo = ((double)lon2 - (double)lon1) * Math.PI / 180;
+            double a = Math.Sin(dLa / 2) * Math.Sin(dLa / 2)
+                     + Math.Cos(la1) * Math.Cos(la2) * Math.Sin(dLo / 2) * Math.Sin(dLo / 2);
+            double km = 2 * r * Math.Asin(Math.Min(1, Math.Sqrt(a)));
+            return km / hours;
+        }
+
+        private static TrackPoint ToEntity(PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
+            => new()
+            {
+                UnitId = batch.UnitId,
+                SessionId = batch.SessionId,
+                Seq = p.Seq,
+                RecordedUtc = p.Utc,
+                ReceivedUtc = serverUtc,
+                Latitude = p.Lat,
+                Longitude = p.Lon,
+                SpeedKph = p.SpeedKph is { } s ? (short)Math.Clamp(s, short.MinValue, short.MaxValue) : null,
+                HeadingDeg = p.HeadingDeg is { } h ? (short)Math.Clamp(h, 0, 359) : null,
+                AccuracyM = p.AccuracyM is { } a ? (short)Math.Clamp(a, 0, short.MaxValue) : null,
+                BatteryPct = p.BatteryPct,
+                SourceType = (byte)ParseSource(p.Source),
+                ModeAtCapture = (byte)SourceToMode(ParseSource(p.Source)),
+                Flags = (byte)flags,
+                AnchorTagUid = p.TagUid
+            };
+
+        private UnitLiveState ToLiveState(PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
+            => new()
+            {
+                UnitId = batch.UnitId,
+                SessionId = batch.SessionId,
+                Lat = p.Lat,
+                Lon = p.Lon,
+                SpeedKph = p.SpeedKph is { } s ? (short)Math.Clamp(s, short.MinValue, short.MaxValue) : null,
+                HeadingDeg = p.HeadingDeg is { } h ? (short)Math.Clamp(h, 0, 359) : null,
+                AccuracyM = p.AccuracyM is { } a ? (short)Math.Clamp(a, 0, short.MaxValue) : null,
+                BatteryPct = p.BatteryPct,
+                Mode = SourceToMode(ParseSource(p.Source)),
+                Source = ParseSource(p.Source),
+                Flags = flags,
+                RecordedUtc = p.Utc,
+                ReceivedUtc = serverUtc
+            };
+
+        internal static TrackPointSource ParseSource(string? source) => source?.ToLowerInvariant() switch
+        {
+            "nfcanchor" => TrackPointSource.NfcAnchor,
+            "live" => TrackPointSource.Live,
+            "duress" => TrackPointSource.Duress,
+            _ => TrackPointSource.Transit
+        };
+
+        private static TrackingMode SourceToMode(TrackPointSource source) => source switch
+        {
+            TrackPointSource.NfcAnchor => TrackingMode.Normal,
+            TrackPointSource.Live => TrackingMode.Live,
+            TrackPointSource.Duress => TrackingMode.Duress,
+            _ => TrackingMode.Transit
+        };
+    }
+}

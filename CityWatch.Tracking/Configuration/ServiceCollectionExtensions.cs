@@ -1,9 +1,13 @@
+using System.Threading.Channels;
 using CityWatch.Tracking.Data;
+using CityWatch.Tracking.Data.Entities;
+using CityWatch.Tracking.Hosted;
 using CityWatch.Tracking.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CityWatch.Tracking.Configuration
 {
@@ -39,9 +43,34 @@ namespace CityWatch.Tracking.Configuration
                 .UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure())
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
-            /* M1.4+: ingest pipeline, hosted services, hub, controller are registered here
-               as each milestone lands. Everything stays behind this same branch so Level-1
-               rollback always covers the whole pack. */
+            /* ---- Ingest pipeline (§7.3) ----
+               A bounded channel decouples HTTP ingest from storage. DropOldest: if the
+               writer falls behind, old points are sacrificed and counted, and the publisher
+               never blocks. At 500-vehicle scale the channel holds ~5 minutes of traffic. */
+            var channel = Channel.CreateBounded<TrackPoint>(new BoundedChannelOptions(50_000)
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleReader = true,
+                SingleWriter = false
+            });
+            services.AddSingleton(channel.Writer);
+            services.AddSingleton(channel.Reader);
+
+            services.AddSingleton<UnitRateLimiter>();
+            services.AddScoped<IIngestService, IngestService>();
+            services.AddScoped<ISessionService, SessionService>();
+
+            services.AddHostedService(sp => new PositionWriter(
+                sp.GetRequiredService<System.Threading.Channels.ChannelReader<TrackPoint>>(),
+                connectionString!,
+                sp.GetRequiredService<ILogger<PositionWriter>>()));
+
+            /* The controller lives in this assembly; adding the application part only when
+               enabled is what makes every /api/tracking route a 404 when disabled (RT2).
+               The host's existing MapControllerRoute maps attribute-routed controllers. */
+            services.AddControllers().AddApplicationPart(typeof(Api.TrackingController).Assembly);
+
+            /* M1.7+: hub + broadcast ticker; M1.8: mode command service. Same branch. */
 
             return services;
         }

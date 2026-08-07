@@ -69,8 +69,12 @@ BEGIN
     CREATE CLUSTERED INDEX CX_TrackPoint_Unit_Time
         ON dbo.TrackPoint (UnitId, RecordedUtc);
 
+    /* IGNORE_DUP_KEY: a retried upload batch (same unit/session/seq) is silently
+       discarded by the engine instead of failing the bulk copy. This is what makes
+       aggressive client-side retry safe by construction (§9.1). */
     CREATE UNIQUE INDEX UX_TrackPoint_Dedupe
-        ON dbo.TrackPoint (UnitId, SessionId, Seq);
+        ON dbo.TrackPoint (UnitId, SessionId, Seq)
+        WITH (IGNORE_DUP_KEY = ON);
 END
 GO
 

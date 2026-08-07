@@ -77,6 +77,9 @@ namespace CityWatch.Tracking.Contracts
 
         /// <summary>Server clock for skew reconciliation on the device.</summary>
         public DateTime ServerUtc { get; set; }
+
+        /// <summary>Set when the batch was rate-limited; the device backs off.</summary>
+        public int? RetryAfterSeconds { get; set; }
     }
 
     /// <summary>
