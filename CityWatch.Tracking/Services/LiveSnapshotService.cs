@@ -86,10 +86,16 @@ namespace CityWatch.Tracking.Services
                projections. A wand allocated to a patrol car renders as a car; everything
                else — a guard on foot with a wand — renders as a guard. */
             var unitIds = sessions.Select(s => s.UnitId).ToList();
-            var carUnits = await _db.PlatformSmartWands
-                .Where(w => unitIds.Contains(w.Id) && w.PatrolCarId != null)
-                .Select(w => w.Id)
-                .ToListAsync(ct);
+            /* Legacy fallback only: units keyed on a wand device are no longer issued, but a
+               session created before the change may still be open. New units say what they
+               are in the key itself (TrackingUnitKey) and in the session's IsPatrolCar. */
+            var legacyWandIds = unitIds.Where(id => !TrackingUnitKey.IsGuard(id) && !TrackingUnitKey.IsPosition(id)).ToList();
+            var carUnits = legacyWandIds.Count == 0
+                ? new List<int>()
+                : await _db.PlatformSmartWands
+                    .Where(w => legacyWandIds.Contains(w.Id) && w.PatrolCarId != null)
+                    .Select(w => w.Id)
+                    .ToListAsync(ct);
             var guardIds = sessions.Select(s => s.GuardId).Distinct().ToList();
             var guardNames = await _db.PlatformGuards
                 .Where(g => guardIds.Contains(g.Id))
@@ -102,10 +108,13 @@ namespace CityWatch.Tracking.Services
                 sessionById.TryGetValue(dto.SessionId, out var session);
                 var guardId = session?.GuardId ?? 0;
 
-                /* Kind precedence: the guard's own "Mobile Patrol Car" toggle for THIS shift
-                   wins; the wand's PatrolCarId is only the fallback for sessions opened
-                   before the declaration was captured. */
-                var isCar = session?.IsPatrolCar ?? carSet.Contains(dto.UnitId);
+                /* Kind precedence: the officer's own "Mobile Patrol Car" toggle for THIS
+                   shift wins; then the unit key itself; the wand's PatrolCarId is only a
+                   fallback for legacy sessions opened before the change. */
+                var isCar = session?.IsPatrolCar
+                            ?? (TrackingUnitKey.IsPosition(dto.UnitId) ? true
+                                : TrackingUnitKey.IsGuard(dto.UnitId) ? false
+                                : carSet.Contains(dto.UnitId));
 
                 var stateMinutes = session?.TravelStateSinceUtc is { } since
                     ? (int)Math.Max(0, (now - since).TotalMinutes)

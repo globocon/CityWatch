@@ -58,11 +58,14 @@ namespace CityWatch.Tracking.Handlers
 
         public async Task HandleAsync(NfcCheckpointScanned e, CancellationToken ct)
         {
-            if (e.SmartWandId <= 0)
-                return;   // scans without a wand allocation have no tracking unit
+            /* Find the session by GUARD, not by device. The scanning phone and the tracked
+               unit are different things — the unit is a car or a person — and a scan may
+               carry no wand id at all. The officer is the reliable link between the two. */
+            if (e.GuardId is not { } guardId || guardId <= 0)
+                return;
 
             var session = await _db.TrackingSessions
-                .FirstOrDefaultAsync(s => s.UnitId == e.SmartWandId && s.Status == "Active", ct);
+                .FirstOrDefaultAsync(s => s.GuardId == guardId && s.Status == "Active", ct);
             if (session == null)
                 return;
 
@@ -72,21 +75,21 @@ namespace CityWatch.Tracking.Handlers
                offline scan must not rewrite the car's current position. */
             if (!e.IsOfflineRecord)
             {
-                await _sessions.ApplyScanAsync(e.SmartWandId, e.ClientSiteId, e.TagSiteName,
+                await _sessions.ApplyScanAsync(session.UnitId, e.ClientSiteId, e.TagSiteName,
                     IsInCarTag(e), e.OccurredUtc, ct);
             }
 
             if (!TryParseGps(e.GpsCoordinates, out var lat, out var lon))
             {
                 _logger.LogDebug("Scan {Tag} on unit {Unit} carried no usable GPS; anchor skipped.",
-                    e.TagUid, e.SmartWandId);
+                    e.TagUid, session.UnitId);
                 return;
             }
 
             var flags = e.IsOfflineRecord ? TrackPointFlags.Backfilled : TrackPointFlags.None;
             var point = new TrackPoint
             {
-                UnitId = e.SmartWandId,
+                UnitId = session.UnitId,
                 SessionId = session.Id,
                 /* Server-generated anchors use negative sequence numbers so they can never
                    collide with the device's own positive Seq counter in the dedupe index. */
@@ -107,7 +110,7 @@ namespace CityWatch.Tracking.Handlers
             {
                 _liveState.Update(new Services.UnitLiveState
                 {
-                    UnitId = e.SmartWandId,
+                    UnitId = session.UnitId,
                     SessionId = session.Id,
                     Lat = lat,
                     Lon = lon,

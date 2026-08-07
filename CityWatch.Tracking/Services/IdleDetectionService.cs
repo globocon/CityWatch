@@ -138,7 +138,13 @@ namespace CityWatch.Tracking.Services
                 {
                     /* Only fall back to the wand's PatrolCarId when the session made no
                        declaration (sessions opened before that was captured). */
-                    Kind = r.Kind == "car" || (kinds.TryGetValue(r.UnitId, out var isCar) && isCar) ? "car" : "guard",
+                    /* Declared kind wins, then the unit key itself; the wand lookup is only
+                       a fallback for legacy device-keyed sessions. */
+                    Kind = r.Kind == "car"
+                           || TrackingUnitKey.IsPosition(r.UnitId)
+                           || (!TrackingUnitKey.IsGuard(r.UnitId)
+                               && kinds.TryGetValue(r.UnitId, out var isCar) && isCar)
+                        ? "car" : "guard",
                     GuardName = names.TryGetValue(r.GuardId, out var name) ? name : null
                 })
                 .OrderByDescending(r => r.IdleMinutes)
