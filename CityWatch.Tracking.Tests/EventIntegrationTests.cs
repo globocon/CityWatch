@@ -53,7 +53,7 @@ namespace CityWatch.Tracking.Tests
         public void Cleanup() => _db.Dispose();
 
         private SessionService Sessions()
-            => new(_db, _liveState, NullLogger<SessionService>.Instance, () => Now);
+            => new(_db, _liveState, NullLogger<SessionService>.Instance, segments: null, utcNow: () => Now);
 
         private NfcAnchorHandler AnchorHandler()
             => new(_db, _liveState, _channel.Writer, NullLogger<NfcAnchorHandler>.Instance);

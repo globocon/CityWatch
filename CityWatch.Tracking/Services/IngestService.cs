@@ -190,20 +190,10 @@ namespace CityWatch.Tracking.Services
             return flags;
         }
 
-        /// <summary>Haversine, sufficient at patrol scale.</summary>
+        /// <summary>Haversine, sufficient at patrol scale. Kept as a passthrough so existing
+        /// tests keep their entry point; the maths lives in GeoMath (shared with segments).</summary>
         internal static double ImpliedSpeedKph(decimal lat1, decimal lon1, decimal lat2, decimal lon2, double hours)
-        {
-            if (hours <= 0)
-                return double.MaxValue;
-
-            const double r = 6371.0;
-            double la1 = (double)lat1 * Math.PI / 180, la2 = (double)lat2 * Math.PI / 180;
-            double dLa = la2 - la1, dLo = ((double)lon2 - (double)lon1) * Math.PI / 180;
-            double a = Math.Sin(dLa / 2) * Math.Sin(dLa / 2)
-                     + Math.Cos(la1) * Math.Cos(la2) * Math.Sin(dLo / 2) * Math.Sin(dLo / 2);
-            double km = 2 * r * Math.Asin(Math.Min(1, Math.Sqrt(a)));
-            return km / hours;
-        }
+            => GeoMath.ImpliedSpeedKph(lat1, lon1, lat2, lon2, hours);
 
         private static TrackPoint ToEntity(PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
             => new()

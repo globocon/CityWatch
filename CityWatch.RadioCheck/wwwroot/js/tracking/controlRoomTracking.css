@@ -52,6 +52,20 @@
 .trk-btn-stop { border-color: #dc2626; background: #dc2626; }
 .trk-pending { font: 700 11px system-ui, sans-serif; color: #2563eb; }
 
+/* replay (§11.2): one surface, two times */
+.trk-btn-replay { border-color: #7c3aed; background: #7c3aed; }
+.trk-car.trk-replay-ghost { border-color: #7c3aed; opacity: .95; }
+.trk-replay-bar {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 1300;
+    display: flex; align-items: center; gap: 8px;
+    background: #ffffffee; border: 1px solid #7c3aed; border-radius: 12px;
+    padding: 6px 12px; font: 600 12px system-ui, sans-serif; color: #0f172a;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+.trk-replay-bar button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 2px 8px; cursor: pointer; font: 700 11px system-ui, sans-serif; }
+.trk-replay-bar button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+.trk-replay-bar input[type=range] { width: 220px; }
+
 /* connection status pill — degrade honestly (§11.3 rule 10) */
 .trk-status {
     position: fixed; bottom: 14px; left: 14px; z-index: 1200;

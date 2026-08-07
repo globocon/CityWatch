@@ -27,14 +27,16 @@ namespace CityWatch.Tracking.Services
     {
         private readonly TrackingDbContext _db;
         private readonly ILiveStateStore _liveState;
+        private readonly ISegmentBuilder? _segments;
         private readonly ILogger<SessionService> _logger;
         private readonly Func<DateTime> _utcNow;
 
         public SessionService(TrackingDbContext db, ILiveStateStore liveState,
-            ILogger<SessionService> logger, Func<DateTime>? utcNow = null)
+            ILogger<SessionService> logger, ISegmentBuilder? segments = null, Func<DateTime>? utcNow = null)
         {
             _db = db;
             _liveState = liveState;
+            _segments = segments;
             _logger = logger;
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
         }
@@ -111,6 +113,20 @@ namespace CityWatch.Tracking.Services
 
             _logger.LogInformation("Tracking session {SessionId} closed ({Reason}): unit {UnitId}.",
                 session.Id, endReason, session.UnitId);
+
+            /* Roll-up is derived data: a failure here must never fail the close, and a missed
+               build is recoverable (the nightly sweep re-runs it — Phase 2 hardening). */
+            if (_segments != null)
+            {
+                try
+                {
+                    await _segments.BuildForSessionAsync(session.Id, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Segment roll-up failed for session {SessionId}; points remain intact.", session.Id);
+                }
+            }
         }
     }
 }

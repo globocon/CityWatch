@@ -78,8 +78,104 @@
         const acc = u.accuracyM == null ? '' : ` · ±${u.accuracyM}m`;
         return `<b>Unit ${u.unitId}</b> <span class="trk-mode-chip ${mode.cls}">${mode.label}</span><br>` +
                `${speed}${acc}${battery}<br>` +
-               `<small>Fix ${u.ageSeconds}s ago</small><br>` + liveButtonHtml(u);
+               `<small>Fix ${u.ageSeconds}s ago</small><br>` + liveButtonHtml(u) +
+               ` <button class="trk-btn trk-btn-replay" data-trk-replay="${u.unitId}">▶ Replay</button>`;
     }
+
+    /* ================= replay (M1.9, ADD §11.2) =================
+       Live and replay share the map; replay draws the audited history trail and animates a
+       ghost marker along it. LIVE returns to the live picture — one surface, two times. */
+    const replay = { active: false, points: [], idx: 0, speed: 4, timer: null, line: null, ghost: null, anchors: [] };
+
+    function replayBarHtml(unitId) {
+        return `<div class="trk-replay-bar" id="trkReplayBar">
+            <b>REPLAY · Unit ${unitId}</b>
+            <button data-trk-rspeed="1">1×</button><button data-trk-rspeed="4" class="on">4×</button>
+            <button data-trk-rspeed="16">16×</button><button data-trk-rspeed="64">64×</button>
+            <input type="range" id="trkReplayPos" min="0" max="100" value="0">
+            <span id="trkReplayClock">—</span>
+            <button id="trkReplayLive" class="trk-btn">⟳ LIVE</button>
+        </div>`;
+    }
+
+    function endReplay() {
+        if (replay.timer) clearInterval(replay.timer);
+        if (replay.line) layer.removeLayer(replay.line);
+        if (replay.ghost) layer.removeLayer(replay.ghost);
+        replay.anchors.forEach(a => layer.removeLayer(a));
+        const bar = document.getElementById('trkReplayBar');
+        if (bar) bar.remove();
+        Object.assign(replay, { active: false, points: [], idx: 0, line: null, ghost: null, anchors: [] });
+    }
+
+    function renderReplayFrame() {
+        const p = replay.points[replay.idx];
+        if (!p) return;
+        replay.ghost.setLatLng([p.lat, p.lon]);
+        const pos = document.getElementById('trkReplayPos');
+        const clock = document.getElementById('trkReplayClock');
+        if (pos) pos.value = Math.round(100 * replay.idx / (replay.points.length - 1));
+        if (clock) clock.textContent = new Date(p.utc).toLocaleTimeString();
+    }
+
+    async function startReplay(unitId) {
+        endReplay();
+        const toUtc = new Date();
+        const fromUtc = new Date(toUtc.getTime() - 8 * 3600 * 1000);   // the shift so far
+        let body;
+        try {
+            const res = await fetch(`/api/tracking/history/${unitId}?fromUtc=${fromUtc.toISOString()}&toUtc=${toUtc.toISOString()}`,
+                { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            body = await res.json();
+        } catch { alert('Replay unavailable.'); return; }
+
+        if (!body.points || body.points.length < 2) { alert('No trail recorded for this unit yet.'); return; }
+
+        replay.active = true;
+        replay.points = body.points;
+        replay.idx = 0;
+        const latlngs = body.points.map(p => [p.lat, p.lon]);
+        replay.line = L.polyline(latlngs, { weight: 4, opacity: .8, color: '#7c3aed', dashArray: '6 6' }).addTo(layer);
+        body.points.filter(p => p.source === 1).forEach(p => {   // NFC anchors: the verified touches
+            replay.anchors.push(L.circleMarker([p.lat, p.lon],
+                { radius: 6, color: '#16a34a', fillColor: '#16a34a', fillOpacity: .9 })
+                .bindTooltip('NFC ' + (p.tag || '')).addTo(layer));
+        });
+        replay.ghost = L.marker(latlngs[0], {
+            icon: L.divIcon({ className: '', html: '<div class="trk-car trk-replay-ghost"><div class="trk-arrow">▲</div></div>', iconSize: [46, 46], iconAnchor: [23, 23] }),
+            zIndexOffset: 2000
+        }).addTo(layer);
+        map.fitBounds(replay.line.getBounds().pad(0.2));
+
+        document.body.insertAdjacentHTML('beforeend', replayBarHtml(unitId));
+        if (body.truncated) document.getElementById('trkReplayClock').textContent = '(truncated)';
+
+        replay.timer = setInterval(() => {
+            if (!replay.active) return;
+            replay.idx = Math.min(replay.idx + replay.speed, replay.points.length - 1);
+            renderReplayFrame();
+            if (replay.idx >= replay.points.length - 1) clearInterval(replay.timer);
+        }, 250);
+    }
+
+    document.addEventListener('click', ev => {
+        const rid = ev.target.getAttribute && ev.target.getAttribute('data-trk-replay');
+        if (rid) { ev.preventDefault(); startReplay(Number(rid)); return; }
+        const spd = ev.target.getAttribute && ev.target.getAttribute('data-trk-rspeed');
+        if (spd && replay.active) {
+            replay.speed = Number(spd);
+            document.querySelectorAll('[data-trk-rspeed]').forEach(b => b.classList.toggle('on', b === ev.target));
+            return;
+        }
+        if (ev.target.id === 'trkReplayLive') endReplay();
+    });
+    document.addEventListener('input', ev => {
+        if (ev.target.id === 'trkReplayPos' && replay.active) {
+            replay.idx = Math.round((ev.target.value / 100) * (replay.points.length - 1));
+            renderReplayFrame();
+        }
+    });
 
     /* Live Mode commands — delegated so popup re-renders keep working. */
     document.addEventListener('click', async ev => {

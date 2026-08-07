@@ -7,6 +7,7 @@ using CityWatch.Tracking.Contracts;
 using CityWatch.Tracking.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CityWatch.Tracking.Api
 {
@@ -30,15 +31,18 @@ namespace CityWatch.Tracking.Api
         private readonly ISessionService _sessions;
         private readonly ILiveSnapshotService _snapshot;
         private readonly IModeCommandService _commands;
+        private readonly Data.TrackingDbContext _db;
         private readonly TrackingOptions _options;
 
         public TrackingController(IIngestService ingest, ISessionService sessions,
-            ILiveSnapshotService snapshot, IModeCommandService commands, TrackingOptions options)
+            ILiveSnapshotService snapshot, IModeCommandService commands,
+            Data.TrackingDbContext db, TrackingOptions options)
         {
             _ingest = ingest;
             _sessions = sessions;
             _snapshot = snapshot;
             _commands = commands;
+            _db = db;
             _options = options;
         }
 
@@ -163,6 +167,98 @@ namespace CityWatch.Tracking.Api
             await _commands.CancelAsync(unitId, userId, "Cancelled",
                 HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
             return Ok();
+        }
+
+        /// <summary>Replay/history: a unit's trail for a bounded window. Every call is
+        /// audited (§13.4) — who looked at whose movements is the first question in any
+        /// workplace-surveillance dispute. Reads the point stream; this endpoint and
+        /// evidentiary export are the ONLY readers of TrackPoint (§8.3).</summary>
+        [Authorize]
+        [HttpGet("history/{unitId:int}")]
+        public async Task<IActionResult> History(int unitId, [FromQuery] DateTime fromUtc,
+            [FromQuery] DateTime toUtc, CancellationToken ct)
+        {
+            if (unitId <= 0 || toUtc <= fromUtc)
+                return BadRequest();
+            if ((toUtc - fromUtc) > TimeSpan.FromHours(26))
+                return BadRequest("Window too large; request at most 26 hours (one shift with margin).");
+            if (OperatorUserId() is not { } userId)
+                return Forbid();
+
+            _db.TrackingAccessAudits.Add(new Data.Entities.TrackingAccessAudit
+            {
+                UserId = userId,
+                Action = "ViewHistory",
+                UnitId = unitId,
+                WindowFromUtc = fromUtc,
+                WindowToUtc = toUtc,
+                AccessedUtc = DateTime.UtcNow,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            });
+            await _db.SaveChangesAsync(ct);
+
+            const int cap = 5000;
+            var points = await _db.TrackPoints
+                .Where(p => p.UnitId == unitId && p.RecordedUtc >= fromUtc && p.RecordedUtc < toUtc)
+                .OrderBy(p => p.RecordedUtc).ThenBy(p => p.Seq)
+                .Take(cap + 1)
+                .Select(p => new
+                {
+                    utc = p.RecordedUtc,
+                    lat = p.Latitude,
+                    lon = p.Longitude,
+                    speedKph = p.SpeedKph,
+                    headingDeg = p.HeadingDeg,
+                    source = p.SourceType,
+                    flags = p.Flags,
+                    tag = p.AnchorTagUid
+                })
+                .ToListAsync(ct);
+
+            var truncated = points.Count > cap;
+            if (truncated)
+                points.RemoveAt(points.Count - 1);
+
+            /* Truncation is stated, never silent: a replay that quietly stops early would
+               read as "the patrol stopped here". */
+            return Ok(new { unitId, fromUtc, toUtc, truncated, points });
+        }
+
+        /// <summary>Segment roll-ups for reporting — the table every analytical consumer
+        /// reads instead of the point stream (§8.3).</summary>
+        [Authorize]
+        [HttpGet("segments")]
+        public async Task<IActionResult> Segments([FromQuery] int? unitId, [FromQuery] DateTime fromUtc,
+            [FromQuery] DateTime toUtc, CancellationToken ct)
+        {
+            if (toUtc <= fromUtc)
+                return BadRequest();
+
+            var query = _db.TrackSegments.Where(s => s.StartUtc >= fromUtc && s.StartUtc < toUtc);
+            if (unitId is { } unit)
+                query = query.Where(s => s.UnitId == unit);
+
+            var segments = await query
+                .OrderBy(s => s.UnitId).ThenBy(s => s.StartUtc)
+                .Take(2000)
+                .Select(s => new
+                {
+                    s.UnitId,
+                    s.SessionId,
+                    s.StartUtc,
+                    s.EndUtc,
+                    s.DistanceM,
+                    s.DurationSec,
+                    s.MaxSpeedKph,
+                    s.AvgSpeedKph,
+                    s.PointCount,
+                    s.AnchorScanCount,
+                    s.AdherenceScore,
+                    s.Flags
+                })
+                .ToListAsync(ct);
+
+            return Ok(segments);
         }
 
         /// <summary>Live snapshot for the control room. Same-origin cookie-authenticated on
