@@ -74,9 +74,11 @@ namespace CityWatch.Tracking.Api
             return Ok(response);
         }
 
-        /// <summary>IsPatrolCar/Callsign are the guard's own login-screen declarations.</summary>
+        /// <summary>All the login-screen declarations. PositionId/PositionName identify the
+        /// CAR ("Mobile Patrols (Car) M1") — the tracked unit's real identity.</summary>
         public sealed record StartSessionRequest(int UnitId, int GuardId, int ClientSiteId, int? PcarRouteId,
-            bool? IsPatrolCar = null, string? Callsign = null);
+            bool? IsPatrolCar = null, string? Callsign = null,
+            int? PositionId = null, string? PositionName = null);
 
         /// <summary>Opens a patrol session. Returns 403 when the unit is not enrolled with
         /// consent — the device shows nothing and simply does not track (§13.5).</summary>
@@ -87,7 +89,8 @@ namespace CityWatch.Tracking.Api
                 return BadRequest();
 
             var session = await _sessions.StartAsync(request.UnitId, request.GuardId,
-                request.ClientSiteId, request.PcarRouteId, ct, request.IsPatrolCar, request.Callsign);
+                request.ClientSiteId, request.PcarRouteId, ct, request.IsPatrolCar, request.Callsign,
+                request.PositionId, request.PositionName);
             if (session == null)
                 return Forbid();
 
@@ -311,6 +314,10 @@ namespace CityWatch.Tracking.Api
                     callsign = u.Callsign,
                     guardId = u.GuardId,
                     guardName = u.GuardName,
+                    patrolCar = u.PatrolCar,
+                    travelState = u.TravelState,
+                    currentSite = u.CurrentSiteName,
+                    stateMinutes = u.StateMinutes,
                     lat = u.Lat,
                     lon = u.Lon,
                     speedKph = u.SpeedKph,

@@ -43,6 +43,27 @@
 
     const idleUnits = {};    // unitId -> idleMinutes (refreshed by the idle poll)
 
+    /* Identity of a tracked unit, most operational first:
+       the CAR from the login Position ("Mobile Patrols (Car) M1" -> "M1"), then the
+       radio callsign, then the guard's name. Several cars of one fleet roam the same
+       sites at once, so the car is what tells them apart. */
+    function shortCar(name) {
+        if (!name) return null;
+        const m = String(name).match(/\(car\)\s*([A-Z]{0,2}\d+)/i);
+        return m ? m[1] : String(name).replace(/mobile patrols\s*/i, '').replace(/[()]/g, '').trim();
+    }
+    function unitLabel(u) {
+        return shortCar(u.patrolCar) || u.callsign
+            || (u.kind !== 'guard' ? `PC-${u.unitId}`
+                : (u.guardName ? u.guardName.split(' ')[0] : `G-${u.guardId || u.unitId}`));
+    }
+    function statusLine(u) {
+        const mins = u.stateMinutes ? ` ${u.stateMinutes}m` : '';
+        return u.travelState === 'AtSite' && u.currentSite
+            ? `📍 At ${esc(u.currentSite)}${mins}`
+            : `🚙 In transit${mins}`;
+    }
+
     function carIcon(u) {
         const mode = MODE[u.mode] || MODE[1];
         const bucket = ageBucket(u.ageSeconds);
@@ -53,10 +74,7 @@
            against guards on foot. */
         const isCar = u.kind !== 'guard';
         const glyph = isCar ? '🚓' : '👮';
-        /* Callsign first — it is what operators say on the radio ("Romeo 1"). */
-        const label = u.callsign
-            ? u.callsign
-            : (isCar ? `PC-${u.unitId}` : (u.guardName ? u.guardName.split(' ')[0] : `G-${u.guardId || u.unitId}`));
+        const label = unitLabel(u);
         const idleMin = idleUnits[u.unitId];
         const idleTxt = idleMin ? `<span class="trk-idle-badge">IDLE ${idleMin}m</span>` : '';
         return L.divIcon({
@@ -94,14 +112,15 @@
         const battery = u.batteryPct == null ? '' : ` · 🔋${u.batteryPct}%`;
         const acc = u.accuracyM == null ? '' : ` · ±${u.accuracyM}m`;
         const isCar = u.kind !== 'guard';
-        const name = u.callsign || (isCar ? `Unit ${u.unitId}` : (u.guardName || ('Guard ' + (u.guardId || u.unitId))));
-        const title = `${isCar ? '🚓' : '👮'} ${esc(name)}`;
-        /* Show the driver's name under the callsign when both are known. */
-        const who = u.guardName && u.guardName !== name ? `<small>${esc(u.guardName)}</small><br>` : '';
+        /* Full car name in the popup ("Mobile Patrols (Car) M1"), callsign beside it. */
+        const title = `${isCar ? '🚓' : '👮'} ${esc(u.patrolCar || u.callsign || (isCar ? `Unit ${u.unitId}` : (u.guardName || ('Guard ' + (u.guardId || u.unitId)))))}`;
+        const sign = u.patrolCar && u.callsign ? ` <span class="trk-mode-chip trk-transit">${esc(u.callsign)}</span>` : '';
+        const who = u.guardName ? `<small>${esc(u.guardName)}</small><br>` : '';
         const idleMin = idleUnits[u.unitId];
         const idleTxt = idleMin ? ` <span class="trk-idle-chip">⏸ idle ${idleMin}m</span>` : '';
-        return `<b>${title}</b> <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>${idleTxt}<br>` +
+        return `<b>${title}</b>${sign} <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>${idleTxt}<br>` +
                who +
+               `<span class="trk-state">${statusLine(u)}</span><br>` +
                `${speed}${acc}${battery}<br>` +
                `<small>Fix ${u.ageSeconds}s ago</small><br>` + liveButtonHtml(u) +
                ` <button class="trk-btn trk-btn-replay" data-trk-replay="${u.unitId}">▶ Replay</button>`;

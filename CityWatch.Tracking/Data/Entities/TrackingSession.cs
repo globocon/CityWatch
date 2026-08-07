@@ -55,5 +55,36 @@ namespace CityWatch.Tracking.Data.Entities
         /// </summary>
         [MaxLength(50)]
         public string? Callsign { get; set; }
+
+        /// <summary>
+        /// THE CAR. Position chosen at login — "Mobile Patrols (Car) M1", "M2", "M3"…
+        /// This is the tracked unit's real identity: several cars from the same fleet roam
+        /// the same sites at once and are told apart by Position, never by the tags they
+        /// scan (they all scan the same site tags).
+        /// </summary>
+        public int? PatrolCarPositionId { get; set; }
+
+        [MaxLength(120)]
+        public string? PatrolCarPositionName { get; set; }
+
+        /// <summary>
+        /// Site the car is currently at, set by the most recent site-tag scan and cleared
+        /// when the in-car tag is scanned. Null means travelling.
+        /// </summary>
+        public int? CurrentSiteId { get; set; }
+
+        [MaxLength(200)]
+        public string? CurrentSiteName { get; set; }
+
+        /// <summary>
+        /// AtSite | Transit. Derived from scans and used for display and leg boundaries —
+        /// it does NOT gate GPS. Tracking stays continuous so a missed scan can never
+        /// lose a journey; the scans annotate the trail rather than switching it on and off.
+        /// </summary>
+        [MaxLength(20)]
+        public string TravelState { get; set; } = "Transit";
+
+        /// <summary>When the current TravelState began — drives "at site 12 min" on the map.</summary>
+        public DateTime? TravelStateSinceUtc { get; set; }
     }
 }

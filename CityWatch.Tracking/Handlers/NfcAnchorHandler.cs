@@ -26,16 +26,34 @@ namespace CityWatch.Tracking.Handlers
     {
         private readonly TrackingDbContext _db;
         private readonly Services.ILiveStateStore _liveState;
+        private readonly Services.ISessionService _sessions;
         private readonly ChannelWriter<TrackPoint> _writer;
         private readonly ILogger<NfcAnchorHandler> _logger;
 
         public NfcAnchorHandler(TrackingDbContext db, Services.ILiveStateStore liveState,
-            ChannelWriter<TrackPoint> writer, ILogger<NfcAnchorHandler> logger)
+            Services.ISessionService sessions, ChannelWriter<TrackPoint> writer,
+            ILogger<NfcAnchorHandler> logger)
         {
             _db = db;
             _liveState = liveState;
+            _sessions = sessions;
             _writer = writer;
             _logger = logger;
+        }
+
+        /// <summary>
+        /// An in-car tag is one that belongs to the officer's own fleet site — the site they
+        /// logged in to ("Citywatch M1 - Romeo Patrol Cars"). Client-site checkpoints belong
+        /// to a different site. The "(in-car)" label is accepted as a secondary signal so a
+        /// tag filed against the wrong site still behaves sensibly.
+        /// </summary>
+        internal static bool IsInCarTag(NfcCheckpointScanned e)
+        {
+            if (!string.IsNullOrWhiteSpace(e.LabelDescription) &&
+                e.LabelDescription.IndexOf("in-car", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+
+            return e.LoggedInClientSiteId > 0 && e.ClientSiteId == e.LoggedInClientSiteId;
         }
 
         public async Task HandleAsync(NfcCheckpointScanned e, CancellationToken ct)
@@ -47,6 +65,16 @@ namespace CityWatch.Tracking.Handlers
                 .FirstOrDefaultAsync(s => s.UnitId == e.SmartWandId && s.Status == "Active", ct);
             if (session == null)
                 return;
+
+            /* Update where the car is: in-car tag ⇒ departing (transit), site tag ⇒ arrived.
+               This only labels the trail — GPS sampling is continuous either way, so a
+               forgotten in-car scan can never lose a journey. Live scans only: a replayed
+               offline scan must not rewrite the car's current position. */
+            if (!e.IsOfflineRecord)
+            {
+                await _sessions.ApplyScanAsync(e.SmartWandId, e.ClientSiteId, e.TagSiteName,
+                    IsInCarTag(e), e.OccurredUtc, ct);
+            }
 
             if (!TryParseGps(e.GpsCoordinates, out var lat, out var lon))
             {

@@ -60,6 +60,19 @@ namespace CityWatch.Events.Events
         public int ScanningType { get; }
 
         /// <summary>
+        /// The site the officer LOGGED IN to (their fleet base, e.g. "Citywatch M1 - Romeo
+        /// Patrol Cars"). When the scanned tag belongs to this same site it is an in-car tag —
+        /// the officer is back in the vehicle — rather than a checkpoint at a client site.
+        /// </summary>
+        public int LoggedInClientSiteId { get; init; }
+
+        /// <summary>Tag label, e.g. "Romeo 03 (in-car)". Used as a secondary signal.</summary>
+        public string? LabelDescription { get; init; }
+
+        /// <summary>Name of the site the tag belongs to, for display on the map.</summary>
+        public string? TagSiteName { get; init; }
+
+        /// <summary>
         /// True when this scan is being replayed from the device's offline cache. Subscribers
         /// should not treat a backfilled scan as a live position.
         /// </summary>

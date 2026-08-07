@@ -47,6 +47,9 @@
 .trk-mode-chip.trk-transit, .trk-mode-chip.trk-live { background: #2563eb; }
 .trk-mode-chip.trk-duress { background: #dc2626; }
 
+/* at-site / in-transit line in the popup */
+.trk-state { font: 700 12px system-ui, sans-serif; color: #2563eb; }
+
 /* live mode controls (§11.3 rules 4-5) */
 .trk-btn {
     margin-top: 4px; padding: 3px 10px; border-radius: 8px; cursor: pointer;

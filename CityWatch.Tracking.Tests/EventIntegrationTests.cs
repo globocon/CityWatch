@@ -56,7 +56,7 @@ namespace CityWatch.Tracking.Tests
             => new(_db, _liveState, NullLogger<SessionService>.Instance, segments: null, utcNow: () => Now);
 
         private NfcAnchorHandler AnchorHandler()
-            => new(_db, _liveState, _channel.Writer, NullLogger<NfcAnchorHandler>.Instance);
+            => new(_db, _liveState, Sessions(), _channel.Writer, NullLogger<NfcAnchorHandler>.Instance);
 
         private SessionLifecycleHandler Lifecycle()
             => new(Sessions(), NullLogger<SessionLifecycleHandler>.Instance);

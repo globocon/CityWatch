@@ -40,6 +40,18 @@ namespace CityWatch.Tracking.Services
 
         /// <summary>Callsign from the login screen ("Romeo 1") — the label operators use.</summary>
         public string? Callsign { get; init; }
+
+        /// <summary>The car itself — "Mobile Patrols (Car) M1". The tracked unit's identity.</summary>
+        public string? PatrolCar { get; init; }
+
+        /// <summary>AtSite | Transit — from NFC scans; does not gate GPS.</summary>
+        public string TravelState { get; init; } = "Transit";
+
+        /// <summary>Site the car is at right now; null while travelling.</summary>
+        public string? CurrentSiteName { get; init; }
+
+        /// <summary>Minutes in the current state — "at Martha Cove 12 min".</summary>
+        public int StateMinutes { get; init; }
     }
 
     public sealed class LiveSnapshotService : ILiveSnapshotService
@@ -61,7 +73,11 @@ namespace CityWatch.Tracking.Services
 
             var sessions = await _db.TrackingSessions
                 .Where(s => s.Status == "Active")
-                .Select(s => new { s.Id, s.UnitId, s.GuardId, s.IsPatrolCar, s.Callsign })
+                .Select(s => new
+                {
+                    s.Id, s.UnitId, s.GuardId, s.IsPatrolCar, s.Callsign,
+                    s.PatrolCarPositionName, s.TravelState, s.CurrentSiteName, s.TravelStateSinceUtc
+                })
                 .ToListAsync(ct);
             if (sessions.Count == 0)
                 return Array.Empty<LiveUnitDto>();
@@ -91,12 +107,20 @@ namespace CityWatch.Tracking.Services
                    before the declaration was captured. */
                 var isCar = session?.IsPatrolCar ?? carSet.Contains(dto.UnitId);
 
+                var stateMinutes = session?.TravelStateSinceUtc is { } since
+                    ? (int)Math.Max(0, (now - since).TotalMinutes)
+                    : 0;
+
                 return dto with
                 {
                     Kind = isCar ? "car" : "guard",
                     GuardId = guardId,
                     GuardName = guardNames.TryGetValue(guardId, out var name) ? name : null,
-                    Callsign = string.IsNullOrWhiteSpace(session?.Callsign) ? null : session!.Callsign
+                    Callsign = string.IsNullOrWhiteSpace(session?.Callsign) ? null : session!.Callsign,
+                    PatrolCar = string.IsNullOrWhiteSpace(session?.PatrolCarPositionName) ? null : session!.PatrolCarPositionName,
+                    TravelState = string.IsNullOrWhiteSpace(session?.TravelState) ? "Transit" : session!.TravelState,
+                    CurrentSiteName = string.IsNullOrWhiteSpace(session?.CurrentSiteName) ? null : session!.CurrentSiteName,
+                    StateMinutes = stateMinutes
                 };
             }
 
