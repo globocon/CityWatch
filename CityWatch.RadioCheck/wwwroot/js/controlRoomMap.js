@@ -16,7 +16,13 @@
         scrollWheelZoom: true,
         maxBounds: AU_BOUNDS.pad(0.08),
         maxBoundsViscosity: 1.0,
-        minZoom: 4,
+        /* minZoom must stay 2, not 4: markercluster builds its distance grids for the
+           map's zoom range AT CREATION. The tracking overlay later calls setMinZoom(2)
+           to follow units outside Australia (pan-lock release) — if the grids only
+           cover 4..19, any addLayer while zoomed to 2-3 crashes with
+           "Cannot read properties of undefined (reading 'getNearObject')" and kills
+           the whole render. maxBounds still keeps the default view Australia-locked. */
+        minZoom: 2,
         maxZoom: 19,
         zoomAnimation: true
     }).fitBounds(AU_BOUNDS);
