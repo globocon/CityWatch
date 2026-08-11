@@ -308,6 +308,40 @@ body.trk-dark .trk-win-custom input { background: #16223a; border-color: #24344f
 .trk-session-pick .row .n { flex: none; font-size: 11px; }
 .trk-session-pick .cancel { margin: 10px 16px 14px; background: #64748b; border-color: #64748b; }
 
+/* ================= guard clusters + layer chips + site pivot ================= */
+.trk-gcluster {
+    background: #1f2937; color: #fff; border: 3px solid #16a34a; border-radius: 16px;
+    padding: 3px 10px; font: 800 13px system-ui, sans-serif; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3); text-align: center;
+}
+.trk-chipbar {
+    position: fixed; z-index: 1250; bottom: 52px; left: 14px;
+    display: flex; gap: 6px;
+}
+.trk-chipbar button {
+    border: 1px solid #dde5ef; background: #fffffff0; color: #0f172a;
+    border-radius: 999px; padding: 8px 14px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; min-height: 38px; box-shadow: 0 2px 8px rgba(15,23,42,.14);
+}
+.trk-chipbar button.off { opacity: .45; text-decoration: line-through; }
+body.trk-dark .trk-chipbar button { background: #101a2ef0; border-color: #24344f; color: #e2e8f0; }
+.trk-sitelink {
+    border: 1px solid #dde5ef; background: #f8fafc; color: #0f172a;
+    border-radius: 10px; padding: 9px 12px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; text-align: left; width: 100%;
+}
+.trk-sitelink:hover { background: #eff4ff; }
+body.trk-dark .trk-sitelink { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+.trk-card-section {
+    font: 800 10px system-ui, sans-serif; color: #64748b; letter-spacing: .06em;
+    margin: 8px 0 2px;
+}
+body.trk-dark .trk-card-section { color: #8ca3c3; }
+.trk-card .trk-search-row { border: 1px solid #eef2f7; border-radius: 10px; margin-bottom: 6px; }
+body.trk-dark .trk-card .trk-search-row { border-color: #1c2b45; }
+.trk-status .warn { color: #b45309; font-weight: 800; }
+.trk-status .bad { color: #b91c1c; font-weight: 800; }
+
 /* ================= status pill (bottom-left slot) ================= */
 .trk-status {
     position: fixed; bottom: 14px; left: 14px; z-index: 1200;
@@ -384,5 +418,8 @@ body.trk-dark .trk-unit .trk-id { background: #101a2eee; border-color: #24344f; 
     .trk-replay-bar { bottom: 8px; border-radius: 12px; width: calc(100vw - 16px); }
     .trk-replay-bar input[type=range] { flex: 1; width: auto; min-width: 120px; }
     .trk-controls { bottom: 150px; }
-    .trk-status { bottom: 8px; left: 8px; }
+    .trk-status { bottom: 8px; left: 8px; font-size: 11px; }
+    .trk-chipbar { bottom: 44px; left: 8px; }
+    .trk-chipbar button { padding: 7px 10px; font-size: 11px; }
+    body.trk-card-open .trk-chipbar { display: none; }
 }

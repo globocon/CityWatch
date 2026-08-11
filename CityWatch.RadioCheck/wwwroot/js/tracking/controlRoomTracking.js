@@ -25,7 +25,44 @@
     const POLL_MS = 5000;
     const POLL_WITH_HUB_MS = 30000;
     const map = window.CRM.map;
-    const layer = window.CRM.carLayer;
+    const layer = window.CRM.carLayer;      // replay artifacts live here — never toggled off
+
+    /* Phase 4 layers: cars roam free; guards cluster by proximity so sixty people at one
+       venue read as one badge, not sixty overlapping avatars. Trails follow their owners
+       so the GUARDS toggle removes people and their breadcrumbs together. */
+    function guardClusterIcon(cluster) {
+        const n = cluster.getChildCount();
+        return L.divIcon({
+            className: '',
+            html: `<div class="trk-gcluster">👮 ${n}</div>`,
+            iconSize: [48, 30], iconAnchor: [24, 15]
+        });
+    }
+    const carsGroup = L.layerGroup().addTo(map);
+    const carTrailsGroup = L.layerGroup().addTo(map);
+    const guardsGroup = (L.markerClusterGroup
+        ? L.markerClusterGroup({
+            maxClusterRadius: 48, disableClusteringAtZoom: 16,
+            spiderfyOnMaxZoom: true, showCoverageOnHover: false,
+            iconCreateFunction: guardClusterIcon
+        })
+        : L.layerGroup()).addTo(map);
+    const guardTrailsGroup = L.layerGroup().addTo(map);
+
+    const layerState = { cars: true, guards: true, sites: true };
+    function applyLayerState() {
+        const pairs = [
+            ['cars', [carsGroup, carTrailsGroup]],
+            ['guards', [guardsGroup, guardTrailsGroup]],
+            ['sites', window.CRM.siteLayer ? [window.CRM.siteLayer] : []]
+        ];
+        pairs.forEach(([key, groups]) => groups.forEach(g => {
+            if (layerState[key] && !map.hasLayer(g)) map.addLayer(g);
+            if (!layerState[key] && map.hasLayer(g)) map.removeLayer(g);
+        }));
+        document.querySelectorAll('[data-trk-layer]').forEach(b =>
+            b.classList.toggle('off', !layerState[b.getAttribute('data-trk-layer')]));
+    }
 
     /* Staleness thresholds (ADD §11.3 rule 2): the map must never render an old
        position as current. */
@@ -97,9 +134,16 @@
     }
 
     /* Honest status: an idle unit is stopped, whatever the NFC travel state says —
-       "in transit + idle 95m" was two truths fighting; stopped-with-context wins. */
+       "in transit + idle 95m" was two truths fighting; stopped-with-context wins.
+       Guards get people language (§4.2): moving / stationary, never "in transit". */
     function statusLine(u) {
         const idleMin = idleUnits[u.unitId];
+        if (u.kind === 'guard') {
+            if (idleMin) return `⏸ Stationary ${fmtMins(idleMin)}${u.currentSite ? ' · ' + esc(u.currentSite) : ''}`;
+            if (u.ageSeconds > HOLLOW_S) return `⚪ No recent fix (${fmtAge(u.ageSeconds)} ago)`;
+            if (u.speedKph != null && u.speedKph >= 2) return `🚶 Moving${u.currentSite ? ' · ' + esc(u.currentSite) : ''}`;
+            return u.currentSite ? `📍 At ${esc(u.currentSite)}` : '🟢 On duty';
+        }
         if (idleMin) {
             return `⏸ Stopped ${fmtMins(idleMin)}${u.currentSite ? ' · ' + esc(u.currentSite) : ''}`;
         }
@@ -186,6 +230,7 @@
     /* ================= selection, card, follow ================= */
 
     let selectedUnitId = null;
+    let selectedSite = null;       // card shows a SITE (who's here) instead of a unit
 
     const follow = { unitId: null, suspended: false };
 
@@ -255,13 +300,25 @@
 
     function openCard(unitId) {
         selectedUnitId = unitId;
+        selectedSite = null;
         document.body.classList.add('trk-card-open');
         if (units[unitId]) refreshIcon(units[unitId]);
+        renderCard();
+    }
+    /* The PCAR↔Site↔Guard pivot (§4.7): a site card lists every tracked asset currently
+       at that site; tapping one lands on its unit card, one tap from FOLLOW. */
+    function openSiteCard(siteName) {
+        const prev = selectedUnitId;
+        selectedUnitId = null;
+        selectedSite = siteName;
+        document.body.classList.add('trk-card-open');
+        if (prev && units[prev]) refreshIcon(units[prev]);
         renderCard();
     }
     function closeCard() {
         const prev = selectedUnitId;
         selectedUnitId = null;
+        selectedSite = null;
         document.body.classList.remove('trk-card-open');
         if (prev && units[prev]) refreshIcon(units[prev]);
         renderCard();
@@ -309,7 +366,35 @@
 
     /* The docked asset card: everything the popup used to say, without covering the
        map. Right panel on desktop, bottom sheet on phones (CSS decides). */
+    function renderSiteCard() {
+        const el = cardEl();
+        const here = Object.values(units).map(e => e.data).filter(u => u.currentSite === selectedSite);
+        const cars = here.filter(u => u.kind !== 'guard');
+        const guards = here.filter(u => u.kind === 'guard');
+        const row = u => {
+            const mode = MODE[u.mode] || MODE[1];
+            return `<div class="trk-search-row" data-trk-open="${u.unitId}">
+                      <span class="g">${u.kind !== 'guard' ? '🚓' : `<span class="trk-avatar trk-avatar-sm" style="border-color:${mode.color}">${esc(initialsOf(u.guardName))}</span>`}</span>
+                      <span class="m"><b>${esc(unitLabel(u))}</b><span>${statusLine(u)}</span></span>
+                      <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>
+                    </div>`;
+        };
+        el.classList.add('open');
+        el.innerHTML = `
+            <div class="trk-card-head">
+              <span class="trk-card-glyph" style="font-size:22px">🏢</span>
+              <span class="trk-card-title"><b>${esc(selectedSite)}</b><span>${here.length ? here.length + ' tracked here now' : 'nobody tracked here right now'}</span></span>
+              <button class="trk-card-close" data-trk-card-close="1" aria-label="Close">×</button>
+            </div>
+            <div class="trk-card-body">
+              ${cars.length ? `<div class="trk-card-section">PATROL CARS (${cars.length})</div>` + cars.map(row).join('') : ''}
+              ${guards.length ? `<div class="trk-card-section">GUARDS (${guards.length})</div>` + guards.map(row).join('') : ''}
+              ${!here.length ? '<div class="trk-row dim">Assets appear here while their NFC scans place them at this site.</div>' : ''}
+            </div>`;
+    }
+
     function renderCard() {
+        if (selectedSite) { renderSiteCard(); return; }
         const el = cardEl();
         const entry = selectedUnitId && units[selectedUnitId];
         if (!entry) {
@@ -351,6 +436,7 @@
               ${u.guardName && isCar ? `<div class="trk-row">👤 ${esc(u.guardName)}</div>` : ''}
               <div class="trk-row trk-row-state">${statusLine(u)}</div>
               ${locationRow}
+              ${u.currentSite ? `<button class="trk-sitelink" data-trk-site="${esc(u.currentSite)}">🏢 ${esc(u.currentSite)} — who's here ›</button>` : ''}
               <div class="trk-row">🚀 ${speed}${dir} &nbsp; ${u.accuracyM == null ? '' : `±${u.accuracyM}m`} ${u.batteryPct == null ? '' : `&nbsp; 🔋${u.batteryPct}%`}</div>
               <div class="trk-row dim">Fix ${fmtAge(u.ageSeconds)} ago${sessionSince ? ` · on shift since ${sessionSince}` : ''}</div>
             </div>
@@ -404,7 +490,8 @@
         const list = Object.values(units).map(e => e.data)
             .filter(u => {
                 if (!q) return true;
-                return [unitLabel(u), u.callsign, u.patrolCar, u.guardName, u.currentSite]
+                return [unitLabel(u), u.callsign, u.patrolCar, u.guardName, u.currentSite,
+                        initialsOf(u.guardName)]
                     .some(v => v && String(v).toLowerCase().includes(q));
             })
             .sort((a, b) => (b.mode - a.mode) || String(unitLabel(a)).localeCompare(String(unitLabel(b))))
@@ -824,6 +911,8 @@
         }
         if (attr('data-trk-card-close')) { closeCard(); return; }
         if (attr('data-trk-search-close')) { toggleSearch(false); return; }
+        const siteEl = ev.target.closest && ev.target.closest('[data-trk-site]');
+        if (siteEl) { openSiteCard(siteEl.getAttribute('data-trk-site')); return; }
         const oid = attr('data-trk-open');
         if (oid) {
             toggleSearch(false);
@@ -880,12 +969,23 @@
     }
 
     /* Glide only when the move is plausible driving; a data jump snaps instantly so the
-       operator never watches a car "drive" across a city it never crossed. */
+       operator never watches a car "drive" across a city it never crossed.
+       Clustered guard markers must be re-added on a real move — the cluster grid does not
+       watch setLatLng — but tiny GPS wobble stays in place so clusters don't flicker. */
     function moveMarker(entry, pos) {
         const from = entry.marker.getLatLng();
-        const jump = haversineKm(from.lat, from.lng, pos[0], pos[1]) > GLIDE_MAX_KM;
+        const movedKm = haversineKm(from.lat, from.lng, pos[0], pos[1]);
+        const clustered = entry.markerGroup === guardsGroup && guardsGroup.removeLayer && L.MarkerClusterGroup
+            && guardsGroup instanceof L.MarkerClusterGroup;
+        if (clustered) {
+            if (movedKm < 0.005) return;              // <5 m: jitter, leave the cluster alone
+            guardsGroup.removeLayer(entry.marker);
+            entry.marker.setLatLng(pos);
+            guardsGroup.addLayer(entry.marker);
+            return;
+        }
         const icon = entry.marker._icon;
-        if (jump && icon) {
+        if (movedKm > GLIDE_MAX_KM && icon) {
             icon.classList.add('trk-nofx');
             entry.marker.setLatLng(pos);
             setTimeout(() => icon.classList.remove('trk-nofx'), 60);
@@ -902,12 +1002,15 @@
         const pos = [Number(u.lat), Number(u.lon)];
 
         if (!entry) {
+            const isGuard = u.kind === 'guard';
+            const markerGroup = isGuard ? guardsGroup : carsGroup;
+            const trailGroup = isGuard ? guardTrailsGroup : carTrailsGroup;
             const marker = L.marker(pos, { icon: unitIcon(u), zIndexOffset: 1000 });
             marker.on('click', () => openCard(u.unitId));
-            marker.addTo(layer);
-            /* Breadcrumb: session-local, client-side only. Replay/history proper is M1.9. */
-            const trail = L.polyline([pos], { weight: 3, opacity: 0.55, color: '#2563eb' }).addTo(layer);
-            entry = units[u.unitId] = { marker, trail, data: u, lastSeenMs: nowMs, iconSig: iconSig(u) };
+            markerGroup.addLayer(marker);
+            /* Breadcrumb: session-local, client-side view; full history lives server-side. */
+            const trail = L.polyline([pos], { weight: 3, opacity: 0.55, color: '#2563eb' }).addTo(trailGroup);
+            entry = units[u.unitId] = { marker, trail, markerGroup, trailGroup, data: u, lastSeenMs: nowMs, iconSig: iconSig(u) };
         } else {
             /* SESSION BOUNDARY: the unit changed hands. The trail belongs to the previous
                officer — reset it, and tell the operator out loud (§B2/B3). A trail that
@@ -972,8 +1075,8 @@
                     stopFollow();
                 }
                 if (selectedUnitId === Number(id)) closeCard();
-                layer.removeLayer(units[id].marker);
-                layer.removeLayer(units[id].trail);
+                units[id].markerGroup.removeLayer(units[id].marker);
+                units[id].trailGroup.removeLayer(units[id].trail);
                 delete units[id];
             }
         });
@@ -986,7 +1089,7 @@
         setStatus(list.length, true);
     }
 
-    /* ---- status pill: degrade honestly (§11.3 rule 10) ---- */
+    /* ---- status pill → live-operation strip (§27): the 5-second answer ---- */
     let statusEl = null;
     function setStatus(count, healthy) {
         if (!statusEl) {
@@ -994,8 +1097,40 @@
             statusEl.className = 'trk-status';
             document.body.appendChild(statusEl);
         }
-        statusEl.textContent = healthy ? `🚓 ${count} tracked` : '🚓 tracking: reconnecting…';
-        statusEl.classList.toggle('trk-status-bad', !healthy);
+        if (!healthy) {
+            statusEl.textContent = '🚓 tracking: reconnecting…';
+            statusEl.classList.add('trk-status-bad');
+            return;
+        }
+        statusEl.classList.remove('trk-status-bad');
+        const list = Object.values(units).map(e => e.data);
+        const cars = list.filter(u => u.kind !== 'guard').length;
+        const guards = list.length - cars;
+        const moving = list.filter(u => (u.speedKph || 0) >= 2 && u.ageSeconds <= SOFT_S).length;
+        const stopped = Object.keys(idleUnits).length;
+        const stale = list.filter(u => u.ageSeconds > HOLLOW_S).length;
+        statusEl.innerHTML =
+            `🚓 ${cars} · 👮 ${guards}` +
+            (list.length ? ` · ▶ ${moving}` : '') +
+            (stopped ? ` · <span class="warn">⏸ ${stopped}</span>` : '') +
+            (stale ? ` · <span class="bad">⚠ ${stale} stale</span>` : '');
+    }
+
+    /* ---- layer toggle chips (§4.6): CARS | GUARDS | SITES ---- */
+    function buildLayerChips() {
+        const el = document.createElement('div');
+        el.className = 'trk-chipbar';
+        el.innerHTML = `
+            <button data-trk-layer="cars" title="Show/hide patrol cars">🚓 Cars</button>
+            <button data-trk-layer="guards" title="Show/hide guards">👮 Guards</button>
+            <button data-trk-layer="sites" title="Show/hide site markers">🏢 Sites</button>`;
+        document.body.appendChild(el);
+        el.addEventListener('click', ev => {
+            const b = ev.target.closest('[data-trk-layer]');
+            if (!b) return;
+            layerState[b.getAttribute('data-trk-layer')] = !layerState[b.getAttribute('data-trk-layer')];
+            applyLayerState();
+        });
     }
 
     /* ---- polling (the Phase-1 data path) ---- */
@@ -1098,5 +1233,6 @@
     if (hubUrl) connectHub(hubUrl);
 
     buildControls();
+    buildLayerChips();
     poll();
 })();
