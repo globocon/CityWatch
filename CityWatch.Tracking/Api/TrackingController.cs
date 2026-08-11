@@ -248,6 +248,7 @@ namespace CityWatch.Tracking.Api
                 .Take(cap + 1)
                 .Select(p => new
                 {
+                    sessionId = p.SessionId,
                     utc = p.RecordedUtc,
                     lat = p.Latitude,
                     lon = p.Longitude,
@@ -263,9 +264,51 @@ namespace CityWatch.Tracking.Api
             if (truncated)
                 points.RemoveAt(points.Count - 1);
 
+            /* Grouped BY SESSION, never returned as one flat stream. A unit id is a car, and
+               a car changes hands: consecutive sessions in one window are different officers'
+               movements, and a client drawing one line through both invents a journey nobody
+               made (the Cochin↔Poonjar defect). The session boundary is the truth boundary. */
+            var sessionIds = points.Select(p => p.sessionId).Distinct().ToList();
+            var sessions = await _db.TrackingSessions
+                .Where(s => sessionIds.Contains(s.Id))
+                .Select(s => new
+                {
+                    s.Id, s.GuardId, s.StartedUtc, s.EndedUtc,
+                    s.Callsign, s.PatrolCarPositionName
+                })
+                .ToListAsync(ct);
+            var guardIds = sessions.Select(s => s.GuardId).Distinct().ToList();
+            var guardNames = await _db.PlatformGuards
+                .Where(g => guardIds.Contains(g.Id))
+                .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
+            var sessionById = sessions.ToDictionary(s => s.Id);
+
+            var grouped = points
+                .GroupBy(p => p.sessionId)
+                .Select(g =>
+                {
+                    sessionById.TryGetValue(g.Key, out var s);
+                    return new
+                    {
+                        sessionId = g.Key,
+                        guardId = s?.GuardId ?? 0,
+                        guardName = s != null && guardNames.TryGetValue(s.GuardId, out var name) ? name : null,
+                        callsign = s?.Callsign,
+                        patrolCar = s?.PatrolCarPositionName,
+                        startedUtc = s?.StartedUtc,
+                        endedUtc = s?.EndedUtc,
+                        points = g.Select(p => new
+                        {
+                            p.utc, p.lat, p.lon, p.speedKph, p.headingDeg, p.source, p.flags, p.tag
+                        }).ToList()
+                    };
+                })
+                .OrderBy(s => s.startedUtc ?? s.points[0].utc)
+                .ToList();
+
             /* Truncation is stated, never silent: a replay that quietly stops early would
                read as "the patrol stopped here". */
-            return Ok(new { unitId, fromUtc, toUtc, truncated, points });
+            return Ok(new { unitId, fromUtc, toUtc, truncated, sessions = grouped });
         }
 
         /// <summary>Segment roll-ups for reporting — the table every analytical consumer
@@ -320,6 +363,11 @@ namespace CityWatch.Tracking.Api
                 units = units.Select(u => new
                 {
                     unitId = u.UnitId,
+                    /* Session identity travels with the unit so the client can reset a trail
+                       the moment a unit changes hands (a trail that survives a takeover would
+                       stitch two officers' movements into one line — the replay bug, live). */
+                    sessionId = u.SessionId,
+                    sessionStartedUtc = u.SessionStartedUtc,
                     kind = u.Kind,
                     callsign = u.Callsign,
                     guardId = u.GuardId,

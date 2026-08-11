@@ -80,6 +80,14 @@ namespace CityWatch.Tracking.Contracts
 
         /// <summary>Set when the batch was rate-limited; the device backs off.</summary>
         public int? RetryAfterSeconds { get; set; }
+
+        /// <summary>
+        /// True when the batch's session was closed because another officer signed into the
+        /// same unit. Without this the superseded phone uploads rejected batches for the rest
+        /// of the shift while its officer believes they are being tracked — the device must
+        /// tell them and prompt a fresh sign-in.
+        /// </summary>
+        public bool SessionSuperseded { get; set; }
     }
 
     /// <summary>

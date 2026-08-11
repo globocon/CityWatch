@@ -52,6 +52,10 @@ namespace CityWatch.Tracking.Services
 
         /// <summary>Minutes in the current state — "at Martha Cove 12 min".</summary>
         public int StateMinutes { get; init; }
+
+        /// <summary>When this session opened — the map's "full journey so far" window, and
+        /// the boundary a live trail must reset on when the session changes hands.</summary>
+        public DateTime SessionStartedUtc { get; init; }
     }
 
     public sealed class LiveSnapshotService : ILiveSnapshotService
@@ -76,7 +80,8 @@ namespace CityWatch.Tracking.Services
                 .Select(s => new
                 {
                     s.Id, s.UnitId, s.GuardId, s.IsPatrolCar, s.Callsign,
-                    s.PatrolCarPositionName, s.TravelState, s.CurrentSiteName, s.TravelStateSinceUtc
+                    s.PatrolCarPositionName, s.TravelState, s.CurrentSiteName, s.TravelStateSinceUtc,
+                    s.StartedUtc
                 })
                 .ToListAsync(ct);
             if (sessions.Count == 0)
@@ -129,7 +134,8 @@ namespace CityWatch.Tracking.Services
                     PatrolCar = string.IsNullOrWhiteSpace(session?.PatrolCarPositionName) ? null : session!.PatrolCarPositionName,
                     TravelState = string.IsNullOrWhiteSpace(session?.TravelState) ? "Transit" : session!.TravelState,
                     CurrentSiteName = string.IsNullOrWhiteSpace(session?.CurrentSiteName) ? null : session!.CurrentSiteName,
-                    StateMinutes = stateMinutes
+                    StateMinutes = stateMinutes,
+                    SessionStartedUtc = session?.StartedUtc ?? default
                 };
             }
 

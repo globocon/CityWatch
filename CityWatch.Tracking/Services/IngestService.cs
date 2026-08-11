@@ -80,10 +80,14 @@ namespace CityWatch.Tracking.Services
 
             /* ---- Gate 2: no session, no tracking (§6.5). ---- */
             var session = await _db.TrackingSessions
-                .FirstOrDefaultAsync(s => s.Id == batch.SessionId && s.UnitId == batch.UnitId && s.Status == "Active", ct);
-            if (session == null)
+                .FirstOrDefaultAsync(s => s.Id == batch.SessionId && s.UnitId == batch.UnitId, ct);
+            if (session is not { Status: "Active" })
             {
                 response.Rejected = batch.Points.Count;
+                /* The device's session was closed because another officer signed into this
+                   unit: say so. Without the flag the superseded phone keeps uploading
+                   rejected batches all shift while its officer believes they are tracked. */
+                response.SessionSuperseded = session?.EndReason == "SupersededByNewSession";
                 return response;
             }
 
