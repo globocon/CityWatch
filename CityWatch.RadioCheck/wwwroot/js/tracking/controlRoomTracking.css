@@ -1,43 +1,87 @@
-/* CityWatch.Tracking — vehicle marker styling (feature pack M1.7, ADD §11.3).
+/* CityWatch.Tracking — control room live layer, Phase 1 (Command Centre plan).
    Colour carries urgency only: duress red matches the existing alarm colour, live blue
-   matches the existing accent. Staleness is shape/opacity, never a second colour scale. */
+   matches the existing accent. Staleness is shape/opacity, never a second colour scale.
 
-.trk-car {
+   LAYOUT SLOTS — every floating widget owns a fixed slot so nothing collides:
+     top-right (below header)  → idle panel (collapsed by default)
+     right / bottom sheet      → asset card
+     bottom-right              → control stack (search / + / − / fit)
+     bottom-centre             → replay bar, follow bar above it
+     bottom-left               → status pill
+     top-centre                → notices (takeover, errors)                         */
+
+/* The overlay ships its own finger-sized zoom stack; the tiny default control goes. */
+.leaflet-control-zoom { display: none; }
+
+/* ================= markers ================= */
+
+/* Position glide: Leaflet moves markers by transform, so transitioning transform makes
+   a 5s fix interval read as driving, not teleporting. Disabled during zoom animations
+   (they also use transform) and for data jumps (.trk-nofx). */
+.trk-marker { transition: transform 1.4s linear; }
+.leaflet-zoom-anim .trk-marker, .trk-marker.trk-nofx { transition: none; }
+
+.trk-unit {
     position: relative;
-    width: 46px; height: 46px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 3px solid #16a34a;               /* normal = ok green */
-    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    width: 56px; height: 68px;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     font-family: system-ui, sans-serif;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
 }
-.trk-car .trk-glyph { font-size: 16px; line-height: 1; }
-.trk-car .trk-arrow { font-size: 10px; line-height: 1; color: #111; transition: transform .9s linear; }
-.trk-car .trk-id { font-size: 8px; font-weight: 700; color: #111; max-width: 42px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* kind: cars are squared like a vehicle plate, guards stay round like site/person markers */
-.trk-car.trk-kind-car { border-radius: 10px; }
-.trk-car.trk-kind-guard { border-radius: 50%; }
-.trk-car.trk-kind-guard .trk-arrow { display: none; }   /* foot patrol heading is GPS noise */
-.trk-car .trk-age {
-    position: absolute; top: -8px; right: -10px;
+.trk-unit .trk-sprite {
+    width: 28px; height: 48px;
+    transition: transform 1.4s linear;        /* heading turns smoothly, never snaps */
+    transform-origin: 50% 50%;
+}
+.trk-unit .trk-id {
+    margin-top: -6px;
+    background: #ffffffee; border: 1px solid #cbd5e1; border-radius: 8px;
+    font-size: 10px; font-weight: 800; color: #0f172a; padding: 0 6px;
+    max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Guards: circular initials avatar — a person, identifiable at a glance. */
+.trk-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: #1f2937; color: #fff;
+    border: 3px solid #16a34a;
+    display: flex; align-items: center; justify-content: center;
+    font: 800 14px system-ui, sans-serif; letter-spacing: .02em;
+}
+.trk-avatar-lg { width: 44px; height: 44px; font-size: 16px; }
+.trk-avatar-sm { width: 26px; height: 26px; font-size: 10px; border-width: 2px; display: inline-flex; }
+
+.trk-unit .trk-age {
+    position: absolute; top: -6px; right: -4px;
     background: #475569; color: #fff; border-radius: 8px;
     font-size: 9px; padding: 1px 5px; font-weight: 700;
 }
+.trk-unit .trk-idle-badge {
+    position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%);
+    background: #d97706; color: #fff; border-radius: 8px;
+    font-size: 8px; padding: 1px 5px; font-weight: 800; white-space: nowrap;
+}
 
-/* mode accents */
-.trk-car.trk-transit { border-color: #2563eb; }
-.trk-car.trk-live    { border-color: #2563eb; animation: trkLivePulse 1.6s ease-in-out infinite; }
-.trk-car.trk-duress  { border-color: #dc2626; animation: trkDuressPulse .8s ease-in-out infinite; }
+/* selection / follow halo */
+.trk-unit.trk-sel::before {
+    content: ''; position: absolute; top: 2px; left: 50%; transform: translateX(-50%);
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 3px solid #2563eb; box-shadow: 0 0 0 6px rgba(37,99,235,.18);
+    animation: trkSelPulse 1.8s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes trkSelPulse { 50% { box-shadow: 0 0 0 12px rgba(37,99,235,.08); } }
+
+/* mode accents on the LIVE/DURESS pulse ring */
+.trk-unit.trk-live .trk-sprite    { animation: trkLivePulse 1.6s ease-in-out infinite; }
+.trk-unit.trk-duress .trk-sprite  { animation: trkDuressPulse .8s ease-in-out infinite; }
+@keyframes trkLivePulse   { 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,.9)); } }
+@keyframes trkDuressPulse { 50% { filter: drop-shadow(0 0 10px rgba(220,38,38,.95)); } }
 
 /* staleness degradation (§11.3 rule 2): never render old as current */
-.trk-car.trk-soft   { opacity: .85; }
-.trk-car.trk-soft   { animation: trkSoftPulse 2.4s ease-in-out infinite; }
-.trk-car.trk-hollow { opacity: .6; background: transparent; }
-.trk-car.trk-dead   { opacity: .35; border-style: dashed; filter: grayscale(1); }
-
-@keyframes trkLivePulse   { 50% { box-shadow: 0 0 0 8px rgba(37,99,235,.15); } }
-@keyframes trkDuressPulse { 50% { box-shadow: 0 0 0 10px rgba(220,38,38,.25); } }
+.trk-unit.trk-soft   { opacity: .85; animation: trkSoftPulse 2.4s ease-in-out infinite; }
+.trk-unit.trk-hollow { opacity: .55; }
+.trk-unit.trk-dead   { opacity: .35; filter: grayscale(1); }
 @keyframes trkSoftPulse   { 50% { opacity: .6; } }
 
 .trk-mode-chip {
@@ -47,59 +91,206 @@
 .trk-mode-chip.trk-transit, .trk-mode-chip.trk-live { background: #2563eb; }
 .trk-mode-chip.trk-duress { background: #dc2626; }
 
-/* at-site / in-transit line in the popup */
-.trk-state { font: 700 12px system-ui, sans-serif; color: #2563eb; }
-
-/* live mode controls (§11.3 rules 4-5) */
+/* ================= buttons ================= */
 .trk-btn {
-    margin-top: 4px; padding: 3px 10px; border-radius: 8px; cursor: pointer;
+    padding: 8px 14px; border-radius: 10px; cursor: pointer;
     border: 1px solid #2563eb; background: #2563eb; color: #fff;
-    font: 700 11px system-ui, sans-serif;
+    font: 700 12px system-ui, sans-serif;
+    min-height: 36px;
 }
 .trk-btn:hover { filter: brightness(1.1); }
 .trk-btn-stop { border-color: #dc2626; background: #dc2626; }
-.trk-pending { font: 700 11px system-ui, sans-serif; color: #2563eb; }
+.trk-btn-on { background: #16a34a; border-color: #16a34a; }
+.trk-btn-replay { border-color: #7c3aed; background: #7c3aed; }
+.trk-pending { font: 700 12px system-ui, sans-serif; color: #2563eb; align-self: center; }
 
-/* idle detection: attention amber, distinct from the urgency scale */
-.trk-idle-badge {
-    position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-    background: #d97706; color: #fff; border-radius: 8px;
-    font-size: 8px; padding: 1px 5px; font-weight: 800; white-space: nowrap;
+/* ================= asset card: docked panel / bottom sheet ================= */
+.trk-card {
+    position: fixed; z-index: 1400;
+    top: 120px; right: 14px; width: 300px;
+    background: #ffffff; border: 1px solid #dde5ef; border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(15,23,42,.22);
+    font: 500 13px system-ui, sans-serif; color: #0f172a;
+    display: none; overflow: hidden;
 }
-.trk-idle-chip {
-    display: inline-block; padding: 0 6px; border-radius: 8px;
-    font-size: 10px; font-weight: 700; color: #fff; background: #d97706; vertical-align: middle;
+.trk-card.open { display: block; }
+.trk-card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 12px 8px; border-bottom: 1px solid #eef2f7;
 }
+.trk-card-glyph svg { width: 22px; height: 38px; }
+.trk-card-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.trk-card-title b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-card-title span { font-size: 11px; color: #64748b; }
+.trk-card-close {
+    border: 0; background: transparent; font-size: 22px; line-height: 1;
+    color: #64748b; cursor: pointer; padding: 4px 8px; min-width: 44px; min-height: 36px;
+}
+.trk-card-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.trk-card .trk-row-state { font-weight: 700; color: #2563eb; }
+.trk-card .dim { color: #64748b; font-size: 12px; }
+.trk-card-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px 14px;
+}
+
+/* ================= follow bar ================= */
+.trk-follow-bar {
+    position: fixed; z-index: 1450; bottom: 76px; left: 50%; transform: translateX(-50%);
+    display: none; align-items: center; gap: 10px;
+    background: #1e293bf2; color: #fff; border-radius: 999px;
+    padding: 8px 16px; font: 700 13px system-ui, sans-serif;
+    box-shadow: 0 6px 20px rgba(15,23,42,.35);
+    white-space: nowrap;
+}
+.trk-follow-bar button {
+    border: 1px solid #94a3b8; background: transparent; color: #fff;
+    border-radius: 999px; padding: 4px 12px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; min-height: 32px;
+}
+.trk-follow-bar button.stop { border-color: #f87171; color: #fca5a5; }
+
+/* ================= search overlay ================= */
+.trk-search {
+    position: fixed; inset: 0; z-index: 1600;
+    display: none; flex-direction: column; align-items: center;
+    padding-top: 14vh; background: rgba(15,23,42,.45);
+}
+.trk-search.open { display: flex; }
+.trk-search-box {
+    display: flex; align-items: center; width: min(480px, calc(100vw - 28px));
+    background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    overflow: hidden;
+}
+.trk-search-box input {
+    flex: 1; border: 0; outline: none; padding: 14px 16px;
+    font: 600 16px system-ui, sans-serif;   /* 16px floor: no iOS zoom */
+}
+.trk-search-close {
+    border: 0; background: transparent; font-size: 24px; color: #64748b;
+    cursor: pointer; padding: 0 14px; min-width: 48px; min-height: 48px;
+}
+.trk-search-results {
+    width: min(480px, calc(100vw - 28px)); margin-top: 8px;
+    background: #fff; border-radius: 14px; overflow: hidden auto; max-height: 46vh;
+    box-shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+.trk-search-row {
+    display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+    cursor: pointer; border-top: 1px solid #f1f5f9; min-height: 48px;
+}
+.trk-search-row:first-child { border-top: 0; }
+.trk-search-row:hover { background: #eff4ff; }
+.trk-search-row .g { font-size: 18px; }
+.trk-search-row .m { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.trk-search-row .m b { font: 700 13px system-ui, sans-serif; }
+.trk-search-row .m span { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-search-empty { padding: 18px; text-align: center; color: #64748b; font: 600 13px system-ui, sans-serif; }
+
+/* ================= control stack (bottom-right) ================= */
+.trk-controls {
+    position: fixed; z-index: 1350; right: 10px; bottom: 96px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.trk-controls button {
+    width: 46px; height: 46px; border-radius: 12px;
+    border: 1px solid #dde5ef; background: #fffffff5; color: #0f172a;
+    font: 700 20px system-ui, sans-serif; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15,23,42,.18);
+}
+.trk-controls button:active { transform: scale(.96); }
+
+/* ================= notices ================= */
+.trk-notices {
+    position: fixed; z-index: 1500; top: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; gap: 6px; align-items: center;
+    pointer-events: none;
+}
+.trk-notice {
+    background: #1e293bf2; color: #fff; border-radius: 10px;
+    padding: 8px 14px; font: 600 13px system-ui, sans-serif;
+    box-shadow: 0 6px 20px rgba(15,23,42,.35);
+    transition: opacity .5s; max-width: min(520px, calc(100vw - 24px));
+}
+.trk-notice.alarm { background: #b91c1cf2; }
+
+/* ================= idle panel (top-right slot, collapsible) ================= */
 .trk-idle-panel {
-    position: fixed; top: 70px; right: 14px; z-index: 1200; min-width: 210px; max-width: 280px;
+    position: fixed; top: 150px; right: 14px; z-index: 1200; min-width: 210px; max-width: 280px;
     background: #ffffffee; border: 1px solid #d97706; border-radius: 12px;
     box-shadow: 0 4px 14px rgba(0,0,0,.15); overflow: hidden;
     font: 600 12px system-ui, sans-serif; color: #0f172a;
 }
-.trk-idle-head { background: #d97706; color: #fff; padding: 5px 10px; font-weight: 800; font-size: 11px; }
-.trk-idle-row { display: flex; align-items: center; gap: 6px; padding: 6px 10px; cursor: pointer; border-top: 1px solid #f1f5f9; }
+.trk-idle-head { background: #d97706; color: #fff; padding: 8px 10px; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; }
+.trk-idle-head .tgl { margin-left: auto; }
+.trk-idle-panel.collapsed .trk-idle-row { display: none; }
+.trk-idle-row { display: flex; align-items: center; gap: 6px; padding: 9px 10px; cursor: pointer; border-top: 1px solid #f1f5f9; min-height: 40px; }
 .trk-idle-row:hover { background: #fff7ed; }
 .trk-idle-row .trk-idle-time { margin-left: auto; color: #b45309; font-weight: 800; font-variant-numeric: tabular-nums; }
+.trk-idle-chip {
+    display: inline-block; padding: 0 6px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; color: #fff; background: #d97706; vertical-align: middle;
+}
 
-/* replay (§11.2): one surface, two times */
-.trk-btn-replay { border-color: #7c3aed; background: #7c3aed; }
-.trk-car.trk-replay-ghost { border-color: #7c3aed; opacity: .95; }
+/* ================= replay ================= */
+.trk-unit.trk-replay-ghost { opacity: .95; }
 .trk-replay-bar {
     position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 1300;
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
     background: #ffffffee; border: 1px solid #7c3aed; border-radius: 12px;
-    padding: 6px 12px; font: 600 12px system-ui, sans-serif; color: #0f172a;
+    padding: 8px 12px; font: 600 12px system-ui, sans-serif; color: #0f172a;
     box-shadow: 0 4px 14px rgba(0,0,0,.18);
+    max-width: calc(100vw - 20px);
 }
-.trk-replay-bar button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 2px 8px; cursor: pointer; font: 700 11px system-ui, sans-serif; }
+.trk-replay-bar button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; font: 700 11px system-ui, sans-serif; min-height: 32px; }
 .trk-replay-bar button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
-.trk-replay-bar input[type=range] { width: 220px; }
+.trk-replay-bar input[type=range] { width: 200px; }
+#trkReplayClock { font-variant-numeric: tabular-nums; font-weight: 800; }
 
-/* connection status pill — degrade honestly (§11.3 rule 10) */
+/* session picker: two officers, two journeys — choose which to watch */
+.trk-session-pick {
+    position: fixed; z-index: 1600; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(360px, calc(100vw - 28px));
+    background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 16px 50px rgba(0,0,0,.4);
+    font: 600 13px system-ui, sans-serif; color: #0f172a;
+}
+.trk-session-pick .head { padding: 12px 16px; background: #7c3aed; color: #fff; display: flex; flex-direction: column; }
+.trk-session-pick .head span { font-size: 11px; font-weight: 500; opacity: .9; }
+.trk-session-pick .row {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+    border-top: 1px solid #f1f5f9; cursor: pointer; min-height: 48px;
+}
+.trk-session-pick .row:hover { background: #f5f3ff; }
+.trk-session-pick .row b { font-variant-numeric: tabular-nums; }
+.trk-session-pick .row span { color: #64748b; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-session-pick .row .n { flex: none; font-size: 11px; }
+.trk-session-pick .cancel { margin: 10px 16px 14px; background: #64748b; border-color: #64748b; }
+
+/* ================= status pill (bottom-left slot) ================= */
 .trk-status {
     position: fixed; bottom: 14px; left: 14px; z-index: 1200;
     background: #ffffffee; border: 1px solid #e2e8f0; border-radius: 10px;
-    padding: 4px 10px; font: 600 12px system-ui, sans-serif; color: #0f172a;
+    padding: 6px 12px; font: 600 12px system-ui, sans-serif; color: #0f172a;
     box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
 .trk-status-bad { background: #fef2f2ee; border-color: #dc2626; color: #b91c1c; }
+
+/* ================= phone layout ================= */
+@media (max-width: 760px) {
+    /* the card becomes a bottom sheet; the map stays visible above it */
+    .trk-card {
+        top: auto; right: 0; left: 0; bottom: 0; width: auto;
+        border-radius: 16px 16px 0 0; max-height: 44vh; overflow-y: auto;
+    }
+    body.trk-card-open .trk-controls { bottom: calc(44vh + 12px); }
+    body.trk-card-open .trk-follow-bar { bottom: calc(44vh + 12px); }
+    body.trk-card-open .trk-status { display: none; }
+
+    .trk-idle-panel { top: auto; bottom: 300px; right: 10px; max-width: 220px; }
+    .trk-follow-bar { bottom: 156px; }
+    .trk-replay-bar { bottom: 8px; border-radius: 12px; width: calc(100vw - 16px); }
+    .trk-replay-bar input[type=range] { flex: 1; width: auto; min-width: 120px; }
+    .trk-controls { bottom: 150px; }
+    .trk-status { bottom: 8px; left: 8px; }
+}
