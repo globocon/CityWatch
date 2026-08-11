@@ -494,97 +494,207 @@
             level === 'alarm' ? 15000 : 8000);
     }
 
-    /* ================= replay (M1.9 → Phase 1: session-true) =================
-       Live and replay share the map; replay draws ONE SESSION's audited trail and
-       animates a ghost along it. A window holding several sessions offers a picker —
-       two officers' journeys are never merged into one line (the Cochin↔Poonjar rule). */
-    const replay = { active: false, points: [], idx: 0, speed: 4, timer: null, line: null, ghost: null, anchors: [], meta: null };
+    /* ================= replay (Phase 3: professional playback) =================
+       Live and replay share the map; replay plays ONE SESSION's audited trail — a window
+       holding several sessions offers a picker, and two officers' journeys are never merged
+       into one line (the Cochin↔Poonjar rule). The route colours in with TIME as the ghost
+       drives it: early = cool blue, late = warm red, un-driven = faint dashes — an
+       out-and-back on one road reads unambiguously. */
+    const REPLAY_BUCKETS = 14;
+    const replay = {
+        active: false, playing: false, unitId: null, session: null,
+        points: [], stops: [], events: [], idx: 0, speed: 4, timer: null,
+        ghost: null, ghostSprite: null, baseLine: null, buckets: [], bucketEnd: [],
+        marks: [], truncated: false
+    };
 
-    function replayHeader(unitId, s) {
-        const label = units[unitId] ? unitLabel(units[unitId].data) : ('Unit ' + unitId);
-        const day = s.startedUtc ? new Date(s.startedUtc).toLocaleDateString([], { day: '2-digit', month: 'short' }) : '';
-        const t0 = s.points.length ? new Date(s.points[0].utc) : null;
-        const t1 = s.points.length ? new Date(s.points[s.points.length - 1].utc) : null;
-        const hm = d => d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
-        return `REPLAY · ${esc(label)} · ${day} ${hm(t0)}→${hm(t1)}` +
-            (s.guardName ? ` · ${esc(s.guardName)}` : '');
+    function bucketColor(i) {
+        /* hue 210 (blue) → 10 (red) across the session. Colour IS the time axis. */
+        return `hsl(${Math.round(210 - 200 * i / Math.max(1, REPLAY_BUCKETS - 1))} 85% 45%)`;
     }
+    function hm(v) { return v ? new Date(v).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function dayOf(v) { return v ? new Date(v).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : ''; }
 
-    function replayBarHtml(unitId, s) {
+    function replayBarHtml(label, s) {
+        const t0 = s.points[0].utc, t1 = s.points[s.points.length - 1].utc;
         return `<div class="trk-replay-bar" id="trkReplayBar">
-            <b>${replayHeader(unitId, s)}</b>
-            <button data-trk-rspeed="1">1×</button><button data-trk-rspeed="4" class="on">4×</button>
-            <button data-trk-rspeed="16">16×</button><button data-trk-rspeed="64">64×</button>
-            <input type="range" id="trkReplayPos" min="0" max="100" value="0">
-            <span id="trkReplayClock">—</span>
-            <button id="trkReplayLive" class="trk-btn">⟳ LIVE</button>
+            <div class="trk-replay-head">
+              <b>REPLAY · ${esc(label)} · ${dayOf(t0)}${s.guardName ? ' · ' + esc(s.guardName) : ''}</b>
+              ${replay.truncated ? '<span class="trk-replay-trunc">⚠ window truncated at 5000 points — oldest not shown</span>' : ''}
+              <button id="trkReplayLive" class="trk-btn">⟳ LIVE</button>
+            </div>
+            <div class="trk-replay-main">
+              <button data-trk-rctl="prev" title="Previous event" aria-label="Previous event">⏮</button>
+              <button data-trk-rctl="play" id="trkReplayPlay" title="Play / pause" aria-label="Play or pause">⏸</button>
+              <button data-trk-rctl="next" title="Next event" aria-label="Next event">⏭</button>
+              <span class="trk-replay-speeds">
+                <button data-trk-rspeed="1">1×</button><button data-trk-rspeed="2">2×</button>
+                <button data-trk-rspeed="4" class="on">4×</button><button data-trk-rspeed="16">16×</button>
+              </span>
+              <span class="trk-replay-time" id="trkReplayClock">—</span>
+            </div>
+            <div class="trk-replay-timeline">
+              <span>${hm(t0)}</span>
+              <input type="range" id="trkReplayPos" min="0" max="${s.points.length - 1}" value="0" step="1" aria-label="Replay position">
+              <span>${hm(t1)}</span>
+            </div>
         </div>`;
     }
 
     function endReplay() {
         if (replay.timer) clearInterval(replay.timer);
-        if (replay.line) layer.removeLayer(replay.line);
-        if (replay.ghost) layer.removeLayer(replay.ghost);
-        replay.anchors.forEach(a => layer.removeLayer(a));
-        const bar = document.getElementById('trkReplayBar');
-        if (bar) bar.remove();
-        const picker = document.getElementById('trkSessionPick');
-        if (picker) picker.remove();
-        Object.assign(replay, { active: false, points: [], idx: 0, line: null, ghost: null, anchors: [], meta: null });
+        [replay.baseLine, replay.ghost, ...replay.buckets, ...replay.marks]
+            .filter(Boolean).forEach(l => layer.removeLayer(l));
+        ['trkReplayBar', 'trkSessionPick', 'trkReplayWindow'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
+        Object.assign(replay, {
+            active: false, playing: false, unitId: null, session: null,
+            points: [], stops: [], events: [], idx: 0, timer: null,
+            ghost: null, ghostSprite: null, baseLine: null, buckets: [], bucketEnd: [], marks: [],
+            truncated: false
+        });
     }
 
-    function renderReplayFrame() {
-        const p = replay.points[replay.idx];
-        if (!p) return;
-        replay.ghost.setLatLng([p.lat, p.lon]);
+    /* Draw the frame for replay.idx: reveal every bucket the clock has passed, part-fill
+       the current one, move+turn the ghost, sync clock and slider. Works for any idx, so
+       scrubbing backwards is the same code path as playing forwards. */
+    function renderProgress() {
+        const pts = replay.points;
+        const i = replay.idx;
+        for (let b = 0; b < replay.buckets.length; b++) {
+            const start = b === 0 ? 0 : replay.bucketEnd[b - 1];
+            const end = Math.min(replay.bucketEnd[b], Math.max(start, i));
+            replay.buckets[b].setLatLngs(i <= start ? [] : pts.slice(start, end + 1).map(p => [p.lat, p.lon]));
+        }
+        const p = pts[i];
+        if (p) {
+            replay.ghost.setLatLng([p.lat, p.lon]);
+            if (replay.ghostSprite == null && replay.ghost._icon)
+                replay.ghostSprite = replay.ghost._icon.querySelector('.trk-sprite');
+            if (replay.ghostSprite && p.headingDeg != null)
+                replay.ghostSprite.style.transform = `rotate(${p.headingDeg}deg)`;
+        }
         const pos = document.getElementById('trkReplayPos');
         const clock = document.getElementById('trkReplayClock');
-        if (pos) pos.value = Math.round(100 * replay.idx / Math.max(1, replay.points.length - 1));
-        if (clock) {
-            const d = new Date(p.utc);
-            clock.textContent = d.toLocaleDateString([], { day: '2-digit', month: 'short' }) + ' ' +
-                d.toLocaleTimeString();
-        }
+        const play = document.getElementById('trkReplayPlay');
+        if (pos) pos.value = i;
+        if (clock && p) clock.textContent = `${dayOf(p.utc)} ${new Date(p.utc).toLocaleTimeString()}`;
+        if (play) play.textContent = replay.playing ? '⏸' : '▶';
+    }
+
+    function stopIcon(min) {
+        return L.divIcon({
+            className: '',
+            html: `<div class="trk-stop-mark">⏸ ${fmtMins(min)}</div>`,
+            iconSize: [58, 20], iconAnchor: [29, 10]
+        });
     }
 
     function playSession(unitId, session, truncated) {
+        const label = units[unitId] ? unitLabel(units[unitId].data) : ('Unit ' + unitId);
         replay.active = true;
-        replay.meta = session;
+        replay.playing = true;
+        replay.unitId = unitId;
+        replay.session = session;
         replay.points = session.points;
+        replay.stops = session.stops || [];
+        replay.truncated = !!truncated;
         replay.idx = 0;
-        const latlngs = session.points.map(p => [p.lat, p.lon]);
-        replay.line = L.polyline(latlngs, { weight: 4, opacity: .8, color: '#7c3aed', dashArray: '6 6' }).addTo(layer);
-        session.points.filter(p => p.source === 1).forEach(p => {   // NFC anchors: the verified touches
-            replay.anchors.push(L.circleMarker([p.lat, p.lon],
-                { radius: 6, color: '#16a34a', fillColor: '#16a34a', fillOpacity: .9 })
-                .bindTooltip('NFC ' + (p.tag || '')).addTo(layer));
+
+        const pts = session.points;
+        const latlngs = pts.map(p => [p.lat, p.lon]);
+
+        /* The whole journey, faint — what remains to be driven. */
+        replay.baseLine = L.polyline(latlngs, { weight: 3, opacity: .35, color: '#94a3b8', dashArray: '4 8' }).addTo(layer);
+
+        /* Time buckets: equal spans of the session, blue → red. Filled by renderProgress. */
+        replay.buckets = [];
+        replay.bucketEnd = [];
+        const t0 = new Date(pts[0].utc).getTime();
+        const t1 = new Date(pts[pts.length - 1].utc).getTime();
+        const span = Math.max(1, t1 - t0);
+        let cursor = 0;
+        for (let b = 0; b < REPLAY_BUCKETS; b++) {
+            const limit = t0 + span * (b + 1) / REPLAY_BUCKETS;
+            while (cursor < pts.length - 1 && new Date(pts[cursor].utc).getTime() <= limit) cursor++;
+            replay.bucketEnd.push(cursor);
+            replay.buckets.push(L.polyline([], { weight: 5, opacity: .9, color: bucketColor(b), lineJoin: 'round' }).addTo(layer));
+        }
+
+        /* Marks: start / end flags, verified NFC touches, stops, duress points. */
+        replay.marks = [];
+        const mark = m => { replay.marks.push(m.addTo(layer)); };
+        mark(L.marker(latlngs[0], { icon: L.divIcon({ className: '', html: '<div class="trk-flag trk-flag-start">START</div>', iconSize: [46, 18], iconAnchor: [23, 9] }), zIndexOffset: 1500 }));
+        mark(L.marker(latlngs[latlngs.length - 1], { icon: L.divIcon({ className: '', html: '<div class="trk-flag trk-flag-end">END</div>', iconSize: [40, 18], iconAnchor: [20, 9] }), zIndexOffset: 1500 }));
+        pts.forEach(p => {
+            if (p.source === 1)
+                mark(L.circleMarker([p.lat, p.lon], { radius: 6, color: '#16a34a', fillColor: '#16a34a', fillOpacity: .9 })
+                    .bindTooltip('✓ NFC ' + (p.tag || '') + ' · ' + hm(p.utc)));
+            if (p.source === 3)
+                mark(L.circleMarker([p.lat, p.lon], { radius: 8, color: '#dc2626', fillColor: '#dc2626', fillOpacity: .8 })
+                    .bindTooltip('🚨 DURESS · ' + hm(p.utc)));
         });
+        replay.stops.forEach(st => {
+            mark(L.marker([st.lat, st.lon], { icon: stopIcon(st.durationMinutes), zIndexOffset: 1400 })
+                .bindTooltip(`Stopped ${fmtMins(st.durationMinutes)} · ${hm(st.fromUtc)}–${hm(st.toUtc)}`));
+        });
+
+        /* Direction arrows on the faint remainder, every ~12th of the trail. */
+        const step = Math.max(1, Math.floor(pts.length / 12));
+        for (let i = step; i < pts.length; i += step) {
+            const a = pts[i - 1], b = pts[i];
+            const ang = Math.atan2(
+                Math.sin(((b.lon - a.lon)) * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180),
+                Math.cos(a.lat * Math.PI / 180) * Math.sin(b.lat * Math.PI / 180)
+                - Math.sin(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.cos((b.lon - a.lon) * Math.PI / 180)
+            ) * 180 / Math.PI;
+            mark(L.marker([(Number(a.lat) + Number(b.lat)) / 2, (Number(a.lon) + Number(b.lon)) / 2], {
+                icon: L.divIcon({ className: '', html: `<div class="trk-dir" style="transform:rotate(${Math.round(ang)}deg)">➤</div>`, iconSize: [14, 14], iconAnchor: [7, 7] }),
+                interactive: false, keyboard: false
+            }));
+        }
+
+        /* Events for ⏮ / ⏭: start, every stop, every NFC touch, every duress, end. */
+        const eventIdx = new Set([0, pts.length - 1]);
+        pts.forEach((p, i) => { if (p.source === 1 || p.source === 3) eventIdx.add(i); });
+        replay.stops.forEach(st => {
+            const t = new Date(st.fromUtc).getTime();
+            let best = 0, bestD = Infinity;
+            pts.forEach((p, i) => {
+                const d = Math.abs(new Date(p.utc).getTime() - t);
+                if (d < bestD) { bestD = d; best = i; }
+            });
+            eventIdx.add(best);
+        });
+        replay.events = [...eventIdx].sort((a, b) => a - b);
+
         replay.ghost = L.marker(latlngs[0], {
-            icon: L.divIcon({ className: '', html: `<div class="trk-unit trk-kind-car trk-replay-ghost"><div class="trk-sprite">${carSvg('#7c3aed')}</div></div>`, iconSize: [56, 68], iconAnchor: [28, 34] }),
+            icon: L.divIcon({ className: '', html: `<div class="trk-unit trk-kind-car trk-replay-ghost"><div class="trk-sprite">${carSvg('#7c3aed')}</div></div>`, iconSize: [56, 68], iconAnchor: [28, 26] }),
             zIndexOffset: 2000
         }).addTo(layer);
-        map.fitBounds(replay.line.getBounds().pad(0.2));
+        map.fitBounds(replay.baseLine.getBounds().pad(0.2));
 
-        document.body.insertAdjacentHTML('beforeend', replayBarHtml(unitId, session));
-        if (truncated) document.getElementById('trkReplayClock').textContent = '(truncated — longest windows trim oldest points)';
+        document.body.insertAdjacentHTML('beforeend', replayBarHtml(label, session));
+        renderProgress();
 
         replay.timer = setInterval(() => {
-            if (!replay.active) return;
+            if (!replay.active || !replay.playing) return;
             replay.idx = Math.min(replay.idx + replay.speed, replay.points.length - 1);
-            renderReplayFrame();
-            if (replay.idx >= replay.points.length - 1) clearInterval(replay.timer);
+            renderProgress();
+            if (replay.idx >= replay.points.length - 1) { replay.playing = false; renderProgress(); }
         }, 250);
     }
 
     function sessionPicker(unitId, sessions, truncated) {
-        const hm = v => v ? new Date(v).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '…';
         const el = document.createElement('div');
         el.id = 'trkSessionPick';
         el.className = 'trk-session-pick';
         el.innerHTML = `<div class="head"><b>${sessions.length} sessions in this window</b><span>Each officer's journey replays separately</span></div>` +
             sessions.map((s, i) => `
                 <div class="row" data-trk-session="${i}">
-                  <b>${hm(s.startedUtc || (s.points[0] && s.points[0].utc))}–${hm(s.endedUtc || (s.points[s.points.length - 1] && s.points[s.points.length - 1].utc))}</b>
+                  <b>${hm(s.startedUtc || s.points[0].utc)}–${hm(s.endedUtc || s.points[s.points.length - 1].utc)}</b>
                   <span>${esc(s.guardName || 'Unknown officer')}${s.callsign ? ' · ' + esc(s.callsign) : ''}</span>
                   <span class="n">${s.points.length} pts</span>
                 </div>`).join('') +
@@ -596,15 +706,63 @@
             if (!row) return;
             const s = sessions[Number(row.getAttribute('data-trk-session'))];
             el.remove();
+            replay.truncated = !!truncated;
             playSession(unitId, s, truncated);
         });
     }
 
-    async function startReplay(unitId) {
+    /* Replay window picker (§3.1): presets for the common asks, custom date + time range
+       for the rest. The 26 h server cap is a shift with margin, stated when exceeded. */
+    function replayWindowPicker(unitId) {
         endReplay();
         closeCard();
-        const toUtc = new Date();
-        const fromUtc = new Date(toUtc.getTime() - 8 * 3600 * 1000);   // the shift so far (P3 adds the date picker)
+        const label = units[unitId] ? unitLabel(units[unitId].data) : ('Unit ' + unitId);
+        const today = new Date().toISOString().slice(0, 10);
+        const el = document.createElement('div');
+        el.id = 'trkReplayWindow';
+        el.className = 'trk-session-pick';
+        el.innerHTML = `
+            <div class="head"><b>▶ Replay · ${esc(label)}</b><span>Choose what to play back</span></div>
+            <div class="row" data-trk-win="8h"><b>Last 8 hours</b><span>the shift so far</span><span class="n"></span></div>
+            <div class="row" data-trk-win="today"><b>Today</b><span>midnight → now</span><span class="n"></span></div>
+            <div class="row" data-trk-win="yesterday"><b>Yesterday</b><span>full day</span><span class="n"></span></div>
+            <div class="trk-win-custom">
+              <input type="date" id="trkWinDate" value="${today}" max="${today}" aria-label="Date">
+              <input type="time" id="trkWinFrom" value="06:00" aria-label="From">
+              <span>→</span>
+              <input type="time" id="trkWinTo" value="18:00" aria-label="To">
+              <button class="trk-btn" data-trk-win="custom">Load</button>
+            </div>
+            <button class="trk-btn cancel" data-trk-session-cancel="1">Cancel</button>`;
+        document.body.appendChild(el);
+        el.addEventListener('click', ev => {
+            if (ev.target.closest('[data-trk-session-cancel]')) { el.remove(); return; }
+            const row = ev.target.closest('[data-trk-win]');
+            if (!row) return;
+            const kind = row.getAttribute('data-trk-win');
+            const now = new Date();
+            let fromUtc, toUtc;
+            if (kind === '8h') { toUtc = now; fromUtc = new Date(now.getTime() - 8 * 3600 * 1000); }
+            else if (kind === 'today') { toUtc = now; fromUtc = new Date(now); fromUtc.setHours(0, 0, 0, 0); }
+            else if (kind === 'yesterday') {
+                toUtc = new Date(now); toUtc.setHours(0, 0, 0, 0);
+                fromUtc = new Date(toUtc.getTime() - 24 * 3600 * 1000);
+            } else {
+                const d = document.getElementById('trkWinDate').value;
+                const f = document.getElementById('trkWinFrom').value || '00:00';
+                const t = document.getElementById('trkWinTo').value || '23:59';
+                if (!d) return;
+                fromUtc = new Date(`${d}T${f}`);
+                toUtc = new Date(`${d}T${t}`);
+                if (!(toUtc > fromUtc)) { notice('The end time must be after the start time.', 'alarm'); return; }
+                if (toUtc - fromUtc > 26 * 3600 * 1000) { notice('Windows are capped at 26 hours — one shift with margin.', 'alarm'); return; }
+            }
+            el.remove();
+            fetchReplay(unitId, fromUtc, toUtc);
+        });
+    }
+
+    async function fetchReplay(unitId, fromUtc, toUtc) {
         let body;
         try {
             const res = await fetch(`/api/tracking/history/${unitId}?fromUtc=${fromUtc.toISOString()}&toUtc=${toUtc.toISOString()}`,
@@ -614,9 +772,13 @@
         } catch { notice('Replay unavailable.', 'alarm'); return; }
 
         const sessions = (body.sessions || []).filter(s => s.points && s.points.length >= 2);
-        if (!sessions.length) { notice('No trail recorded for this unit yet.'); return; }
+        if (!sessions.length) { notice(`No trail recorded between ${hm(fromUtc)} and ${hm(toUtc)}.`); return; }
         if (sessions.length === 1) playSession(unitId, sessions[0], body.truncated);
         else sessionPicker(unitId, sessions, body.truncated);
+    }
+
+    function startReplay(unitId) {
+        replayWindowPicker(unitId);
     }
 
     /* ================= delegated clicks ================= */
@@ -634,6 +796,19 @@
         if (spd && replay.active) {
             replay.speed = Number(spd);
             document.querySelectorAll('[data-trk-rspeed]').forEach(b => b.classList.toggle('on', b.getAttribute('data-trk-rspeed') === spd));
+            return;
+        }
+        const rctl = attr('data-trk-rctl');
+        if (rctl && replay.active) {
+            if (rctl === 'play') replay.playing = !replay.playing;
+            else if (rctl === 'prev') {
+                const prev = [...replay.events].reverse().find(i => i < replay.idx);
+                replay.idx = prev ?? 0;
+            } else if (rctl === 'next') {
+                const next = replay.events.find(i => i > replay.idx);
+                replay.idx = next ?? replay.points.length - 1;
+            }
+            renderProgress();
             return;
         }
         if (ev.target.id === 'trkReplayLive') { endReplay(); return; }
@@ -662,8 +837,10 @@
     });
     document.addEventListener('input', ev => {
         if (ev.target.id === 'trkReplayPos' && replay.active) {
-            replay.idx = Math.round((ev.target.value / 100) * (replay.points.length - 1));
-            renderReplayFrame();
+            /* Scrubbing pauses playback — the timeline must not fight the finger. */
+            replay.playing = false;
+            replay.idx = Math.max(0, Math.min(Number(ev.target.value) || 0, replay.points.length - 1));
+            renderProgress();
         }
     });
 
