@@ -210,6 +210,12 @@ namespace CityWatch.RadioCheck.Pages
                             patrolCarName = route?.PatrolCarName ?? "",
                             nextSite = next?.SiteName ?? "",
                             plannedTotal = planned.Count,
+                            /* The full planned sequence, in patrol order — what makes
+                               "planned vs actual" (missed/delayed/unexpected) computable
+                               without a second data model. Data source is unchanged. */
+                            planned = planned.OrderBy(p => p.OrderNo)
+                                .Select(p => new { siteId = p.ClientSiteId, siteName = p.SiteName })
+                                .ToList(),
                             visits = ordered.Select(v => new
                             {
                                 siteId = v.SiteId,

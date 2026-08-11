@@ -351,6 +351,148 @@
         return undefined;      // unknown yet — distinct from a known miss
     }
 
+    /* ================= security intelligence (Phase 5) ================= */
+
+    /* Alert feed: the exceptions surface, so nobody has to stare at the map all day.
+       Every rule below runs on data the poll already carries — nothing is invented.
+       (Route-DELAY alerts are deliberately absent: planned routes carry no expected
+       times, and a made-up threshold would cry wolf. Documented, not faked.) */
+    const alerts = [];             // {t, level: 'info'|'warn'|'alarm', msg, unitId}
+    let alertsUnseen = 0;
+    let alertPanelOpen = false;
+
+    function addAlert(level, msg, unitId) {
+        const last = alerts[alerts.length - 1];
+        if (last && last.msg === msg && Date.now() - last.t < 120000) return;   // burst dedupe
+        alerts.push({ t: Date.now(), level, msg, unitId });
+        while (alerts.length > 60) alerts.shift();
+        alertsUnseen++;
+        updateAlertBadge();
+        if (alertPanelOpen) renderAlertPanel();
+    }
+
+    function updateAlertBadge() {
+        const b = document.getElementById('trkBellBadge');
+        if (b) {
+            b.textContent = alertsUnseen > 9 ? '9+' : String(alertsUnseen);
+            b.style.display = alertsUnseen ? 'flex' : 'none';
+        }
+    }
+
+    function alertPanelEl() {
+        let el = document.getElementById('trkAlerts');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'trkAlerts';
+            el.className = 'trk-alert-panel';
+            document.body.appendChild(el);
+        }
+        return el;
+    }
+
+    function toggleAlerts(show) {
+        alertPanelOpen = show ?? !alertPanelOpen;
+        if (alertPanelOpen) { alertsUnseen = 0; updateAlertBadge(); renderAlertPanel(); }
+        alertPanelEl().classList.toggle('open', alertPanelOpen);
+    }
+
+    function renderAlertPanel() {
+        const el = alertPanelEl();
+        const rows = [...alerts].reverse().map(a => `
+            <div class="trk-alert-row ${a.level}" ${a.unitId && units[a.unitId] ? `data-trk-open="${a.unitId}"` : ''}>
+              <span class="t">${new Date(a.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span class="m">${a.msg}</span>
+            </div>`).join('');
+        el.innerHTML = `
+            <div class="trk-alert-head"><b>⚠ ATTENTION (${alerts.length})</b>
+              <button class="trk-card-close" data-trk-alerts-close="1" aria-label="Close">×</button></div>
+            <div class="trk-alert-body">${rows || '<div class="trk-alert-empty">Nothing needs attention. 🎉</div>'}</div>`;
+    }
+
+    /* Planned vs actual (§5.2): the wand-scan route data the base map already loads,
+       refreshed once a minute — no second data model. */
+    let pcarPlans = {};            // guardId -> { planned:[{siteId,siteName}], visits:[...], patrolCarName }
+    async function pollPlans() {
+        try {
+            const res = await fetch('/ControlRoomMap?handler=PcarRoutes', { credentials: 'same-origin' });
+            if (res.ok) {
+                const list = await res.json();
+                const m = {};
+                (list || []).forEach(r => { if (r && r.guardId != null) m[r.guardId] = r; });
+                pcarPlans = m;
+            }
+        } catch { /* plan panel simply stays empty */ }
+        finally { setTimeout(pollPlans, 60000); }
+    }
+    pollPlans();
+
+    function planHtml(u) {
+        const plan = u.kind !== 'guard' && u.guardId ? pcarPlans[u.guardId] : null;
+        if (!plan || !plan.planned || !plan.planned.length) return '';
+        const visitedIds = new Set((plan.visits || []).map(v => v.siteId));
+        const lastVisit = (plan.visits || [])[plan.visits.length - 1];
+        const currentIdx = plan.planned.findIndex(p => lastVisit && p.siteId === lastVisit.siteId);
+        const rows = plan.planned.map((p, i) => {
+            let cls = 'todo', mark = '·';
+            if (visitedIds.has(p.siteId)) { cls = 'done'; mark = '✓'; }
+            else if (currentIdx >= 0 && i < currentIdx) { cls = 'missed'; mark = '✗'; }
+            const cur = lastVisit && p.siteId === lastVisit.siteId ? ' cur' : '';
+            return `<div class="trk-plan-row ${cls}${cur}"><span class="mk">${mark}</span>${esc(p.siteName || ('Site ' + p.siteId))}${cls === 'missed' ? '<span class="miss">MISSED</span>' : ''}</div>`;
+        });
+        const extras = (plan.visits || []).filter(v => !plan.planned.some(p => p.siteId === v.siteId))
+            .map(v => `<div class="trk-plan-row extra"><span class="mk">+</span>${esc(v.siteName)}<span class="unexp">UNEXPECTED</span></div>`);
+        const done = plan.planned.filter(p => visitedIds.has(p.siteId)).length;
+        return `<div class="trk-card-section">PATROL PLAN · ${done}/${plan.planned.length} VISITED</div>
+                <div class="trk-plan">${rows.join('')}${extras.join('')}</div>`;
+    }
+
+    /* Patrol performance (§5.3): re-read from the existing TrackSegments roll-ups —
+       segments close with their sessions, so an in-progress patrol shows what has
+       already been rolled up and says so. */
+    const perfCache = {};          // unitId -> { t, html }
+    function perfFor(u) {
+        const hit = perfCache[u.unitId];
+        if (hit && Date.now() - hit.t < 60000) return hit.html;
+        if (hit && hit.pending) return hit.html || '';
+        perfCache[u.unitId] = { t: Date.now(), html: hit ? hit.html : '', pending: true };
+        const from = new Date(); from.setHours(0, 0, 0, 0);
+        fetch(`/api/tracking/segments?unitId=${u.unitId}&fromUtc=${from.toISOString()}&toUtc=${new Date().toISOString()}`,
+            { credentials: 'same-origin' })
+            .then(r => r.ok ? r.json() : [])
+            .then(segments => {
+                let html = '';
+                if (segments && segments.length) {
+                    const km = segments.reduce((s, x) => s + (x.distanceM || 0), 0) / 1000;
+                    const sec = segments.reduce((s, x) => s + (x.durationSec || 0), 0);
+                    const scans = segments.reduce((s, x) => s + (x.anchorScanCount || 0), 0);
+                    const maxSpeed = Math.max(0, ...segments.map(x => x.maxSpeedKph || 0));
+                    html = `<div class="trk-card-section">TODAY (COMPLETED PATROLS)</div>
+                        <div class="trk-row">📏 ${km.toFixed(1)} km · ⏱ ${fmtMins(sec / 60)} · 🔝 ${maxSpeed} km/h${scans ? ` · ✓ ${scans} scans` : ''}</div>`;
+                }
+                perfCache[u.unitId] = { t: Date.now(), html };
+                if (selectedUnitId === u.unitId) renderCard();
+            })
+            .catch(() => { perfCache[u.unitId] = { t: Date.now(), html: '' }; });
+        return perfCache[u.unitId].html || '';
+    }
+
+    /* Duress intelligence (§5.4): who is closest, right now, with one-tap pivot. */
+    function respondersHtml(u) {
+        if (u.mode !== 4) return '';
+        const nearest = Object.values(units).map(e => e.data)
+            .filter(o => o.unitId !== u.unitId && o.ageSeconds <= HOLLOW_S)
+            .map(o => ({ o, km: haversineKm(Number(u.lat), Number(u.lon), Number(o.lat), Number(o.lon)) }))
+            .sort((a, b) => a.km - b.km)
+            .slice(0, 3);
+        if (!nearest.length) return '';
+        return `<div class="trk-card-section">NEAREST RESPONDERS</div>` + nearest.map(({ o, km }) => `
+            <div class="trk-search-row" data-trk-open="${o.unitId}">
+              <span class="g">${o.kind !== 'guard' ? '🚓' : '👮'}</span>
+              <span class="m"><b>${esc(unitLabel(o))}</b><span>${km < 1 ? Math.round(km * 1000) + ' m' : km.toFixed(1) + ' km'} away</span></span>
+              <span class="trk-mode-chip trk-transit">GO ›</span>
+            </div>`).join('');
+    }
+
     const liveRequests = {};   // unitId -> epoch ms of an unacknowledged "Track Live" click
 
     function liveButtonHtml(u) {
@@ -439,6 +581,9 @@
               ${u.currentSite ? `<button class="trk-sitelink" data-trk-site="${esc(u.currentSite)}">🏢 ${esc(u.currentSite)} — who's here ›</button>` : ''}
               <div class="trk-row">🚀 ${speed}${dir} &nbsp; ${u.accuracyM == null ? '' : `±${u.accuracyM}m`} ${u.batteryPct == null ? '' : `&nbsp; 🔋${u.batteryPct}%`}</div>
               <div class="trk-row dim">Fix ${fmtAge(u.ageSeconds)} ago${sessionSince ? ` · on shift since ${sessionSince}` : ''}</div>
+              ${respondersHtml(u)}
+              ${planHtml(u)}
+              ${perfFor(u)}
             </div>
             <div class="trk-card-actions">
               <button class="trk-btn ${following ? 'trk-btn-on' : ''}" data-trk-follow="${u.unitId}">${following ? '◉ FOLLOWING' : '◉ FOLLOW'}</button>
@@ -537,6 +682,7 @@
         const el = document.createElement('div');
         el.className = 'trk-controls';
         el.innerHTML = `
+            <button data-trk-ctl="alerts" title="Attention feed" aria-label="Attention feed" style="position:relative">🔔<span id="trkBellBadge" class="trk-bellbadge" style="display:none">0</span></button>
             <button data-trk-ctl="search" title="Find a patrol car or guard" aria-label="Search">🔍</button>
             <button data-trk-ctl="in" title="Zoom in" aria-label="Zoom in">+</button>
             <button data-trk-ctl="out" title="Zoom out" aria-label="Zoom out">−</button>
@@ -550,6 +696,7 @@
             if (what === 'in') map.zoomIn();
             else if (what === 'out') map.zoomOut();
             else if (what === 'search') toggleSearch(true);
+            else if (what === 'alerts') toggleAlerts();
             else if (what === 'mode') {
                 const next = MAP_MODES[(MAP_MODES.indexOf(currentMapMode()) + 1) % MAP_MODES.length];
                 applyMapMode(next);
@@ -911,11 +1058,13 @@
         }
         if (attr('data-trk-card-close')) { closeCard(); return; }
         if (attr('data-trk-search-close')) { toggleSearch(false); return; }
+        if (attr('data-trk-alerts-close')) { toggleAlerts(false); return; }
         const siteEl = ev.target.closest && ev.target.closest('[data-trk-site]');
         if (siteEl) { openSiteCard(siteEl.getAttribute('data-trk-site')); return; }
         const oid = attr('data-trk-open');
         if (oid) {
             toggleSearch(false);
+            toggleAlerts(false);
             const entry = units[Number(oid)];
             if (entry) {
                 map.flyTo(entry.marker.getLatLng(), Math.max(map.getZoom(), 14), { duration: 1 });
@@ -1018,6 +1167,16 @@
             if (entry.data.sessionId && u.sessionId && entry.data.sessionId !== u.sessionId) {
                 entry.trail.setLatLngs([pos]);
                 notice(`⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, 'alarm');
+                addAlert('alarm', `⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, u.unitId);
+            }
+            /* Arrival (§5.1): the NFC-confirmed transition is the trustworthy signal. */
+            if (u.travelState === 'AtSite' && u.currentSite &&
+                (entry.data.travelState !== 'AtSite' || entry.data.currentSite !== u.currentSite)) {
+                addAlert('info', `📍 <b>${esc(unitLabel(u))}</b> arrived at ${esc(u.currentSite)}`, u.unitId);
+            }
+            /* Offline (§5.1): crossing the hollow threshold is worth one line, once. */
+            if (entry.data.ageSeconds <= HOLLOW_S && u.ageSeconds > HOLLOW_S) {
+                addAlert('warn', `⚠ <b>${esc(unitLabel(u))}</b> has not reported for ${fmtAge(u.ageSeconds)}`, u.unitId);
             }
             moveMarker(entry, pos);
             entry.data = u;
@@ -1034,6 +1193,7 @@
 
         if (u.mode === 4 && !entry.duressAnnounced) {   // duress: centre once, loudly
             entry.duressAnnounced = true;
+            addAlert('alarm', `🚨 <b>DURESS — ${esc(unitLabel(u))}</b>${u.guardName ? ' · ' + esc(u.guardName) : ''}${u.currentSite ? ' · ' + esc(u.currentSite) : ''}`, u.unitId);
             map.setView(pos, Math.max(map.getZoom(), 14));
             openCard(u.unitId);
         } else if (u.mode !== 4) {
@@ -1070,6 +1230,7 @@
         /* Units gone from the snapshot ended their session: off the map (§13.5). */
         Object.keys(units).forEach(id => {
             if (!seen[id]) {
+                addAlert('info', `⚪ <b>${esc(unitLabel(units[id].data))}</b> went off shift`, null);
                 if (follow.unitId === Number(id)) {
                     notice(`◉ <b>${esc(unitLabel(units[id].data))}</b> — session ended, follow stopped`);
                     stopFollow();
@@ -1095,6 +1256,8 @@
         if (!statusEl) {
             statusEl = document.createElement('div');
             statusEl.className = 'trk-status';
+            statusEl.title = 'Open the attention feed';
+            statusEl.addEventListener('click', () => toggleAlerts(true));
             document.body.appendChild(statusEl);
         }
         if (!healthy) {
@@ -1191,6 +1354,7 @@
             }).join('');
     }
 
+    let prevIdleIds = new Set();
     async function pollIdle() {
         try {
             const res = await fetch('/api/tracking/idle', { credentials: 'same-origin' });
@@ -1199,6 +1363,15 @@
             const list = body.units || [];
             Object.keys(idleUnits).forEach(k => delete idleUnits[k]);
             list.forEach(u => { idleUnits[u.unitId] = u.idleMinutes; });
+            /* Stationary alert fires once per idle spell, when the unit first crosses in. */
+            list.forEach(u => {
+                if (!prevIdleIds.has(u.unitId)) {
+                    const label = units[u.unitId] ? unitLabel(units[u.unitId].data)
+                        : (u.callsign || u.guardName || ('Unit ' + u.unitId));
+                    addAlert('warn', `⏸ <b>${esc(label)}</b> stationary for ${fmtMins(u.idleMinutes)}`, u.unitId);
+                }
+            });
+            prevIdleIds = new Set(list.map(u => u.unitId));
             renderIdlePanel(list);
         } catch {
             /* leave the last known idle picture; the live poll's health pill covers outages */
