@@ -276,6 +276,57 @@
 }
 .trk-status-bad { background: #fef2f2ee; border-color: #dc2626; color: #b91c1c; }
 
+/* ================= tactical dark (§2.5) =================
+   One coherent command-centre look. The base page styles everything through CSS
+   variables on :root, so overriding them on body.trk-dark re-themes the whole page —
+   header, KPIs, banners, panels — and the rules below catch the overlay widgets that
+   carry literal colours. Visibility and contrast, not decoration. */
+body.trk-dark {
+    --bg: #0b1220;
+    --card: #101a2e;
+    --line: #24344f;
+    --text: #e2e8f0;
+    --text-dim: #8ca3c3;
+    --accent: #3b82f6;
+    --accent-soft: #14233d;
+    --ok-soft: #0d2a1a;
+    --warn-soft: #2d2008;
+    --alarm-soft: #2d0f0f;
+    --off-soft: #16223a;
+    --shadow: 0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.5);
+    background: var(--bg);
+}
+body.trk-dark #map { background: #0b1220; }
+body.trk-dark .trk-card,
+body.trk-dark .trk-search-box,
+body.trk-dark .trk-search-results,
+body.trk-dark .trk-session-pick {
+    background: #101a2e; border-color: #24344f; color: #e2e8f0;
+}
+body.trk-dark .trk-card-head { border-bottom-color: #1c2b45; }
+body.trk-dark .trk-card-title span, body.trk-dark .trk-card .dim { color: #8ca3c3; }
+body.trk-dark .trk-card-close, body.trk-dark .trk-search-close { color: #8ca3c3; }
+body.trk-dark .trk-search-box input { background: #101a2e; color: #e2e8f0; }
+body.trk-dark .trk-search-row { border-top-color: #1c2b45; }
+body.trk-dark .trk-search-row:hover, body.trk-dark .trk-session-pick .row:hover { background: #16223a; }
+body.trk-dark .trk-search-row .m span, body.trk-dark .trk-search-empty,
+body.trk-dark .trk-session-pick .row span { color: #8ca3c3; }
+body.trk-dark .trk-session-pick .row { border-top-color: #1c2b45; }
+body.trk-dark .trk-controls button {
+    background: #101a2ef5; border-color: #24344f; color: #e2e8f0;
+}
+body.trk-dark .trk-status { background: #101a2eee; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-status-bad { background: #2d0f0fee; border-color: #dc2626; color: #fca5a5; }
+body.trk-dark .trk-idle-panel { background: #101a2eee; color: #e2e8f0; }
+body.trk-dark .trk-idle-row { border-top-color: #1c2b45; }
+body.trk-dark .trk-idle-row:hover { background: #2d2008; }
+body.trk-dark .trk-replay-bar {
+    background: #101a2eee; color: #e2e8f0;
+}
+body.trk-dark .trk-replay-bar button { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-replay-bar button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+body.trk-dark .trk-unit .trk-id { background: #101a2eee; border-color: #24344f; color: #e2e8f0; }
+
 /* ================= phone layout ================= */
 @media (max-width: 760px) {
     /* the card becomes a bottom sheet; the map stays visible above it */

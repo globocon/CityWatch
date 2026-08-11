@@ -40,6 +40,7 @@ namespace CityWatch.Tracking.Tests
 
             CollectionAssert.AreEqual(new[]
             {
+                nameof(GeocodeCache),          // Phase 2.1: the reverse-geocode spatial cache
                 nameof(TrackingAccessAudit),
                 nameof(TrackingModeCommand),
                 nameof(TrackingSession),

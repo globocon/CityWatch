@@ -66,6 +66,28 @@ namespace CityWatch.Tracking.Configuration
 
         public SamplingPolicyOptions Policy { get; set; } = new();
 
+        public GeocodingOptions Geocoding { get; set; } = new();
+
+        /// <summary>Reverse geocoding (§Phase 2.1). The cache carries the load; the provider
+        /// is a trickle. Disabled ⇒ the address endpoint answers null and the UI falls back
+        /// to site name / coordinates — nothing else changes.</summary>
+        public sealed class GeocodingOptions
+        {
+            public bool Enabled { get; set; } = true;
+
+            /// <summary>Provider endpoint. Nominatim-compatible.</summary>
+            public string BaseUrl { get; set; } = "https://nominatim.openstreetmap.org/";
+
+            /// <summary>Provider policy floor — Nominatim asks for ≤1 req/s.</summary>
+            public int MinIntervalMs { get; set; } = 1100;
+
+            /// <summary>How long a resolved address stays true enough. Streets rarely move.</summary>
+            public int CacheDays { get; set; } = 45;
+
+            /// <summary>How long a FAILED lookup is remembered before one retry is allowed.</summary>
+            public int FailureRetryMinutes { get; set; } = 30;
+        }
+
         public sealed class RetentionOptions
         {
             /// <summary>Raw points kept hot. Confirm against contractual requirements (D12).</summary>

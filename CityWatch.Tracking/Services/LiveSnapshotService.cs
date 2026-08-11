@@ -56,6 +56,10 @@ namespace CityWatch.Tracking.Services
         /// <summary>When this session opened — the map's "full journey so far" window, and
         /// the boundary a live trail must reset on when the session changes hands.</summary>
         public DateTime SessionStartedUtc { get; init; }
+
+        /// <summary>True when SpeedKph is computed from fixes, not device-reported —
+        /// the UI shows it as approximate ("~42 km/h").</summary>
+        public bool SpeedDerived { get; init; }
     }
 
     public sealed class LiveSnapshotService : ILiveSnapshotService
@@ -151,7 +155,8 @@ namespace CityWatch.Tracking.Services
                         warm.UnitId, warm.SessionId, warm.Lat, warm.Lon,
                         warm.SpeedKph, warm.HeadingDeg, warm.AccuracyM, warm.BatteryPct,
                         (byte)warm.Mode, (byte)warm.Flags, warm.RecordedUtc,
-                        (int)Math.Max(0, (now - warm.ReceivedUtc).TotalSeconds))));
+                        (int)Math.Max(0, (now - warm.ReceivedUtc).TotalSeconds))
+                    { SpeedDerived = warm.SpeedDerived }));
                 }
                 else
                 {

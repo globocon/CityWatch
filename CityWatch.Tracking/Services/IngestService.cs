@@ -227,13 +227,37 @@ namespace CityWatch.Tracking.Services
             };
 
         private UnitLiveState ToLiveState(PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
-            => new()
+        {
+            /* Speed fallback (§Phase 2.3): device speed when given; otherwise implied from
+               the previous live fix — only when the interval is sane and the result is
+               plausible, and always marked derived. No value beats a misleading one. */
+            short? speed = p.SpeedKph is { } s ? (short)Math.Clamp(s, short.MinValue, short.MaxValue) : null;
+            var derived = false;
+            var previous = _liveState.Get(batch.UnitId);
+            if (speed == null && previous != null && !p.Backfilled &&
+                (flags & TrackPointFlags.Implausible) == 0 &&
+                (flags & TrackPointFlags.LowAccuracy) == 0)
+            {
+                var dtSec = (p.Utc - previous.RecordedUtc).TotalSeconds;
+                if (dtSec is >= 3 and <= 180)
+                {
+                    var implied = ImpliedSpeedKph(previous.Lat, previous.Lon, p.Lat, p.Lon, dtSec / 3600.0);
+                    if (implied <= _options.PlausibilityMaxSpeedKph)
+                    {
+                        speed = (short)Math.Round(implied);
+                        derived = true;
+                    }
+                }
+            }
+
+            return new()
             {
                 UnitId = batch.UnitId,
                 SessionId = batch.SessionId,
                 Lat = p.Lat,
                 Lon = p.Lon,
-                SpeedKph = p.SpeedKph is { } s ? (short)Math.Clamp(s, short.MinValue, short.MaxValue) : null,
+                SpeedKph = speed,
+                SpeedDerived = derived,
                 HeadingDeg = p.HeadingDeg is { } h ? (short)Math.Clamp(h, 0, 359) : null,
                 AccuracyM = p.AccuracyM is { } a ? (short)Math.Clamp(a, 0, short.MaxValue) : null,
                 BatteryPct = p.BatteryPct,
@@ -243,6 +267,7 @@ namespace CityWatch.Tracking.Services
                 RecordedUtc = p.Utc,
                 ReceivedUtc = serverUtc
             };
+        }
 
         internal static TrackPointSource ParseSource(string? source) => source?.ToLowerInvariant() switch
         {

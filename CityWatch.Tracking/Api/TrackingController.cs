@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -288,6 +289,48 @@ namespace CityWatch.Tracking.Api
                 .Select(g =>
                 {
                     sessionById.TryGetValue(g.Key, out var s);
+                    var raw = g.ToList();
+
+                    /* Speed fallback (§2.3): where the device sent no speed, derive it from
+                       consecutive fixes — sane interval, plausible result, marked derived. */
+                    var outPoints = new List<object>(raw.Count);
+                    for (var i = 0; i < raw.Count; i++)
+                    {
+                        var speed = raw[i].speedKph;
+                        var derived = false;
+                        if (speed == null && i > 0)
+                        {
+                            var dtSec = (raw[i].utc - raw[i - 1].utc).TotalSeconds;
+                            if (dtSec is >= 3 and <= 180)
+                            {
+                                var implied = Services.GeoMath.ImpliedSpeedKph(
+                                    raw[i - 1].lat, raw[i - 1].lon, raw[i].lat, raw[i].lon, dtSec / 3600.0);
+                                if (implied <= _options.PlausibilityMaxSpeedKph)
+                                {
+                                    speed = (short)Math.Round(implied);
+                                    derived = true;
+                                }
+                            }
+                        }
+                        outPoints.Add(new
+                        {
+                            raw[i].utc, raw[i].lat, raw[i].lon,
+                            speedKph = speed, speedDerived = derived,
+                            raw[i].headingDeg, raw[i].source, raw[i].flags, raw[i].tag
+                        });
+                    }
+
+                    /* Historical stops (§2.2): where the journey paused, jitter ignored. */
+                    var stops = Services.StopDetector.Detect(
+                            raw.Select(p => new Services.StopDetector.TrailPoint(p.lat, p.lon, p.utc)).ToList())
+                        .Select(st => new
+                        {
+                            lat = st.Lat, lon = st.Lon,
+                            fromUtc = st.FromUtc, toUtc = st.ToUtc,
+                            durationMinutes = st.DurationMinutes
+                        })
+                        .ToList();
+
                     return new
                     {
                         sessionId = g.Key,
@@ -297,18 +340,32 @@ namespace CityWatch.Tracking.Api
                         patrolCar = s?.PatrolCarPositionName,
                         startedUtc = s?.StartedUtc,
                         endedUtc = s?.EndedUtc,
-                        points = g.Select(p => new
-                        {
-                            p.utc, p.lat, p.lon, p.speedKph, p.headingDeg, p.source, p.flags, p.tag
-                        }).ToList()
+                        firstUtc = raw[0].utc,
+                        points = outPoints,
+                        stops
                     };
                 })
-                .OrderBy(s => s.startedUtc ?? s.points[0].utc)
+                .OrderBy(s => s.startedUtc ?? s.firstUtc)
                 .ToList();
 
             /* Truncation is stated, never silent: a replay that quietly stops early would
                read as "the patrol stopped here". */
             return Ok(new { unitId, fromUtc, toUtc, truncated, sessions = grouped });
+        }
+
+        /// <summary>Short street address for coordinates ("Main Road, Pala"), cache-first
+        /// (§Phase 2.1). Null is a normal answer — the UI falls back to site/coordinates,
+        /// and the map never depends on the geocoder being up.</summary>
+        [Authorize]
+        [HttpGet("address")]
+        public async Task<IActionResult> Address([FromQuery] decimal lat, [FromQuery] decimal lon,
+            [FromServices] Services.Geocoding.IGeocodeService geocode, CancellationToken ct)
+        {
+            if (lat is < -90 or > 90 || lon is < -180 or > 180)
+                return BadRequest();
+
+            var address = await geocode.GetAddressAsync(lat, lon, ct);
+            return Ok(new { address });
         }
 
         /// <summary>Segment roll-ups for reporting — the table every analytical consumer
@@ -379,6 +436,7 @@ namespace CityWatch.Tracking.Api
                     lat = u.Lat,
                     lon = u.Lon,
                     speedKph = u.SpeedKph,
+                    speedDerived = u.SpeedDerived,
                     headingDeg = u.HeadingDeg,
                     accuracyM = u.AccuracyM,
                     batteryPct = u.BatteryPct,

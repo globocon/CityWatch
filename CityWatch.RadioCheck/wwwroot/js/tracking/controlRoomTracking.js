@@ -267,6 +267,33 @@
         renderCard();
     }
 
+    /* Street addresses (§2.1): resolved through the server's cached geocoder, cached again
+       per ~110 m cell here so an open card costs at most one request per street. The card
+       renders without waiting — an address is decoration, never a dependency. */
+    const addrCache = {};      // "cellLat:cellLon" -> address string | null (null = known miss)
+    const addrPending = {};
+
+    function addrKey(u) {
+        return Math.floor(u.lat * 1000) + ':' + Math.floor(u.lon * 1000);
+    }
+
+    function addressFor(u) {
+        const key = addrKey(u);
+        if (key in addrCache) return addrCache[key];
+        if (!addrPending[key]) {
+            addrPending[key] = true;
+            fetch(`/api/tracking/address?lat=${u.lat}&lon=${u.lon}`, { credentials: 'same-origin' })
+                .then(r => r.ok ? r.json() : { address: null })
+                .then(b => { addrCache[key] = b.address || null; })
+                .catch(() => { addrCache[key] = null; })
+                .finally(() => {
+                    delete addrPending[key];
+                    if (selectedUnitId === u.unitId) renderCard();   // repaint once it arrives
+                });
+        }
+        return undefined;      // unknown yet — distinct from a known miss
+    }
+
     const liveRequests = {};   // unitId -> epoch ms of an unacknowledged "Track Live" click
 
     function liveButtonHtml(u) {
@@ -295,8 +322,16 @@
         const title = isCar
             ? (u.patrolCar || u.callsign || `Unit ${u.unitId}`)
             : (u.guardName || `Guard ${u.guardId || u.unitId}`);
-        const speed = u.speedKph == null ? '—' : `${u.speedKph} km/h`;
+        /* Derived speed is approximate and says so; measured speed is plain. */
+        const speed = u.speedKph == null ? '—' : `${u.speedDerived ? '~' : ''}${u.speedKph} km/h`;
         const dir = u.headingDeg == null ? '' : ` <span class="dim">${compass(u.headingDeg)} ↗</span>`;
+        /* Location line: street address → site name (statusLine) → coordinates. */
+        const addr = addressFor(u);
+        const locationRow = addr
+            ? `<div class="trk-row">📍 ${esc(addr)}</div>`
+            : (addr === null && !u.currentSite
+                ? `<div class="trk-row dim">📍 ${Number(u.lat).toFixed(5)}, ${Number(u.lon).toFixed(5)}</div>`
+                : '');
         const sessionSince = u.sessionStartedUtc
             ? new Date(u.sessionStartedUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
         const following = follow.unitId === u.unitId;
@@ -315,6 +350,7 @@
             <div class="trk-card-body">
               ${u.guardName && isCar ? `<div class="trk-row">👤 ${esc(u.guardName)}</div>` : ''}
               <div class="trk-row trk-row-state">${statusLine(u)}</div>
+              ${locationRow}
               <div class="trk-row">🚀 ${speed}${dir} &nbsp; ${u.accuracyM == null ? '' : `±${u.accuracyM}m`} ${u.batteryPct == null ? '' : `&nbsp; 🔋${u.batteryPct}%`}</div>
               <div class="trk-row dim">Fix ${fmtAge(u.ageSeconds)} ago${sessionSince ? ` · on shift since ${sessionSince}` : ''}</div>
             </div>
@@ -391,6 +427,25 @@
 
     /* ================= zoom / map controls: fingers, not Ctrl+ ================= */
 
+    /* Map modes (§2.4/2.5): Standard for daily work, Satellite for real-world context,
+       Tactical Dark for the command-centre wall. Dark re-themes the WHOLE page by
+       overriding the base map's CSS variables — one coherent product, not a dark map
+       under light widgets. Persisted so a control room keeps its chosen look. */
+    const MAP_MODES = ['standard', 'sat', 'dark'];
+    const MODE_GLYPH = { standard: '🗺', sat: '🛰', dark: '🌙' };
+
+    function applyMapMode(mode) {
+        if (window.CRM.setBase) window.CRM.setBase(mode === 'standard' ? 'light' : mode === 'sat' ? 'sat' : 'dark');
+        document.body.classList.toggle('trk-dark', mode === 'dark');
+        try { localStorage.setItem('trkMapMode', mode); } catch { /* private mode */ }
+        const btn = document.querySelector('[data-trk-ctl="mode"]');
+        if (btn) btn.textContent = MODE_GLYPH[mode];
+    }
+
+    function currentMapMode() {
+        try { return localStorage.getItem('trkMapMode') || 'standard'; } catch { return 'standard'; }
+    }
+
     function buildControls() {
         const el = document.createElement('div');
         el.className = 'trk-controls';
@@ -398,7 +453,8 @@
             <button data-trk-ctl="search" title="Find a patrol car or guard" aria-label="Search">🔍</button>
             <button data-trk-ctl="in" title="Zoom in" aria-label="Zoom in">+</button>
             <button data-trk-ctl="out" title="Zoom out" aria-label="Zoom out">−</button>
-            <button data-trk-ctl="fit" title="Fit all tracked units" aria-label="Fit all">⛶</button>`;
+            <button data-trk-ctl="fit" title="Fit all tracked units" aria-label="Fit all">⛶</button>
+            <button data-trk-ctl="mode" title="Map style: standard / satellite / tactical dark" aria-label="Map style">${MODE_GLYPH[currentMapMode()]}</button>`;
         document.body.appendChild(el);
         el.addEventListener('click', ev => {
             const b = ev.target.closest('[data-trk-ctl]');
@@ -407,11 +463,16 @@
             if (what === 'in') map.zoomIn();
             else if (what === 'out') map.zoomOut();
             else if (what === 'search') toggleSearch(true);
+            else if (what === 'mode') {
+                const next = MAP_MODES[(MAP_MODES.indexOf(currentMapMode()) + 1) % MAP_MODES.length];
+                applyMapMode(next);
+            }
             else if (what === 'fit') {
                 const pts = Object.values(units).map(e => e.marker.getLatLng());
                 if (pts.length) map.flyToBounds(L.latLngBounds(pts).pad(0.3), { duration: 1 });
             }
         });
+        if (currentMapMode() !== 'standard') applyMapMode(currentMapMode());
     }
 
     /* ================= notices (session takeover etc.) ================= */

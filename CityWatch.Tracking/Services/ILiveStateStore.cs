@@ -14,6 +14,12 @@ namespace CityWatch.Tracking.Services
         public decimal Lat { get; init; }
         public decimal Lon { get; init; }
         public short? SpeedKph { get; init; }
+
+        /// <summary>True when SpeedKph was computed from consecutive fixes because the
+        /// device sent none. Shown as approximate ("~42 km/h") — derived is never dressed
+        /// up as measured (§Phase 2.3).</summary>
+        public bool SpeedDerived { get; init; }
+
         public short? HeadingDeg { get; init; }
         public short? AccuracyM { get; init; }
         public byte? BatteryPct { get; init; }

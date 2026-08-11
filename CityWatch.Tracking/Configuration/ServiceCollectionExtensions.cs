@@ -4,6 +4,7 @@ using CityWatch.Tracking.Data;
 using CityWatch.Tracking.Data.Entities;
 using CityWatch.Tracking.Hosted;
 using CityWatch.Tracking.Services;
+using CityWatch.Tracking.Services.Geocoding;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -71,6 +72,11 @@ namespace CityWatch.Tracking.Configuration
             services.AddScoped<IModeCommandService, ModeCommandService>();
             services.AddScoped<ISegmentBuilder, SegmentBuilder>();
             services.AddScoped<IIdleDetectionService, IdleDetectionService>();
+
+            /* Reverse geocoding (§Phase 2.1): provider behind an interface, spatial cache in
+               front of it. The typed HttpClient carries the polite User-Agent and base URL. */
+            services.AddHttpClient<IReverseGeocoder, NominatimReverseGeocoder>();
+            services.AddScoped<IGeocodeService, GeocodeService>();
             services.AddSignalR();
 
             services.AddHostedService<Hosted.BroadcastTicker>();

@@ -1,16 +1,16 @@
-using CityWatch.Tracking.Data.Entities;
+﻿using CityWatch.Tracking.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CityWatch.Tracking.Data
 {
     /// <summary>
-    /// The feature pack's own context — six DbSets against the same physical database as
+    /// The feature pack's own context — its DbSets run against the same physical database as
     /// CityWatchDbContext, sharing nothing with it (D1, §3.3). The 214-DbSet platform context
     /// is a shared surface across three applications; this one is paid for only where the
     /// pack is enabled, and an accidental .Include() from platform code into tracking tables
     /// is structurally impossible.
     ///
-    /// Schema is deployed by numbered DbScript files (402–404), never by migrations — the
+    /// Schema is deployed by numbered DbScript files (360–368), never by migrations — the
     /// platform has no EF migrations and this pack follows the house convention (§1.2, §8.5).
     /// </summary>
     public class TrackingDbContext : DbContext
@@ -29,6 +29,7 @@ namespace CityWatch.Tracking.Data
         public DbSet<TrackingUnitEnrolment> TrackingUnitEnrolments { get; set; } = null!;
         public DbSet<TrackingModeCommand> TrackingModeCommands { get; set; } = null!;
         public DbSet<TrackingAccessAudit> TrackingAccessAudits { get; set; } = null!;
+        public DbSet<GeocodeCache> GeocodeCacheEntries { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,6 +67,15 @@ namespace CityWatch.Tracking.Data
                 e.HasIndex(a => new { a.UserId, a.AccessedUtc }).HasDatabaseName("IX_TrackingAccessAudit_User_Time");
                 e.HasIndex(a => new { a.UnitId, a.AccessedUtc }).HasDatabaseName("IX_TrackingAccessAudit_Unit_Time");
             });
+
+            modelBuilder.Entity<GeocodeCache>(e =>
+            {
+                e.ToTable("GeocodeCache");
+                // Matches DbScript/368. Unique: one answer per cell; concurrent misses race
+                // the index and the loser's write is discarded (see GeocodeService).
+                e.HasIndex(c => new { c.CellLat, c.CellLon }).IsUnique().HasDatabaseName("UX_GeocodeCache_Cell");
+            });
         }
     }
 }
+
