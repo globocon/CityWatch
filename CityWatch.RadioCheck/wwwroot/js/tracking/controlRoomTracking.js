@@ -1101,16 +1101,28 @@
                 });
                 if (res.ok) {
                     liveRequests[liveId] = Date.now();
+                    notice('◉ Live requested — waiting for the device to confirm…');
                 } else if (res.status === 409) {
                     const body = await res.json().catch(() => null);
                     notice((body && body.error) || 'Live tracking unavailable for this unit.', 'alarm');
+                } else {
+                    /* 403 on the read-only keyed view, 401 after a session timeout — the
+                       button must never just do nothing. */
+                    notice('Live commands need an operator sign-in (read-only view cannot send them).', 'alarm');
                 }
             } else {
-                await fetch(`/api/tracking/command/${stopId}`, { method: 'DELETE', credentials: 'same-origin' });
+                const res = await fetch(`/api/tracking/command/${stopId}`, { method: 'DELETE', credentials: 'same-origin' });
                 delete liveRequests[stopId];
+                if (res.ok) {
+                    notice('⏹ Stop sent — the device returns to normal within a few seconds.');
+                } else {
+                    notice('Stop could not be sent (operator sign-in required).', 'alarm');
+                }
             }
             renderCard();
-        } catch { /* next poll re-renders the truth */ }
+        } catch {
+            notice('Command failed — network problem; the next poll shows the truth.', 'alarm');
+        }
     });
 
     /* ================= live state ================= */
