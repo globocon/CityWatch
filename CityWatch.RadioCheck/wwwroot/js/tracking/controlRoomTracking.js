@@ -155,21 +155,15 @@
 
     /* ================= markers: a car that looks like a car ================= */
 
-    /* Top-down patrol car, drawn pointing north; the sprite div rotates with heading.
-       Stroke colour is the mode accent. No <defs>/ids — the SVG repeats per marker. */
+    /* Top-down vehicle, drawn pointing north; the sprite div rotates with heading.
+       Google-Maps discipline: one solid mode-coloured body, a thick white outline, two
+       simple window bands — bold shapes that stay legible at every zoom. No wheels, no
+       lightbar clutter: detail that vanishes at 24 px wide is noise, not realism. */
     function carSvg(color) {
-        return `<svg viewBox="0 0 28 48" width="26" height="45" aria-hidden="true">
-            <rect x="1" y="6" width="4" height="9" rx="2" fill="#334155"/>
-            <rect x="23" y="6" width="4" height="9" rx="2" fill="#334155"/>
-            <rect x="1" y="32" width="4" height="9" rx="2" fill="#334155"/>
-            <rect x="23" y="32" width="4" height="9" rx="2" fill="#334155"/>
-            <rect x="3" y="1" width="22" height="46" rx="9" fill="#1f2937" stroke="${color}" stroke-width="2.5"/>
-            <circle cx="9" cy="4.5" r="1.7" fill="#fde68a"/>
-            <circle cx="19" cy="4.5" r="1.7" fill="#fde68a"/>
-            <rect x="6.5" y="9" width="15" height="8" rx="2.5" fill="#94a3b8"/>
-            <rect x="6.5" y="34" width="15" height="6" rx="2" fill="#94a3b8" opacity=".7"/>
-            <rect x="7.5" y="21" width="6" height="4.5" rx="1" fill="#ef4444"/>
-            <rect x="14.5" y="21" width="6" height="4.5" rx="1" fill="#3b82f6"/>
+        return `<svg viewBox="0 0 24 40" width="24" height="40" aria-hidden="true">
+            <rect x="2" y="1.5" width="20" height="37" rx="9" fill="${color}" stroke="#ffffff" stroke-width="2.6"/>
+            <rect x="5.5" y="8.5" width="13" height="7" rx="2.5" fill="#0f172a" opacity=".8"/>
+            <rect x="5.5" y="27.5" width="13" height="5" rx="2" fill="#0f172a" opacity=".45"/>
         </svg>`;
     }
 
@@ -189,10 +183,10 @@
             const heading = (u.headingDeg == null) ? 0 : u.headingDeg;
             body = `<div class="trk-sprite" style="transform:rotate(${heading}deg)">${carSvg(mode.color)}</div>`;
         } else {
-            /* Guards: circular initials avatar — identifiable at a glance, no heading
-               (foot-patrol heading is GPS noise). State ring colour = mode/idle. */
-            const ring = idleMin ? '#d97706' : mode.color;
-            body = `<div class="trk-avatar" style="border-color:${ring}">${esc(initialsOf(u.guardName))}</div>`;
+            /* Guards: solid state-coloured circle, white ring, white initials — the
+               Google-Maps person-dot idiom. No heading (foot heading is GPS noise). */
+            const fill = idleMin ? '#d97706' : mode.color;
+            body = `<div class="trk-avatar" style="background:${fill}">${esc(initialsOf(u.guardName))}</div>`;
         }
         return L.divIcon({
             className: 'trk-marker',
@@ -904,8 +898,16 @@
         });
         replay.events = [...eventIdx].sort((a, b) => a - b);
 
+        /* The ghost wears the unit's own shape: a car replays as a car, a guard as their
+           avatar — never a purple car walking through a house. Purple = "this is the
+           recording", and the live marker underneath stays untouched. */
+        const liveEntry = units[unitId];
+        const isGuardGhost = liveEntry && liveEntry.data.kind === 'guard';
+        const ghostHtml = isGuardGhost
+            ? `<div class="trk-unit trk-replay-ghost"><div class="trk-avatar" style="background:#7c3aed">${esc(initialsOf(liveEntry.data.guardName))}</div></div>`
+            : `<div class="trk-unit trk-kind-car trk-replay-ghost"><div class="trk-sprite">${carSvg('#7c3aed')}</div></div>`;
         replay.ghost = L.marker(latlngs[0], {
-            icon: L.divIcon({ className: '', html: `<div class="trk-unit trk-kind-car trk-replay-ghost"><div class="trk-sprite">${carSvg('#7c3aed')}</div></div>`, iconSize: [56, 68], iconAnchor: [28, 26] }),
+            icon: L.divIcon({ className: '', html: ghostHtml, iconSize: [56, 68], iconAnchor: [28, 26] }),
             zIndexOffset: 2000
         }).addTo(layer);
         map.fitBounds(replay.baseLine.getBounds().pad(0.2));
@@ -1183,7 +1185,11 @@
             applyIcon(entry, false);
             const pts = entry.trail.getLatLngs();
             const last = pts[pts.length - 1];
-            if (!last || last.lat !== pos[0] || last.lng !== pos[1]) {
+            if (last && haversineKm(last.lat, last.lng, pos[0], pos[1]) > GLIDE_MAX_KM) {
+                /* A jump is not a journey: restart the trail rather than draw a line
+                   across ground nobody covered (first coarse fix → real fix, etc.). */
+                entry.trail.setLatLngs([pos]);
+            } else if (!last || last.lat !== pos[0] || last.lng !== pos[1]) {
                 pts.push(L.latLng(pos[0], pos[1]));
                 if (pts.length > 500) pts.shift();     // bounded: a shift is thousands of points
                 entry.trail.setLatLngs(pts);
