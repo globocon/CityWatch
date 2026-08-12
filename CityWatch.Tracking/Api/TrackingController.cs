@@ -32,17 +32,22 @@ namespace CityWatch.Tracking.Api
         private readonly ISessionService _sessions;
         private readonly ILiveSnapshotService _snapshot;
         private readonly IModeCommandService _commands;
+        private readonly IDeviceTokenService _deviceTokens;
+        private readonly ITrackingPingService _ping;
         private readonly Data.TrackingDbContext _db;
         private readonly TrackingOptions _options;
 
         public TrackingController(IIngestService ingest, ISessionService sessions,
             ILiveSnapshotService snapshot, IModeCommandService commands,
+            IDeviceTokenService deviceTokens, ITrackingPingService ping,
             Data.TrackingDbContext db, TrackingOptions options)
         {
             _ingest = ingest;
             _sessions = sessions;
             _snapshot = snapshot;
             _commands = commands;
+            _deviceTokens = deviceTokens;
+            _ping = ping;
             _db = db;
             _options = options;
         }
@@ -212,6 +217,71 @@ namespace CityWatch.Tracking.Api
                     idleMinutes = u.IdleMinutes
                 })
             });
+        }
+
+        /* ---- FCM device tokens + push nudge. FCM is the accelerator; the ingest response
+           is the guarantee: nothing below ever claims a position arrived. ---- */
+
+        public sealed record RegisterDeviceTokenRequest(int UnitId, Guid SessionId, string Token, string? Platform);
+
+        /// <summary>Device endpoint: registers the phone's FCM token under the same trust
+        /// model as ingest — the (unit, session) pair must name the ACTIVE session, so a
+        /// device can only register a token for the unit it is signed into (§13.1.1).</summary>
+        [HttpPost("device-token")]
+        public async Task<IActionResult> RegisterDeviceToken([FromBody] RegisterDeviceTokenRequest request,
+            CancellationToken ct)
+        {
+            if (request == null || request.UnitId <= 0 || request.SessionId == Guid.Empty
+                || string.IsNullOrWhiteSpace(request.Token) || request.Token.Length > 512)
+                return BadRequest();
+
+            var registered = await _deviceTokens.RegisterAsync(request.UnitId, request.SessionId,
+                request.Token.Trim(), request.Platform, ct);
+            if (!registered)
+                return StatusCode(403, new { error = "No active session for this unit; token not registered." });
+            return Ok();
+        }
+
+        public sealed record ReleaseDeviceTokenRequest(string Token);
+
+        /// <summary>Logout path. Holding the token IS the credential — only the device that
+        /// owns it can release it. Idempotent: releasing twice is a no-op, always 200.</summary>
+        [HttpPost("device-token/release")]
+        public async Task<IActionResult> ReleaseDeviceToken([FromBody] ReleaseDeviceTokenRequest request,
+            CancellationToken ct)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Token))
+                return BadRequest();
+
+            await _deviceTokens.ReleaseAsync(request.Token.Trim(), ct);
+            return Ok();
+        }
+
+        /// <summary>Operator nudge (the 📳 button): asks a unit's phone for a fresh position
+        /// via FCM. 202 means the nudge was SENT — never that a position arrived; the fresh
+        /// fix shows up through the normal ingest path or not at all. Refusals are explicit
+        /// and machine-readable: a button must never silently do nothing.</summary>
+        [Authorize]
+        [HttpPost("ping/{unitId:int}")]
+        public async Task<IActionResult> Ping(int unitId, CancellationToken ct)
+        {
+            if (unitId <= 0)
+                return BadRequest();
+            if (OperatorUserId() is not { } userId)
+                return StatusCode(403, new { error = "Operator identity not found on the session." });
+
+            var result = await _ping.PingAsync(unitId, userId,
+                HttpContext.Connection.RemoteIpAddress?.ToString(), "ManualPing", ct);
+            return result.Status switch
+            {
+                PingStatus.NotConfigured => StatusCode(409, new
+                { error = "Push is not configured on this server (Tracking:Fcm:ServiceAccountJsonPath)." }),
+                PingStatus.NoTokens => StatusCode(409, new
+                { error = "This unit's phone has not registered for push — it may be running an older app build." }),
+                PingStatus.Cooldown => StatusCode(429, new
+                { error = $"Pinged less than {_options.Fcm.PingCooldownSeconds}s ago — still waiting on the device." }),
+                _ => StatusCode(202, new { requestId = result.RequestId, tokensPinged = result.TokensPinged })
+            };
         }
 
         /// <summary>Replay/history: a unit's trail for a bounded window. Every call is

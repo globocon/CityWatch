@@ -30,6 +30,7 @@ namespace CityWatch.Tracking.Data
         public DbSet<TrackingModeCommand> TrackingModeCommands { get; set; } = null!;
         public DbSet<TrackingAccessAudit> TrackingAccessAudits { get; set; } = null!;
         public DbSet<GeocodeCache> GeocodeCacheEntries { get; set; } = null!;
+        public DbSet<TrackingDeviceToken> TrackingDeviceTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -74,6 +75,16 @@ namespace CityWatch.Tracking.Data
                 // Matches DbScript/368. Unique: one answer per cell; concurrent misses race
                 // the index and the loser's write is discarded (see GeocodeService).
                 e.HasIndex(c => new { c.CellLat, c.CellLon }).IsUnique().HasDatabaseName("UX_GeocodeCache_Cell");
+            });
+
+            modelBuilder.Entity<TrackingDeviceToken>(e =>
+            {
+                e.ToTable("TrackingDeviceToken");
+                // Matches DbScript/369: one row per physical token, re-homed across units.
+                e.HasIndex(t => t.FcmToken).IsUnique().HasDatabaseName("UX_TrackingDeviceToken_Token");
+                e.HasIndex(t => new { t.UnitId, t.IsActive }).HasDatabaseName("IX_TrackingDeviceToken_Unit_Active");
+                e.Property(t => t.FcmToken).HasMaxLength(512);
+                e.Property(t => t.Platform).HasMaxLength(20);
             });
         }
     }

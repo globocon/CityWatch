@@ -42,6 +42,7 @@ namespace CityWatch.Tracking.Tests
             {
                 nameof(GeocodeCache),          // Phase 2.1: the reverse-geocode spatial cache
                 nameof(TrackingAccessAudit),
+                nameof(TrackingDeviceToken),   // §Push: FCM nudge addresses (DbScript 369)
                 nameof(TrackingModeCommand),
                 nameof(TrackingSession),
                 nameof(TrackingUnitEnrolment),

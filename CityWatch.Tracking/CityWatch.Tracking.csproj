@@ -12,6 +12,10 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.15" />
+    <!-- FCM push nudge (§Push). Targets net6.0/netstandard2.0 — verified against
+         nuget.org for net7.0 compatibility 12 Aug 2026. The service-account key it
+         reads lives OUTSIDE the repo and site folder (Tracking:Fcm config). -->
+    <PackageReference Include="FirebaseAdmin" Version="3.6.0" />
   </ItemGroup>
 
   <ItemGroup>

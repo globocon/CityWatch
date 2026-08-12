@@ -66,6 +66,23 @@ namespace CityWatch.Tracking.Configuration
 
         public SamplingPolicyOptions Policy { get; set; } = new();
 
+        /// <summary>Remote nudge via FCM. The accelerator, never the guarantee (§5.3
+        /// discipline): a nudge only "succeeds" when a fresh position arrives on the
+        /// ingest path. Unset ServiceAccountJsonPath ⇒ a no-op sender is registered and
+        /// /ping answers with a machine-readable refusal.</summary>
+        public FcmOptions Fcm { get; set; } = new();
+
+        public sealed class FcmOptions
+        {
+            /// <summary>Absolute path to the Firebase service-account JSON on the SERVER,
+            /// outside the site folder and outside source control. Never committed.</summary>
+            public string? ServiceAccountJsonPath { get; set; }
+
+            /// <summary>Repeated pings of one unit inside this window are refused — this
+            /// protects Android's high-priority delivery quota, not just the database.</summary>
+            public int PingCooldownSeconds { get; set; } = 30;
+        }
+
         public GeocodingOptions Geocoding { get; set; } = new();
 
         /// <summary>Reverse geocoding (§Phase 2.1). The cache carries the load; the provider

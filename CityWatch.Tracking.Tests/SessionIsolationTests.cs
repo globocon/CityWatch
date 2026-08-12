@@ -104,7 +104,7 @@ namespace CityWatch.Tracking.Tests
             Flags = 0
         };
 
-        private TrackingController Controller() => new(null!, null!, null!, null!, _db, new TrackingOptions())
+        private TrackingController Controller() => new(null!, null!, null!, null!, null!, null!, _db, new TrackingOptions())
         {
             ControllerContext = new ControllerContext
             {

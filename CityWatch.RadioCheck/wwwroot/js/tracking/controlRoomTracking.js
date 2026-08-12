@@ -593,6 +593,7 @@
               <button class="trk-btn ${following ? 'trk-btn-on' : ''}" data-trk-follow="${u.unitId}">${following ? '◉ FOLLOWING' : '◉ FOLLOW'}</button>
               <button class="trk-btn trk-btn-replay" data-trk-replay="${u.unitId}">▶ Replay</button>
               ${liveButtonHtml(u)}
+              <button class="trk-btn" data-trk-ping="${u.unitId}" title="Ask the phone for a fresh position right now">📳 Ping</button>
             </div>`;
     }
 
@@ -1099,6 +1100,30 @@
 
     /* Live Mode commands — delegated so card re-renders keep working. */
     document.addEventListener('click', async ev => {
+        const pingEl = ev.target.closest && ev.target.closest('[data-trk-ping]');
+        if (pingEl) {
+            /* 📳 Ping: FCM is the accelerator, ingest is the guarantee — this button only
+               ever claims "asked", never "answered". The answer is the marker moving. */
+            ev.preventDefault();
+            const pingId = pingEl.getAttribute('data-trk-ping');
+            pingEl.disabled = true;
+            try {
+                const res = await fetch(`/api/tracking/ping/${pingId}`, { method: 'POST', credentials: 'same-origin' });
+                if (res.status === 202) {
+                    notice('📳 Nudge sent — if the phone is reachable, a fresh position arrives within seconds.');
+                } else if (res.status === 409 || res.status === 429) {
+                    const body = await res.json().catch(() => null);
+                    notice((body && body.error) || 'Ping unavailable for this unit.', 'alarm');
+                } else {
+                    notice('Ping needs an operator sign-in (read-only view cannot send it).', 'alarm');
+                }
+            } catch {
+                notice('Ping failed — network problem.', 'alarm');
+            } finally {
+                pingEl.disabled = false;
+            }
+            return;
+        }
         const liveEl = ev.target.closest && ev.target.closest('[data-trk-live]');
         const stopEl = ev.target.closest && ev.target.closest('[data-trk-stop]');
         if (!liveEl && !stopEl) return;

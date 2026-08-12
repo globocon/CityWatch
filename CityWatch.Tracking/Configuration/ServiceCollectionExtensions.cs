@@ -73,6 +73,16 @@ namespace CityWatch.Tracking.Configuration
             services.AddScoped<ISegmentBuilder, SegmentBuilder>();
             services.AddScoped<IIdleDetectionService, IdleDetectionService>();
 
+            /* ---- FCM push nudge (§Push): the accelerator, never the guarantee. Without a
+               service-account path the null sender keeps every code path alive and /ping
+               answers with an explicit refusal — push-off is a configuration, not an error. */
+            services.AddScoped<IDeviceTokenService, DeviceTokenService>();
+            services.AddScoped<ITrackingPingService, TrackingPingService>();
+            if (string.IsNullOrWhiteSpace(options.Fcm.ServiceAccountJsonPath))
+                services.AddSingleton<Services.Push.ITrackingNudgeSender, Services.Push.NullTrackingNudgeSender>();
+            else
+                services.AddSingleton<Services.Push.ITrackingNudgeSender, Services.Push.FirebaseTrackingNudgeSender>();
+
             /* Reverse geocoding (§Phase 2.1): provider behind an interface, spatial cache in
                front of it. The typed HttpClient carries the polite User-Agent and base URL. */
             services.AddHttpClient<IReverseGeocoder, NominatimReverseGeocoder>();
