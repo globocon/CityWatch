@@ -1178,6 +1178,15 @@
        Guards are not seeded: dozens of clustered guards would fan out dozens of history
        reads for breadcrumbs nobody follows. */
     const TRAIL_MAX = 2000;          // seeded session + live appends; a polyline this size is cheap
+
+    /* A trail is TWO lines: white casing under a solid colour core — the Google-Maps
+       idiom that keeps a route legible over a busy street map (field feedback 12 Aug:
+       3 px at 55% opacity vanished into the OSM base). Core is the source of truth;
+       the casing mirrors it through this helper. */
+    function setTrailLine(entry, latlngs) {
+        entry.trail.setLatLngs(latlngs);
+        if (entry.trailCasing) entry.trailCasing.setLatLngs(latlngs);
+    }
     function seedTrail(entry) {
         const u = entry.data;
         if (entry.trailSeeded || u.kind === 'guard') return;
@@ -1219,7 +1228,7 @@
                         live[0].lat, live[0].lng) > GLIDE_MAX_KM) return;
                 const merged = seed.concat(live).filter((p, i, a) =>
                     i === 0 || p.lat !== a[i - 1].lat || p.lng !== a[i - 1].lng);
-                entry.trail.setLatLngs(merged);
+                setTrailLine(entry, merged);
             })
             .catch(() => { /* no seed — the trail still grows live from here */ });
     }
@@ -1239,15 +1248,16 @@
             marker.on('click', () => openCard(u.unitId));
             markerGroup.addLayer(marker);
             /* Breadcrumb: session-local, client-side view; full history lives server-side. */
-            const trail = L.polyline([pos], { weight: 3, opacity: 0.55, color: '#2563eb' }).addTo(trailGroup);
-            entry = units[u.unitId] = { marker, trail, markerGroup, trailGroup, data: u, lastSeenMs: nowMs, iconSig: iconSig(u) };
+            const trailCasing = L.polyline([pos], { weight: 9, opacity: .9, color: '#ffffff', lineJoin: 'round', lineCap: 'round' }).addTo(trailGroup);
+            const trail = L.polyline([pos], { weight: 5, opacity: .95, color: '#2563eb', lineJoin: 'round', lineCap: 'round' }).addTo(trailGroup);
+            entry = units[u.unitId] = { marker, trail, trailCasing, markerGroup, trailGroup, data: u, lastSeenMs: nowMs, iconSig: iconSig(u) };
             seedTrail(entry);      // cars: back-fill this session's route so the start shows
         } else {
             /* SESSION BOUNDARY: the unit changed hands. The trail belongs to the previous
                officer — reset it, and tell the operator out loud (§B2/B3). A trail that
                survives a takeover stitches two journeys into one line. */
             if (entry.data.sessionId && u.sessionId && entry.data.sessionId !== u.sessionId) {
-                entry.trail.setLatLngs([pos]);
+                setTrailLine(entry, [pos]);
                 entry.trailSeeded = false;      // new session, new seed (covers reconnects too)
                 notice(`⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, 'alarm');
                 addAlert('alarm', `⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, u.unitId);
@@ -1269,11 +1279,11 @@
             if (last && haversineKm(last.lat, last.lng, pos[0], pos[1]) > GLIDE_MAX_KM) {
                 /* A jump is not a journey: restart the trail rather than draw a line
                    across ground nobody covered (first coarse fix → real fix, etc.). */
-                entry.trail.setLatLngs([pos]);
+                setTrailLine(entry, [pos]);
             } else if (!last || last.lat !== pos[0] || last.lng !== pos[1]) {
                 pts.push(L.latLng(pos[0], pos[1]));
                 if (pts.length > TRAIL_MAX) pts.shift();   // bounded, but big enough for a whole shift
-                entry.trail.setLatLngs(pts);
+                setTrailLine(entry, pts);
             }
             if (!entry.trailSeeded) seedTrail(entry);      // hub-created or post-takeover entries
             entry.lastSeenMs = nowMs;
@@ -1326,6 +1336,7 @@
                 if (selectedUnitId === Number(id)) closeCard();
                 units[id].markerGroup.removeLayer(units[id].marker);
                 units[id].trailGroup.removeLayer(units[id].trail);
+                if (units[id].trailCasing) units[id].trailGroup.removeLayer(units[id].trailCasing);
                 delete units[id];
             }
         });

@@ -80,11 +80,16 @@
 @keyframes trkLivePulse   { 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,.9)); } }
 @keyframes trkDuressPulse { 50% { filter: drop-shadow(0 0 10px rgba(220,38,38,.95)); } }
 
-/* staleness degradation (§11.3 rule 2): never render old as current */
-.trk-unit.trk-soft   { opacity: .85; animation: trkSoftPulse 2.4s ease-in-out infinite; }
-.trk-unit.trk-hollow { opacity: .55; }
-.trk-unit.trk-dead   { opacity: .35; filter: grayscale(1); }
-@keyframes trkSoftPulse   { 50% { opacity: .6; } }
+/* staleness degradation (§11.3 rule 2): never render old as current — but an offline
+   unit's LAST KNOWN position is exactly what the operator is hunting for, so the
+   SPRITE goes grey (this is not current) while the marker stays findable (field
+   feedback 12 Aug: a dead unit at 35% opacity was simply invisible at Kottayam).
+   The age badge turns red: "last heard 1h 28m ago" reads as the alarm it is. */
+.trk-unit.trk-soft   { opacity: .9; animation: trkSoftPulse 2.4s ease-in-out infinite; }
+.trk-unit.trk-hollow .trk-sprite, .trk-unit.trk-hollow .trk-avatar { filter: grayscale(.65); opacity: .85; }
+.trk-unit.trk-dead .trk-sprite,   .trk-unit.trk-dead .trk-avatar   { filter: grayscale(1); opacity: .8; }
+.trk-unit.trk-hollow .trk-age, .trk-unit.trk-dead .trk-age { background: #dc2626; }
+@keyframes trkSoftPulse   { 50% { opacity: .7; } }
 
 .trk-mode-chip {
     display: inline-block; padding: 0 6px; border-radius: 8px;
