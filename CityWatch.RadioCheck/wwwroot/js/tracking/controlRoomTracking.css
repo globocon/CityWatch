@@ -29,10 +29,11 @@
     filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
 }
 .trk-unit .trk-sprite {
-    width: 28px; height: 48px;
-    transition: transform 1.4s linear;        /* heading turns smoothly, never snaps */
+    width: 46px; height: 26px;                /* side-view car: wider than tall */
+    transition: transform .5s ease;           /* east↔west flips animate, never snap */
     transform-origin: 50% 50%;
 }
+.trk-unit .trk-sprite.trk-flip { transform: scaleX(-1); }   /* westbound faces left */
 .trk-unit .trk-id {
     margin-top: -6px;
     background: #ffffffee; border: 1px solid #cbd5e1; border-radius: 8px;

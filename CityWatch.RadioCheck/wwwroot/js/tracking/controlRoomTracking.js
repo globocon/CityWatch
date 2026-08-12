@@ -155,16 +155,27 @@
 
     /* ================= markers: a car that looks like a car ================= */
 
-    /* Top-down vehicle, drawn pointing north; the sprite div rotates with heading.
-       Google-Maps discipline: one solid mode-coloured body, a thick white outline, two
-       simple window bands — bold shapes that stay legible at every zoom. No wheels, no
-       lightbar clutter: detail that vanishes at 24 px wide is noise, not realism. */
+    /* Side-view vehicle (field feedback, 12 Aug: "make it look like a car"). One solid
+       mode-coloured body, thick white outline, dark glass, two wheels — bold shapes that
+       still read as a car at 24 px. Drawn facing RIGHT; westbound headings flip it
+       (a side view cannot rotate with heading the way the old top-down sprite did). */
     function carSvg(color) {
-        return `<svg viewBox="0 0 24 40" width="24" height="40" aria-hidden="true">
-            <rect x="2" y="1.5" width="20" height="37" rx="9" fill="${color}" stroke="#ffffff" stroke-width="2.6"/>
-            <rect x="5.5" y="8.5" width="13" height="7" rx="2.5" fill="#0f172a" opacity=".8"/>
-            <rect x="5.5" y="27.5" width="13" height="5" rx="2" fill="#0f172a" opacity=".45"/>
+        return `<svg viewBox="0 0 48 26" width="44" height="24" aria-hidden="true">
+            <path d="M3 16.5 Q3 11.5 8.5 10.5 L13.5 5.8 Q14.8 4.2 17 4.2 L28.5 4.2 Q30.8 4.2 32.4 5.8 L36.8 10.3 Q43.2 11 45 13.4 Q45.7 14.5 45.7 16 L45.7 17 Q45.7 19 43.7 19 L5 19 Q3 19 3 16.5 Z"
+                  fill="${color}" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M17.2 6 L27.5 6 L27.5 9.8 L15 9.8 Z" fill="#0f172a" opacity=".82"/>
+            <path d="M29.5 6 Q30.3 6 30.9 6.6 L34 9.8 L29.5 9.8 Z" fill="#0f172a" opacity=".82"/>
+            <circle cx="12.5" cy="19" r="4.6" fill="#1e293b" stroke="#ffffff" stroke-width="1.6"/>
+            <circle cx="35.5" cy="19" r="4.6" fill="#1e293b" stroke="#ffffff" stroke-width="1.6"/>
+            <circle cx="12.5" cy="19" r="1.7" fill="#cbd5e1"/>
+            <circle cx="35.5" cy="19" r="1.7" fill="#cbd5e1"/>
         </svg>`;
+    }
+
+    /* The sprite faces right; anything heading west (180–360°) faces left. */
+    function facesLeft(headingDeg) {
+        if (headingDeg == null) return false;
+        return (((headingDeg % 360) + 360) % 360) > 180;
     }
 
     function unitIcon(u) {
@@ -180,8 +191,7 @@
 
         let body;
         if (isCar) {
-            const heading = (u.headingDeg == null) ? 0 : u.headingDeg;
-            body = `<div class="trk-sprite" style="transform:rotate(${heading}deg)">${carSvg(mode.color)}</div>`;
+            body = `<div class="trk-sprite${facesLeft(u.headingDeg) ? ' trk-flip' : ''}">${carSvg(mode.color)}</div>`;
         } else {
             /* Guards: solid state-coloured circle, white ring, white initials — the
                Google-Maps person-dot idiom. No heading (foot heading is GPS noise). */
@@ -195,13 +205,13 @@
                      <span class="trk-id">${esc(label)}</span>${ageTxt}${idleTxt}
                    </div>`,
             iconSize: [56, 68],
-            iconAnchor: [28, 26]      /* the sprite's centre — the vehicle, not the label */
+            iconAnchor: [28, isCar ? 14 : 26]   /* the sprite's centre — the vehicle, not the label */
         });
     }
 
     /* Everything that changes the icon's DOM, EXCEPT heading. Heading is applied as a
-       style so the sprite turns through its CSS transition; rebuilding innerHTML on every
-       poll would snap the rotation and churn the DOM for nothing. */
+       class toggle so the sprite flips through its CSS transition; rebuilding innerHTML
+       on every poll would snap the flip and churn the DOM for nothing. */
     function iconSig(u) {
         const sel = selectedUnitId === u.unitId || follow.unitId === u.unitId;
         return [u.mode, ageBucket(u.ageSeconds), u.kind, unitLabel(u),
@@ -217,7 +227,7 @@
             entry.iconSig = sig;
         } else if (u.kind !== 'guard' && u.headingDeg != null && entry.marker._icon) {
             const sprite = entry.marker._icon.querySelector('.trk-sprite');
-            if (sprite) sprite.style.transform = `rotate(${u.headingDeg}deg)`;
+            if (sprite) sprite.classList.toggle('trk-flip', facesLeft(u.headingDeg));
         }
     }
 
@@ -802,7 +812,7 @@
             if (replay.ghostSprite == null && replay.ghost._icon)
                 replay.ghostSprite = replay.ghost._icon.querySelector('.trk-sprite');
             if (replay.ghostSprite && p.headingDeg != null)
-                replay.ghostSprite.style.transform = `rotate(${p.headingDeg}deg)`;
+                replay.ghostSprite.classList.toggle('trk-flip', facesLeft(p.headingDeg));
         }
         const pos = document.getElementById('trkReplayPos');
         const clock = document.getElementById('trkReplayClock');
@@ -856,11 +866,14 @@
         const mark = m => { replay.marks.push(m.addTo(layer)); };
         mark(L.marker(latlngs[0], { icon: L.divIcon({ className: '', html: '<div class="trk-flag trk-flag-start">START</div>', iconSize: [46, 18], iconAnchor: [23, 9] }), zIndexOffset: 1500 }));
         mark(L.marker(latlngs[latlngs.length - 1], { icon: L.divIcon({ className: '', html: '<div class="trk-flag trk-flag-end">END</div>', iconSize: [40, 18], iconAnchor: [20, 9] }), zIndexOffset: 1500 }));
+        /* Source values are TrackPointSource: 1 NfcAnchor · 2 Transit · 3 Live · 4 Duress.
+           Live (3) is a sampling rate, not an event — painting it red buried a whole
+           night's route under phantom "DURESS" dots (field test, 12 Aug). Only 4 is red. */
         pts.forEach(p => {
             if (p.source === 1)
                 mark(L.circleMarker([p.lat, p.lon], { radius: 6, color: '#16a34a', fillColor: '#16a34a', fillOpacity: .9 })
                     .bindTooltip('✓ NFC ' + (p.tag || '') + ' · ' + hm(p.utc)));
-            if (p.source === 3)
+            if (p.source === 4)
                 mark(L.circleMarker([p.lat, p.lon], { radius: 8, color: '#dc2626', fillColor: '#dc2626', fillOpacity: .8 })
                     .bindTooltip('🚨 DURESS · ' + hm(p.utc)));
         });
@@ -886,7 +899,7 @@
 
         /* Events for ⏮ / ⏭: start, every stop, every NFC touch, every duress, end. */
         const eventIdx = new Set([0, pts.length - 1]);
-        pts.forEach((p, i) => { if (p.source === 1 || p.source === 3) eventIdx.add(i); });
+        pts.forEach((p, i) => { if (p.source === 1 || p.source === 4) eventIdx.add(i); });
         replay.stops.forEach(st => {
             const t = new Date(st.fromUtc).getTime();
             let best = 0, bestD = Infinity;
@@ -907,7 +920,7 @@
             ? `<div class="trk-unit trk-replay-ghost"><div class="trk-avatar" style="background:#7c3aed">${esc(initialsOf(liveEntry.data.guardName))}</div></div>`
             : `<div class="trk-unit trk-kind-car trk-replay-ghost"><div class="trk-sprite">${carSvg('#7c3aed')}</div></div>`;
         replay.ghost = L.marker(latlngs[0], {
-            icon: L.divIcon({ className: '', html: ghostHtml, iconSize: [56, 68], iconAnchor: [28, 26] }),
+            icon: L.divIcon({ className: '', html: ghostHtml, iconSize: [56, 68], iconAnchor: [28, isGuardGhost ? 26 : 14] }),
             zIndexOffset: 2000
         }).addTo(layer);
         map.fitBounds(replay.baseLine.getBounds().pad(0.2));
@@ -1157,6 +1170,60 @@
         }
     }
 
+    /* Session-trail seeding: the breadcrumb used to begin wherever the unit happened to
+       be when THIS browser tab opened, so a car that left Poonjar an hour earlier showed
+       a trail born mid-route while replay (server history) showed the true start — two
+       different answers to "where has it been". Seed each car's trail once from the
+       audited history of its CURRENT session so live and replay tell the same story.
+       Guards are not seeded: dozens of clustered guards would fan out dozens of history
+       reads for breadcrumbs nobody follows. */
+    const TRAIL_MAX = 2000;          // seeded session + live appends; a polyline this size is cheap
+    function seedTrail(entry) {
+        const u = entry.data;
+        if (entry.trailSeeded || u.kind === 'guard') return;
+        if (!u.sessionId) return;        // partial hub frame — the next full poll seeds
+        entry.trailSeeded = true;
+        const from = u.sessionStartedUtc ? new Date(u.sessionStartedUtc)
+            : new Date(Date.now() - 8 * 3600 * 1000);
+        fetch(`/api/tracking/history/${u.unitId}?fromUtc=${from.toISOString()}&toUtc=${new Date().toISOString()}`,
+            { credentials: 'same-origin' })
+            .then(r => r.ok ? r.json() : null)
+            .then(body => {
+                if (!body || units[u.unitId] !== entry) return;      // unit went off shift meanwhile
+                const sid = String(u.sessionId).toLowerCase();
+                const s = (body.sessions || []).find(x => String(x.sessionId).toLowerCase() === sid);
+                if (!s || !s.points || s.points.length < 2) return;
+                /* Thin to a drawable size, keeping the start; the trail is a picture,
+                   the audit record stays server-side. */
+                let pts = s.points;
+                const budget = TRAIL_MAX - 200;
+                if (pts.length > budget) {
+                    const step = Math.ceil(pts.length / budget);
+                    pts = pts.filter((p, i) => i % step === 0 || i === s.points.length - 1);
+                }
+                let seed = pts.map(p => L.latLng(Number(p.lat), Number(p.lon)));
+                /* Jump-break invariant (same rule as the live append path): a >3 km hop is
+                   a data jump, not a road — keep only the contiguous tail so the seeded
+                   line never crosses ground nobody covered. */
+                let start = 0;
+                for (let i = 1; i < seed.length; i++) {
+                    if (haversineKm(seed[i - 1].lat, seed[i - 1].lng, seed[i].lat, seed[i].lng) > GLIDE_MAX_KM)
+                        start = i;
+                }
+                seed = seed.slice(start);
+                const live = entry.trail.getLatLngs();
+                /* If the history tail and the live head don't meet (device offline in
+                   between), seeding would draw that same phantom line — keep live only. */
+                if (live.length && seed.length &&
+                    haversineKm(seed[seed.length - 1].lat, seed[seed.length - 1].lng,
+                        live[0].lat, live[0].lng) > GLIDE_MAX_KM) return;
+                const merged = seed.concat(live).filter((p, i, a) =>
+                    i === 0 || p.lat !== a[i - 1].lat || p.lng !== a[i - 1].lng);
+                entry.trail.setLatLngs(merged);
+            })
+            .catch(() => { /* no seed — the trail still grows live from here */ });
+    }
+
     function upsert(u, nowMs) {
         let entry = units[u.unitId];
         /* Hub frames are partial (no labels, no session): merge over what we know so a
@@ -1174,12 +1241,14 @@
             /* Breadcrumb: session-local, client-side view; full history lives server-side. */
             const trail = L.polyline([pos], { weight: 3, opacity: 0.55, color: '#2563eb' }).addTo(trailGroup);
             entry = units[u.unitId] = { marker, trail, markerGroup, trailGroup, data: u, lastSeenMs: nowMs, iconSig: iconSig(u) };
+            seedTrail(entry);      // cars: back-fill this session's route so the start shows
         } else {
             /* SESSION BOUNDARY: the unit changed hands. The trail belongs to the previous
                officer — reset it, and tell the operator out loud (§B2/B3). A trail that
                survives a takeover stitches two journeys into one line. */
             if (entry.data.sessionId && u.sessionId && entry.data.sessionId !== u.sessionId) {
                 entry.trail.setLatLngs([pos]);
+                entry.trailSeeded = false;      // new session, new seed (covers reconnects too)
                 notice(`⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, 'alarm');
                 addAlert('alarm', `⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, u.unitId);
             }
@@ -1203,9 +1272,10 @@
                 entry.trail.setLatLngs([pos]);
             } else if (!last || last.lat !== pos[0] || last.lng !== pos[1]) {
                 pts.push(L.latLng(pos[0], pos[1]));
-                if (pts.length > 500) pts.shift();     // bounded: a shift is thousands of points
+                if (pts.length > TRAIL_MAX) pts.shift();   // bounded, but big enough for a whole shift
                 entry.trail.setLatLngs(pts);
             }
+            if (!entry.trailSeeded) seedTrail(entry);      // hub-created or post-takeover entries
             entry.lastSeenMs = nowMs;
         }
 

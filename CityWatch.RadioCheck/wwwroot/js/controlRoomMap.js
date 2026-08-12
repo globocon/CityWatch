@@ -27,8 +27,12 @@
         zoomAnimation: true
     }).fitBounds(AU_BOUNDS);
 
-    const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 20
+    /* Standard = OSM's own style, not CARTO Voyager: Voyager deliberately omits shops,
+       POIs and small locality names, which read as "the map is missing detail" to an
+       operator navigating by landmarks (field feedback, 12 Aug). OSM standard renders
+       them all from ~z16. Native max is z19. */
+    const lightLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
     }).addTo(map);
     const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 20
