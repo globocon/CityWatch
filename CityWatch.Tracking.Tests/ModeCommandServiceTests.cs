@@ -28,8 +28,13 @@ namespace CityWatch.Tracking.Tests
         [TestInitialize]
         public async Task Setup()
         {
+            /* NoTracking mirrors the production DI registration (ServiceCollectionExtensions).
+               The 12 Aug field bug — commands stuck Pending forever because ResolveAsync/
+               CancelAsync mutated untracked entities — was invisible to tests that ran with
+               the tracking default. This fixture must fail if a service forgets AsTracking. */
             _db = new TrackingDbContext(new DbContextOptionsBuilder<TrackingDbContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
             _db.TrackingSessions.Add(new TrackingSession
             {
                 Id = Guid.NewGuid(), UnitId = Unit, GuardId = 7, ClientSiteId = 12,
@@ -65,7 +70,7 @@ namespace CityWatch.Tracking.Tests
         [TestMethod]
         public async Task RequestLive_WithoutActiveSession_IsRefused()
         {
-            var session = await _db.TrackingSessions.SingleAsync();
+            var session = await _db.TrackingSessions.AsTracking().SingleAsync();
             session.Status = "Completed";
             await _db.SaveChangesAsync();
 

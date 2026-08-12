@@ -60,7 +60,11 @@ namespace CityWatch.Tracking.Services
                 return null;   // not enrolled / no consent — tracking simply does not start (§13.5)
 
             var now = _utcNow();
+            /* AsTracking: the same-officer branch below mutates this row, and the context
+               defaults to NoTracking — without it the callsign/position refresh silently
+               never persisted (the takeover branch was safe: CloseAsync calls Update). */
             var active = await _db.TrackingSessions
+                .AsTracking()
                 .FirstOrDefaultAsync(s => s.UnitId == unitId && s.Status == "Active", ct);
 
             if (active != null)
@@ -110,7 +114,11 @@ namespace CityWatch.Tracking.Services
         public async Task ApplyScanAsync(int unitId, int tagSiteId, string? tagSiteName, bool isInCarTag,
             DateTime occurredUtc, CancellationToken ct)
         {
+            /* AsTracking: NoTracking default made every arrival/departure below a silent
+               no-op — TravelState never left "Transit" in the database, so the control room
+               showed cars "in transit" while they stood scanned-in at a site (12 Aug). */
             var session = await _db.TrackingSessions
+                .AsTracking()
                 .FirstOrDefaultAsync(s => s.UnitId == unitId && s.Status == "Active", ct);
             if (session == null)
                 return;

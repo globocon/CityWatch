@@ -117,7 +117,11 @@ namespace CityWatch.Tracking.Services
         public async Task CancelAsync(int unitId, int? operatorUserId, string reason, string? ipAddress, CancellationToken ct)
         {
             var now = _utcNow();
+            /* AsTracking: the context defaults to NoTracking (DI, §3.3), under which these
+               mutations silently persist NOTHING — field-verified 12 Aug: every command row
+               sat "Pending" forever, so Stop Live never actually cancelled server-side. */
             var open = await _db.TrackingModeCommands
+                .AsTracking()
                 .Where(c => c.UnitId == unitId && (c.Status == "Pending" || c.Status == "Active"))
                 .ToListAsync(ct);
             if (open.Count == 0)
@@ -149,7 +153,10 @@ namespace CityWatch.Tracking.Services
         {
             var now = _utcNow();
 
+            /* AsTracking: TTL expiry and the device ack below mutate these rows; without it
+               the NoTracking default made both silent no-ops (commands never left Pending). */
             var open = await _db.TrackingModeCommands
+                .AsTracking()
                 .Where(c => c.UnitId == unitId && (c.Status == "Pending" || c.Status == "Active"))
                 .OrderByDescending(c => c.CommandSeq)
                 .ToListAsync(ct);
@@ -223,6 +230,7 @@ namespace CityWatch.Tracking.Services
         private async Task SupersedeOpenCommandsAsync(int unitId, string reason, CancellationToken ct)
         {
             var open = await _db.TrackingModeCommands
+                .AsTracking()                     // mutated below; see CancelAsync
                 .Where(c => c.UnitId == unitId && (c.Status == "Pending" || c.Status == "Active"))
                 .ToListAsync(ct);
             foreach (var command in open)

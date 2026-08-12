@@ -38,8 +38,12 @@ namespace CityWatch.Tracking.Tests
         [TestInitialize]
         public async Task Setup()
         {
+            /* NoTracking mirrors production (see ModeCommandServiceTests): ApplyScanAsync's
+               arrival/departure writes silently no-opped under it until 12 Aug — this
+               fixture must fail if SessionService forgets AsTracking on a mutating query. */
             _db = new TrackingDbContext(new DbContextOptionsBuilder<TrackingDbContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
             _db.TrackingUnitEnrolments.AddRange(
                 new TrackingUnitEnrolment
                 {
