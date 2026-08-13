@@ -80,6 +80,18 @@ $(function () {
 
     function convertDbString(value) { return (value === null || value === undefined) ? '' : value; }
 
+    function convertTrailerRegoDbString(iscarstock, value1, value2) {
+        if (iscarstock != null && iscarstock === true) {
+            if (value1 == null || value2 == null) {
+                return '';
+            }
+
+            return value1 + "; " + value2;
+        }
+
+        return value1 == null ? '' : value1;
+    }
+
     function convertDateTimeString(value) { return (value === null || value === undefined) ? '' : getTimeFromDateTime(new Date(value)); }
 
     function displayValidationSummary(errors) {
@@ -226,7 +238,6 @@ $(function () {
 
             // HEADER ROW 1
             '<tr>' +
-            '<th colspan="4" style="background-color:#EAF0ED"><center>Trailers Rego or ISO</center></th>' +
             '<th colspan="3" style="background-color:#EAF0ED"><center>Individual</center></th>' +
             '<th rowspan="2" style="background-color:#EAF0ED"><center>Site POC</center></th>' +
             '<th rowspan="2" style="background-color:#EAF0ED"><center>Site Location</center></th>' +
@@ -236,10 +247,6 @@ $(function () {
 
             // HEADER ROW 2
             '<tr>' +
-            '<th>1</th>' +
-            '<th>2</th>' +
-            '<th>3</th>' +
-            '<th>4</th>' +
             '<th>Name</th>' +
             '<th>Mobile No:</th>' +
             '<th>Type</th>' +
@@ -248,12 +255,8 @@ $(function () {
             '<th>Tare (t)</th>' +
             '</tr>' +
 
-            // DATA ROW
+            // DATA ROW 1
             '<tr>' +
-            '<td>' + convertDbString(d.detail.trailer1Rego) + '</td>' +
-            '<td>' + convertDbString(d.detail.trailer2Rego) + '</td>' +
-            '<td>' + convertDbString(d.detail.trailer3Rego) + '</td>' +
-            '<td>' + convertDbString(d.detail.trailer4Rego) + '</td>' +
             '<td>' + convertDbString(d.detail.personName) + '</td>' +
             '<td>' + convertDbString(d.detail.mobileNumber) + '</td>' +
             '<td>' + convertDbString(d.personTypeText) + '</td>' +
@@ -263,6 +266,35 @@ $(function () {
             '<td width="8%">' + convertDbString(d.detail.inWeight) + '</td>' +
             '<td width="8%">' + convertDbString(d.detail.outWeight) + '</td>' +
             '<td width="8%">' + convertDbString(d.detail.tareWeight) + '</td>' +
+            '</tr>' +
+
+            // HEADER ROW 3
+            '<tr>' +
+            '<th colspan="9" style="background-color:#EAF0ED"><center>' + convertDbString(d.vehicleRegoHeading) + '</center></th>' +
+            '</tr>' +
+
+            // HEADER ROW 4
+            '<tr>' +
+            '<th colspan="2">1</th>' +
+            '<th>2</th>' +
+            '<th>3</th>' +
+            '<th>4</th>' +
+            '<th>5</th>' +
+            '<th>6</th>' +
+            '<th>7</th>' +
+            '<th>8</th>' +
+            '</tr>' +
+
+            // DATA ROW 2
+            '<tr>' +
+            '<td colspan="2">' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer1Rego, d.plate1) + '</td>' +
+            '<td>' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer2Rego, d.plate2) + '</td>' +
+            '<td>' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer3Rego, d.plate3) + '</td>' +
+            '<td>' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer4Rego, d.plate4) + '</td>' +
+            '<td>' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer5Rego, d.plate5) + '</td>' +
+            '<td>' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer6Rego, d.plate6) + '</td>' +
+            '<td>' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer7Rego, d.plate7) + '</td>' +
+            '<td>' + convertTrailerRegoDbString(d.detail.isCarsStock, d.detail.trailer8Rego, d.plate8) + '</td>' +
             '</tr>' +
 
             // NOTES ROW
