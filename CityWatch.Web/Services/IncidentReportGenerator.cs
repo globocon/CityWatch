@@ -78,6 +78,7 @@ namespace CityWatch.Web.Services
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IConfigDataProvider _configDataProvider;
         private readonly IClientDataProvider _clientDataProvider;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly Settings _settings;
         private readonly IConfiguration _configuration;
         private readonly ILogger<IncidentReportGenerator> _logger;
@@ -123,6 +124,7 @@ namespace CityWatch.Web.Services
         public IncidentReportGenerator(IWebHostEnvironment webHostEnvironment,
             IConfigDataProvider configDataProvider,
             IClientDataProvider clientDataProvider,
+            IGuardLogDataProvider guardLogDataProvider,
             IOptions<Settings> settings,
             IConfiguration configuration,
             ILogger<IncidentReportGenerator> logger,
@@ -131,6 +133,7 @@ namespace CityWatch.Web.Services
         {
             _configDataProvider = configDataProvider;
             _clientDataProvider = clientDataProvider;
+            _guardLogDataProvider = guardLogDataProvider;
             _webHostEnvironment = webHostEnvironment;
             _settings = settings.Value;
             _configuration = configuration;
@@ -830,72 +833,6 @@ namespace CityWatch.Web.Services
                 }
 
             }
-            //Pdf file New code end 22042024
-
-            // PdfDocument newpdf = new PdfDocument(new PdfReader(_TemplatePdf), new PdfWriter(data));
-
-            ////  var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
-            //var incidentreportdetails = _clientDataProvider.GetIncidentDetailsKvlReport(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
-            //var plateIds = incidentreportdetails.Select(x => x.PlateId).ToArray();
-            //var truckNos = incidentreportdetails.Select(x => x.TruckNo).ToArray();
-            //var kvlFields = _clientDataProvider.GetKeyVehicleLogFields();
-            ////var plates = kvlFields.Where(z => plateIds.Contains(z.Id)).Select(x => x.Name).ToArray();
-
-            //var keyVehicleLog = _clientDataProvider.GetKeyVehiclogWithPlateIdAndTruckNoByLogId(plateIds, truckNos, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
-            ////var keyVehicleLog = keyVehicleLog1.Where(z => DateTime.Compare(z.ClientSiteLogBook.Date, incidentReport.DateLocation.ReportDate));
-            //// guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
-
-
-            //var TruckConfigText = kvlFields.Where(z => keyVehicleLog.Select(x => x.TruckConfig).Contains(z.Id)).Select(x => x.Name).ToArray();
-            //var TrailerTypeText = kvlFields.Where(z => keyVehicleLog.Select(x => x.TrailerType).Contains(z.Id)).Select(x => x.Name).ToArray();
-
-            //var clientsitepocdetails = _clientDataProvider.GetClientSitePocs();
-            //var clientsitepoc = clientsitepocdetails.Where(z => keyVehicleLog.Select(x => x.ClientSitePocId).Contains(z.Id)).Select(x => x.Name).ToArray();
-            //var clientsitelocdetails = _clientDataProvider.GetClientSiteLocations();
-            //var clientsiteloc = clientsitelocdetails.Where(z => keyVehicleLog.Select(x => x.ClientSiteLocationId).Contains(z.Id)).Select(x => x.Name).ToArray();
-            //var EntryReason = kvlFields.Where(z => keyVehicleLog.Select(x => x.EntryReason).Contains(z.Id)).Select(x => x.Name).ToArray();
-            //var PersonTypeText = kvlFields.Where(z => keyVehicleLog.Select(x => x.PersonType).Contains(z.Id)).Select(x => x.Name).ToArray();
-            //if (string.IsNullOrEmpty(data))
-            //    return;
-            //// var index = pdfDocument.GetNumberOfPages() + 1;
-            //var index = 1;
-            //var pageSize = new PageSize(pdfDocument.GetLastPage().GetPageSize());
-            //var doc = new Document(pdfDocument);
-            //if (keyVehicleLog.Count > 0)
-            //{
-            //    pdfDocument.AddNewPage(index, pageSize);
-            //}
-            //// newpdf.AddNewPage(1, pageSize);
-
-
-            //// var kvlFields = _clientDataProvider.GetKeyVehicleLogFields();
-            //var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
-
-            //doc.SetMargins(15f, 10f, 30f, 10f);
-
-            //doc.Add(CreateSiteDetailsTable(keyVehicleLog));
-
-            //doc.Add(CreateReportDetailsTable(_clientDataProvider, keyVehicleLog));
-
-            //var countpage = newpdf.GetNumberOfPages();
-
-            ////pdfDocument.CopyPagesTo(1, 1, pdfDocument)
-            //var page = pdfDocument.GetFirstPage();
-            //if (attachLiveGps == true)
-            //{
-            //    pdfDocument.MovePage(page, countpage + 2);
-            //}
-            //else
-            //{
-            //    pdfDocument.MovePage(page, countpage + 1);
-            //}
-            ////var page1 = pdfDocument.GetFirstPage();
-
-            ////pdfDocument.RemovePage(page1);
-            //doc.Close();
-
-            //pdfDocument.Close();
-
 
         }
 
@@ -975,55 +912,62 @@ namespace CityWatch.Web.Services
         }
         private Table CreateReportDetailsTable(IClientDataProvider _clientDataProvider, List<KeyVehicleLog> keyVehicleLogViewModel)
         {
-            var outerTable = new Table(UnitValue.CreatePercentArray(new float[] { 78, 22 })).UseAllAvailableWidth().SetMarginTop(10);
 
-            var innerTable1 = new Table(1).UseAllAvailableWidth();
+            //var outerTable = new Table(UnitValue.CreatePercentArray(new float[] { 78, 22 })).UseAllAvailableWidth().SetMarginTop(10);
+            var outerTable = new Table(1).UseAllAvailableWidth().SetMarginTop(10);
 
-            var cellClockDetails = new Cell()
-                                    .SetPaddingLeft(0)
-                                    .SetPaddingTop(0)
-                                    .SetBorder(Border.NO_BORDER)
-                                    .Add(GetClockDetailsTable(_clientDataProvider, keyVehicleLogViewModel));
-            innerTable1.AddCell(cellClockDetails);
-            outerTable.AddCell(cellClockDetails);
-            //var cellCompanyDetails = new Cell()
-            //                            .SetPaddingLeft(0)
-            //                            .SetBorder(Border.NO_BORDER)
-            //                            .Add(GetCompanyDetailsTable(keyVehicleLogViewModel));
-            //innerTable1.AddCell(cellCompanyDetails);
-
-            //var cellInnerTable1 = new Cell()
+            //var innerTable1 = new Table(1).UseAllAvailableWidth();
+            //var cellClockDetails = new Cell()
             //                        .SetPaddingLeft(0)
             //                        .SetPaddingTop(0)
             //                        .SetBorder(Border.NO_BORDER)
-            //                        .Add(innerTable1);
-            //outerTable.AddCell(cellInnerTable1);
+            //                        .Add(GetClockDetailsTable(_clientDataProvider, keyVehicleLogViewModel));
+            ////innerTable1.AddCell(cellClockDetails);
+            //outerTable.AddCell(cellClockDetails);
 
-            //var cellNotesTable = new Cell()
-            //                        .SetPaddingRight(0)
-            //                        .SetPaddingTop(0)
-            //                        .SetBorder(Border.NO_BORDER)
-            //                        .Add(GetNotesTable(keyVehicleLogViewModel,null));
-            //outerTable.AddCell(cellNotesTable);
-
-            //var cellVehicleDetails = new Cell(1, 2)
+            //var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            //var kvLogViewModel = new KeyVehicleLogViewModel(keyVehicleLogViewModel, kvlFields);
+            //var cellVehicleTrailerDetails = new Cell()
             //                            .SetPaddingLeft(0)
             //                            .SetPaddingTop(0)
             //                            .SetBorder(Border.NO_BORDER)
-            //                            .Add(GetVehicleDetailsTable(keyVehicleLogViewModel));
-            //outerTable.AddCell(cellVehicleDetails);
+            //                            .Add(GetVehicleTrailerDetailsTable(kvLogViewModel));
+            //outerTable.AddCell(cellVehicleTrailerDetails).SetPaddingBottom(1);
+
+            foreach (var kv in keyVehicleLogViewModel)
+            {
+                var cellClockDetails = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetPaddingBottom(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetClockDetailsTable(_clientDataProvider, kv));
+                //innerTable1.AddCell(cellClockDetails);
+                outerTable.AddCell(cellClockDetails);
+
+                var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+                var kvLogViewModel = new KeyVehicleLogViewModel(kv, kvlFields);
+                var cellVehicleTrailerDetails = new Cell()
+                                            .SetPaddingLeft(0)
+                                            .SetPaddingTop(0)
+                                            .SetPaddingBottom(10) // gap only between kv records
+                                            .SetBorder(Border.NO_BORDER)
+                                            .Add(GetVehicleTrailerDetailsTable(kvLogViewModel));
+                outerTable.AddCell(cellVehicleTrailerDetails);
+            }
 
             return outerTable;
         }
         private static Table GetClockDetailsTable(IClientDataProvider _clientDataProvider, List<KeyVehicleLog> keyVehicleLogViewModel)
         {
-            var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 14, 14, 14, 14, 14, 14, 14, 12, 14, 8, 8, 8, 8, 14, 30, 25, 14, 14, 20, 14, 14, 14, 14, 14, 35 })).UseAllAvailableWidth();
+            //var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 14, 14, 14, 14, 14, 14, 14, 12, 14, 8, 8, 8, 8, 14, 30, 25, 14, 14, 20, 14, 14, 14, 14, 14, 35 })).UseAllAvailableWidth();
+            var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 14, 14, 14, 14, 14, 14, 14, 12, 14, 14, 30, 25, 14, 14, 20, 14, 14, 14, 14, 14, 35 })).UseAllAvailableWidth();
 
             clockDetails.AddCell(GetHeaderCell("Clocks", 1, 5));
             clockDetails.AddCell(GetHeaderCell("ID No / Vehicle Rego", 2));
             clockDetails.AddCell(GetHeaderCell("ID /Plate", 2));
             clockDetails.AddCell(GetHeaderCell("Vehicle Description", 1, 2));
-            clockDetails.AddCell(GetHeaderCell("Trailers Rego or ISO", 1, 4));
+            // clockDetails.AddCell(GetHeaderCell("Trailers Rego or ISO", 1, 4));
             clockDetails.AddCell(GetHeaderCell("Key /card scan", 2));
             clockDetails.AddCell(GetHeaderCell("Company Name", 2));
             clockDetails.AddCell(GetHeaderCell("Individual", 1, 3));
@@ -1046,10 +990,10 @@ namespace CityWatch.Web.Services
             clockDetails.AddCell(GetHeaderCell("Truck Config"));
             clockDetails.AddCell(GetHeaderCell("Trailer Type"));
 
-            clockDetails.AddCell(GetHeaderCell("1"));
-            clockDetails.AddCell(GetHeaderCell("2"));
-            clockDetails.AddCell(GetHeaderCell("3"));
-            clockDetails.AddCell(GetHeaderCell("4"));
+            //clockDetails.AddCell(GetHeaderCell("1"));
+            //clockDetails.AddCell(GetHeaderCell("2"));
+            //clockDetails.AddCell(GetHeaderCell("3"));
+            //clockDetails.AddCell(GetHeaderCell("4"));
 
 
             clockDetails.AddCell(GetHeaderCell("Name"));
@@ -1102,10 +1046,10 @@ namespace CityWatch.Web.Services
 
 
 
-                clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer1Rego).SetMaxWidth(18).SetMinWidth(18));
-                clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer2Rego).SetMaxWidth(18).SetMinWidth(18));
-                clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer3Rego).SetMaxWidth(18).SetMinWidth(18));
-                clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer4Rego).SetMaxWidth(18).SetMinWidth(18));
+                //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer1Rego).SetMaxWidth(18).SetMinWidth(18));
+                //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer2Rego).SetMaxWidth(18).SetMinWidth(18));
+                //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer3Rego).SetMaxWidth(18).SetMinWidth(18));
+                //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].Trailer4Rego).SetMaxWidth(18).SetMinWidth(18));
                 // clockDetails.AddCell(GetDataCell(GetKeyDetailsCommaSeparated(keyVehicleLogViewModel[0].Detail), textAlignment: TextAlignment.LEFT));
                 clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].KeyNo).SetMaxWidth(14).SetMinWidth(14));
                 clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[i].CompanyName).SetMaxWidth(30).SetMinWidth(30));
@@ -1159,6 +1103,123 @@ namespace CityWatch.Web.Services
             //clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel[0][0].Notes.ToString()));
             return clockDetails;
         }
+
+        private static Table GetClockDetailsTable(IClientDataProvider _clientDataProvider, KeyVehicleLog keyVehicleLogViewModel)
+        {            
+            var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 14, 14, 14, 14, 14, 14, 14, 12, 14, 14, 30, 25, 14, 14, 20, 14, 14, 14, 14, 14, 35 })).UseAllAvailableWidth();
+
+            clockDetails.AddCell(GetHeaderCell("Clocks", 1, 5));
+            clockDetails.AddCell(GetHeaderCell("ID No / Vehicle Rego", 2));
+            clockDetails.AddCell(GetHeaderCell("ID /Plate", 2));
+            clockDetails.AddCell(GetHeaderCell("Vehicle Description", 1, 2));
+            clockDetails.AddCell(GetHeaderCell("Key /card scan", 2));
+            clockDetails.AddCell(GetHeaderCell("Company Name", 2));
+            clockDetails.AddCell(GetHeaderCell("Individual", 1, 3));
+            clockDetails.AddCell(GetHeaderCell("Site POC", 2));
+            clockDetails.AddCell(GetHeaderCell("Site Location", 2));
+            clockDetails.AddCell(GetHeaderCell("Purpose of Entry", 2));
+            clockDetails.AddCell(GetHeaderCell("Weight", 1, 3));
+            clockDetails.AddCell(GetHeaderCell("Notes", 2));
+
+            clockDetails.AddCell(GetHeaderCell("Intial Call"));
+            clockDetails.AddCell(GetHeaderCell("Entry Time"));
+            clockDetails.AddCell(GetHeaderCell("Sent In Time"));
+            clockDetails.AddCell(GetHeaderCell("Exit Time"));
+
+            clockDetails.AddCell(GetHeaderCell("Time Slot No"));
+
+            clockDetails.AddCell(GetHeaderCell("Truck Config"));
+            clockDetails.AddCell(GetHeaderCell("Trailer Type"));                       
+
+            clockDetails.AddCell(GetHeaderCell("Name"));
+            clockDetails.AddCell(GetHeaderCell("Mobile No"));
+            clockDetails.AddCell(GetHeaderCell("Type"));
+
+
+            clockDetails.AddCell(GetHeaderCell("In Gross"));
+            clockDetails.AddCell(GetHeaderCell("Out Net"));
+            clockDetails.AddCell(GetHeaderCell("Tare"));
+
+            var headerTimeSlotNo = keyVehicleLogViewModel.IsTimeSlotNo ? "Time Slot No." : "T-No. (Load)";
+
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.InitialCallTime?.ToString("HH:mm")).SetMaxWidth(15).SetMinWidth(15));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.EntryTime?.ToString("HH:mm")).SetMaxWidth(15).SetMinWidth(15));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.SentInTime?.ToString("HH:mm")).SetMaxWidth(15).SetMinWidth(15));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.ExitTime?.ToString("HH:mm")).SetMaxWidth(15).SetMinWidth(15));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.TimeSlotNo).SetMaxWidth(15).SetMinWidth(15));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.VehicleRego).SetMaxWidth(15).SetMinWidth(15));
+            var kvlFields = _clientDataProvider.GetKeyVehicleLogFields();
+            var plates = kvlFields.Where(z => z.Id == keyVehicleLogViewModel.PlateId).ToList();
+            clockDetails.AddCell(GetDataCell(plates[0].Name).SetMaxWidth(14).SetMaxWidth(14));
+
+            if (keyVehicleLogViewModel.TruckConfig == null)
+            {
+                clockDetails.AddCell(GetDataCell(null).SetMaxWidth(14).SetMinWidth(14));
+            }
+            else
+            {
+                var TruckConfigText = kvlFields.Where(z => z.Id == keyVehicleLogViewModel.TruckConfig).ToList();
+                clockDetails.AddCell(GetDataCell(TruckConfigText[0].Name).SetMaxWidth(12).SetMinWidth(12));
+            }
+            if (keyVehicleLogViewModel.TrailerType == null)
+            {
+                clockDetails.AddCell(GetDataCell(null).SetMaxWidth(14).SetMinWidth(14));
+            }
+            else
+            {
+                var TrailerTypeText = kvlFields.Where(z => z.Id == keyVehicleLogViewModel.TrailerType).ToList();
+                clockDetails.AddCell(GetDataCell(TrailerTypeText[0].Name).SetMaxWidth(14).SetMinWidth(14));
+            }
+
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.KeyNo).SetMaxWidth(14).SetMinWidth(14));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.CompanyName).SetMaxWidth(30).SetMinWidth(30));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PersonName).SetMaxWidth(25).SetMinWidth(25));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.MobileNumber).SetMaxWidth(14).SetMinWidth(14));
+
+            var PersonTypeText = kvlFields.Where(z => z.Id == keyVehicleLogViewModel.PersonType).ToList();
+            clockDetails.AddCell(GetDataCell(PersonTypeText[0].Name).SetMaxWidth(15).SetMinWidth(15));
+
+            if (keyVehicleLogViewModel.ClientSitePocId == null)
+            {
+                clockDetails.AddCell(GetDataCell(null).SetMaxWidth(20).SetMinWidth(20));
+            }
+            else
+            {
+
+                var clientsitepocdetails = _clientDataProvider.GetClientSitePocs();
+                var clientsitepoc = clientsitepocdetails.Where(z => z.Id == keyVehicleLogViewModel.ClientSitePocId).ToList();
+                clockDetails.AddCell(GetDataCell(clientsitepoc[0].Name).SetMaxWidth(20).SetMinWidth(20));
+            }
+            if (keyVehicleLogViewModel.ClientSiteLocationId == null)
+            {
+                clockDetails.AddCell(GetDataCell(null).SetMaxWidth(19).SetMinWidth(19));
+            }
+            else
+            {
+                var clientsitelocdetails = _clientDataProvider.GetClientSiteLocations();
+                var clientsiteloc = clientsitelocdetails.Where(z => z.Id == keyVehicleLogViewModel.ClientSiteLocationId).ToList();
+                clockDetails.AddCell(GetDataCell(clientsiteloc[0].Name).SetMaxWidth(19).SetMinWidth(19));
+            }
+            if (keyVehicleLogViewModel.EntryReason == null)
+            {
+                clockDetails.AddCell(GetDataCell(null).SetMaxWidth(14).SetMinWidth(14));
+            }
+            else
+            {
+                var EntryReason = kvlFields.Where(z => z.Id == keyVehicleLogViewModel.EntryReason).ToList();
+                clockDetails.AddCell(GetDataCell(EntryReason[0].Name).SetMaxWidth(14).SetMinWidth(14));
+
+            }
+
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.InWeight.ToString()).SetMaxWidth(14).SetMinWidth(14));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.OutWeight.ToString()).SetMaxWidth(14).SetMinWidth(14));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.TareWeight?.ToString()).SetMaxWidth(14).SetMinWidth(14));
+
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Notes).SetMaxWidth(35).SetMinWidth(35));
+
+            return clockDetails;
+        }
+
         private string GetKeyDetailsCommaSeparated(KeyVehicleLog keyVehicleLog)
         {
             var clientSiteKeys = _clientDataProvider.GetClientSiteKeys(keyVehicleLog.ClientSiteLogBook.ClientSiteId);
@@ -1262,6 +1323,35 @@ namespace CityWatch.Web.Services
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer4Rego));
 
             return vehicleDetailsTable;
+        }
+
+        private static Table GetVehicleTrailerDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var vehicleTrailerDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 10, 10, 10, 10, 10, 10, 10 })).UseAllAvailableWidth();
+
+            //var vehicleRegoColumnName = keyVehicleLogViewModel.Detail.
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell(keyVehicleLogViewModel.VehicleRegoHeading, 1, 8));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("1"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("2"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("3"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("4"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("5"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("6"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("7"));
+            vehicleTrailerDetailsTable.AddCell(GetHeaderCell("8"));
+
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate1 + "\n" + keyVehicleLogViewModel.Detail.Trailer1Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate2 + "\n" + keyVehicleLogViewModel.Detail.Trailer2Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate3 + "\n" + keyVehicleLogViewModel.Detail.Trailer3Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate4 + "\n" + keyVehicleLogViewModel.Detail.Trailer4Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate5 + "\n" + keyVehicleLogViewModel.Detail.Trailer5Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate6 + "\n" + keyVehicleLogViewModel.Detail.Trailer6Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate7 + "\n" + keyVehicleLogViewModel.Detail.Trailer7Rego));
+            vehicleTrailerDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate8 + "\n" + keyVehicleLogViewModel.Detail.Trailer8Rego));
+
+
+
+            return vehicleTrailerDetailsTable;
         }
 
         public string GeneratePdfReport(PatrolRequest patrolRequest)
@@ -1504,7 +1594,7 @@ namespace CityWatch.Web.Services
                 Console.WriteLine("Error in GetGpsWithWeatherImage: " + ex.Message);
                 return "";
             }
-            
+
         }
         private async Task<WeatherInfo> GetWeatherAsync(double lat, double lon, DateTime uvdate)
         {
@@ -1632,7 +1722,7 @@ namespace CityWatch.Web.Services
                 };
                 //throw;
             }
-            
+
         }
 
 
