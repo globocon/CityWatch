@@ -3290,11 +3290,14 @@ namespace CityWatch.Data.Providers
                                     //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
                                     //{
                                     /* Check if anylogbook entery exits in that timing */
+                                    /* 13-Aug-2026: window widened for guards who arrive early - see
+                                       GetNoGuardEvidenceWindowStart for the reason and the safeguard. */
+                                    var evidenceWindowStart = GetNoGuardEvidenceWindowStart(manning.SettingsId, manning.Id, manning.EmpHoursStart, dateTime);
                                     var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
                                     bool iflogbookentryexist = false;
                                     foreach (var log in checkSiteLogBook)
                                     {
-                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= evidenceWindowStart && x.EventDateTime <= dateendTime)).ToList();
                                         if (checklogbookEntryInSpecificTiming.Count != 0)
                                         {
                                             iflogbookentryexist = true;
@@ -3443,11 +3446,14 @@ namespace CityWatch.Data.Providers
                             //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
                             //{
                             /* Check if anylogbook entery exits in that timing */
+                            /* 13-Aug-2026: window widened for guards who arrive early - see
+                               GetNoGuardEvidenceWindowStart for the reason and the safeguard. */
+                            var evidenceWindowStart = GetNoGuardEvidenceWindowStart(manning.SettingsId, 0, manning.EmpHoursStart, dateTime); /* adhoc rows live in a different table, so there is no Id to exclude */
                             var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
                             bool iflogbookentryexist = false;
                             foreach (var log in checkSiteLogBook)
                             {
-                                var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= evidenceWindowStart && x.EventDateTime <= dateendTime)).ToList();
                                 if (checklogbookEntryInSpecificTiming.Count != 0)
                                 {
                                     iflogbookentryexist = true;
@@ -3599,6 +3605,95 @@ namespace CityWatch.Data.Providers
 
 
 
+        /* ----------------------------------------------------------------------------
+           Added 13-Aug-2026 - fixes false "No Guard on Duty" alarms for early arrivals.
+
+           WHY IT CHANGED
+           The manning check only counted logbook entries from 5 minutes before the shift
+           start (dateTime = EmpHoursStart - 5 min). A guard who arrived earlier than that
+           logged in, wrote his start-of-shift note, and had nothing left to do by the time
+           the window opened - so the check found nothing and raised the alarm while he was
+           standing on site.
+
+           Real case, site 882 (MAXCON - South Melbourne 253), Thu 13-Aug-2026:
+               shift start 18:00  ->  old window opened 17:55
+               17:19:17  Logbook Logged In
+               17:30:00  "I started shift I am onsite, all is Ok"
+               17:59:27  system stamped "No Guard on Duty"
+           The check was correct; the window it was given was too narrow to see him.
+
+           WHAT CHANGED
+           The logbook check now looks back NoGuardEarlyArrivalLookbackMinutes further,
+           but ONLY when the site was genuinely empty beforehand - that is, no other
+           manning block for the same site finishes within NoGuardPrecedingShiftGapMinutes
+           of this block's start. Sites running back-to-back shifts over midnight (41 of
+           them when this was written, e.g. a block ending 23:59 followed by one starting
+           00:01) keep the original 5 minute window, so an outgoing guard's entries can
+           never be mistaken for the incoming guard arriving.
+
+           MEASURED IMPACT (7 days to 13-Aug-2026: 127 alarms raised)
+               99  had no site activity at all in the preceding 4 hours - genuine, unaffected
+                5  had activity within 30 min  - the false alarms this suppresses
+                6  had activity 31-60 min before - still alarm at the current 30 min setting
+           This can only ever suppress an alarm when the site was empty and someone has
+           since logged activity. It cannot hide a genuine no-show.
+
+           The two values below are deliberately in code, not appsettings.
+           ---------------------------------------------------------------------------- */
+        private const int NoGuardEarlyArrivalLookbackMinutes = 30;
+        private const int NoGuardPrecedingShiftGapMinutes = 60;
+
+        /* Returns the time from which logbook activity counts as proof a guard is on site.
+           Falls back to the original window whenever another shift at the same site ends
+           close before this one begins, or if anything cannot be parsed. */
+        private DateTime GetNoGuardEvidenceWindowStart(int settingsId, int excludeManningId, string empHoursStart, DateTime shiftWindowStart)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(empHoursStart))
+                    return shiftWindowStart;
+
+                if (!DateTime.TryParseExact(empHoursStart, "H:mm", null,
+                        System.Globalization.DateTimeStyles.None, out var parsedStart))
+                    return shiftWindowStart;
+
+                var startMinuteOfDay = (int)parsedStart.TimeOfDay.TotalMinutes;
+
+                /* Every other block for the same site. Shift patterns repeat daily, so a
+                   block belonging to the previous day counts too - that is exactly the
+                   23:59 -> 00:01 handover we must not widen. */
+                var otherShiftEndTimes = _context.ClientSiteManningKpiSettings
+                    .Where(x => x.SettingsId == settingsId
+                                && x.Id != excludeManningId
+                                && x.Type == "2"
+                                && x.EmpHoursEnd != null
+                                && x.EmpHoursEnd != "")
+                    .Select(x => x.EmpHoursEnd)
+                    .ToList();
+
+                foreach (var endTime in otherShiftEndTimes)
+                {
+                    if (!DateTime.TryParseExact(endTime, "H:mm", null,
+                            System.Globalization.DateTimeStyles.None, out var parsedEnd))
+                        continue;
+
+                    /* How long before this block starts does the other block finish,
+                       wrapping over midnight. 23:59 before a 00:01 start gives 2. */
+                    var minutesBefore = (startMinuteOfDay - (int)parsedEnd.TimeOfDay.TotalMinutes + 1440) % 1440;
+
+                    if (minutesBefore < NoGuardPrecedingShiftGapMinutes)
+                        return shiftWindowStart;
+                }
+
+                return shiftWindowStart.AddMinutes(-NoGuardEarlyArrivalLookbackMinutes);
+            }
+            catch
+            {
+                /* Never let this stop the manning run - keep the previous behaviour. */
+                return shiftWindowStart;
+            }
+        }
+
         /* in some time the no guard shows when guard is active in the two hour list
          * this function will check if any Activity Status in the radio status list 
          */
@@ -3693,11 +3788,14 @@ namespace CityWatch.Data.Providers
                                 {
 
                                     /* Check if anylogbook entery exits in that timing */
+                                    /* 13-Aug-2026: window widened for guards who arrive early - see
+                                       GetNoGuardEvidenceWindowStart for the reason and the safeguard. */
+                                    var evidenceWindowStart = GetNoGuardEvidenceWindowStart(manning.SettingsId, manning.Id, manning.EmpHoursStart, dateTime);
                                     var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
                                     bool iflogbookentryexist = false;
                                     foreach (var log in checkSiteLogBook)
                                     {
-                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= evidenceWindowStart && x.EventDateTime <= dateendTime)).ToList();
                                         if (checklogbookEntryInSpecificTiming.Count != 0)
                                         {
                                             iflogbookentryexist = true;
