@@ -488,3 +488,45 @@ body.trk-dark .trk-unit .trk-id { background: #101a2eee; border-color: #24344f; 
     body.trk-card-open .trk-chipbar { display: none; }
     .trk-alert-panel { top: auto; bottom: 200px; right: 8px; left: 8px; width: auto; max-height: 44vh; }
 }
+
+/* ================= compose overlay (✉ custom message) =================
+   Additive block — reuses the search overlay's geometry and the .trk-btn look. */
+.trk-msg {
+    position: fixed; inset: 0; z-index: 1600;
+    display: none; flex-direction: column; align-items: center;
+    padding-top: 14vh; background: rgba(15,23,42,.45);
+}
+.trk-msg.open { display: flex; }
+.trk-msg-box {
+    display: flex; flex-direction: column; gap: 10px;
+    width: min(480px, calc(100vw - 28px));
+    background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    padding: 12px 14px 14px;
+}
+.trk-msg-head { display: flex; align-items: center; }
+.trk-msg-head b { flex: 1; font: 700 14px system-ui, sans-serif; color: #0f172a; }
+.trk-msg-close {
+    border: 0; background: transparent; font-size: 24px; color: #64748b;
+    cursor: pointer; padding: 0 6px; min-width: 44px; min-height: 36px;
+}
+.trk-msg-scopes { display: flex; gap: 8px; flex-wrap: wrap; }
+.trk-msg-scope { background: #fff; color: #2563eb; }
+.trk-msg-scope.trk-btn-on { background: #16a34a; border-color: #16a34a; color: #fff; }
+.trk-msg-box textarea {
+    border: 1px solid #dde5ef; border-radius: 10px; outline: none;
+    padding: 12px 14px; resize: vertical; min-height: 76px;
+    font: 600 16px system-ui, sans-serif;   /* 16px floor: no iOS zoom */
+    color: #0f172a; background: #fff;
+}
+.trk-msg-box textarea:focus { border-color: #2563eb; }
+.trk-msg-foot { display: flex; align-items: center; gap: 10px; }
+.trk-msg-count { flex: 1; font: 600 12px system-ui, sans-serif; color: #64748b; }
+.trk-msg-box .trk-btn:disabled { opacity: .5; cursor: default; }
+
+body.trk-dark .trk-msg-box { background: #101a2e; color: #e2e8f0; }
+body.trk-dark .trk-msg-head b { color: #e2e8f0; }
+body.trk-dark .trk-msg-close { color: #8ca3c3; }
+body.trk-dark .trk-msg-scope { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-msg-scope.trk-btn-on { background: #16a34a; border-color: #16a34a; color: #fff; }
+body.trk-dark .trk-msg-box textarea { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-msg-count { color: #8ca3c3; }

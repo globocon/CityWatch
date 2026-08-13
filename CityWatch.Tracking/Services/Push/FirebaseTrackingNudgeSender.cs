@@ -94,5 +94,61 @@ namespace CityWatch.Tracking.Services.Push
                 return NudgeSendStatus.Failed;
             }
         }
+
+        public async Task<NudgeSendStatus> SendMessageAsync(string fcmToken, int unitId, string title,
+            string body, string requestId, CancellationToken ct)
+        {
+            if (_app.Value == null)
+                return NudgeSendStatus.Failed;
+
+            try
+            {
+                /* NOTIFICATION message, unlike the silent nudge: the Notification block is
+                   what makes Android's system tray display the text while the app is
+                   backgrounded or killed — the zero-app-change path. The data block rides
+                   along so a future app build can render the message in foreground too.
+                   No AndroidNotification.ChannelId on purpose: a channel id the installed
+                   app never created would DROP the notification on Android 8+; unset lets
+                   the FCM SDK fall back to the app's default channel. TTL is an hour — an
+                   operator's message stays useful far longer than a position nudge. */
+                var message = new Message
+                {
+                    Token = fcmToken,
+                    Notification = new Notification
+                    {
+                        Title = title,
+                        Body = body
+                    },
+                    Android = new AndroidConfig
+                    {
+                        Priority = Priority.High,
+                        TimeToLive = TimeSpan.FromHours(1)
+                    },
+                    Data = new Dictionary<string, string>
+                    {
+                        ["type"] = "TrackingMessage",
+                        ["message"] = body,
+                        ["unitId"] = unitId.ToString(),
+                        ["requestId"] = requestId
+                    }
+                };
+                await FirebaseMessaging.DefaultInstance.SendAsync(message, ct);
+                _logger.LogInformation("TrackingMessageSent unit {Unit} request {RequestId}.",
+                    unitId, requestId);
+                return NudgeSendStatus.Sent;
+            }
+            catch (FirebaseMessagingException ex) when (
+                ex.MessagingErrorCode is MessagingErrorCode.Unregistered or MessagingErrorCode.InvalidArgument)
+            {
+                _logger.LogInformation("TrackingMessage token invalid for unit {Unit} ({Code}).",
+                    unitId, ex.MessagingErrorCode);
+                return NudgeSendStatus.InvalidToken;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "TrackingMessageFailed unit {Unit} request {RequestId}.", unitId, requestId);
+                return NudgeSendStatus.Failed;
+            }
+        }
     }
 }

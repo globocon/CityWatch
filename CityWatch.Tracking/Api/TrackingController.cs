@@ -284,6 +284,98 @@ namespace CityWatch.Tracking.Api
             };
         }
 
+        /* ---- Custom messages (the ✉ button): operator text to a unit's phone, or to every
+           online unit of a kind. Same discipline as ping: 202 means FCM ACCEPTED the message,
+           never that anyone read it, and refusals are explicit and machine-readable. ---- */
+
+        public sealed record UnitMessageRequest(string Message);
+
+        public sealed record BroadcastMessageRequest(string Message, string? Kind);
+
+        private static readonly string[] BroadcastKinds = { "all", "car", "guard" };
+
+        /// <summary>Read-only map viewers (?key=) carry Sid "0" — authenticated enough to
+        /// watch, never enough to speak to an officer's phone. Applied to the message
+        /// endpoints only; ping's existing behavior is unchanged.</summary>
+        private IActionResult? RefuseUnlessMessagingOperator(out int userId)
+        {
+            if (OperatorUserId() is not { } id || id <= 0)
+            {
+                userId = 0;
+                return StatusCode(403, new
+                { error = "Messaging needs an operator sign-in (read-only map view cannot send)." });
+            }
+            userId = id;
+            return null;
+        }
+
+        [Authorize]
+        [HttpPost("message/{unitId:int}")]
+        public async Task<IActionResult> Message(int unitId, [FromBody] UnitMessageRequest request,
+            [FromServices] ITrackingMessageService messages, CancellationToken ct)
+        {
+            if (unitId <= 0 || request == null || string.IsNullOrWhiteSpace(request.Message))
+                return BadRequest();
+            if (request.Message.Trim().Length > TrackingMessageService.MaxMessageLength)
+                return BadRequest(new
+                { error = $"Message too long ({TrackingMessageService.MaxMessageLength} characters max)." });
+            if (RefuseUnlessMessagingOperator(out var userId) is { } refusal)
+                return refusal;
+
+            var result = await messages.SendToUnitAsync(unitId, request.Message, userId,
+                HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
+            return result.Status switch
+            {
+                TrackingMessageStatus.InvalidMessage => BadRequest(new
+                { error = $"Message must be 1–{TrackingMessageService.MaxMessageLength} characters." }),
+                TrackingMessageStatus.NotConfigured => StatusCode(409, new
+                { error = "Push is not configured on this server (Tracking:Fcm:ServiceAccountJsonPath)." }),
+                TrackingMessageStatus.NoTokens => StatusCode(409, new
+                { error = "This unit's phone has not registered for push — it may be running an older app build." }),
+                TrackingMessageStatus.Cooldown => StatusCode(429, new
+                { error = $"Messaged less than {_options.Fcm.MessageCooldownSeconds}s ago — give the phone a moment." }),
+                _ => StatusCode(202, new { requestId = result.RequestId, tokensSent = result.TokensSent })
+            };
+        }
+
+        [Authorize]
+        [HttpPost("message/broadcast")]
+        public async Task<IActionResult> BroadcastMessage([FromBody] BroadcastMessageRequest request,
+            [FromServices] ITrackingMessageService messages, CancellationToken ct)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
+                return BadRequest();
+            if (request.Message.Trim().Length > TrackingMessageService.MaxMessageLength)
+                return BadRequest(new
+                { error = $"Message too long ({TrackingMessageService.MaxMessageLength} characters max)." });
+            var kind = string.IsNullOrWhiteSpace(request.Kind) ? "all" : request.Kind.Trim().ToLowerInvariant();
+            if (!BroadcastKinds.Contains(kind))
+                return BadRequest(new { error = "Kind must be one of: all, car, guard." });
+            if (RefuseUnlessMessagingOperator(out var userId) is { } refusal)
+                return refusal;
+
+            var result = await messages.BroadcastAsync(kind, request.Message, userId,
+                HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
+            return result.Status switch
+            {
+                TrackingMessageStatus.InvalidMessage => BadRequest(new
+                { error = $"Message must be 1–{TrackingMessageService.MaxMessageLength} characters." }),
+                TrackingMessageStatus.NotConfigured => StatusCode(409, new
+                { error = "Push is not configured on this server (Tracking:Fcm:ServiceAccountJsonPath)." }),
+                TrackingMessageStatus.NoRecipients => StatusCode(409, new
+                { error = "No online units match that filter right now." }),
+                _ => StatusCode(202, new
+                {
+                    requestId = result.RequestId,
+                    unitsTargeted = result.UnitsTargeted,
+                    unitsSent = result.UnitsSent,
+                    tokensSent = result.TokensSent,
+                    unitsSkippedNoToken = result.UnitsSkippedNoToken,
+                    unitsSkippedCooldown = result.UnitsSkippedCooldown
+                })
+            };
+        }
+
         /// <summary>Replay/history: a unit's trail for a bounded window. Every call is
         /// audited (§13.4) — who looked at whose movements is the first question in any
         /// workplace-surveillance dispute. Reads the point stream; this endpoint and

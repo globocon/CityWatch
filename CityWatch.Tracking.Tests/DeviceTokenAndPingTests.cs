@@ -37,11 +37,19 @@ namespace CityWatch.Tracking.Tests
             public bool IsConfigured { get; set; } = true;
             public Queue<NudgeSendStatus> Results { get; } = new();
             public List<(string Token, int UnitId, string Reason, string RequestId)> Sent { get; } = new();
+            public List<(string Token, int UnitId, string Title, string Body, string RequestId)> Messages { get; } = new();
 
             public Task<NudgeSendStatus> SendNudgeAsync(string fcmToken, int unitId, string reason,
                 string requestId, CancellationToken ct)
             {
                 Sent.Add((fcmToken, unitId, reason, requestId));
+                return Task.FromResult(Results.Count > 0 ? Results.Dequeue() : NudgeSendStatus.Sent);
+            }
+
+            public Task<NudgeSendStatus> SendMessageAsync(string fcmToken, int unitId, string title,
+                string body, string requestId, CancellationToken ct)
+            {
+                Messages.Add((fcmToken, unitId, title, body, requestId));
                 return Task.FromResult(Results.Count > 0 ? Results.Dequeue() : NudgeSendStatus.Sent);
             }
         }

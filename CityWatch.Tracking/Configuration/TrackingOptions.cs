@@ -81,6 +81,10 @@ namespace CityWatch.Tracking.Configuration
             /// <summary>Repeated pings of one unit inside this window are refused — this
             /// protects Android's high-priority delivery quota, not just the database.</summary>
             public int PingCooldownSeconds { get; set; } = 30;
+
+            /// <summary>Repeated custom messages to one unit inside this window are refused
+            /// (double-click guard); a broadcast SKIPS cooled-down units instead of failing.</summary>
+            public int MessageCooldownSeconds { get; set; } = 5;
         }
 
         public GeocodingOptions Geocoding { get; set; } = new();

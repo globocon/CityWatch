@@ -28,6 +28,13 @@ namespace CityWatch.Tracking.Services.Push
 
         Task<NudgeSendStatus> SendNudgeAsync(string fcmToken, int unitId, string reason,
             string requestId, CancellationToken ct);
+
+        /// <summary>Operator → device text. Carries a Notification block so a BACKGROUNDED
+        /// app displays it with zero app changes, plus a data block so a future app build
+        /// can render it in foreground. "Sent" means FCM accepted the message — never that
+        /// a human read it.</summary>
+        Task<NudgeSendStatus> SendMessageAsync(string fcmToken, int unitId, string title,
+            string body, string requestId, CancellationToken ct);
     }
 
     /// <summary>Registered when Tracking:Fcm:ServiceAccountJsonPath is absent: push is off,
@@ -38,5 +45,8 @@ namespace CityWatch.Tracking.Services.Push
 
         public Task<NudgeSendStatus> SendNudgeAsync(string fcmToken, int unitId, string reason,
             string requestId, CancellationToken ct) => Task.FromResult(NudgeSendStatus.Failed);
+
+        public Task<NudgeSendStatus> SendMessageAsync(string fcmToken, int unitId, string title,
+            string body, string requestId, CancellationToken ct) => Task.FromResult(NudgeSendStatus.Failed);
     }
 }

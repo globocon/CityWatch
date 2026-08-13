@@ -23,6 +23,11 @@ namespace CityWatch.Tracking.Services
 
         Task<List<TrackingDeviceToken>> GetActiveAsync(int unitId, CancellationToken ct);
 
+        /// <summary>All active tokens for a set of units in ONE query — a broadcast must
+        /// never turn into an N+1 over the token table.</summary>
+        Task<List<TrackingDeviceToken>> GetActiveForUnitsAsync(IReadOnlyCollection<int> unitIds,
+            CancellationToken ct);
+
         /// <summary>FCM said Unregistered/InvalidArgument: the token is dead, stop using it.</summary>
         Task MarkInvalidAsync(int tokenId, CancellationToken ct);
     }
@@ -107,6 +112,12 @@ namespace CityWatch.Tracking.Services
             => _db.TrackingDeviceTokens
                 .Where(t => t.UnitId == unitId && t.IsActive)
                 .OrderByDescending(t => t.LastSeenUtc)
+                .ToListAsync(ct);
+
+        public Task<List<TrackingDeviceToken>> GetActiveForUnitsAsync(IReadOnlyCollection<int> unitIds,
+            CancellationToken ct)
+            => _db.TrackingDeviceTokens
+                .Where(t => unitIds.Contains(t.UnitId) && t.IsActive)
                 .ToListAsync(ct);
 
         public async Task MarkInvalidAsync(int tokenId, CancellationToken ct)

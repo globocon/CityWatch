@@ -594,6 +594,7 @@
               <button class="trk-btn trk-btn-replay" data-trk-replay="${u.unitId}">▶ Replay</button>
               ${liveButtonHtml(u)}
               <button class="trk-btn" data-trk-ping="${u.unitId}" title="Ask the phone for a fresh position right now">📳 Ping</button>
+              <button class="trk-btn" data-trk-msg="${u.unitId}" title="Send a text message to this unit's phone">✉ Message</button>
             </div>`;
     }
 
@@ -662,6 +663,85 @@
         }).join('');
     }
 
+    /* ================= compose: operator text to a phone (✉) =================
+       Additive layer over the FCM message endpoints. One unit from its asset card, or
+       every online unit (all / cars / guards) from the ✉ map control. The counts shown
+       are this browser's view; the SERVER re-resolves who is online at send time. */
+
+    const compose = { unitId: null, kind: 'all' };
+
+    function onlineUnitData() {
+        return Object.values(units).map(e => e.data).filter(u => u.ageSeconds <= HOLLOW_S);
+    }
+
+    function composeOverlay() {
+        let el = document.getElementById('trkMsg');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'trkMsg';
+            el.className = 'trk-msg';
+            el.innerHTML = `
+                <div class="trk-msg-box">
+                  <div class="trk-msg-head">
+                    <b id="trkMsgTarget">✉ Message</b>
+                    <button class="trk-msg-close" data-trk-msg-close="1" aria-label="Close">×</button>
+                  </div>
+                  <div id="trkMsgScopes" class="trk-msg-scopes"></div>
+                  <textarea id="trkMsgText" maxlength="240" rows="3"
+                            placeholder="Type the message the officer's phone should show…"></textarea>
+                  <div class="trk-msg-foot">
+                    <span id="trkMsgCount" class="trk-msg-count">240</span>
+                    <button id="trkMsgSend" class="trk-btn" disabled>✉ Send</button>
+                  </div>
+                </div>`;
+            document.body.appendChild(el);
+            const input = document.getElementById('trkMsgText');
+            input.addEventListener('input', () => {
+                document.getElementById('trkMsgCount').textContent = String(240 - input.value.length);
+                document.getElementById('trkMsgSend').disabled = input.value.trim().length === 0;
+            });
+            input.addEventListener('keydown', e => { if (e.key === 'Escape') closeCompose(); });
+        }
+        return el;
+    }
+
+    function composeScopesHtml() {
+        const online = onlineUnitData();
+        const cars = online.filter(u => u.kind !== 'guard').length;
+        const guards = online.length - cars;
+        const btn = (kind, label, n) =>
+            `<button class="trk-btn trk-msg-scope${compose.kind === kind ? ' trk-btn-on' : ''}" data-trk-msg-kind="${kind}">${label} (${n})</button>`;
+        return btn('all', 'All online', online.length) + btn('car', '🚓 Cars', cars) + btn('guard', '👮 Guards', guards);
+    }
+
+    function openCompose(unitId) {
+        const el = composeOverlay();
+        compose.unitId = unitId ? Number(unitId) : null;
+        const target = document.getElementById('trkMsgTarget');
+        const scopes = document.getElementById('trkMsgScopes');
+        if (compose.unitId) {
+            const entry = units[compose.unitId];
+            target.textContent = '✉ Message ' + (entry ? unitLabel(entry.data) : 'unit ' + compose.unitId);
+            scopes.style.display = 'none';
+            scopes.innerHTML = '';
+        } else {
+            target.textContent = '✉ Message online units';
+            scopes.style.display = '';
+            scopes.innerHTML = composeScopesHtml();
+        }
+        const input = document.getElementById('trkMsgText');
+        input.value = '';
+        document.getElementById('trkMsgCount').textContent = '240';
+        document.getElementById('trkMsgSend').disabled = true;
+        el.classList.add('open');
+        setTimeout(() => input.focus(), 50);
+    }
+
+    function closeCompose() {
+        const el = document.getElementById('trkMsg');
+        if (el) el.classList.remove('open');
+    }
+
     /* ================= zoom / map controls: fingers, not Ctrl+ ================= */
 
     /* Map modes (§2.4/2.5): Standard for daily work, Satellite for real-world context,
@@ -689,6 +769,7 @@
         el.innerHTML = `
             <button data-trk-ctl="alerts" title="Attention feed" aria-label="Attention feed" style="position:relative">🔔<span id="trkBellBadge" class="trk-bellbadge" style="display:none">0</span></button>
             <button data-trk-ctl="search" title="Find a patrol car or guard" aria-label="Search">🔍</button>
+            <button data-trk-ctl="msg" title="Message online units" aria-label="Message online units">✉</button>
             <button data-trk-ctl="in" title="Zoom in" aria-label="Zoom in">+</button>
             <button data-trk-ctl="out" title="Zoom out" aria-label="Zoom out">−</button>
             <button data-trk-ctl="fit" title="Fit all tracked units" aria-label="Fit all">⛶</button>
@@ -701,6 +782,7 @@
             if (what === 'in') map.zoomIn();
             else if (what === 'out') map.zoomOut();
             else if (what === 'search') toggleSearch(true);
+            else if (what === 'msg') openCompose(null);
             else if (what === 'alerts') toggleAlerts();
             else if (what === 'mode') {
                 const next = MAP_MODES[(MAP_MODES.indexOf(currentMapMode()) + 1) % MAP_MODES.length];
@@ -1160,6 +1242,65 @@
             renderCard();
         } catch {
             notice('Command failed — network problem; the next poll shows the truth.', 'alarm');
+        }
+    });
+
+    /* ✉ custom messages — a SEPARATE delegated listener so the ping/live handlers above
+       stay untouched. 202 means FCM accepted the message, never that anyone read it. */
+    document.addEventListener('click', async ev => {
+        const msgEl = ev.target.closest && ev.target.closest('[data-trk-msg]');
+        if (msgEl) { ev.preventDefault(); openCompose(msgEl.getAttribute('data-trk-msg')); return; }
+        if (ev.target.closest && ev.target.closest('[data-trk-msg-close]')) { closeCompose(); return; }
+        const scopeEl = ev.target.closest && ev.target.closest('[data-trk-msg-kind]');
+        if (scopeEl) {
+            compose.kind = scopeEl.getAttribute('data-trk-msg-kind');
+            const scopes = document.getElementById('trkMsgScopes');
+            if (scopes) scopes.innerHTML = composeScopesHtml();
+            return;
+        }
+        if (ev.target.id !== 'trkMsgSend') return;
+        ev.preventDefault();
+        const btn = ev.target;
+        const message = (document.getElementById('trkMsgText').value || '').trim();
+        if (!message) return;
+        btn.disabled = true;
+        try {
+            const res = compose.unitId
+                ? await fetch(`/api/tracking/message/${compose.unitId}`, {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                })
+                : await fetch('/api/tracking/message/broadcast', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, kind: compose.kind })
+                });
+            if (res.status === 202) {
+                const body = await res.json().catch(() => null);
+                closeCompose();
+                if (compose.unitId) {
+                    const entry = units[compose.unitId];
+                    notice(`✉ Message sent to ${esc(entry ? unitLabel(entry.data) : 'unit ' + compose.unitId)} — it shows on the phone within seconds.`);
+                } else {
+                    const scopeLabel = compose.kind === 'car' ? 'patrol cars' : compose.kind === 'guard' ? 'guards' : 'online units';
+                    const skipped = body
+                        ? [body.unitsSkippedNoToken ? body.unitsSkippedNoToken + ' no push' : '',
+                           body.unitsSkippedCooldown ? body.unitsSkippedCooldown + ' cooldown' : ''].filter(Boolean).join(', ')
+                        : '';
+                    notice(`✉ Message sent to ${body ? body.unitsSent : '?'} of ${body ? body.unitsTargeted : '?'} online ${scopeLabel}${skipped ? ' (skipped: ' + esc(skipped) + ')' : ''}.`);
+                }
+            } else if (res.status === 400 || res.status === 403 || res.status === 409 || res.status === 429) {
+                /* Refusals keep the compose open — the typed message must not be lost. */
+                const body = await res.json().catch(() => null);
+                notice(esc((body && body.error) || 'Message could not be sent.'), 'alarm');
+            } else {
+                notice('Messaging needs an operator sign-in (read-only view cannot send).', 'alarm');
+            }
+        } catch {
+            notice('Message failed — network problem.', 'alarm');
+        } finally {
+            btn.disabled = false;
         }
     });
 

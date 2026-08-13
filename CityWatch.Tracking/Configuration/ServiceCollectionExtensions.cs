@@ -78,6 +78,7 @@ namespace CityWatch.Tracking.Configuration
                answers with an explicit refusal — push-off is a configuration, not an error. */
             services.AddScoped<IDeviceTokenService, DeviceTokenService>();
             services.AddScoped<ITrackingPingService, TrackingPingService>();
+            services.AddScoped<ITrackingMessageService, TrackingMessageService>();
             if (string.IsNullOrWhiteSpace(options.Fcm.ServiceAccountJsonPath))
                 services.AddSingleton<Services.Push.ITrackingNudgeSender, Services.Push.NullTrackingNudgeSender>();
             else
