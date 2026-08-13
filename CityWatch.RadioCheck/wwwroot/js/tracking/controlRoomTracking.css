@@ -530,3 +530,31 @@ body.trk-dark .trk-msg-scope { background: #16223a; border-color: #24344f; color
 body.trk-dark .trk-msg-scope.trk-btn-on { background: #16a34a; border-color: #16a34a; color: #fff; }
 body.trk-dark .trk-msg-box textarea { background: #16223a; border-color: #24344f; color: #e2e8f0; }
 body.trk-dark .trk-msg-count { color: #8ca3c3; }
+
+/* ================= online roster (the wall-clock answer to "who is out there?") ====
+   Additive block: the 📱 counter sits on the LEFT above the layer chips; tapping it
+   opens the search window in roster mode. Section headers group online vs offline. */
+.trk-online-fab {
+    position: fixed; z-index: 1250; bottom: 98px; left: 14px;
+    display: flex; align-items: center; gap: 5px;
+    border: 1px solid #dde5ef; background: #fffffff0; color: #0f172a;
+    border-radius: 999px; padding: 8px 14px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; min-height: 38px; box-shadow: 0 2px 8px rgba(15,23,42,.14);
+}
+.trk-online-fab:active { transform: scale(.97); }
+.trk-online-fab b { font-size: 14px; color: #15803d; }
+body.trk-dark .trk-online-fab { background: #101a2ef0; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-online-fab b { color: #4ade80; }
+
+.trk-search-sect {
+    padding: 10px 14px 4px; font: 800 10px system-ui, sans-serif;
+    letter-spacing: .08em; color: #64748b; border-top: 1px solid #f1f5f9;
+    position: sticky; top: 0; background: inherit;
+}
+.trk-search-sect:first-child { border-top: 0; }
+body.trk-dark .trk-search-sect { border-top-color: #1c2b45; color: #8ca3c3; }
+
+@media (max-width: 760px) {
+    .trk-online-fab { bottom: 90px; left: 8px; padding: 7px 10px; font-size: 11px; }
+    body.trk-card-open .trk-online-fab { display: none; }
+}

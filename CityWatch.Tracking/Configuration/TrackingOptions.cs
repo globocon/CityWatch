@@ -87,6 +87,22 @@ namespace CityWatch.Tracking.Configuration
             public int MessageCooldownSeconds { get; set; } = 5;
         }
 
+        /// <summary>Abandoned-session expiry (§13.5 hygiene). A login nobody closed must not
+        /// haunt the live map as a permanently-stationary unit the next day.</summary>
+        public ReaperOptions Reaper { get; set; } = new();
+
+        public sealed class ReaperOptions
+        {
+            public bool Enabled { get; set; } = true;
+
+            /// <summary>A session with no point RECEIVED for this long is abandoned. Longer
+            /// than any real shift on purpose: mid-shift quiet spells must survive it.</summary>
+            public int StaleAfterHours { get; set; } = 12;
+
+            /// <summary>How often the leader sweeps.</summary>
+            public int SweepMinutes { get; set; } = 15;
+        }
+
         public GeocodingOptions Geocoding { get; set; } = new();
 
         /// <summary>Reverse geocoding (§Phase 2.1). The cache carries the load; the provider

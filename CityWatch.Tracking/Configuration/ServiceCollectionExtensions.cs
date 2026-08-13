@@ -91,6 +91,7 @@ namespace CityWatch.Tracking.Configuration
             services.AddSignalR();
 
             services.AddHostedService<Hosted.BroadcastTicker>();
+            services.AddHostedService<Hosted.SessionReaper>();   // gates itself on IsLeaderInstance
 
             services.AddHostedService(sp => new PositionWriter(
                 sp.GetRequiredService<System.Threading.Channels.ChannelReader<TrackPoint>>(),

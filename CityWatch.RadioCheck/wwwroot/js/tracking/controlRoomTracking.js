@@ -49,7 +49,10 @@
         : L.layerGroup()).addTo(map);
     const guardTrailsGroup = L.layerGroup().addTo(map);
 
-    const layerState = { cars: true, guards: true, sites: true };
+    const layerState = { cars: true, guards: true, sites: true, offline: readShowOffline() };
+    function readShowOffline() {
+        try { return localStorage.getItem('trkShowOffline') === '1'; } catch { return false; }
+    }
     function applyLayerState() {
         const pairs = [
             ['cars', [carsGroup, carTrailsGroup]],
@@ -60,6 +63,9 @@
             if (layerState[key] && !map.hasLayer(g)) map.addLayer(g);
             if (!layerState[key] && map.hasLayer(g)) map.removeLayer(g);
         }));
+        /* 'offline' is not a layer group — it's a per-unit visibility rule. */
+        try { localStorage.setItem('trkShowOffline', layerState.offline ? '1' : '0'); } catch { /* private mode */ }
+        refreshOfflineVisibility();
         document.querySelectorAll('[data-trk-layer]').forEach(b =>
             b.classList.toggle('off', !layerState[b.getAttribute('data-trk-layer')]));
     }
@@ -67,6 +73,33 @@
     /* Staleness thresholds (ADD §11.3 rule 2): the map must never render an old
        position as current. */
     const FRESH_S = 30, SOFT_S = 120, HOLLOW_S = 300;
+
+    /* Beyond this a unit is yesterday's leftover, not a mid-shift quiet spell: hidden
+       from the map by default. The ⚪ Offline chip reveals them, search always lists
+       them, and a hidden unit opened from search shows itself while its card is up.
+       The server reaper expires truly abandoned sessions; this only tidies the view. */
+    const OFFLINE_HIDE_S = 4 * 3600;
+
+    function isHiddenOffline(u) {
+        return !layerState.offline && u.unitId !== selectedUnitId && u.ageSeconds > OFFLINE_HIDE_S;
+    }
+    function applyOfflineVisibility(entry) {
+        const hide = isHiddenOffline(entry.data);
+        if (hide === !!entry.offlineHidden) return;
+        entry.offlineHidden = hide;
+        if (hide) {
+            entry.markerGroup.removeLayer(entry.marker);
+            if (entry.trailCasing) entry.trailGroup.removeLayer(entry.trailCasing);
+            entry.trailGroup.removeLayer(entry.trail);
+        } else {
+            entry.markerGroup.addLayer(entry.marker);
+            if (entry.trailCasing) entry.trailGroup.addLayer(entry.trailCasing);   // casing under the line
+            entry.trailGroup.addLayer(entry.trail);
+        }
+    }
+    function refreshOfflineVisibility() {
+        Object.values(units).forEach(applyOfflineVisibility);
+    }
 
     /* A move this large between consecutive fixes is a data jump (flagged Implausible
        server-side), not driving — snap, never animate the vehicle across the map. */
@@ -307,6 +340,7 @@
         selectedSite = null;
         document.body.classList.add('trk-card-open');
         if (units[unitId]) refreshIcon(units[unitId]);
+        refreshOfflineVisibility();   // an offline-hidden unit shows itself while its card is up
         renderCard();
     }
     /* The PCAR↔Site↔Guard pivot (§4.7): a site card lists every tracked asset currently
@@ -325,6 +359,7 @@
         selectedSite = null;
         document.body.classList.remove('trk-card-open');
         if (prev && units[prev]) refreshIcon(units[prev]);
+        refreshOfflineVisibility();   // card closed: the offline unit hides again
         renderCard();
     }
 
@@ -636,31 +671,56 @@
         }
     }
 
+    function searchRow(u) {
+        const mode = MODE[u.mode] || MODE[1];
+        const isCar = u.kind !== 'guard';
+        const online = u.ageSeconds <= HOLLOW_S;
+        return `<div class="trk-search-row" data-trk-open="${u.unitId}">
+                  <span class="g">${isCar ? '🚓' : `<span class="trk-avatar trk-avatar-sm" style="border-color:${mode.color}">${esc(initialsOf(u.guardName))}</span>`}</span>
+                  <span class="m"><b>${esc(unitLabel(u))}</b><span>${esc(isCar ? (u.guardName || 'Patrol car') : 'Guard')}${u.currentSite ? ' · ' + esc(u.currentSite) : ''} · ${online ? '' : 'offline '}${fmtAge(u.ageSeconds)} ago</span></span>
+                  <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>
+                </div>`;
+    }
+
     function renderSearchResults() {
         const q = (document.getElementById('trkSearchInput').value || '').trim().toLowerCase();
-        const list = Object.values(units).map(e => e.data)
-            .filter(u => {
-                if (!q) return true;
-                return [unitLabel(u), u.callsign, u.patrolCar, u.guardName, u.currentSite,
-                        initialsOf(u.guardName)]
-                    .some(v => v && String(v).toLowerCase().includes(q));
-            })
-            .sort((a, b) => (b.mode - a.mode) || String(unitLabel(a)).localeCompare(String(unitLabel(b))))
-            .slice(0, 12);
+        const all = Object.values(units).map(e => e.data);
         const box = document.getElementById('trkSearchResults');
-        if (!list.length) {
-            box.innerHTML = `<div class="trk-search-empty">${Object.keys(units).length ? 'No tracked asset matches.' : 'No units are tracking right now.'}</div>`;
+
+        if (!q) {
+            /* Roster mode (the 📱 counter opens here): the WHOLE picture, grouped and
+               unabridged — online first (cars before guards, freshest first), then
+               whatever is offline. This list is where offline-hidden units stay findable. */
+            if (!all.length) {
+                box.innerHTML = '<div class="trk-search-empty">No units are tracking right now.</div>';
+                return;
+            }
+            const bySeen = (a, b) => (a.kind !== 'guard' ? 0 : 1) - (b.kind !== 'guard' ? 0 : 1)
+                || a.ageSeconds - b.ageSeconds;
+            const online = all.filter(u => u.ageSeconds <= HOLLOW_S).sort(bySeen);
+            const offline = all.filter(u => u.ageSeconds > HOLLOW_S).sort(bySeen);
+            const cars = online.filter(u => u.kind !== 'guard').length;
+            box.innerHTML =
+                `<div class="trk-search-sect">🟢 ONLINE (${online.length})${online.length ? ` · 🚓 ${cars} · 👮 ${online.length - cars}` : ''}</div>` +
+                (online.length ? online.map(searchRow).join('')
+                               : '<div class="trk-search-empty">Nobody is online right now.</div>') +
+                (offline.length
+                    ? `<div class="trk-search-sect">⚪ OFFLINE (${offline.length})</div>` + offline.map(searchRow).join('')
+                    : '');
             return;
         }
-        box.innerHTML = list.map(u => {
-            const mode = MODE[u.mode] || MODE[1];
-            const isCar = u.kind !== 'guard';
-            return `<div class="trk-search-row" data-trk-open="${u.unitId}">
-                      <span class="g">${isCar ? '🚓' : `<span class="trk-avatar trk-avatar-sm" style="border-color:${mode.color}">${esc(initialsOf(u.guardName))}</span>`}</span>
-                      <span class="m"><b>${esc(unitLabel(u))}</b><span>${esc(isCar ? (u.guardName || 'Patrol car') : 'Guard')}${u.currentSite ? ' · ' + esc(u.currentSite) : ''}</span></span>
-                      <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>
-                    </div>`;
-        }).join('');
+
+        const list = all
+            .filter(u => [unitLabel(u), u.callsign, u.patrolCar, u.guardName, u.currentSite,
+                          initialsOf(u.guardName)]
+                .some(v => v && String(v).toLowerCase().includes(q)))
+            .sort((a, b) => (b.mode - a.mode) || String(unitLabel(a)).localeCompare(String(unitLabel(b))))
+            .slice(0, 12);
+        if (!list.length) {
+            box.innerHTML = '<div class="trk-search-empty">No tracked asset matches.</div>';
+            return;
+        }
+        box.innerHTML = list.map(searchRow).join('');
     }
 
     /* ================= compose: operator text to a phone (✉) =================
@@ -1418,6 +1478,7 @@
             const trail = L.polyline([pos], { weight: 5, opacity: .95, color: '#2563eb', lineJoin: 'round', lineCap: 'round' }).addTo(trailGroup);
             entry = units[u.unitId] = { marker, trail, trailCasing, markerGroup, trailGroup, data: u, lastSeenMs: nowMs, iconSig: iconSig(u) };
             seedTrail(entry);      // cars: back-fill this session's route so the start shows
+            applyOfflineVisibility(entry);   // yesterday's leftovers arrive hidden
         } else {
             /* SESSION BOUNDARY: the unit changed hands. The trail belongs to the previous
                officer — reset it, and tell the operator out loud (§B2/B3). A trail that
@@ -1453,6 +1514,7 @@
             }
             if (!entry.trailSeeded) seedTrail(entry);      // hub-created or post-takeover entries
             entry.lastSeenMs = nowMs;
+            applyOfflineVisibility(entry);   // crossing the 4h line hides it; a fresh fix reveals it
         }
 
         if (u.mode === 4 && !entry.duressAnnounced) {   // duress: centre once, loudly
@@ -1515,6 +1577,23 @@
         setStatus(list.length, true);
     }
 
+    /* ---- 📱 online counter (left, above the layer chips): the one-tap answer to
+       "who is out there right now?" — tap it for the full clickable roster, which opens
+       in the search window (typing there narrows it, so it IS the search too). ---- */
+    let onlineFab = null;
+    function renderOnlineFab() {
+        if (!onlineFab) {
+            onlineFab = document.createElement('button');
+            onlineFab.className = 'trk-online-fab';
+            onlineFab.title = 'Everyone online right now — tap for the full list';
+            onlineFab.addEventListener('click', () => toggleSearch(true));
+            document.body.appendChild(onlineFab);
+        }
+        const online = Object.values(units).map(e => e.data).filter(u => u.ageSeconds <= HOLLOW_S);
+        const cars = online.filter(u => u.kind !== 'guard').length;
+        onlineFab.innerHTML = `📱 <b>${online.length}</b> online · 🚓 ${cars} · 👮 ${online.length - cars}`;
+    }
+
     /* ---- status pill → live-operation strip (§27): the 5-second answer ---- */
     let statusEl = null;
     function setStatus(count, healthy) {
@@ -1542,6 +1621,7 @@
             (list.length ? ` · ▶ ${moving}` : '') +
             (stopped ? ` · <span class="warn">⏸ ${stopped}</span>` : '') +
             (stale ? ` · <span class="bad">⚠ ${stale} stale</span>` : '');
+        renderOnlineFab();
     }
 
     /* ---- layer toggle chips (§4.6): CARS | GUARDS | SITES ---- */
@@ -1551,7 +1631,9 @@
         el.innerHTML = `
             <button data-trk-layer="cars" title="Show/hide patrol cars">🚓 Cars</button>
             <button data-trk-layer="guards" title="Show/hide guards">👮 Guards</button>
-            <button data-trk-layer="sites" title="Show/hide site markers">🏢 Sites</button>`;
+            <button data-trk-layer="sites" title="Show/hide site markers">🏢 Sites</button>
+            <button data-trk-layer="offline" class="${layerState.offline ? '' : 'off'}"
+                    title="Show/hide units that stopped reporting over 4 hours ago">⚪ Offline</button>`;
         document.body.appendChild(el);
         el.addEventListener('click', ev => {
             const b = ev.target.closest('[data-trk-layer]');
@@ -1672,5 +1754,6 @@
 
     buildControls();
     buildLayerChips();
+    renderOnlineFab();      // visible from the first paint, even before the first snapshot
     poll();
 })();
