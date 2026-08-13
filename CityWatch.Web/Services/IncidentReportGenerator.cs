@@ -939,6 +939,7 @@ namespace CityWatch.Web.Services
                 var cellClockDetails = new Cell()
                                     .SetPaddingLeft(0)
                                     .SetPaddingTop(0)
+                                    .SetPaddingBottom(0)
                                     .SetBorder(Border.NO_BORDER)
                                     .Add(GetClockDetailsTable(_clientDataProvider, kv));
                 //innerTable1.AddCell(cellClockDetails);
@@ -949,9 +950,10 @@ namespace CityWatch.Web.Services
                 var cellVehicleTrailerDetails = new Cell()
                                             .SetPaddingLeft(0)
                                             .SetPaddingTop(0)
+                                            .SetPaddingBottom(10) // gap only between kv records
                                             .SetBorder(Border.NO_BORDER)
                                             .Add(GetVehicleTrailerDetailsTable(kvLogViewModel));
-                outerTable.AddCell(cellVehicleTrailerDetails).SetPaddingBottom(10);
+                outerTable.AddCell(cellVehicleTrailerDetails);
             }
 
             return outerTable;
@@ -1325,7 +1327,7 @@ namespace CityWatch.Web.Services
 
         private static Table GetVehicleTrailerDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
-            var vehicleTrailerDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 10, 10, 10, 10, 10, 10, 10 })).UseAllAvailableWidth().SetMarginTop(10);
+            var vehicleTrailerDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 10, 10, 10, 10, 10, 10, 10 })).UseAllAvailableWidth();
 
             //var vehicleRegoColumnName = keyVehicleLogViewModel.Detail.
             vehicleTrailerDetailsTable.AddCell(GetHeaderCell(keyVehicleLogViewModel.VehicleRegoHeading, 1, 8));
