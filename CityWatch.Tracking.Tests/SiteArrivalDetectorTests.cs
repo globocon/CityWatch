@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CityWatch.Tracking.Configuration;
 using CityWatch.Tracking.Data;
 using CityWatch.Tracking.Data.Entities;
+using CityWatch.Tracking.Services;
 using CityWatch.Tracking.Services.Geofencing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -41,10 +42,12 @@ namespace CityWatch.Tracking.Tests
             _db = new TrackingDbContext(new DbContextOptionsBuilder<TrackingDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
+            /* UseGpsDetection on: these tests exercise the GPS dwell logic itself. The
+               production default is NFC-only — see Gps_detection_off_by_default below. */
             _options = new TrackingOptions
             {
                 Enabled = true,
-                SiteGeofence = { Enabled = true, EnterRadiusM = 150, ExitRadiusM = 250, DwellSeconds = 120 }
+                SiteGeofence = { Enabled = true, UseGpsDetection = true, EnterRadiusM = 150, ExitRadiusM = 250, DwellSeconds = 120 }
             };
         }
 
@@ -169,6 +172,26 @@ namespace CityWatch.Tracking.Tests
         }
 
         [TestMethod]
+        public async Task Gps_detection_off_by_default_but_nfc_still_records()
+        {
+            /* The production stance (17 Aug): scans are the source of truth. With default
+               options a car can sit inside the radius forever and GPS concludes nothing —
+               but the site tag and the in-car tag still write the entered/left record. */
+            _options = new TrackingOptions { Enabled = true };
+            Assert.IsFalse(_options.SiteGeofence.UseGpsDetection, "GPS detection must be opt-in");
+
+            var d = Detector(Hyundai);
+            await Run(d, At(50, 0), At(50, 300));
+            Assert.AreEqual(0, Visits().Count, "no GPS conclusions when detection is off");
+
+            await d.ApplyScanAsync(Unit, Session, 1, "Hyundai - Nunawading", false, Now, CancellationToken.None);
+            await d.ApplyScanAsync(Unit, Session, 625, null, isInCarTag: true, Now.AddMinutes(20), CancellationToken.None);
+            var visit = Visits().Single();
+            Assert.AreEqual(Now, visit.ConfirmedUtc, "site tag = entered");
+            Assert.AreEqual(Now.AddMinutes(20), visit.ExitedUtc, "in-car tag = left");
+        }
+
+        [TestMethod]
         public async Task Nearest_site_wins_when_radii_overlap()
         {
             var other = new GeofenceSite(2, "Next Door", MetresNorth(120), SiteLon);
@@ -220,6 +243,58 @@ namespace CityWatch.Tracking.Tests
             await d.ApplyScanAsync(Unit, Session, 625, null, isInCarTag: true, Now.AddMinutes(20), CancellationToken.None);
             var visit = Visits().Single();
             Assert.AreEqual(Now.AddMinutes(20), visit.ExitedUtc, "back in the car means the visit ended");
+        }
+
+        /* ---------------- the real scan wire ---------------- */
+
+        [TestMethod]
+        public async Task Scan_event_to_bell_record_the_whole_wire()
+        {
+            /* Production path: NfcCheckpointScanned → NfcAnchorHandler (session by GUARD,
+               in-car decided by label/fleet-site) → SessionService → detector. Default
+               options: GPS detection off, scans still write the entered/left record. */
+            _options = new TrackingOptions { Enabled = true };
+            _db.TrackingSessions.Add(new TrackingSession
+            {
+                Id = Session, UnitId = Unit, GuardId = 7, ClientSiteId = 625,
+                StartedUtc = Now.AddHours(-1), Status = "Active", IsPatrolCar = true, Callsign = "Romeo 03"
+            });
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
+
+            var live = new InMemoryLiveStateStore();
+            var channel = System.Threading.Channels.Channel.CreateBounded<TrackPoint>(100);
+            var detector = Detector(Hyundai);
+            var sessions = new SessionService(_db, live, NullLogger<SessionService>.Instance,
+                segments: null, utcNow: () => Now, arrivals: detector);
+            var handler = new Handlers.NfcAnchorHandler(_db, live, sessions, channel.Writer,
+                NullLogger<Handlers.NfcAnchorHandler>.Instance);
+
+            /* Officer tags the client site's checkpoint. */
+            await handler.HandleAsync(new CityWatch.Events.Events.NfcCheckpointScanned(
+                Unit, "044B45AA655281", 390, 7, null, "-37.8,145.1", Now, 1, false)
+            { LoggedInClientSiteId = 625, LabelDescription = "Front gate", TagSiteName = "Martha Cove Marina" },
+                CancellationToken.None);
+
+            var visit = Visits().Single();
+            Assert.AreEqual("Martha Cove Marina", visit.SiteName);
+            Assert.AreEqual(Now, visit.ConfirmedUtc, "site tag = entered, instantly");
+
+            /* Back at the car, officer tags the dashboard tag (their own fleet site). */
+            await handler.HandleAsync(new CityWatch.Events.Events.NfcCheckpointScanned(
+                Unit, "0448CFC2ED6E81", 625, 7, null, "-37.8,145.1", Now.AddMinutes(18), 2, false)
+            { LoggedInClientSiteId = 625, LabelDescription = "Romeo 01 (in-car)" },
+                CancellationToken.None);
+
+            visit = Visits().Single();
+            Assert.AreEqual(Now.AddMinutes(18), visit.ExitedUtc, "in-car tag = left");
+
+            /* A replayed offline scan must never move the record. */
+            await handler.HandleAsync(new CityWatch.Events.Events.NfcCheckpointScanned(
+                Unit, "044B45AA655281", 390, 7, null, "-37.8,145.1", Now.AddMinutes(30), 3, true)
+            { LoggedInClientSiteId = 625, TagSiteName = "Martha Cove Marina" },
+                CancellationToken.None);
+            Assert.AreEqual(1, Visits().Count, "offline replays are history, not news");
         }
 
         /* ---------------- GPS parsing ---------------- */

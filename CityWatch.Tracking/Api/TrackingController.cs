@@ -633,6 +633,7 @@ namespace CityWatch.Tracking.Api
                     siteName = a.SiteName,
                     enteredUtc = a.EnteredUtc,
                     confirmedUtc = a.ConfirmedUtc,
+                    exitedUtc = a.ExitedUtc,
                     stillOnSite = a.StillOnSite,
                     minutesOnSite = a.MinutesOnSite,
                     source = a.Source

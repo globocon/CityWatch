@@ -112,6 +112,12 @@ namespace CityWatch.Tracking.Configuration
         {
             public bool Enabled { get; set; } = true;
 
+            /// <summary>The NFC scan is the source of truth (17 Aug decision): site tag =
+            /// entered, in-car tag = left. GPS dwell detection stays implemented behind this
+            /// flag for sites where tagging is impractical, but it is OFF by default — the
+            /// scan is deliberate, unambiguous evidence; a radius calculation is not.</summary>
+            public bool UseGpsDetection { get; set; } = false;
+
             /// <summary>Crossing INTO this radius of a site's coordinate opens a candidate
             /// visit. Sites are recorded as a single point, so this has to cover the whole
             /// property — 150 m is a large industrial block, not a GPS tolerance.</summary>

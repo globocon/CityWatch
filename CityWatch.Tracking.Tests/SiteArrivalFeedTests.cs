@@ -96,7 +96,18 @@ namespace CityWatch.Tracking.Tests
             await AddVisit(1, Now.AddHours(-2), confirmed: Now.AddHours(-2), exited: Now.AddMinutes(-75));
             var a = (await _feed.GetRecentAsync(null, CancellationToken.None)).Single();
             Assert.IsFalse(a.StillOnSite);
+            Assert.AreEqual(Now.AddMinutes(-75), a.ExitedUtc, "the client renders the 'left' line from this");
             Assert.AreEqual(45, a.MinutesOnSite, "a closed stay is measured to its exit");
+        }
+
+        [TestMethod]
+        public async Task A_fresh_exit_keeps_an_old_visit_in_the_window()
+        {
+            /* Arrived 13 h ago (outside the 12 h window) but drove off 1 h ago: the "left"
+               line must still reach the bell — the departure is the news. */
+            await AddVisit(1, Now.AddHours(-13), confirmed: Now.AddHours(-13), exited: Now.AddHours(-1));
+            var list = await _feed.GetRecentAsync(null, CancellationToken.None);
+            Assert.AreEqual(1, list.Count, "a visit is in the window while EITHER event is");
         }
     }
 }

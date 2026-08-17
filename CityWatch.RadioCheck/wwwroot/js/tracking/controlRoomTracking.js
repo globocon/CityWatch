@@ -406,9 +406,11 @@
        The transient alerts are this browser's observations; the arrivals are the record. */
     let serverArrivals = [];       // newest first, straight from /api/tracking/arrivals
     let arrivalsUnseen = 0;
-    const ARR_SEEN_KEY = 'trkArrSeenMax';
-    function arrSeenMax() { try { return Number(localStorage.getItem(ARR_SEEN_KEY)) || 0; } catch { return 0; } }
-    function setArrSeenMax(id) { try { localStorage.setItem(ARR_SEEN_KEY, String(id)); } catch { /* private mode */ } }
+    /* Seen-tracking is by EVENT TIME, not row id: one visit produces an "entered" line and
+       later a "left" line on the same row — an id watermark would swallow the departure. */
+    const ARR_SEEN_KEY = 'trkArrSeenTs';
+    function arrSeenTs() { try { return Number(localStorage.getItem(ARR_SEEN_KEY)) || 0; } catch { return 0; } }
+    function setArrSeenTs(ts) { try { localStorage.setItem(ARR_SEEN_KEY, String(ts)); } catch { /* private mode */ } }
 
     /* Server times defensively normalised: datetime2 round-trips without a zone marker,
        and new Date() would silently read that as LOCAL time. */
@@ -447,38 +449,47 @@
         return el;
     }
 
+    function arrivalEvents(a) {
+        /* One visit, up to two bell lines: the NFC site scan is "entered the site", the
+           in-car dashboard scan is "left the site" — exactly the officer's own actions. */
+        const who = esc(a.label || ('Unit ' + a.unitId));
+        const guard = a.guardName ? ` · ${esc(a.guardName)}` : '';
+        const how = a.source === 'Nfc' ? ' · tagged' : '';
+        const events = [{
+            t: utcDate(a.confirmedUtc).getTime(),
+            level: 'info',
+            unitId: a.unitId,
+            msg: `📍 <b>${who}</b> entered <b>${esc(a.siteName)}</b>${guard}${how}`
+        }];
+        if (a.exitedUtc) {
+            events.push({
+                t: utcDate(a.exitedUtc).getTime(),
+                level: 'info',
+                unitId: a.unitId,
+                msg: `🚗 <b>${who}</b> left <b>${esc(a.siteName)}</b>${guard} · after ${fmtMins(Math.max(1, a.minutesOnSite))}`
+            });
+        }
+        return events;
+    }
+
+    function allArrivalEvents() { return serverArrivals.flatMap(arrivalEvents); }
+
     function toggleAlerts(show) {
         alertPanelOpen = show ?? !alertPanelOpen;
         if (alertPanelOpen) {
             alertsUnseen = 0;
             arrivalsUnseen = 0;
-            if (serverArrivals.length) setArrSeenMax(Math.max(arrSeenMax(), ...serverArrivals.map(a => a.id)));
+            const evs = allArrivalEvents();
+            if (evs.length) setArrSeenTs(Math.max(arrSeenTs(), ...evs.map(e => e.t)));
             updateAlertBadge();
             renderAlertPanel();
         }
         alertPanelEl().classList.toggle('open', alertPanelOpen);
     }
 
-    function arrivalRow(a) {
-        /* "M1 entered Hyundai - Nunawading" — the sentence the operator asked for. The stay
-           length tells them at a glance whether the car is still there. */
-        const who = esc(a.label || ('Unit ' + a.unitId));
-        const guard = a.guardName ? ` · ${esc(a.guardName)}` : '';
-        const stay = a.stillOnSite
-            ? `on site ${fmtMins(a.minutesOnSite)}`
-            : `left after ${fmtMins(Math.max(1, a.minutesOnSite))}`;
-        const how = a.source === 'Nfc' ? ' · tagged' : '';
-        return {
-            t: utcDate(a.confirmedUtc).getTime(),
-            level: 'info',
-            unitId: a.unitId,
-            msg: `📍 <b>${who}</b> entered <b>${esc(a.siteName)}</b>${guard} · ${stay}${how}`
-        };
-    }
-
     function renderAlertPanel() {
         const el = alertPanelEl();
-        const merged = [...alerts, ...serverArrivals.map(arrivalRow)].sort((x, y) => x.t - y.t);
+        const merged = [...alerts, ...allArrivalEvents()].sort((x, y) => x.t - y.t);
         const rows = merged.reverse().map(a => `
             <div class="trk-alert-row ${a.level}" ${a.unitId && units[a.unitId] ? `data-trk-open="${a.unitId}"` : ''}>
               <span class="t">${new Date(a.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -498,12 +509,12 @@
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const body = await res.json();
             serverArrivals = body.arrivals || [];
-            const seen = arrSeenMax();
-            const fresh = serverArrivals.filter(a => a.id > seen);
+            const seen = arrSeenTs();
+            const fresh = allArrivalEvents().filter(e => e.t > seen);
             if (alertPanelOpen) {
                 /* Panel is open: the operator is looking at it — new rows appear in place
                    and count as seen. */
-                if (fresh.length) setArrSeenMax(Math.max(seen, ...fresh.map(a => a.id)));
+                if (fresh.length) setArrSeenTs(Math.max(seen, ...fresh.map(e => e.t)));
                 renderAlertPanel();
             } else {
                 arrivalsUnseen = fresh.length;

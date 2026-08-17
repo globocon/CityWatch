@@ -9,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CityWatch.Tracking.Services.Geofencing
 {
-    /// <summary>One line in the control room's bell.</summary>
+    /// <summary>One visit — the client renders it as an "entered" line and, once
+    /// <see cref="ExitedUtc"/> is set, a "left" line too.</summary>
     public sealed record SiteArrivalDto(
         int Id, int UnitId, int SiteId, string SiteName,
-        DateTime EnteredUtc, DateTime ConfirmedUtc, bool StillOnSite, string Source)
+        DateTime EnteredUtc, DateTime ConfirmedUtc, DateTime? ExitedUtc, bool StillOnSite, string Source)
     {
         /// <summary>What the operator calls the unit: callsign, else the car, else the unit id.</summary>
         public string? Label { get; init; }
@@ -63,9 +64,12 @@ namespace CityWatch.Tracking.Services.Geofencing
             var window = Math.Clamp(hours ?? _options.SiteGeofence.FeedHours, 1, 168);
             var cutoff = now.AddHours(-window);
 
+            /* A visit is in the window while EITHER of its events is: a car that arrived
+               13 hours ago and drives off now must still put its "left" line in the bell. */
             var visits = await _db.TrackingSiteVisits
-                .Where(v => v.ConfirmedUtc != null && v.ConfirmedUtc >= cutoff)
-                .OrderByDescending(v => v.ConfirmedUtc)
+                .Where(v => v.ConfirmedUtc != null &&
+                            (v.ConfirmedUtc >= cutoff || v.ExitedUtc >= cutoff))
+                .OrderByDescending(v => v.ExitedUtc ?? v.ConfirmedUtc)
                 .Take(MaxRows)
                 .ToListAsync(ct);
             if (visits.Count == 0)
@@ -95,7 +99,7 @@ namespace CityWatch.Tracking.Services.Geofencing
 
                 return new SiteArrivalDto(
                     v.Id, v.UnitId, v.SiteId, v.SiteName,
-                    v.EnteredUtc, v.ConfirmedUtc!.Value, v.ExitedUtc == null, v.Source)
+                    v.EnteredUtc, v.ConfirmedUtc!.Value, v.ExitedUtc, v.ExitedUtc == null, v.Source)
                 {
                     Label = label,
                     GuardName = session != null && guardNames.TryGetValue(session.GuardId, out var name) ? name : null,

@@ -65,7 +65,7 @@ namespace CityWatch.Tracking.Services.Geofencing
         public async Task EvaluateAsync(int unitId, Guid sessionId, bool isCar, IReadOnlyList<GeoFix> fixes, CancellationToken ct)
         {
             var cfg = _options.SiteGeofence;
-            if (!cfg.Enabled || fixes.Count == 0)
+            if (!cfg.Enabled || !cfg.UseGpsDetection || fixes.Count == 0)
                 return;
             if (cfg.CarsOnly && !isCar)
                 return;

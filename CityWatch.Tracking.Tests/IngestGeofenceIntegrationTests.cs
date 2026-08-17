@@ -47,7 +47,7 @@ namespace CityWatch.Tracking.Tests
             {
                 Enabled = true,
                 EnforceServiceArea = false,
-                SiteGeofence = { EnterRadiusM = 150, ExitRadiusM = 250, DwellSeconds = 120 }
+                SiteGeofence = { UseGpsDetection = true, EnterRadiusM = 150, ExitRadiusM = 250, DwellSeconds = 120 }
             };
             _live = new InMemoryLiveStateStore();
             _channel = Channel.CreateBounded<TrackPoint>(1000);
