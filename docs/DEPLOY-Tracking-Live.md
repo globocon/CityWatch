@@ -51,20 +51,40 @@ SELECT (SELECT COUNT(*) FROM sys.tables WHERE name IN
   `"Fcm": { "ServiceAccountJsonPath": "C:\\c4isystem\\keys\\citywatch-tracking-firebase-adminsdk-fbsvc-b780031587.json" }`
 - Optional keyed map link on RC: `"ControlRoomMap": { "AccessKey": "<long random>" }`
 
-## 4. Copy files — STOP BOTH APP POOLS FIRST
+## 4. Copy files into the live sites
+
+**a. Verify the live folders first.** IIS Manager → each live site → Advanced
+Settings → **Physical Path**. The commands below assume `...\ir\prod-citywatch`
+(Web) and `...\rc\prod-citywatch` (RC) — if IIS says different, use what IIS says.
+`/MIR` into a wrong folder mirrors (and deletes) in the wrong place.
+
+**b. Stop both app pools** (IIS Manager → Application Pools → right-click → Stop).
+Sites are down until step e — keep the window short.
+
+**c. Open an elevated Command Prompt and paste each command as ONE line:**
 
 ```
-robocopy C:\c4isystem\Publish\citywatch_webPublish C:\c4isystem\Websites\ir\prod-citywatch ^
-  /MIR /XF appsettings.json web.config ^
-  /XD wwwroot\Pdf wwwroot\GpsImage wwwroot\jsJotform wwwroot\StaffDocs
-
-robocopy C:\c4isystem\Publish\Citwatch_RcPublish C:\c4isystem\Websites\rc\prod-citywatch ^
-  /MIR /XF appsettings.json web.config ^
-  /XD wwwroot\Pdf wwwroot\GpsImage wwwroot\jsJotform wwwroot\StaffDocs
+robocopy C:\c4isystem\Publish\citywatch_webPublish C:\c4isystem\Websites\ir\prod-citywatch /MIR /XF appsettings.json web.config /XD wwwroot\Pdf wwwroot\GpsImage wwwroot\jsJotform wwwroot\StaffDocs
 ```
 
-`/MIR` is mandatory (plain `/E` left stale DLLs → 500s, 12 Aug). The `/XD` list
-protects live client report archives. Start the pools.
+```
+robocopy C:\c4isystem\Publish\Citwatch_RcPublish C:\c4isystem\Websites\rc\prod-citywatch /MIR /XF appsettings.json web.config /XD wwwroot\Pdf wwwroot\GpsImage wwwroot\jsJotform wwwroot\StaffDocs
+```
+
+What the switches mean:
+- `/MIR` — mirror: copy everything new AND delete stale files. Mandatory
+  (plain `/E` left stale DLLs → 500s, 12 Aug).
+- `/XF appsettings.json web.config` — never touch the live config files
+  (connection string + Tracking flags live there).
+- `/XD wwwroot\Pdf wwwroot\GpsImage wwwroot\jsJotform wwwroot\StaffDocs` — never
+  touch these folders: real client report archives and uploads that exist only
+  on the server. Because /MIR deletes what isn't in the source, dropping this
+  list would DELETE CLIENT DATA.
+
+**d. Check the summary table robocopy prints: FAILED must be 0 on every row.**
+Locked-file failures mean a pool is still running — stop it, re-run (safe to repeat).
+
+**e. Start both app pools.**
 
 ## 5. Post-deploy checks
 
