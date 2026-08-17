@@ -32,4 +32,23 @@ namespace CityWatch.Tracking.Data.Entities
 
         public string? Name { get; set; }
     }
+
+    /// <summary>ClientSites, read-only. The geofence catalogue: where the sites ARE, so an
+    /// arrival can be detected from GPS instead of waiting for a tag that may never be
+    /// scanned. Gps is the platform's own free-text "lat,lon" column — parsed defensively,
+    /// never written back.</summary>
+    [Table("ClientSites")]
+    public class PlatformClientSite
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public string? Name { get; set; }
+
+        /// <summary>"-37.81805,145.1849757". Free text: blank, malformed and out-of-range
+        /// values all exist in the wild and are simply skipped.</summary>
+        public string? Gps { get; set; }
+
+        public bool IsActive { get; set; }
+    }
 }

@@ -103,6 +103,43 @@ namespace CityWatch.Tracking.Configuration
             public int SweepMinutes { get; set; } = 15;
         }
 
+        /// <summary>GPS site-arrival detection. Without it "arrived at site" depends entirely
+        /// on an officer remembering to tag, so a car can sit at a site all night while the
+        /// control room reads "in transit".</summary>
+        public SiteGeofenceOptions SiteGeofence { get; set; } = new();
+
+        public sealed class SiteGeofenceOptions
+        {
+            public bool Enabled { get; set; } = true;
+
+            /// <summary>Crossing INTO this radius of a site's coordinate opens a candidate
+            /// visit. Sites are recorded as a single point, so this has to cover the whole
+            /// property — 150 m is a large industrial block, not a GPS tolerance.</summary>
+            public int EnterRadiusM { get; set; } = 150;
+
+            /// <summary>Leaving is only believed past this LARGER radius. The gap between the
+            /// two is deliberate hysteresis: without it a fix wobbling across a single
+            /// boundary produces arrive/depart/arrive all night.</summary>
+            public int ExitRadiusM { get; set; } = 250;
+
+            /// <summary>How long the unit must stay inside before the arrival is announced.
+            /// This is what separates "arrived" from "drove past on the main road" — at
+            /// 60 km/h a car clears a 150 m radius in about 18 seconds.</summary>
+            public int DwellSeconds { get; set; } = 120;
+
+            /// <summary>Sites move rarely; the catalogue is re-read on this interval rather
+            /// than per fix (about 800 active sites carry coordinates).</summary>
+            public int CatalogueRefreshMinutes { get; set; } = 15;
+
+            /// <summary>Patrol cars only, by default. A guard posted at a site is stationary
+            /// there for a whole shift — announcing that as an arrival is noise, and noise is
+            /// what makes an alert feed get ignored.</summary>
+            public bool CarsOnly { get; set; } = true;
+
+            /// <summary>How far back the control room's bell reads arrivals on load.</summary>
+            public int FeedHours { get; set; } = 12;
+        }
+
         public GeocodingOptions Geocoding { get; set; } = new();
 
         /// <summary>Reverse geocoding (§Phase 2.1). The cache carries the load; the provider

@@ -400,6 +400,23 @@
     let alertsUnseen = 0;
     let alertPanelOpen = false;
 
+    /* Site arrivals are DIFFERENT from the transient alerts above: they come from the
+       server's TrackingSiteVisit record, so they survive a refresh, are identical on every
+       operator's screen, and include arrivals that happened while no browser was open.
+       The transient alerts are this browser's observations; the arrivals are the record. */
+    let serverArrivals = [];       // newest first, straight from /api/tracking/arrivals
+    let arrivalsUnseen = 0;
+    const ARR_SEEN_KEY = 'trkArrSeenMax';
+    function arrSeenMax() { try { return Number(localStorage.getItem(ARR_SEEN_KEY)) || 0; } catch { return 0; } }
+    function setArrSeenMax(id) { try { localStorage.setItem(ARR_SEEN_KEY, String(id)); } catch { /* private mode */ } }
+
+    /* Server times defensively normalised: datetime2 round-trips without a zone marker,
+       and new Date() would silently read that as LOCAL time. */
+    function utcDate(v) {
+        if (typeof v === 'string' && !/(Z|[+-]\d\d:?\d\d)$/.test(v)) return new Date(v + 'Z');
+        return new Date(v);
+    }
+
     function addAlert(level, msg, unitId) {
         const last = alerts[alerts.length - 1];
         if (last && last.msg === msg && Date.now() - last.t < 120000) return;   // burst dedupe
@@ -413,8 +430,9 @@
     function updateAlertBadge() {
         const b = document.getElementById('trkBellBadge');
         if (b) {
-            b.textContent = alertsUnseen > 9 ? '9+' : String(alertsUnseen);
-            b.style.display = alertsUnseen ? 'flex' : 'none';
+            const unseen = alertsUnseen + arrivalsUnseen;
+            b.textContent = unseen > 9 ? '9+' : String(unseen);
+            b.style.display = unseen ? 'flex' : 'none';
         }
     }
 
@@ -431,21 +449,71 @@
 
     function toggleAlerts(show) {
         alertPanelOpen = show ?? !alertPanelOpen;
-        if (alertPanelOpen) { alertsUnseen = 0; updateAlertBadge(); renderAlertPanel(); }
+        if (alertPanelOpen) {
+            alertsUnseen = 0;
+            arrivalsUnseen = 0;
+            if (serverArrivals.length) setArrSeenMax(Math.max(arrSeenMax(), ...serverArrivals.map(a => a.id)));
+            updateAlertBadge();
+            renderAlertPanel();
+        }
         alertPanelEl().classList.toggle('open', alertPanelOpen);
+    }
+
+    function arrivalRow(a) {
+        /* "M1 entered Hyundai - Nunawading" — the sentence the operator asked for. The stay
+           length tells them at a glance whether the car is still there. */
+        const who = esc(a.label || ('Unit ' + a.unitId));
+        const guard = a.guardName ? ` · ${esc(a.guardName)}` : '';
+        const stay = a.stillOnSite
+            ? `on site ${fmtMins(a.minutesOnSite)}`
+            : `left after ${fmtMins(Math.max(1, a.minutesOnSite))}`;
+        const how = a.source === 'Nfc' ? ' · tagged' : '';
+        return {
+            t: utcDate(a.confirmedUtc).getTime(),
+            level: 'info',
+            unitId: a.unitId,
+            msg: `📍 <b>${who}</b> entered <b>${esc(a.siteName)}</b>${guard} · ${stay}${how}`
+        };
     }
 
     function renderAlertPanel() {
         const el = alertPanelEl();
-        const rows = [...alerts].reverse().map(a => `
+        const merged = [...alerts, ...serverArrivals.map(arrivalRow)].sort((x, y) => x.t - y.t);
+        const rows = merged.reverse().map(a => `
             <div class="trk-alert-row ${a.level}" ${a.unitId && units[a.unitId] ? `data-trk-open="${a.unitId}"` : ''}>
               <span class="t">${new Date(a.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               <span class="m">${a.msg}</span>
             </div>`).join('');
         el.innerHTML = `
-            <div class="trk-alert-head"><b>⚠ ATTENTION (${alerts.length})</b>
+            <div class="trk-alert-head"><b>⚠ ATTENTION (${merged.length})</b>
               <button class="trk-card-close" data-trk-alerts-close="1" aria-label="Close">×</button></div>
             <div class="trk-alert-body">${rows || '<div class="trk-alert-empty">Nothing needs attention. 🎉</div>'}</div>`;
+    }
+
+    /* The arrivals poll. 30 s is plenty: the dwell window means an arrival is already
+       minutes old by the time it is confirmable, and the record is server-side either way. */
+    async function pollArrivals() {
+        try {
+            const res = await fetch('/api/tracking/arrivals', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const body = await res.json();
+            serverArrivals = body.arrivals || [];
+            const seen = arrSeenMax();
+            const fresh = serverArrivals.filter(a => a.id > seen);
+            if (alertPanelOpen) {
+                /* Panel is open: the operator is looking at it — new rows appear in place
+                   and count as seen. */
+                if (fresh.length) setArrSeenMax(Math.max(seen, ...fresh.map(a => a.id)));
+                renderAlertPanel();
+            } else {
+                arrivalsUnseen = fresh.length;
+                updateAlertBadge();
+            }
+        } catch {
+            /* keep the last list; the live poll's health pill covers outages */
+        } finally {
+            setTimeout(pollArrivals, 30000);
+        }
     }
 
     /* Planned vs actual (§5.2): the wand-scan route data the base map already loads,
@@ -1489,11 +1557,9 @@
                 notice(`⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, 'alarm');
                 addAlert('alarm', `⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, u.unitId);
             }
-            /* Arrival (§5.1): the NFC-confirmed transition is the trustworthy signal. */
-            if (u.travelState === 'AtSite' && u.currentSite &&
-                (entry.data.travelState !== 'AtSite' || entry.data.currentSite !== u.currentSite)) {
-                addAlert('info', `📍 <b>${esc(unitLabel(u))}</b> arrived at ${esc(u.currentSite)}`, u.unitId);
-            }
+            /* Arrival alerts moved server-side (§5.1): /api/tracking/arrivals now records
+               them from GPS geofence + NFC, so they survive refreshes and reach every
+               operator. Raising a second, transient copy here would double every arrival. */
             /* Offline (§5.1): crossing the hollow threshold is worth one line, once. */
             if (entry.data.ageSeconds <= HOLLOW_S && u.ageSeconds > HOLLOW_S) {
                 addAlert('warn', `⚠ <b>${esc(unitLabel(u))}</b> has not reported for ${fmtAge(u.ageSeconds)}`, u.unitId);
@@ -1756,4 +1822,5 @@
     buildLayerChips();
     renderOnlineFab();      // visible from the first paint, even before the first snapshot
     poll();
+    pollArrivals();         // the durable bell: last 12 h of confirmed site arrivals
 })();

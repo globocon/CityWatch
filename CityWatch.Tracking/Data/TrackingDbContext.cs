@@ -24,6 +24,7 @@ namespace CityWatch.Tracking.Data
         /// <summary>Read-only platform projections (§13.3 boundary). Never written.</summary>
         public DbSet<PlatformSmartWand> PlatformSmartWands { get; set; } = null!;
         public DbSet<PlatformGuard> PlatformGuards { get; set; } = null!;
+        public DbSet<PlatformClientSite> PlatformClientSites { get; set; } = null!;
         public DbSet<TrackSegment> TrackSegments { get; set; } = null!;
         public DbSet<TrackingSession> TrackingSessions { get; set; } = null!;
         public DbSet<TrackingUnitEnrolment> TrackingUnitEnrolments { get; set; } = null!;
@@ -31,6 +32,7 @@ namespace CityWatch.Tracking.Data
         public DbSet<TrackingAccessAudit> TrackingAccessAudits { get; set; } = null!;
         public DbSet<GeocodeCache> GeocodeCacheEntries { get; set; } = null!;
         public DbSet<TrackingDeviceToken> TrackingDeviceTokens { get; set; } = null!;
+        public DbSet<TrackingSiteVisit> TrackingSiteVisits { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -85,6 +87,20 @@ namespace CityWatch.Tracking.Data
                 e.HasIndex(t => new { t.UnitId, t.IsActive }).HasDatabaseName("IX_TrackingDeviceToken_Unit_Active");
                 e.Property(t => t.FcmToken).HasMaxLength(512);
                 e.Property(t => t.Platform).HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<TrackingSiteVisit>(e =>
+            {
+                e.ToTable("TrackingSiteVisit");
+                // Matches DbScript/370. ConfirmedUtc leads the feed index: the bell reads
+                // "confirmed since X" far more often than anything else touches this table.
+                e.HasIndex(v => v.ConfirmedUtc).HasDatabaseName("IX_TrackingSiteVisit_Confirmed");
+                e.HasIndex(v => new { v.SessionId, v.ExitedUtc }).HasDatabaseName("IX_TrackingSiteVisit_Session_Open");
+                e.HasIndex(v => new { v.UnitId, v.EnteredUtc }).HasDatabaseName("IX_TrackingSiteVisit_Unit_Entered");
+                e.Property(v => v.SiteName).HasMaxLength(200);
+                e.Property(v => v.Source).HasMaxLength(10);
+                e.Property(v => v.EnteredLat).HasPrecision(9, 6);
+                e.Property(v => v.EnteredLon).HasPrecision(9, 6);
             });
         }
     }

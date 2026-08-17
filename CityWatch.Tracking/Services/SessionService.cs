@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CityWatch.Tracking.Data;
@@ -38,15 +39,18 @@ namespace CityWatch.Tracking.Services
         private readonly TrackingDbContext _db;
         private readonly ILiveStateStore _liveState;
         private readonly ISegmentBuilder? _segments;
+        private readonly Geofencing.ISiteArrivalDetector? _arrivals;
         private readonly ILogger<SessionService> _logger;
         private readonly Func<DateTime> _utcNow;
 
         public SessionService(TrackingDbContext db, ILiveStateStore liveState,
-            ILogger<SessionService> logger, ISegmentBuilder? segments = null, Func<DateTime>? utcNow = null)
+            ILogger<SessionService> logger, ISegmentBuilder? segments = null, Func<DateTime>? utcNow = null,
+            Geofencing.ISiteArrivalDetector? arrivals = null)
         {
             _db = db;
             _liveState = liveState;
             _segments = segments;
+            _arrivals = arrivals;
             _logger = logger;
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
         }
@@ -153,6 +157,23 @@ namespace CityWatch.Tracking.Services
             }
 
             await _db.SaveChangesAsync(ct);
+
+            /* The scan is also the strongest possible arrival evidence — a person put a phone
+               against a tag on the site. It confirms the visit with no dwell window, and it is
+               the only way a site with no coordinate on file can raise an arrival at all.
+               Never allowed to fail the scan itself: a scan that reports "Tag Found" to the
+               officer must not depend on the control room's notification feed. */
+            if (_arrivals != null)
+            {
+                try
+                {
+                    await _arrivals.ApplyScanAsync(unitId, session.Id, tagSiteId, tagSiteName, isInCarTag, occurredUtc, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Site visit record failed for unit {Unit} scan at site {Site}.", unitId, tagSiteId);
+                }
+            }
         }
 
         public async Task EndAsync(Guid sessionId, string endReason, CancellationToken ct)
@@ -189,6 +210,20 @@ namespace CityWatch.Tracking.Services
 
             _logger.LogInformation("Tracking session {SessionId} closed ({Reason}): unit {UnitId}.",
                 session.Id, endReason, session.UnitId);
+
+            /* A stay cannot outlive the shift it happened in. Left open, the unit reads as
+               "still at Martha Cove" tomorrow morning — the same class of stale-state noise
+               the session reaper exists to prevent. */
+            var openVisits = await _db.TrackingSiteVisits
+                .AsTracking()
+                .Where(v => v.SessionId == session.Id && v.ExitedUtc == null)
+                .ToListAsync(ct);
+            if (openVisits.Count > 0)
+            {
+                foreach (var visit in openVisits)
+                    visit.ExitedUtc = now;
+                await _db.SaveChangesAsync(ct);
+            }
 
             /* Roll-up is derived data: a failure here must never fail the close, and a missed
                build is recoverable (the nightly sweep re-runs it — Phase 2 hardening). */

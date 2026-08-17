@@ -26,7 +26,7 @@ namespace CityWatch.Tracking.Tests
         /// the pack-owns-its-tables assertions below.</summary>
         private static readonly string[] PlatformProjections =
         {
-            nameof(PlatformSmartWand), nameof(PlatformGuard)
+            nameof(PlatformSmartWand), nameof(PlatformGuard), nameof(PlatformClientSite)
         };
 
         [TestMethod]
@@ -45,6 +45,7 @@ namespace CityWatch.Tracking.Tests
                 nameof(TrackingDeviceToken),   // §Push: FCM nudge addresses (DbScript 369)
                 nameof(TrackingModeCommand),
                 nameof(TrackingSession),
+                nameof(TrackingSiteVisit),     // §5.1: GPS/NFC site arrivals (DbScript 370)
                 nameof(TrackingUnitEnrolment),
                 nameof(TrackPoint),
                 nameof(TrackSegment)
@@ -73,6 +74,8 @@ namespace CityWatch.Tracking.Tests
                 context.Model.FindEntityType(typeof(PlatformSmartWand))!.GetTableName());
             Assert.AreEqual("Guards",
                 context.Model.FindEntityType(typeof(PlatformGuard))!.GetTableName());
+            Assert.AreEqual("ClientSites",
+                context.Model.FindEntityType(typeof(PlatformClientSite))!.GetTableName());
         }
 
         [TestMethod]

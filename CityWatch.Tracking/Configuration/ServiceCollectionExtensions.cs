@@ -66,6 +66,15 @@ namespace CityWatch.Tracking.Configuration
             services.AddSingleton(channel.Reader);
 
             services.AddSingleton<UnitRateLimiter>();
+
+            /* ---- Site geofence (§5.1): "arrived at site" from GPS, not just from tags.
+               Catalogue is a singleton (sites move roughly never; one read per interval,
+               nothing on the hot path); detector and feed are scoped like everything else
+               that touches the DbContext. Disabled ⇒ arrivals only ever come from NFC. */
+            services.AddSingleton<Services.Geofencing.ISiteGeofenceCatalogue, Services.Geofencing.SiteGeofenceCatalogue>();
+            services.AddScoped<Services.Geofencing.ISiteArrivalDetector, Services.Geofencing.SiteArrivalDetector>();
+            services.AddScoped<Services.Geofencing.ISiteArrivalFeed, Services.Geofencing.SiteArrivalFeed>();
+
             services.AddScoped<IIngestService, IngestService>();
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<ILiveSnapshotService, LiveSnapshotService>();

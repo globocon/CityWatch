@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -34,6 +35,7 @@ namespace CityWatch.Tracking.Services
         private readonly UnitRateLimiter _rateLimiter;
         private readonly TrackingOptions _options;
         private readonly IModeCommandService? _commands;
+        private readonly Geofencing.ISiteArrivalDetector? _arrivals;
         private readonly ILogger<IngestService> _logger;
         private readonly Func<DateTime> _utcNow;
 
@@ -45,7 +47,8 @@ namespace CityWatch.Tracking.Services
             TrackingOptions options,
             ILogger<IngestService> logger,
             IModeCommandService? commands = null,
-            Func<DateTime>? utcNow = null)
+            Func<DateTime>? utcNow = null,
+            Geofencing.ISiteArrivalDetector? arrivals = null)
         {
             _db = db;
             _liveState = liveState;
@@ -53,6 +56,7 @@ namespace CityWatch.Tracking.Services
             _rateLimiter = rateLimiter;
             _options = options;
             _commands = commands;
+            _arrivals = arrivals;
             _logger = logger;
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
         }
@@ -100,6 +104,7 @@ namespace CityWatch.Tracking.Services
             }
 
             var previous = _liveState.Get(batch.UnitId);
+            var geoFixes = new List<Geofencing.GeoFix>();
 
             foreach (var p in batch.Points)
             {
@@ -130,6 +135,16 @@ namespace CityWatch.Tracking.Services
                     var state = ToLiveState(batch, p, flags, serverUtc);
                     _liveState.Update(state);
                     previous = state;
+
+                    /* A fix the ingest pipeline does not trust is not a fix the geofence
+                       should draw a conclusion from: a 500 m accuracy reading sits "inside"
+                       half the suburb. */
+                    if ((flags & TrackPointFlags.LowAccuracy) == 0 &&
+                        (flags & TrackPointFlags.Implausible) == 0 &&
+                        (flags & TrackPointFlags.MockProvider) == 0)
+                    {
+                        geoFixes.Add(new Geofencing.GeoFix(p.Lat, p.Lon, p.Utc));
+                    }
                 }
             }
 
@@ -139,6 +154,24 @@ namespace CityWatch.Tracking.Services
                 session.LastFixUtc = serverUtc;
                 _db.TrackingSessions.Update(session);
                 await _db.SaveChangesAsync(ct);
+            }
+
+            /* Site geofence (§5.1): decide whether this batch means the car arrived somewhere.
+               Deliberately AFTER the session update and wrapped: an arrival alert is worth
+               having, but never at the cost of rejecting positions that were already accepted
+               and written. A failure here loses a notification, not evidence. */
+            if (_arrivals != null && geoFixes.Count > 0)
+            {
+                try
+                {
+                    var isCar = session.IsPatrolCar ?? TrackingUnitKey.IsPosition(batch.UnitId);
+                    await _arrivals.EvaluateAsync(batch.UnitId, session.Id, isCar, geoFixes, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Site geofence evaluation failed for unit {Unit}; positions were still accepted.",
+                        batch.UnitId);
+                }
             }
 
             /* Authoritative mode delivery on the device's own heartbeat (§5.3, D5): the

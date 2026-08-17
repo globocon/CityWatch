@@ -608,5 +608,36 @@ namespace CityWatch.Tracking.Api
                 })
             });
         }
+
+        /// <summary>Confirmed site arrivals for the bell (§5.1). Server-recorded, so the feed
+        /// survives a page refresh, is identical on every operator's screen, and captures
+        /// arrivals that happened while no browser was open. Candidates that never dwelled
+        /// (drive-pasts) are stored but never served.</summary>
+        [Authorize]
+        [HttpGet("arrivals")]
+        public async Task<IActionResult> Arrivals([FromQuery] int? hours,
+            [FromServices] Services.Geofencing.ISiteArrivalFeed feed, CancellationToken ct)
+        {
+            var arrivals = await feed.GetRecentAsync(hours, ct);
+            return Ok(new
+            {
+                serverUtc = DateTime.UtcNow,
+                arrivals = arrivals.Select(a => new
+                {
+                    id = a.Id,
+                    unitId = a.UnitId,
+                    kind = a.Kind,
+                    label = a.Label,
+                    guardName = a.GuardName,
+                    siteId = a.SiteId,
+                    siteName = a.SiteName,
+                    enteredUtc = a.EnteredUtc,
+                    confirmedUtc = a.ConfirmedUtc,
+                    stillOnSite = a.StillOnSite,
+                    minutesOnSite = a.MinutesOnSite,
+                    source = a.Source
+                })
+            });
+        }
     }
 }
