@@ -1,0 +1,560 @@
+/* CityWatch.Tracking — control room live layer, Phase 1 (Command Centre plan).
+   Colour carries urgency only: duress red matches the existing alarm colour, live blue
+   matches the existing accent. Staleness is shape/opacity, never a second colour scale.
+
+   LAYOUT SLOTS — every floating widget owns a fixed slot so nothing collides:
+     top-right (below header)  → idle panel (collapsed by default)
+     right / bottom sheet      → asset card
+     bottom-right              → control stack (search / + / − / fit)
+     bottom-centre             → replay bar, follow bar above it
+     bottom-left               → status pill
+     top-centre                → notices (takeover, errors)                         */
+
+/* The overlay ships its own finger-sized zoom stack; the tiny default control goes. */
+.leaflet-control-zoom { display: none; }
+
+/* ================= markers ================= */
+
+/* Position glide: Leaflet moves markers by transform, so transitioning transform makes
+   a 5s fix interval read as driving, not teleporting. Disabled during zoom animations
+   (they also use transform) and for data jumps (.trk-nofx). */
+.trk-marker { transition: transform 1.4s linear; }
+.leaflet-zoom-anim .trk-marker, .trk-marker.trk-nofx { transition: none; }
+
+.trk-unit {
+    position: relative;
+    width: 56px; height: 68px;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    font-family: system-ui, sans-serif;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+}
+.trk-unit .trk-sprite {
+    width: 46px; height: 26px;                /* side-view car: wider than tall */
+    transition: transform .5s ease;           /* east↔west flips animate, never snap */
+    transform-origin: 50% 50%;
+}
+.trk-unit .trk-sprite.trk-flip { transform: scaleX(-1); }   /* westbound faces left */
+.trk-unit .trk-id {
+    margin-top: -6px;
+    background: #ffffffee; border: 1px solid #cbd5e1; border-radius: 8px;
+    font-size: 10px; font-weight: 800; color: #0f172a; padding: 0 6px;
+    max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Guards: solid state-coloured circle, thick white ring — the Google person-dot idiom. */
+.trk-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #16a34a; color: #fff;
+    border: 3px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    display: flex; align-items: center; justify-content: center;
+    font: 800 13px system-ui, sans-serif; letter-spacing: .02em;
+}
+.trk-avatar-lg { width: 44px; height: 44px; font-size: 16px; }
+.trk-avatar-sm { width: 26px; height: 26px; font-size: 10px; border-width: 2px; display: inline-flex; }
+
+.trk-unit .trk-age {
+    position: absolute; top: -6px; right: -4px;
+    background: #475569; color: #fff; border-radius: 8px;
+    font-size: 9px; padding: 1px 5px; font-weight: 700;
+}
+.trk-unit .trk-idle-badge {
+    position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%);
+    background: #d97706; color: #fff; border-radius: 8px;
+    font-size: 8px; padding: 1px 5px; font-weight: 800; white-space: nowrap;
+}
+
+/* selection / follow halo */
+.trk-unit.trk-sel::before {
+    content: ''; position: absolute; top: 2px; left: 50%; transform: translateX(-50%);
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 3px solid #2563eb; box-shadow: 0 0 0 6px rgba(37,99,235,.18);
+    animation: trkSelPulse 1.8s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes trkSelPulse { 50% { box-shadow: 0 0 0 12px rgba(37,99,235,.08); } }
+
+/* mode accents on the LIVE/DURESS pulse ring */
+.trk-unit.trk-live .trk-sprite    { animation: trkLivePulse 1.6s ease-in-out infinite; }
+.trk-unit.trk-duress .trk-sprite  { animation: trkDuressPulse .8s ease-in-out infinite; }
+@keyframes trkLivePulse   { 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,.9)); } }
+@keyframes trkDuressPulse { 50% { filter: drop-shadow(0 0 10px rgba(220,38,38,.95)); } }
+
+/* staleness degradation (§11.3 rule 2): never render old as current — but an offline
+   unit's LAST KNOWN position is exactly what the operator is hunting for, so the
+   SPRITE goes grey (this is not current) while the marker stays findable (field
+   feedback 12 Aug: a dead unit at 35% opacity was simply invisible at Kottayam).
+   The age badge turns red: "last heard 1h 28m ago" reads as the alarm it is. */
+.trk-unit.trk-soft   { opacity: .9; animation: trkSoftPulse 2.4s ease-in-out infinite; }
+.trk-unit.trk-hollow .trk-sprite, .trk-unit.trk-hollow .trk-avatar { filter: grayscale(.65); opacity: .85; }
+.trk-unit.trk-dead .trk-sprite,   .trk-unit.trk-dead .trk-avatar   { filter: grayscale(1); opacity: .8; }
+.trk-unit.trk-hollow .trk-age, .trk-unit.trk-dead .trk-age { background: #dc2626; }
+@keyframes trkSoftPulse   { 50% { opacity: .7; } }
+
+.trk-mode-chip {
+    display: inline-block; padding: 0 6px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; color: #fff; background: #16a34a; vertical-align: middle;
+}
+.trk-mode-chip.trk-transit, .trk-mode-chip.trk-live { background: #2563eb; }
+.trk-mode-chip.trk-duress { background: #dc2626; }
+
+/* ================= buttons ================= */
+.trk-btn {
+    padding: 8px 14px; border-radius: 10px; cursor: pointer;
+    border: 1px solid #2563eb; background: #2563eb; color: #fff;
+    font: 700 12px system-ui, sans-serif;
+    min-height: 36px;
+}
+.trk-btn:hover { filter: brightness(1.1); }
+.trk-btn-stop { border-color: #dc2626; background: #dc2626; }
+.trk-btn-on { background: #16a34a; border-color: #16a34a; }
+.trk-btn-replay { border-color: #7c3aed; background: #7c3aed; }
+.trk-pending { font: 700 12px system-ui, sans-serif; color: #2563eb; align-self: center; }
+
+/* ================= asset card: docked panel / bottom sheet ================= */
+.trk-card {
+    position: fixed; z-index: 1400;
+    top: 120px; right: 14px; width: 300px;
+    background: #ffffff; border: 1px solid #dde5ef; border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(15,23,42,.22);
+    font: 500 13px system-ui, sans-serif; color: #0f172a;
+    display: none; overflow: hidden;
+}
+.trk-card.open { display: block; }
+.trk-card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 12px 8px; border-bottom: 1px solid #eef2f7;
+}
+.trk-card-glyph svg { width: 22px; height: 38px; }
+.trk-card-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.trk-card-title b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-card-title span { font-size: 11px; color: #64748b; }
+.trk-card-close {
+    border: 0; background: transparent; font-size: 22px; line-height: 1;
+    color: #64748b; cursor: pointer; padding: 4px 8px; min-width: 44px; min-height: 36px;
+}
+.trk-card-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.trk-card .trk-row-state { font-weight: 700; color: #2563eb; }
+.trk-card .dim { color: #64748b; font-size: 12px; }
+.trk-card-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px 14px;
+}
+
+/* ================= follow bar ================= */
+.trk-follow-bar {
+    position: fixed; z-index: 1450; bottom: 76px; left: 50%; transform: translateX(-50%);
+    display: none; align-items: center; gap: 10px;
+    background: #1e293bf2; color: #fff; border-radius: 999px;
+    padding: 8px 16px; font: 700 13px system-ui, sans-serif;
+    box-shadow: 0 6px 20px rgba(15,23,42,.35);
+    white-space: nowrap;
+}
+.trk-follow-bar button {
+    border: 1px solid #94a3b8; background: transparent; color: #fff;
+    border-radius: 999px; padding: 4px 12px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; min-height: 32px;
+}
+.trk-follow-bar button.stop { border-color: #f87171; color: #fca5a5; }
+
+/* ================= search overlay ================= */
+.trk-search {
+    position: fixed; inset: 0; z-index: 1600;
+    display: none; flex-direction: column; align-items: center;
+    padding-top: 14vh; background: rgba(15,23,42,.45);
+}
+.trk-search.open { display: flex; }
+.trk-search-box {
+    display: flex; align-items: center; width: min(480px, calc(100vw - 28px));
+    background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    overflow: hidden;
+}
+.trk-search-box input {
+    flex: 1; border: 0; outline: none; padding: 14px 16px;
+    font: 600 16px system-ui, sans-serif;   /* 16px floor: no iOS zoom */
+}
+.trk-search-close {
+    border: 0; background: transparent; font-size: 24px; color: #64748b;
+    cursor: pointer; padding: 0 14px; min-width: 48px; min-height: 48px;
+}
+.trk-search-results {
+    width: min(480px, calc(100vw - 28px)); margin-top: 8px;
+    background: #fff; border-radius: 14px; overflow: hidden auto; max-height: 46vh;
+    box-shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+.trk-search-row {
+    display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+    cursor: pointer; border-top: 1px solid #f1f5f9; min-height: 48px;
+}
+.trk-search-row:first-child { border-top: 0; }
+.trk-search-row:hover { background: #eff4ff; }
+.trk-search-row .g { font-size: 18px; }
+.trk-search-row .m { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.trk-search-row .m b { font: 700 13px system-ui, sans-serif; }
+.trk-search-row .m span { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-search-empty { padding: 18px; text-align: center; color: #64748b; font: 600 13px system-ui, sans-serif; }
+
+/* ================= control stack (bottom-right) ================= */
+.trk-controls {
+    position: fixed; z-index: 1350; right: 10px; bottom: 96px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.trk-controls button {
+    width: 46px; height: 46px; border-radius: 12px;
+    border: 1px solid #dde5ef; background: #fffffff5; color: #0f172a;
+    font: 700 20px system-ui, sans-serif; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15,23,42,.18);
+}
+.trk-controls button:active { transform: scale(.96); }
+
+/* ================= notices ================= */
+.trk-notices {
+    position: fixed; z-index: 1500; top: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; gap: 6px; align-items: center;
+    pointer-events: none;
+}
+.trk-notice {
+    background: #1e293bf2; color: #fff; border-radius: 10px;
+    padding: 8px 14px; font: 600 13px system-ui, sans-serif;
+    box-shadow: 0 6px 20px rgba(15,23,42,.35);
+    transition: opacity .5s; max-width: min(520px, calc(100vw - 24px));
+}
+.trk-notice.alarm { background: #b91c1cf2; }
+
+/* ================= idle panel (top-right slot, collapsible) ================= */
+.trk-idle-panel {
+    position: fixed; top: 150px; right: 14px; z-index: 1200; min-width: 210px; max-width: 280px;
+    background: #ffffffee; border: 1px solid #d97706; border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.15); overflow: hidden;
+    font: 600 12px system-ui, sans-serif; color: #0f172a;
+}
+.trk-idle-head { background: #d97706; color: #fff; padding: 8px 10px; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; }
+.trk-idle-head .tgl { margin-left: auto; }
+.trk-idle-panel.collapsed .trk-idle-row { display: none; }
+.trk-idle-row { display: flex; align-items: center; gap: 6px; padding: 9px 10px; cursor: pointer; border-top: 1px solid #f1f5f9; min-height: 40px; }
+.trk-idle-row:hover { background: #fff7ed; }
+.trk-idle-row .trk-idle-time { margin-left: auto; color: #b45309; font-weight: 800; font-variant-numeric: tabular-nums; }
+.trk-idle-chip {
+    display: inline-block; padding: 0 6px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; color: #fff; background: #d97706; vertical-align: middle;
+}
+
+/* ================= replay: the operational playback deck ================= */
+.trk-unit.trk-replay-ghost { opacity: .95; }
+.trk-replay-bar {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 1300;
+    display: flex; flex-direction: column; gap: 6px;
+    width: min(560px, calc(100vw - 20px));
+    background: #fffffff2; border: 1px solid #7c3aed; border-radius: 14px;
+    padding: 10px 14px; font: 600 12px system-ui, sans-serif; color: #0f172a;
+    box-shadow: 0 6px 22px rgba(0,0,0,.22);
+}
+.trk-replay-head { display: flex; align-items: center; gap: 8px; }
+.trk-replay-head b { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-replay-head .trk-btn { padding: 4px 10px; min-height: 30px; }
+.trk-replay-trunc { color: #b45309; font-size: 10px; font-weight: 700; }
+.trk-replay-main { display: flex; align-items: center; gap: 8px; }
+.trk-replay-bar button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; font: 700 12px system-ui, sans-serif; min-height: 36px; min-width: 40px; }
+.trk-replay-bar button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+#trkReplayPlay { font-size: 15px; min-width: 48px; }
+.trk-replay-speeds { display: flex; gap: 4px; }
+.trk-replay-time {
+    margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 800; font-size: 13px;
+    color: #7c3aed; white-space: nowrap;
+}
+.trk-replay-timeline { display: flex; align-items: center; gap: 8px; }
+.trk-replay-timeline span { font-variant-numeric: tabular-nums; color: #64748b; font-size: 11px; }
+.trk-replay-timeline input[type=range] { flex: 1; height: 28px; accent-color: #7c3aed; cursor: pointer; }
+
+/* route annotations */
+.trk-flag {
+    padding: 1px 7px; border-radius: 8px; color: #fff;
+    font: 800 10px system-ui, sans-serif; text-align: center; white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.trk-flag-start { background: #16a34a; }
+.trk-flag-end { background: #dc2626; }
+.trk-stop-mark {
+    background: #d97706; color: #fff; border-radius: 9px; padding: 1px 7px;
+    font: 800 10px system-ui, sans-serif; white-space: nowrap; text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.35);
+}
+.trk-dir { color: #475569; font-size: 12px; line-height: 14px; text-align: center; opacity: .8; }
+body.trk-dark .trk-dir { color: #cbd5e1; }
+
+/* custom window row in the replay picker */
+.trk-win-custom {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 12px 16px; border-top: 1px solid #f1f5f9;
+}
+.trk-win-custom input {
+    border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; font: 600 13px system-ui, sans-serif;
+    min-height: 38px;
+}
+.trk-win-custom input[type=date] { flex: 1; min-width: 130px; }
+body.trk-dark .trk-win-custom { border-top-color: #1c2b45; }
+body.trk-dark .trk-win-custom input { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+
+/* session picker: two officers, two journeys — choose which to watch */
+.trk-session-pick {
+    position: fixed; z-index: 1600; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(360px, calc(100vw - 28px));
+    background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 16px 50px rgba(0,0,0,.4);
+    font: 600 13px system-ui, sans-serif; color: #0f172a;
+}
+.trk-session-pick .head { padding: 12px 16px; background: #7c3aed; color: #fff; display: flex; flex-direction: column; }
+.trk-session-pick .head span { font-size: 11px; font-weight: 500; opacity: .9; }
+.trk-session-pick .row {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+    border-top: 1px solid #f1f5f9; cursor: pointer; min-height: 48px;
+}
+.trk-session-pick .row:hover { background: #f5f3ff; }
+.trk-session-pick .row b { font-variant-numeric: tabular-nums; }
+.trk-session-pick .row span { color: #64748b; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-session-pick .row .n { flex: none; font-size: 11px; }
+.trk-session-pick .cancel { margin: 10px 16px 14px; background: #64748b; border-color: #64748b; }
+
+/* ================= guard clusters + layer chips + site pivot ================= */
+.trk-gcluster {
+    background: #1f2937; color: #fff; border: 3px solid #16a34a; border-radius: 16px;
+    padding: 3px 10px; font: 800 13px system-ui, sans-serif; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3); text-align: center;
+}
+.trk-chipbar {
+    position: fixed; z-index: 1250; bottom: 52px; left: 14px;
+    display: flex; gap: 6px;
+}
+.trk-chipbar button {
+    border: 1px solid #dde5ef; background: #fffffff0; color: #0f172a;
+    border-radius: 999px; padding: 8px 14px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; min-height: 38px; box-shadow: 0 2px 8px rgba(15,23,42,.14);
+}
+.trk-chipbar button.off { opacity: .45; text-decoration: line-through; }
+body.trk-dark .trk-chipbar button { background: #101a2ef0; border-color: #24344f; color: #e2e8f0; }
+.trk-sitelink {
+    border: 1px solid #dde5ef; background: #f8fafc; color: #0f172a;
+    border-radius: 10px; padding: 9px 12px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; text-align: left; width: 100%;
+}
+.trk-sitelink:hover { background: #eff4ff; }
+body.trk-dark .trk-sitelink { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+.trk-card-section {
+    font: 800 10px system-ui, sans-serif; color: #64748b; letter-spacing: .06em;
+    margin: 8px 0 2px;
+}
+body.trk-dark .trk-card-section { color: #8ca3c3; }
+.trk-card .trk-search-row { border: 1px solid #eef2f7; border-radius: 10px; margin-bottom: 6px; }
+body.trk-dark .trk-card .trk-search-row { border-color: #1c2b45; }
+.trk-status .warn { color: #b45309; font-weight: 800; }
+.trk-status .bad { color: #b91c1c; font-weight: 800; }
+
+/* ================= attention feed (Phase 5) ================= */
+.trk-bellbadge {
+    position: absolute; top: 2px; right: 2px;
+    min-width: 16px; height: 16px; border-radius: 8px; padding: 0 3px;
+    background: #dc2626; color: #fff; font: 800 10px system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+}
+.trk-alert-panel {
+    position: fixed; z-index: 1550; top: 120px; right: 14px; width: 320px;
+    max-height: min(56vh, 520px);
+    background: #fff; border: 1px solid #dde5ef; border-radius: 14px;
+    box-shadow: 0 10px 34px rgba(15,23,42,.28);
+    display: none; flex-direction: column; overflow: hidden;
+    font: 600 12px system-ui, sans-serif; color: #0f172a;
+}
+.trk-alert-panel.open { display: flex; }
+.trk-alert-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 8px 8px 14px; border-bottom: 1px solid #eef2f7; font-size: 12px;
+}
+.trk-alert-body { overflow-y: auto; }
+.trk-alert-row {
+    display: flex; gap: 10px; align-items: baseline;
+    padding: 10px 14px; border-top: 1px solid #f6f8fb; cursor: pointer; min-height: 42px;
+}
+.trk-alert-row:hover { background: #f8fafc; }
+.trk-alert-row .t { color: #94a3b8; font-variant-numeric: tabular-nums; flex: none; }
+.trk-alert-row .m { flex: 1; min-width: 0; }
+.trk-alert-row.warn { border-left: 3px solid #d97706; }
+.trk-alert-row.alarm { border-left: 3px solid #dc2626; background: #fff7f7; }
+.trk-alert-row.info { border-left: 3px solid #94a3b8; }
+.trk-alert-empty { padding: 22px; text-align: center; color: #64748b; }
+body.trk-dark .trk-alert-panel { background: #101a2e; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-alert-head { border-bottom-color: #1c2b45; }
+body.trk-dark .trk-alert-row { border-top-color: #16223a; }
+body.trk-dark .trk-alert-row:hover { background: #16223a; }
+body.trk-dark .trk-alert-row.alarm { background: #2d0f0f; }
+
+/* patrol plan rows (planned vs actual) */
+.trk-plan { display: flex; flex-direction: column; gap: 2px; }
+.trk-plan-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 8px; font: 600 12px system-ui, sans-serif;
+}
+.trk-plan-row .mk { width: 16px; text-align: center; font-weight: 800; }
+.trk-plan-row.done { color: #15803d; background: #f0fdf4; }
+.trk-plan-row.missed { color: #b91c1c; background: #fef2f2; }
+.trk-plan-row.todo { color: #64748b; }
+.trk-plan-row.extra { color: #1d4ed8; background: #eff6ff; }
+.trk-plan-row.cur { outline: 2px solid #2563eb33; }
+.trk-plan-row .miss, .trk-plan-row .unexp {
+    margin-left: auto; font: 800 9px system-ui, sans-serif; letter-spacing: .05em;
+}
+body.trk-dark .trk-plan-row.done { background: #0d2a1a; }
+body.trk-dark .trk-plan-row.missed { background: #2d0f0f; }
+body.trk-dark .trk-plan-row.extra { background: #14233d; }
+
+/* ================= status pill (bottom-left slot) ================= */
+.trk-status {
+    position: fixed; bottom: 14px; left: 14px; z-index: 1200;
+    background: #ffffffee; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 6px 12px; font: 600 12px system-ui, sans-serif; color: #0f172a;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+.trk-status-bad { background: #fef2f2ee; border-color: #dc2626; color: #b91c1c; }
+
+/* ================= tactical dark (§2.5) =================
+   One coherent command-centre look. The base page styles everything through CSS
+   variables on :root, so overriding them on body.trk-dark re-themes the whole page —
+   header, KPIs, banners, panels — and the rules below catch the overlay widgets that
+   carry literal colours. Visibility and contrast, not decoration. */
+body.trk-dark {
+    --bg: #0b1220;
+    --card: #101a2e;
+    --line: #24344f;
+    --text: #e2e8f0;
+    --text-dim: #8ca3c3;
+    --accent: #3b82f6;
+    --accent-soft: #14233d;
+    --ok-soft: #0d2a1a;
+    --warn-soft: #2d2008;
+    --alarm-soft: #2d0f0f;
+    --off-soft: #16223a;
+    --shadow: 0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.5);
+    background: var(--bg);
+}
+body.trk-dark #map { background: #0b1220; }
+body.trk-dark .trk-card,
+body.trk-dark .trk-search-box,
+body.trk-dark .trk-search-results,
+body.trk-dark .trk-session-pick {
+    background: #101a2e; border-color: #24344f; color: #e2e8f0;
+}
+body.trk-dark .trk-card-head { border-bottom-color: #1c2b45; }
+body.trk-dark .trk-card-title span, body.trk-dark .trk-card .dim { color: #8ca3c3; }
+body.trk-dark .trk-card-close, body.trk-dark .trk-search-close { color: #8ca3c3; }
+body.trk-dark .trk-search-box input { background: #101a2e; color: #e2e8f0; }
+body.trk-dark .trk-search-row { border-top-color: #1c2b45; }
+body.trk-dark .trk-search-row:hover, body.trk-dark .trk-session-pick .row:hover { background: #16223a; }
+body.trk-dark .trk-search-row .m span, body.trk-dark .trk-search-empty,
+body.trk-dark .trk-session-pick .row span { color: #8ca3c3; }
+body.trk-dark .trk-session-pick .row { border-top-color: #1c2b45; }
+body.trk-dark .trk-controls button {
+    background: #101a2ef5; border-color: #24344f; color: #e2e8f0;
+}
+body.trk-dark .trk-status { background: #101a2eee; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-status-bad { background: #2d0f0fee; border-color: #dc2626; color: #fca5a5; }
+body.trk-dark .trk-idle-panel { background: #101a2eee; color: #e2e8f0; }
+body.trk-dark .trk-idle-row { border-top-color: #1c2b45; }
+body.trk-dark .trk-idle-row:hover { background: #2d2008; }
+body.trk-dark .trk-replay-bar {
+    background: #101a2eee; color: #e2e8f0;
+}
+body.trk-dark .trk-replay-bar button { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-replay-bar button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+body.trk-dark .trk-unit .trk-id { background: #101a2eee; border-color: #24344f; color: #e2e8f0; }
+
+/* ================= phone layout ================= */
+@media (max-width: 760px) {
+    /* the card becomes a bottom sheet; the map stays visible above it */
+    .trk-card {
+        top: auto; right: 0; left: 0; bottom: 0; width: auto;
+        border-radius: 16px 16px 0 0; max-height: 44vh; overflow-y: auto;
+    }
+    body.trk-card-open .trk-controls { bottom: calc(44vh + 12px); }
+    body.trk-card-open .trk-follow-bar { bottom: calc(44vh + 12px); }
+    body.trk-card-open .trk-status { display: none; }
+
+    .trk-idle-panel { top: auto; bottom: 300px; right: 10px; max-width: 220px; }
+    .trk-follow-bar { bottom: 156px; }
+    .trk-replay-bar { bottom: 8px; border-radius: 12px; width: calc(100vw - 16px); }
+    .trk-replay-bar input[type=range] { flex: 1; width: auto; min-width: 120px; }
+    .trk-controls { bottom: 150px; }
+    .trk-status { bottom: 8px; left: 8px; font-size: 11px; }
+    .trk-chipbar { bottom: 44px; left: 8px; }
+    .trk-chipbar button { padding: 7px 10px; font-size: 11px; }
+    body.trk-card-open .trk-chipbar { display: none; }
+    .trk-alert-panel { top: auto; bottom: 200px; right: 8px; left: 8px; width: auto; max-height: 44vh; }
+}
+
+/* ================= compose overlay (✉ custom message) =================
+   Additive block — reuses the search overlay's geometry and the .trk-btn look. */
+.trk-msg {
+    position: fixed; inset: 0; z-index: 1600;
+    display: none; flex-direction: column; align-items: center;
+    padding-top: 14vh; background: rgba(15,23,42,.45);
+}
+.trk-msg.open { display: flex; }
+.trk-msg-box {
+    display: flex; flex-direction: column; gap: 10px;
+    width: min(480px, calc(100vw - 28px));
+    background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    padding: 12px 14px 14px;
+}
+.trk-msg-head { display: flex; align-items: center; }
+.trk-msg-head b { flex: 1; font: 700 14px system-ui, sans-serif; color: #0f172a; }
+.trk-msg-close {
+    border: 0; background: transparent; font-size: 24px; color: #64748b;
+    cursor: pointer; padding: 0 6px; min-width: 44px; min-height: 36px;
+}
+.trk-msg-scopes { display: flex; gap: 8px; flex-wrap: wrap; }
+.trk-msg-scope { background: #fff; color: #2563eb; }
+.trk-msg-scope.trk-btn-on { background: #16a34a; border-color: #16a34a; color: #fff; }
+.trk-msg-box textarea {
+    border: 1px solid #dde5ef; border-radius: 10px; outline: none;
+    padding: 12px 14px; resize: vertical; min-height: 76px;
+    font: 600 16px system-ui, sans-serif;   /* 16px floor: no iOS zoom */
+    color: #0f172a; background: #fff;
+}
+.trk-msg-box textarea:focus { border-color: #2563eb; }
+.trk-msg-foot { display: flex; align-items: center; gap: 10px; }
+.trk-msg-count { flex: 1; font: 600 12px system-ui, sans-serif; color: #64748b; }
+.trk-msg-box .trk-btn:disabled { opacity: .5; cursor: default; }
+
+body.trk-dark .trk-msg-box { background: #101a2e; color: #e2e8f0; }
+body.trk-dark .trk-msg-head b { color: #e2e8f0; }
+body.trk-dark .trk-msg-close { color: #8ca3c3; }
+body.trk-dark .trk-msg-scope { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-msg-scope.trk-btn-on { background: #16a34a; border-color: #16a34a; color: #fff; }
+body.trk-dark .trk-msg-box textarea { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-msg-count { color: #8ca3c3; }
+
+/* ================= online roster (the wall-clock answer to "who is out there?") ====
+   Additive block: the 📱 counter sits on the LEFT above the layer chips; tapping it
+   opens the search window in roster mode. Section headers group online vs offline. */
+.trk-online-fab {
+    position: fixed; z-index: 1250; bottom: 98px; left: 14px;
+    display: flex; align-items: center; gap: 5px;
+    border: 1px solid #dde5ef; background: #fffffff0; color: #0f172a;
+    border-radius: 999px; padding: 8px 14px; font: 700 12px system-ui, sans-serif;
+    cursor: pointer; min-height: 38px; box-shadow: 0 2px 8px rgba(15,23,42,.14);
+}
+.trk-online-fab:active { transform: scale(.97); }
+.trk-online-fab b { font-size: 14px; color: #15803d; }
+body.trk-dark .trk-online-fab { background: #101a2ef0; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-online-fab b { color: #4ade80; }
+
+.trk-search-sect {
+    padding: 10px 14px 4px; font: 800 10px system-ui, sans-serif;
+    letter-spacing: .08em; color: #64748b; border-top: 1px solid #f1f5f9;
+    position: sticky; top: 0; background: inherit;
+}
+.trk-search-sect:first-child { border-top: 0; }
+body.trk-dark .trk-search-sect { border-top-color: #1c2b45; color: #8ca3c3; }
+
+@media (max-width: 760px) {
+    .trk-online-fab { bottom: 90px; left: 8px; padding: 7px 10px; font-size: 11px; }
+    body.trk-card-open .trk-online-fab { display: none; }
+}

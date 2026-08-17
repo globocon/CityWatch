@@ -1,12 +1,19 @@
 using CityWatch.Data;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace CityWatch.RadioCheck.Pages
 {
@@ -28,14 +35,46 @@ namespace CityWatch.RadioCheck.Pages
 
         public string SignalRConnectionUrl { get; set; }
 
+        /* Tracking feature pack: gates the two script tags in the view. Off = the page is
+           byte-identical to today (RT9). */
+        public bool TrackingEnabled => _configuration.GetSection("Tracking")["Enabled"] == "True"
+                                       || _configuration.GetSection("Tracking")["Enabled"] == "true";
+
         // AllowAnonymousToFolder("/") in Program.cs suppresses [Authorize], so the page
         // guards itself the same way RadioCheckV2/ClientProfile do.
         private bool IsLoggedIn => User.Identity != null && User.Identity.IsAuthenticated;
 
-        public IActionResult OnGet()
+        public async Task<IActionResult> OnGetAsync(string key = null)
         {
+            /* Keyed direct link (field/test use): when ControlRoomMap:AccessKey is set in
+               configuration AND the request carries a matching ?key=, sign in a read-only
+               map-viewer principal (the same cookie the interactive login issues) and
+               redirect to the clean URL so the key does not linger in the address bar.
+               Absent/empty config = feature OFF — a production deploy without the key
+               behaves byte-identically to today. Treat the key like a password: anyone
+               holding the link sees the live map. Rotate or clear it in appsettings. */
             if (!IsLoggedIn)
+            {
+                var accessKey = _configuration["ControlRoomMap:AccessKey"];
+                if (!string.IsNullOrWhiteSpace(accessKey) && !string.IsNullOrEmpty(key)
+                    && CryptographicOperations.FixedTimeEquals(
+                        Encoding.UTF8.GetBytes(key), Encoding.UTF8.GetBytes(accessKey)))
+                {
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, "MapViewerLink"),
+                        new Claim(ClaimTypes.Sid, "0"),
+                        new Claim(ClaimTypes.Role, "User"),
+                    };
+                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(identity),
+                        new AuthenticationProperties { ExpiresUtc = DateTimeOffset.UtcNow.AddHours(12) });
+                    return RedirectToPage("/ControlRoomMap");
+                }
+
                 return Redirect(Url.Page("/Account/Login", new { returnUrl = Url.Page("/ControlRoomMap") }));
+            }
 
             SignalRConnectionUrl = _configuration.GetSection("SignalRConnectionUrl").Value;
             return Page();
@@ -171,6 +210,12 @@ namespace CityWatch.RadioCheck.Pages
                             patrolCarName = route?.PatrolCarName ?? "",
                             nextSite = next?.SiteName ?? "",
                             plannedTotal = planned.Count,
+                            /* The full planned sequence, in patrol order — what makes
+                               "planned vs actual" (missed/delayed/unexpected) computable
+                               without a second data model. Data source is unchanged. */
+                            planned = planned.OrderBy(p => p.OrderNo)
+                                .Select(p => new { siteId = p.ClientSiteId, siteName = p.SiteName })
+                                .ToList(),
                             visits = ordered.Select(v => new
                             {
                                 siteId = v.SiteId,

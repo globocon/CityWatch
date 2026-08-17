@@ -36,9 +36,14 @@ namespace CityWatch.Web.Services
         public readonly IClientDataProvider _clientDataProvider;
         private readonly IHubContext<MobileAppSignalRHub> _hubContext;
 
+        /* Tracking feature pack: optional publisher, no-op unless a subscriber activated
+           the bus. See CityWatch.Events.NullDomainEventPublisher. */
+        private readonly CityWatch.Events.IDomainEventPublisher _events;
+
         public MobileAppDataServices(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext)
+            ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext,
+            CityWatch.Events.IDomainEventPublisher events = null)
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
@@ -47,6 +52,7 @@ namespace CityWatch.Web.Services
             _logbookDataService = logbookDataService;
             _guardLogDataProvider = guardLogDataProvider;
             _hubContext = hubContext;
+            _events = events ?? CityWatch.Events.NullDomainEventPublisher.Instance;
         }
 
         public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId, int RowIdInServer)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
@@ -285,6 +291,21 @@ namespace CityWatch.Web.Services
                     // Log the tag details
                     _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
                     RowIdInServer = _clientSiteSmartWandTagsHitLog.Id;
+
+                    /* Tracking feature pack: the scan is committed above; publish is fire-and-
+                       forget and cannot fail this workflow (D17). LoggedInClientSiteId lets
+                       tracking tell an in-car tag (belongs to the officer's own fleet site)
+                       from a client-site checkpoint. */
+                    var _trkTagSiteId = _clientSiteSmartWandTagsHitLog.TagLinkedClientSiteId.GetValueOrDefault();
+                    if (_trkTagSiteId <= 0) _trkTagSiteId = ScanFromLinkedSiteId > 0 ? ScanFromLinkedSiteId : siteId;
+                    _events.Publish(new CityWatch.Events.Events.NfcCheckpointScanned(
+                        SmartWandId ?? 0, TagUid, _trkTagSiteId,
+                        GuardId, UserId, gpsCordinates, HitUtcDateTime, (int)scanningType, IsOfflineRecord)
+                    {
+                        LoggedInClientSiteId = siteId,
+                        LabelDescription = _clientSiteSmartWandTagsHitLog.LabelDescription,
+                        TagSiteName = TagInfoDetails?.ClientSiteName
+                    });
                     if (_ClientSiteTourMode != null && _ClientSiteTourMode.PatrolTourMode != PatrolTouringMode.STND)
                     {
                         // If tour mode enabled then log the tour activity  

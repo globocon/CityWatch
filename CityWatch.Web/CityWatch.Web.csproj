@@ -63,6 +63,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CityWatch.Common\CityWatch.Common.csproj" />
     <ProjectReference Include="..\CityWatch.Data\CityWatch.Data.csproj" />
+    <ProjectReference Include="..\CityWatch.Tracking\CityWatch.Tracking.csproj" />
   </ItemGroup>
 
  

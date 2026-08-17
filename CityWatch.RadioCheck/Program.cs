@@ -1,5 +1,6 @@
 using CityWatch.Common.Services;
 using CityWatch.Data;
+using CityWatch.Tracking.Configuration;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -77,6 +78,7 @@ builder.Services.AddSession(options =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
+builder.Services.AddCityWatchTracking(builder.Configuration); // Tracking feature pack (no-op unless Tracking:Enabled)
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -99,4 +101,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHub<MobileAppSignalRHub>("/MobileAppSignalRHub");
+app.MapCityWatchTracking(); // Tracking feature pack (no-op unless Tracking:Enabled)
 app.Run();

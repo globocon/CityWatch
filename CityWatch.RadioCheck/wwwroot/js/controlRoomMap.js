@@ -16,18 +16,32 @@
         scrollWheelZoom: true,
         maxBounds: AU_BOUNDS.pad(0.08),
         maxBoundsViscosity: 1.0,
-        minZoom: 4,
+        /* minZoom must stay 2, not 4: markercluster builds its distance grids for the
+           map's zoom range AT CREATION. The tracking overlay later calls setMinZoom(2)
+           to follow units outside Australia (pan-lock release) — if the grids only
+           cover 4..19, any addLayer while zoomed to 2-3 crashes with
+           "Cannot read properties of undefined (reading 'getNearObject')" and kills
+           the whole render. maxBounds still keeps the default view Australia-locked. */
+        minZoom: 2,
         maxZoom: 19,
         zoomAnimation: true
     }).fitBounds(AU_BOUNDS);
 
-    const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 20
+    /* Standard = OSM's own style, not CARTO Voyager: Voyager deliberately omits shops,
+       POIs and small locality names, which read as "the map is missing detail" to an
+       operator navigating by landmarks (field feedback, 12 Aug). OSM standard renders
+       them all from ~z16. Native max is z19. */
+    const lightLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
     }).addTo(map);
     const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 20
     });
-    L.control.layers({ 'Streets (light)': lightLayer, 'Night ops (dark)': darkLayer }, null, { position: 'topright' }).addTo(map);
+    /* Satellite: real-world visual context (Esri World Imagery). */
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics', maxZoom: 19
+    });
+    L.control.layers({ 'Streets (light)': lightLayer, 'Night ops (dark)': darkLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(map);
 
     /* cluster group for site markers; separate glide layer for PCAR cars */
     const clusterGroup = L.markerClusterGroup({
@@ -1349,6 +1363,21 @@
     }
 
     document.getElementById('btnRefreshNow').addEventListener('click', () => { clock = REFRESH_SECONDS; refresh(); });
+
+    /* tracking feature pack reads this; never writes internal state.
+       baseLayers/setBase: the overlay's map-mode button switches basemaps through here so
+       the two layer controls can never fight; siteLayer powers its Sites layer toggle. */
+    window.CRM = {
+        map, carLayer, COL,
+        siteLayer: clusterGroup,
+        baseLayers: { light: lightLayer, dark: darkLayer, sat: satLayer },
+        setBase: function (name) {
+            const target = this.baseLayers[name];
+            if (!target) return;
+            Object.values(this.baseLayers).forEach(l => { if (l !== target && map.hasLayer(l)) map.removeLayer(l); });
+            if (!map.hasLayer(target)) map.addLayer(target);
+        }
+    };
 
     refresh();
 })();

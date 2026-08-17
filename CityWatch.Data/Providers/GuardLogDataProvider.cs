@@ -463,13 +463,19 @@ namespace CityWatch.Data.Providers
         private readonly ILogbookDataService _logbookDataService;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
 
+        /* Tracking feature pack: optional publisher, no-op unless a subscriber activated
+           the bus. See CityWatch.Events.NullDomainEventPublisher. */
+        private readonly CityWatch.Events.IDomainEventPublisher _events;
+
         public GuardLogDataProvider(CityWatchDbContext context,
             ILogbookDataService logbookDataService,
-            IClientSiteWandDataProvider clientSiteWandDataProvider)
+            IClientSiteWandDataProvider clientSiteWandDataProvider,
+            CityWatch.Events.IDomainEventPublisher events = null)
         {
             _context = context;
             _logbookDataService = logbookDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
+            _events = events ?? CityWatch.Events.NullDomainEventPublisher.Instance;
         }
 
         public List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate)
@@ -709,7 +715,9 @@ namespace CityWatch.Data.Providers
             });
             _context.SaveChanges();
 
-
+            /* Tracking observes duress; it never gates it. The alert path above is already
+               committed and complete before this line runs (D17). */
+            _events.Publish(new CityWatch.Events.Events.DuressActivated(guardId, null, clientSiteId, gpsCoordinates, DateTime.UtcNow));
         }
         //To Save ActionList
         public void SaveActionList(ActionListNotification ActionList)

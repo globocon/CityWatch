@@ -76,6 +76,8 @@ namespace CityWatch.Web.API
         private readonly IAlertEmailServices _alertEmailServices;
         private readonly IHubContext<UpdateHub> _webHubContext;
         private readonly IHubContext<MobileAppSignalRHub> _mobileHubContext;
+        /* Tracking feature pack: optional publisher, no-op unless a subscriber activated the bus. */
+        private readonly CityWatch.Events.IDomainEventPublisher _events;
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
 
 
@@ -92,8 +94,10 @@ namespace CityWatch.Web.API
             IAppConfigurationProvider appConfigurationProvider, IUserAuthenticationService userAuthentication,
             IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices,
             Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache, CityWatchDbContext context,
-            IHubContext<UpdateHub> webHubContext, IHubContext<MobileAppSignalRHub> mobileHubContext)
+            IHubContext<UpdateHub> webHubContext, IHubContext<MobileAppSignalRHub> mobileHubContext,
+            CityWatch.Events.IDomainEventPublisher events = null)
         {
+            _events = events ?? CityWatch.Events.NullDomainEventPublisher.Instance;
             _context = context;
             _memoryCache = memoryCache;
             _guardDataProvider = guardDataProvider;
@@ -4090,6 +4094,8 @@ namespace CityWatch.Web.API
                     _context.PcarVisitHistory.Add(history);
                     await _context.SaveChangesAsync();
 
+                    PublishPcarVisitEvent(visit.SmartWandId, visitdetails.GuardId, visitdetails.PcarRouteId, visit.SiteId, PcarVisitStatusEnum.CancelledOrDelegated); // tracking feature pack (D17)
+
                     return Ok(new
                     {
                         Success = true,
@@ -4199,6 +4205,8 @@ namespace CityWatch.Web.API
                         _context.PcarVisitHistory.Add(history);
                         await _context.SaveChangesAsync();
 
+                        PublishPcarVisitEvent(dto.SmartWandId, newVisit.GuardId, newVisit.PcarRouteId, dto.SiteId, visitStatus); // tracking feature pack (D17)
+
                         return Ok(new
                         {
                             Success = true,
@@ -4283,6 +4291,8 @@ namespace CityWatch.Web.API
 
                     _context.PcarVisitHistory.Add(history);
                     await _context.SaveChangesAsync();
+
+                    PublishPcarVisitEvent(dto.SmartWandId, visit.GuardId, visit.PcarRouteId, dto.SiteId, visitStatus); // tracking feature pack (D17)
 
                     return Ok(new
                     {
@@ -6156,6 +6166,17 @@ namespace CityWatch.Web.API
             {
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        /* Tracking feature pack: maps PCAR visit status transitions onto the domain event
+           vocabulary. Called as the last statement after each PcarVisitHistory commit (D17);
+           Publish never throws and never blocks, so the visit workflow cannot be affected. */
+        private void PublishPcarVisitEvent(int smartWandId, int? guardId, int? pcarRouteId, int siteId, PcarVisitStatusEnum status)
+        {
+            if (status == PcarVisitStatusEnum.InProgress)
+                _events.Publish(new CityWatch.Events.Events.PatrolStarted(smartWandId, guardId, pcarRouteId, siteId, DateTime.UtcNow));
+            else if (status == PcarVisitStatusEnum.Completed || status == PcarVisitStatusEnum.CancelledOrDelegated)
+                _events.Publish(new CityWatch.Events.Events.PatrolEnded(smartWandId, guardId, status.ToString(), DateTime.UtcNow));
         }
 
     }

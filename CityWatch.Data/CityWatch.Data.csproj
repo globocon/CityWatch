@@ -25,6 +25,7 @@
     
   <ItemGroup>
     <ProjectReference Include="..\CityWatch.Common\CityWatch.Common.csproj" />
+    <ProjectReference Include="..\CityWatch.Events\CityWatch.Events.csproj" />
   </ItemGroup>
 	
 </Project>
