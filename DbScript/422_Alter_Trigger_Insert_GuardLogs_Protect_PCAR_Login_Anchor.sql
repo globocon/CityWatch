@@ -1,6 +1,16 @@
 /* =============================================================================
    422 - Protect patrol car base-site login anchors from the cross-site cleanup.
 
+   WHEN       19-Aug-2026
+   AFFECTS    Trigger dbo.Insert_GuardLogs (on dbo.GuardLogs)
+   RUN ORDER  Run this script BEFORE deploying the matching application build.
+              The app change creates the login anchor; the OLD trigger would
+              delete it on the crew's next client-site scan, so the trigger must
+              be patched first. Proven on test - the anchor alone does not hold.
+   VERIFIED   test-citywatch, 19-Aug-2026: six patrol car crews, twelve
+              client-site scans, all six anchors survived. Standard guard moving
+              site A -> B unchanged (both rows at A still removed).
+
    PROBLEM
    Insert_GuardLogs deletes a guard's Radio Check rows at every OTHER site on
    each log entry, enforcing "one guard = one site". A patrol car crew is
