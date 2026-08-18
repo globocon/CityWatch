@@ -33,6 +33,25 @@ namespace CityWatch.Tracking.Data.Entities
         public string? Name { get; set; }
     }
 
+    /// <summary>ClientSiteDuress, read-only. THE truth table for duress: raising the alarm
+    /// inserts rows (and only then publishes DuressActivated); the control room deactivating
+    /// it DELETES them. Tracking keeps a unit in Duress Mode exactly as long as a row backs
+    /// it — a command that outlives its rows is a stuck alarm, not an emergency.</summary>
+    [Table("ClientSiteDuress")]
+    public class PlatformClientSiteDuress
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int ClientSiteId { get; set; }
+
+        public bool IsEnabled { get; set; }
+
+        /// <summary>The guard who raised the alarm — the association tracking mirrors,
+        /// because DuressActivated escalates that guard's active session.</summary>
+        public int EnabledBy { get; set; }
+    }
+
     /// <summary>ClientSites, read-only. The geofence catalogue: where the sites ARE, so an
     /// arrival can be detected from GPS instead of waiting for a tag that may never be
     /// scanned. Gps is the platform's own free-text "lat,lon" column — parsed defensively,

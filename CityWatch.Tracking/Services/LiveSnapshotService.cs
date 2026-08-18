@@ -183,6 +183,21 @@ namespace CityWatch.Tracking.Services
                     (int)Math.Max(0, (now - point.ReceivedUtc).TotalSeconds))));
             }
 
+            /* The live map shows NOW; a point's ModeAtCapture is history. A marker keeps its
+               DURESS accent only while the platform's ClientSiteDuress rows say the alarm is
+               still on — the control room deactivating it deletes those rows, and the map must
+               stand down with them even when the phone is unreachable and cannot ack (§5.4). */
+            if (result.Any(u => u.Mode == (byte)TrackingMode.Duress))
+            {
+                var alarmedGuards = (await _db.PlatformClientSiteDuress
+                    .Where(d => d.IsEnabled)
+                    .Select(d => d.EnabledBy)
+                    .ToListAsync(ct)).ToHashSet();
+                for (var i = 0; i < result.Count; i++)
+                    if (result[i].Mode == (byte)TrackingMode.Duress && !alarmedGuards.Contains(result[i].GuardId))
+                        result[i] = result[i] with { Mode = (byte)TrackingMode.Transit };
+            }
+
             return result.OrderBy(u => u.UnitId).ToList();
         }
     }

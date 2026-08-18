@@ -176,6 +176,21 @@ namespace CityWatch.Tracking.Services
                     _events.Publish(new LiveTrackingEnded(command.UnitId, null, "Expired", now));
                     continue;
                 }
+
+                /* Duress has no TTL, but it is not eternal either: it lives exactly as long
+                   as the platform's ClientSiteDuress rows say the alarm is on. The control
+                   room deactivating duress DELETES those rows without telling this pack —
+                   so the device's own heartbeat is where a cleared alarm stands down. */
+                if (command.DesiredMode == (byte)TrackingMode.Duress &&
+                    !await DuressStillOnAsync(unitId, ct))
+                {
+                    command.Status = "Cancelled";
+                    command.EndReason = "DuressCleared";
+                    dirty = true;
+                    _events.Publish(new LiveTrackingEnded(command.UnitId, null, "DuressCleared", now));
+                    continue;
+                }
+
                 current ??= command;   // newest non-expired wins
             }
 
@@ -226,6 +241,14 @@ namespace CityWatch.Tracking.Services
 
             _logger.LogWarning("Unit {Unit} commanded to Duress Mode.", unitId);
         }
+
+        /* Backed = an enabled ClientSiteDuress row raised by the guard of this unit's active
+           session — the same guard-keyed association DuressHandler used to escalate. A unit
+           with no active session has nobody the alarm could be for; that counts as cleared. */
+        private async Task<bool> DuressStillOnAsync(int unitId, CancellationToken ct)
+            => await _db.PlatformClientSiteDuress.AnyAsync(d => d.IsEnabled &&
+                   _db.TrackingSessions.Any(s =>
+                       s.UnitId == unitId && s.Status == "Active" && s.GuardId == d.EnabledBy), ct);
 
         private async Task SupersedeOpenCommandsAsync(int unitId, string reason, CancellationToken ct)
         {

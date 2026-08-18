@@ -130,5 +130,37 @@ namespace CityWatch.Tracking.Tests
             var snapshot = await _service.GetSnapshotAsync(CancellationToken.None);
             Assert.AreEqual(0, snapshot.Count, "An open session with no data is not an error and not a marker.");
         }
+
+        [TestMethod]
+        public async Task DuressMarker_Persists_WhileTheAlarmIsOn()
+        {
+            _db.PlatformClientSiteDuress.Add(new PlatformClientSiteDuress
+            {
+                ClientSiteId = 12, IsEnabled = true, EnabledBy = 7   // the session's guard
+            });
+            _db.TrackPoints.Add(new TrackPoint { UnitId = Unit, SessionId = Session, Seq = 1, RecordedUtc = Now.AddMinutes(-5), ReceivedUtc = Now.AddMinutes(-5), Latitude = -33.9m, Longitude = 151.1m, SourceType = 4, ModeAtCapture = 4 });
+            await _db.SaveChangesAsync();
+
+            var snapshot = await _service.GetSnapshotAsync(CancellationToken.None);
+
+            Assert.AreEqual((byte)TrackingMode.Duress, snapshot[0].Mode,
+                "A live alarm keeps the marker in duress, however old the last fix.");
+        }
+
+        [TestMethod]
+        public async Task DuressMarker_StandsDown_WhenTheControlRoomDeactivatesTheAlarm()
+        {
+            /* The phone is unreachable: its last stored point still says duress, but the
+               control room has deactivated the alarm (ClientSiteDuress rows deleted). The
+               map must stand down NOW — from the control room an eternal stale DURESS is
+               indistinguishable from a real one, which is the dangerous part. */
+            _db.TrackPoints.Add(new TrackPoint { UnitId = Unit, SessionId = Session, Seq = 1, RecordedUtc = Now.AddMinutes(-30), ReceivedUtc = Now.AddMinutes(-30), Latitude = -33.9m, Longitude = 151.1m, SourceType = 4, ModeAtCapture = 4 });
+            await _db.SaveChangesAsync();
+
+            var snapshot = await _service.GetSnapshotAsync(CancellationToken.None);
+
+            Assert.AreEqual((byte)TrackingMode.Transit, snapshot[0].Mode,
+                "No ClientSiteDuress row ⇒ no DURESS accent, whatever the last point captured.");
+        }
     }
 }

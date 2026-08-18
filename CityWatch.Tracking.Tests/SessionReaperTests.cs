@@ -154,5 +154,55 @@ namespace CityWatch.Tracking.Tests
             var after = await _db.TrackingSessions.SingleAsync(s => s.Id == done.Id);
             Assert.AreEqual("OfficerLoggedOut", after.EndReason);   // untouched, not re-reaped
         }
+
+        /* ---- duress reconcile: the sweep for the phone that cannot heartbeat. ---- */
+
+        private async Task<TrackingModeCommand> SeedDuressCommandAsync(int unitId)
+        {
+            var command = new TrackingModeCommand
+            {
+                UnitId = unitId, CommandSeq = 1, DesiredMode = 4 /* Duress */,
+                IssuedUtc = Now.AddHours(-26), Status = "Active"
+            };
+            _db.TrackingModeCommands.Add(command);
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
+            return command;
+        }
+
+        private Task<int> ReconcileAsync()
+            => SessionReaper.ReconcileDuressAsync(_db, NullLogger.Instance, CancellationToken.None);
+
+        [TestMethod]
+        public async Task DeactivatedAlarm_OfflinePhone_CommandIsStoodDown()
+        {
+            /* The 18 Aug live incident: duress cleared in the control room yesterday
+               (ClientSiteDuress rows deleted), phone never heartbeated again, command
+               sat Active for 24h+ and the map flashed a dead alarm all day. */
+            await SeedSessionAsync(2000010, Now.AddHours(-20), lastPointUtc: Now.AddMinutes(-5));
+            var command = await SeedDuressCommandAsync(2000010);
+
+            Assert.AreEqual(1, await ReconcileAsync());
+            var row = await _db.TrackingModeCommands.SingleAsync(c => c.Id == command.Id);
+            Assert.AreEqual("Cancelled", row.Status);
+            Assert.AreEqual("DuressCleared", row.EndReason);
+        }
+
+        [TestMethod]
+        public async Task LiveAlarm_IsNeverTouchedByTheReconcile()
+        {
+            var session = await SeedSessionAsync(2000010, Now.AddHours(-2), lastPointUtc: Now.AddMinutes(-5));
+            _db.PlatformClientSiteDuress.Add(new PlatformClientSiteDuress
+            {
+                ClientSiteId = 1, IsEnabled = true, EnabledBy = session.GuardId
+            });
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
+            var command = await SeedDuressCommandAsync(2000010);
+
+            Assert.AreEqual(0, await ReconcileAsync());
+            var row = await _db.TrackingModeCommands.SingleAsync(c => c.Id == command.Id);
+            Assert.AreEqual("Active", row.Status, "A backed alarm is an emergency, not a leak.");
+        }
     }
 }

@@ -129,9 +129,29 @@ namespace CityWatch.Tracking.Tests
             Assert.AreEqual("Expired", stored.Status);
         }
 
-        [TestMethod]
-        public async Task Duress_OverridesLive_AndNeverExpires()
+        /* The truth table: raising duress inserts ClientSiteDuress rows; the control room
+           deactivating the alarm deletes them. Guard 7 matches the session seeded in Setup. */
+        private async Task AlarmOnAsync()
         {
+            _db.PlatformClientSiteDuress.Add(new PlatformClientSiteDuress
+            {
+                ClientSiteId = 12, IsEnabled = true, EnabledBy = 7
+            });
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();   // seeding must not shadow the service's own reads
+        }
+
+        private async Task AlarmClearedAsync()
+        {
+            _db.PlatformClientSiteDuress.RemoveRange(await _db.PlatformClientSiteDuress.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
+        }
+
+        [TestMethod]
+        public async Task Duress_OverridesLive_AndNeverExpires_WhileTheAlarmIsOn()
+        {
+            await AlarmOnAsync();
             await Service().RequestLiveAsync(Unit, Operator, null, CancellationToken.None);
 
             await Service().RequestDuressAsync(Unit, CancellationToken.None);
@@ -145,6 +165,40 @@ namespace CityWatch.Tracking.Tests
             _clock = Now.AddHours(12);   // duress persists across a whole shift if uncancelled
             var later = await Service().ResolveAsync(Unit, 0, CancellationToken.None);
             Assert.AreEqual(TrackingMode.Duress, later.DesiredMode);
+        }
+
+        [TestMethod]
+        public async Task Duress_StandsDown_WhenTheControlRoomDeactivatesTheAlarm()
+        {
+            await AlarmOnAsync();
+            await Service().RequestDuressAsync(Unit, CancellationToken.None);
+            var during = await Service().ResolveAsync(Unit, 0, CancellationToken.None);
+            Assert.AreEqual(TrackingMode.Duress, during.DesiredMode);
+
+            await AlarmClearedAsync();   // what the control room's deactivate actually does
+
+            var after = await Service().ResolveAsync(Unit, 0, CancellationToken.None);
+            Assert.AreEqual(TrackingMode.Normal, after.DesiredMode,
+                "A cleared alarm must stand the device down on its next heartbeat.");
+            var stored = await _db.TrackingModeCommands.SingleAsync();
+            Assert.AreEqual("Cancelled", stored.Status);
+            Assert.AreEqual("DuressCleared", stored.EndReason);
+        }
+
+        [TestMethod]
+        public async Task Duress_StandsDown_WhenTheAlarmBelongsToAnotherGuard()
+        {
+            _db.PlatformClientSiteDuress.Add(new PlatformClientSiteDuress
+            {
+                ClientSiteId = 12, IsEnabled = true, EnabledBy = 999   // someone else's alarm
+            });
+            await _db.SaveChangesAsync();
+            await Service().RequestDuressAsync(Unit, CancellationToken.None);
+
+            var resolution = await Service().ResolveAsync(Unit, 0, CancellationToken.None);
+
+            Assert.AreEqual(TrackingMode.Normal, resolution.DesiredMode,
+                "Another guard's open alarm must not keep this unit in duress.");
         }
 
         [TestMethod]
