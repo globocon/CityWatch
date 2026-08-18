@@ -678,7 +678,7 @@
                 ? `<div class="trk-row dim">📍 ${Number(u.lat).toFixed(5)}, ${Number(u.lon).toFixed(5)}</div>`
                 : '');
         const sessionSince = u.sessionStartedUtc
-            ? new Date(u.sessionStartedUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+            ? utcDate(u.sessionStartedUtc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
         const following = follow.unitId === u.unitId;
 
         el.classList.add('open');
@@ -972,8 +972,11 @@
         /* hue 210 (blue) → 10 (red) across the session. Colour IS the time axis. */
         return `hsl(${Math.round(210 - 200 * i / Math.max(1, REPLAY_BUCKETS - 1))} 85% 45%)`;
     }
-    function hm(v) { return v ? new Date(v).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
-    function dayOf(v) { return v ? new Date(v).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : ''; }
+    /* Both through utcDate: p.utc arrives WITHOUT a zone marker, and a raw new Date()
+       shows UTC digits on the wall clock — the replay said 02:21 in a room whose clock
+       said 12:21 (field report, 18 Aug). Operators read local time, so we render local. */
+    function hm(v) { return v ? utcDate(v).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function dayOf(v) { return v ? utcDate(v).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : ''; }
 
     function replayBarHtml(label, s) {
         const t0 = s.points[0].utc, t1 = s.points[s.points.length - 1].utc;
@@ -1040,7 +1043,7 @@
         const clock = document.getElementById('trkReplayClock');
         const play = document.getElementById('trkReplayPlay');
         if (pos) pos.value = i;
-        if (clock && p) clock.textContent = `${dayOf(p.utc)} ${new Date(p.utc).toLocaleTimeString()}`;
+        if (clock && p) clock.textContent = `${dayOf(p.utc)} ${utcDate(p.utc).toLocaleTimeString()}`;
         if (play) play.textContent = replay.playing ? '⏸' : '▶';
     }
 
@@ -1072,13 +1075,13 @@
         /* Time buckets: equal spans of the session, blue → red. Filled by renderProgress. */
         replay.buckets = [];
         replay.bucketEnd = [];
-        const t0 = new Date(pts[0].utc).getTime();
-        const t1 = new Date(pts[pts.length - 1].utc).getTime();
+        const t0 = utcDate(pts[0].utc).getTime();
+        const t1 = utcDate(pts[pts.length - 1].utc).getTime();
         const span = Math.max(1, t1 - t0);
         let cursor = 0;
         for (let b = 0; b < REPLAY_BUCKETS; b++) {
             const limit = t0 + span * (b + 1) / REPLAY_BUCKETS;
-            while (cursor < pts.length - 1 && new Date(pts[cursor].utc).getTime() <= limit) cursor++;
+            while (cursor < pts.length - 1 && utcDate(pts[cursor].utc).getTime() <= limit) cursor++;
             replay.bucketEnd.push(cursor);
             replay.buckets.push(L.polyline([], { weight: 5, opacity: .9, color: bucketColor(b), lineJoin: 'round' }).addTo(layer));
         }
@@ -1123,10 +1126,10 @@
         const eventIdx = new Set([0, pts.length - 1]);
         pts.forEach((p, i) => { if (p.source === 1 || p.source === 4) eventIdx.add(i); });
         replay.stops.forEach(st => {
-            const t = new Date(st.fromUtc).getTime();
+            const t = utcDate(st.fromUtc).getTime();
             let best = 0, bestD = Infinity;
             pts.forEach((p, i) => {
-                const d = Math.abs(new Date(p.utc).getTime() - t);
+                const d = Math.abs(utcDate(p.utc).getTime() - t);
                 if (d < bestD) { bestD = d; best = i; }
             });
             eventIdx.add(best);
@@ -1233,6 +1236,34 @@
         });
     }
 
+    /* A phone's first fix after login can be a cold-start ghost from a stale A-GPS
+       cache, thousands of km from the shift — every 17 Aug replay "started in India"
+       and drew a line across the ocean to the real route. A SHORT leading run that
+       the next fix abandons at impossible speed is that ghost: drop it before
+       anything is drawn, so START, the base line, buckets and events all begin where
+       the patrol really began. Jumps deeper inside the route are left alone — there
+       they are evidence, and the live-trail rules already refuse to draw across them. */
+    const GHOST_RUN_MAX = 3;   // a real route's opening run is longer than this
+    function ghostJump(a, b) {
+        const km = haversineKm(Number(a.lat), Number(a.lon), Number(b.lat), Number(b.lon));
+        if (km > 1000) return true;   // no patrol covers this between two fixes, whatever the gap
+        const hours = Math.max(1 / 3600, (utcDate(b.utc) - utcDate(a.utc)) / 3600000);
+        return km > GLIDE_MAX_KM && km / hours > 500;   // faster than anything on wheels
+    }
+    function dropGhostPrefix(points) {
+        const pts = points || [];
+        let from = 0;
+        for (let cluster = 0; cluster < 3; cluster++) {   // tolerate a few ghost fixes, not many
+            const limit = Math.min(from + GHOST_RUN_MAX, pts.length - 1);
+            let jumpAt = -1;
+            for (let i = from; i < limit; i++)
+                if (ghostJump(pts[i], pts[i + 1])) { jumpAt = i; break; }
+            if (jumpAt < 0) break;
+            from = jumpAt + 1;
+        }
+        return from ? pts.slice(from) : pts;
+    }
+
     async function fetchReplay(unitId, fromUtc, toUtc) {
         let body;
         try {
@@ -1242,7 +1273,9 @@
             body = await res.json();
         } catch { notice('Replay unavailable.', 'alarm'); return; }
 
-        const sessions = (body.sessions || []).filter(s => s.points && s.points.length >= 2);
+        const sessions = (body.sessions || [])
+            .map(s => ({ ...s, points: dropGhostPrefix(s.points) }))
+            .filter(s => s.points && s.points.length >= 2);
         if (!sessions.length) { notice(`No trail recorded between ${hm(fromUtc)} and ${hm(toUtc)}.`); return; }
         if (sessions.length === 1) playSession(unitId, sessions[0], body.truncated);
         else sessionPicker(unitId, sessions, body.truncated);
@@ -1497,7 +1530,7 @@
         if (entry.trailSeeded || u.kind === 'guard') return;
         if (!u.sessionId) return;        // partial hub frame — the next full poll seeds
         entry.trailSeeded = true;
-        const from = u.sessionStartedUtc ? new Date(u.sessionStartedUtc)
+        const from = u.sessionStartedUtc ? utcDate(u.sessionStartedUtc)
             : new Date(Date.now() - 8 * 3600 * 1000);
         fetch(`/api/tracking/history/${u.unitId}?fromUtc=${from.toISOString()}&toUtc=${new Date().toISOString()}`,
             { credentials: 'same-origin' })
