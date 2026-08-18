@@ -55,10 +55,11 @@ namespace CityWatch.Tracking.Hosted
                 try
                 {
                     using var scope = _scopes.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<TrackingDbContext>();
                     await SweepAsync(
-                        scope.ServiceProvider.GetRequiredService<TrackingDbContext>(),
-                        scope.ServiceProvider.GetRequiredService<ISessionService>(),
+                        db, scope.ServiceProvider.GetRequiredService<ISessionService>(),
                         DateTime.UtcNow, _options.Reaper, _logger, stoppingToken);
+                    await ReconcileDuressAsync(db, _logger, stoppingToken);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
@@ -89,6 +90,36 @@ namespace CityWatch.Tracking.Hosted
                 logger.LogInformation("Session reaper expired {Count} session(s) silent for over {Hours}h.",
                     staleIds.Count, options.StaleAfterHours);
             return staleIds.Count;
+        }
+
+        /// <summary>Stands down duress commands whose alarm the control room has deactivated
+        /// (its deactivate DELETES the ClientSiteDuress rows). The device's own heartbeat does
+        /// this in ResolveAsync; this sweep is for the phone that is offline or dead — its
+        /// marker must not flash DURESS for a day after the alarm was cleared (18 Aug field
+        /// report: a cleared duress sat Active for 24h+ because nothing ever re-resolved it).</summary>
+        public static async Task<int> ReconcileDuressAsync(TrackingDbContext db, ILogger logger, CancellationToken ct)
+        {
+            var orphaned = await db.TrackingModeCommands
+                .AsTracking()   // mutated below; the context default is NoTracking
+                .Where(c => c.DesiredMode == (byte)Contracts.TrackingMode.Duress &&
+                            (c.Status == "Pending" || c.Status == "Active"))
+                .Where(c => !db.PlatformClientSiteDuress.Any(d => d.IsEnabled &&
+                            db.TrackingSessions.Any(s =>
+                                s.UnitId == c.UnitId && s.Status == "Active" && s.GuardId == d.EnabledBy)))
+                .ToListAsync(ct);
+            if (orphaned.Count == 0)
+                return 0;
+
+            foreach (var command in orphaned)
+            {
+                command.Status = "Cancelled";
+                command.EndReason = "DuressCleared";
+            }
+            await db.SaveChangesAsync(ct);
+
+            logger.LogInformation("Duress reconcile stood down {Count} command(s) with no backing ClientSiteDuress row.",
+                orphaned.Count);
+            return orphaned.Count;
         }
     }
 }

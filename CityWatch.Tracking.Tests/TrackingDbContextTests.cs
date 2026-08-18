@@ -26,7 +26,8 @@ namespace CityWatch.Tracking.Tests
         /// the pack-owns-its-tables assertions below.</summary>
         private static readonly string[] PlatformProjections =
         {
-            nameof(PlatformSmartWand), nameof(PlatformGuard), nameof(PlatformClientSite)
+            nameof(PlatformSmartWand), nameof(PlatformGuard), nameof(PlatformClientSite),
+            nameof(PlatformClientSiteDuress)
         };
 
         [TestMethod]
@@ -76,6 +77,8 @@ namespace CityWatch.Tracking.Tests
                 context.Model.FindEntityType(typeof(PlatformGuard))!.GetTableName());
             Assert.AreEqual("ClientSites",
                 context.Model.FindEntityType(typeof(PlatformClientSite))!.GetTableName());
+            Assert.AreEqual("ClientSiteDuress",
+                context.Model.FindEntityType(typeof(PlatformClientSiteDuress))!.GetTableName());
         }
 
         [TestMethod]
