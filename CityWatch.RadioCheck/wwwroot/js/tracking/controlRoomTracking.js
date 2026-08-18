@@ -147,17 +147,20 @@
         return 2 * R * Math.asin(Math.sqrt(h));
     }
 
-    /* Identity of a tracked unit, most operational first:
-       the CAR from the login Position ("Mobile Patrols (Car) M1" -> "M1"), then the
-       radio callsign, then the guard's name. Several cars of one fleet roam the same
-       sites at once, so the car is what tells them apart. */
+    /* Identity of a tracked unit — ONE naming system per screen: the radio CALLSIGN the
+       officer logged in with ("R3"), because that is the name the control room already
+       uses everywhere else. The car from the login Position ("Mobile Patrols (Car) M1"
+       -> "M1") is only the fallback when no callsign was entered, then the guard's name.
+       Field report 18 Aug: car-name-first put "M1" beside "R1" on the same map and the
+       operator could not match markers to the RC screen. The car stays visible in the
+       asset card and in search. */
     function shortCar(name) {
         if (!name) return null;
         const m = String(name).match(/\(car\)\s*([A-Z]{0,2}\d+)/i);
         return m ? m[1] : String(name).replace(/mobile patrols\s*/i, '').replace(/[()]/g, '').trim();
     }
     function unitLabel(u) {
-        return shortCar(u.patrolCar) || u.callsign
+        return u.callsign || shortCar(u.patrolCar)
             || (u.kind !== 'guard' ? `PC-${u.unitId}`
                 : (u.guardName ? u.guardName.split(' ')[0] : `G-${u.guardId || u.unitId}`));
     }
@@ -664,8 +667,10 @@
         const u = entry.data;
         const mode = MODE[u.mode] || MODE[1];
         const isCar = u.kind !== 'guard';
+        /* Same rule as unitLabel: callsign headlines, the car itself moves to the
+           subtitle — the card must answer to the same name as its marker. */
         const title = isCar
-            ? (u.patrolCar || u.callsign || `Unit ${u.unitId}`)
+            ? (u.callsign || u.patrolCar || `Unit ${u.unitId}`)
             : (u.guardName || `Guard ${u.guardId || u.unitId}`);
         /* Derived speed is approximate and says so; measured speed is plain. */
         const speed = u.speedKph == null ? '—' : `${u.speedDerived ? '~' : ''}${u.speedKph} km/h`;
@@ -687,7 +692,7 @@
               <span class="trk-card-glyph">${isCar ? carSvg(mode.color) : `<div class="trk-avatar trk-avatar-lg" style="border-color:${mode.color}">${esc(initialsOf(u.guardName))}</div>`}</span>
               <span class="trk-card-title">
                 <b>${esc(title)}</b>
-                <span>${u.callsign && u.patrolCar ? esc(u.callsign) + ' · ' : ''}${isCar ? 'Patrol Car' : 'Guard'}</span>
+                <span>${u.callsign && u.patrolCar ? esc(u.patrolCar) + ' · ' : ''}${isCar ? 'Patrol Car' : 'Guard'}</span>
               </span>
               <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>
               <button class="trk-card-close" data-trk-card-close="1" aria-label="Close">×</button>
