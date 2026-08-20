@@ -20,14 +20,14 @@ SELECT COUNT(*)                              AS TotalPoints,
        AVG(CAST(AccuracyM AS FLOAT))         AS AvgAccuracyM,
        MAX(AccuracyM)                        AS MaxAccuracyM,
        SUM(CASE WHEN AccuracyM IS NULL THEN 1 ELSE 0 END) AS PointsWithoutAccuracy
-FROM dbo.TrackPoints;
+FROM dbo.TrackPoint;
 
 SELECT DISTINCT
        PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY CAST(AccuracyM AS FLOAT)) OVER () AS P50,
        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY CAST(AccuracyM AS FLOAT)) OVER () AS P75,
        PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY CAST(AccuracyM AS FLOAT)) OVER () AS P90,
        PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY CAST(AccuracyM AS FLOAT)) OVER () AS P99
-FROM dbo.TrackPoints
+FROM dbo.TrackPoint
 WHERE AccuracyM IS NOT NULL;
 
 /* ---- 2. Flag counts ---------------------------------------------------- */
@@ -36,7 +36,7 @@ SELECT SUM(CASE WHEN Flags & 1 > 0 THEN 1 ELSE 0 END) AS MockProvider,
        SUM(CASE WHEN Flags & 4 > 0 THEN 1 ELSE 0 END) AS Implausible,
        SUM(CASE WHEN Flags & 8 > 0 THEN 1 ELSE 0 END) AS Backfilled,
        SUM(CASE WHEN Flags = 0     THEN 1 ELSE 0 END) AS Clean
-FROM dbo.TrackPoints;
+FROM dbo.TrackPoint;
 
 /* ---- 3. Accuracy bands per login site (spike sites float to the top) --- */
 SELECT TOP 30
@@ -50,8 +50,8 @@ SELECT TOP 30
        AVG(CAST(tp.AccuracyM AS FLOAT))                             AS AvgAccM,
        SUM(CASE WHEN tp.SpeedKph IS NULL OR tp.SpeedKph < 2     THEN 1 ELSE 0 END) AS Stationaryish,
        SUM(CASE WHEN tp.SpeedKph >= 2                           THEN 1 ELSE 0 END) AS Moving
-FROM dbo.TrackPoints tp
-JOIN dbo.TrackingSessions s ON s.Id = tp.SessionId
+FROM dbo.TrackPoint tp
+JOIN dbo.TrackingSession s ON s.Id = tp.SessionId
 LEFT JOIN dbo.ClientSites cs ON cs.Id = s.ClientSiteId
 GROUP BY cs.Name
 ORDER BY SUM(CASE WHEN tp.Flags & 6 > 0 THEN 1 ELSE 0 END) DESC;
@@ -66,7 +66,7 @@ WITH Centred AS (
     SELECT tp.SessionId, tp.Latitude, tp.Longitude, tp.AccuracyM, tp.Flags,
            AVG(CAST(tp.Latitude  AS FLOAT)) OVER (PARTITION BY tp.SessionId) AS CLat,
            AVG(CAST(tp.Longitude AS FLOAT)) OVER (PARTITION BY tp.SessionId) AS CLon
-    FROM dbo.TrackPoints tp
+    FROM dbo.TrackPoint tp
 ),
 Measured AS (
     SELECT SessionId, AccuracyM, Flags,
@@ -91,8 +91,8 @@ SELECT s.UnitId,
        COUNT(*) AS Points,
        AVG(CAST(tp.AccuracyM AS FLOAT)) AS AvgAccM,
        MIN(tp.AccuracyM) AS BestAccM
-FROM dbo.TrackPoints tp
-JOIN dbo.TrackingSessions s ON s.Id = tp.SessionId
+FROM dbo.TrackPoint tp
+JOIN dbo.TrackingSession s ON s.Id = tp.SessionId
 WHERE tp.AccuracyM IS NOT NULL
 GROUP BY s.UnitId
 HAVING MIN(tp.AccuracyM) > 400        -- even its BEST fix is coarse = approximate permission
