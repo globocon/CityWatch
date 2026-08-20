@@ -194,6 +194,31 @@
         .rcbox .rcmsg { font-size: 12px; color: var(--text); line-height: 1.5; }
         .rcbox .rcmeta { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
 
+        /* Guard ID badge (#153 Part 2): the licence worn on the popup the way the physical
+           one is worn on a lanyard — always in view; phone/email fold behind Contact. */
+        .crm-idbadge {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+            border: 1px solid var(--line); border-left: 3px solid var(--accent);
+            background: linear-gradient(180deg, #f8fafc, var(--accent-soft));
+            border-radius: 10px; padding: 8px 10px;
+        }
+        .crm-idbadge .lic {
+            flex: 1; font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+            font-size: 12.5px; font-weight: 600; letter-spacing: .04em; color: var(--text);
+            font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+        }
+        .crm-idbadge .st {
+            font-size: 9px; font-weight: 800; letter-spacing: .08em; vertical-align: 1px;
+            background: var(--accent); color: #fff; border-radius: 4px; padding: 2px 5px; margin-left: 6px;
+        }
+        .crm-idbadge button {
+            border: 0; background: none; color: var(--accent); font-size: 11px; font-weight: 700;
+            cursor: pointer; white-space: nowrap; padding: 4px 2px;
+        }
+        .crm-idbadge button:hover { text-decoration: underline; }
+        .crm-idrows { display: flex; flex-direction: column; gap: 5px; margin: -4px 0 10px; font-size: 12.5px; }
+        .crm-idrows a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
+
         /* ================= sidebar ================= */
         #crmSidebar {
             position: fixed; z-index: 990; top: calc(74px + var(--b1) + var(--b2)); left: 10px; bottom: 10px; width: 312px;
