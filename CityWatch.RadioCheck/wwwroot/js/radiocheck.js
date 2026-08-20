@@ -10836,18 +10836,24 @@ $('#selectRadioFrequencyStatus').on('change', function () {
         });
     }
 
+    /* One control, two jobs (field feedback, 20 Aug): the car icon carries the live
+       fleet count and CLICKING it opens the summary panel; the switch beside it is
+       the PCAR-only filter. No separate header icon. */
     function addPcarSwitch(tableId) {
         var filter = $('#' + tableId + '_filter');
-        if (!filter.length || filter.find('.pcar-switch').length) return;
-        var sw = $('<label class="pcar-switch" title="PCAR mode: show only patrol-car users">' +
-            '<i class="fa fa-car" aria-hidden="true"></i>' +
-            '<input type="checkbox"><span class="pcar-slider"></span></label>');
-        sw.find('input').on('change', function () {
+        if (!filter.length || filter.find('.pcar-ctl').length) return;
+        var ctl = $('<span class="pcar-ctl">' +
+            '<button type="button" class="pcar-fleet-btn" title="Patrol cars — how many, where, how fresh">' +
+            '<i class="fa fa-car" aria-hidden="true"></i><span class="pcar-fleet-count">0</span></button>' +
+            '<label class="pcar-switch" title="PCAR mode: show only patrol-car users">' +
+            '<input type="checkbox"><span class="pcar-slider"></span></label></span>');
+        ctl.find('input').on('change', function () {
             pcarOnly = this.checked;
             $('.pcar-switch input').prop('checked', pcarOnly);        // twin tables stay in step
             redrawPcarTables();
         });
-        filter.prepend(sw);
+        ctl.find('.pcar-fleet-btn').on('click', function (e) { e.stopPropagation(); toggleFleetPanel(); });
+        filter.prepend(ctl);
     }
 
     /* The header count follows what the operator is actually looking at. */
@@ -10898,11 +10904,13 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     function renderFleetPanel() {
         var panel = $('#pcarFleetPanel');
         if (!panel.length) return;
-        var head = '<div class="pcar-fleet-head">🚓 <b>Patrol Cars</b><span>' + fleet.length + ' Active</span></div>';
+        var head = '<div class="pcar-fleet-head">🚓 <b>Patrol Cars</b><span>' + fleet.length + ' Active</span>' +
+            '<button type="button" class="pcar-fleet-close" aria-label="Close">&times;</button></div>';
         var list = fleet.length
             ? '<div class="pcar-fleet-list">' + fleet.map(fleetCardHtml).join('') + '</div>'
             : '<div class="pcar-fleet-empty">No active patrol cars</div>';
         panel.html(head + list);
+        panel.find('.pcar-fleet-close').on('click', function () { toggleFleetPanel(false); });
     }
 
     function toggleFleetPanel(force) {
@@ -10914,22 +10922,17 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     function refreshFleet() {
         $.getJSON('/ActiveGuardSinglePage?handler=PcarSummary').done(function (d) {
             fleet = Array.isArray(d) ? d : [];
-            $('#pcarFleetCount').text(fleet.length);
+            $('.pcar-fleet-count').text(fleet.length);   // every toolbar badge, every table
             if (fleetOpen) renderFleetPanel();
         });
     }
 
-    function ensureFleetUi() {
-        var h3 = $('h3').filter(function () { return /Activity in Last 2 hrs/.test($(this).text()); }).first();
-        if (!h3.length || $('#pcarFleetBtn').length) return false;
-        h3.append('<button type="button" id="pcarFleetBtn" title="Patrol cars — how many, where, how fresh">' +
-            '<span class="pcar-fleet-ico">🚓</span><span class="pcar-fleet-count" id="pcarFleetCount">0</span></button>');
+    function ensureFleetPanel() {
+        if ($('#pcarFleetPanel').length) return;
         $(document.body).append('<div id="pcarFleetPanel" class="pcar-fleet-panel" style="display:none"></div>');
-        $('#pcarFleetBtn').on('click', function (e) { e.stopPropagation(); toggleFleetPanel(); });
         $(document).on('click', function (e) {
-            if (fleetOpen && !$(e.target).closest('#pcarFleetPanel,#pcarFleetBtn').length) toggleFleetPanel(false);
+            if (fleetOpen && !$(e.target).closest('#pcarFleetPanel,.pcar-fleet-btn').length) toggleFleetPanel(false);
         });
-        return true;
     }
 
     /* ---------------- styles + boot ---------------- */
@@ -10941,10 +10944,14 @@ $('#selectRadioFrequencyStatus').on('change', function () {
         '.pcar-switch .pcar-slider:after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25);}' +
         '.pcar-switch input:checked+.pcar-slider{background:#2563eb;}' +
         '.pcar-switch input:checked+.pcar-slider:after{left:16px;}' +
-        '#pcarFleetBtn{border:1px solid #dde5ef;background:#f8fafc;border-radius:999px;padding:2px 10px 2px 6px;margin-left:12px;cursor:pointer;vertical-align:middle;line-height:1;}' +
-        '#pcarFleetBtn:hover{background:#eff4ff;}' +
-        '.pcar-fleet-ico{font-size:15px;}' +
-        '.pcar-fleet-count{font:700 12px system-ui,sans-serif;color:#fff;background:#2563eb;border-radius:999px;padding:1px 7px;margin-left:5px;vertical-align:2px;}' +
+        '.pcar-ctl{display:inline-flex;align-items:center;gap:8px;margin-right:14px;vertical-align:middle;}' +
+        '.pcar-ctl .pcar-switch{margin-right:0;}' +
+        '.pcar-fleet-btn{border:1px solid #dde5ef;background:#f8fafc;border-radius:999px;padding:3px 8px 3px 9px;cursor:pointer;line-height:1;display:inline-flex;align-items:center;gap:5px;}' +
+        '.pcar-fleet-btn:hover{background:#eff4ff;}' +
+        '.pcar-fleet-btn .fa-car{color:#2563eb;font-size:14px;}' +
+        '.pcar-fleet-count{font:700 11px system-ui,sans-serif;color:#fff;background:#2563eb;border-radius:999px;padding:1px 6px;}' +
+        '.pcar-fleet-close{border:0;background:none;font-size:20px;line-height:1;color:#64748b;cursor:pointer;padding:0 2px;margin-left:6px;}' +
+        '.pcar-fleet-close:hover{color:#0f172a;}' +
         '.pcar-fleet-panel{position:fixed;top:120px;right:24px;z-index:3000;width:290px;max-height:70vh;overflow-y:auto;background:#fff;border:1px solid #dde5ef;border-radius:14px;box-shadow:0 12px 32px rgba(15,23,42,.18);padding:10px;}' +
         '.pcar-fleet-head{display:flex;align-items:center;gap:6px;font:700 14px system-ui,sans-serif;color:#0f172a;padding:2px 4px 8px;}' +
         '.pcar-fleet-head span{margin-left:auto;font:700 11px system-ui,sans-serif;color:#2563eb;background:#eff4ff;border-radius:999px;padding:2px 8px;}' +
@@ -10968,11 +10975,10 @@ $('#selectRadioFrequencyStatus').on('change', function () {
         var tries = 0;
         var boot = setInterval(function () {
             PCAR_TABLES.forEach(function (id) { addPcarSwitch(id); hookHeaderCount(id); });
-            var uiReady = ensureFleetUi() || $('#pcarFleetBtn').length;
-            var switchReady = $('.pcar-switch').length;
-            if ((uiReady && switchReady) || ++tries > 20) {
+            if ($('.pcar-ctl').length || ++tries > 20) {
                 clearInterval(boot);
-                if ($('#pcarFleetBtn').length) {
+                if ($('.pcar-ctl').length) {
+                    ensureFleetPanel();
                     refreshFleet();
                     setInterval(refreshFleet, 60000);   // the count stays current on its own
                 }
