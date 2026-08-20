@@ -1,3 +1,4 @@
+using CityWatch.Data;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -38,8 +39,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly ILogbookDataService _logbookDataService;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
+        private readonly CityWatchDbContext _context;
         public ActiveGuardSinglePage(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration,ILogbookDataService logbookDataService, IGuardDataProvider guardDataProvider, IViewDataService viewDataService)
+            IConfiguration configuration,ILogbookDataService logbookDataService, IGuardDataProvider guardDataProvider, IViewDataService viewDataService,
+            CityWatchDbContext context)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
@@ -48,6 +51,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _logbookDataService = logbookDataService;
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
+            _context = context;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -292,6 +296,79 @@ namespace CityWatch.RadioCheck.Pages.Radio
         {
 
             return new JsonResult(_guardLogDataProvider.GetActiveGuardDetails());
+        }
+
+        /// <summary>
+        /// P4#153 Part 4: patrol-car fleet summary for the control room, built from
+        /// existing RC data ONLY (activity status + today's PCAR wand-scan visits —
+        /// no tracking-pack dependency). Answers the four control-room questions:
+        /// how many cars, where is each now, how fresh is that, who is driving.
+        /// On Site = last scan opened (TimeOn, no TimeOff); In Transit = last scan
+        /// closed; Last Known = no scan yet, or nothing for 30+ minutes.
+        /// </summary>
+        public IActionResult OnGetPcarSummary()
+        {
+            try
+            {
+                var pcarGuards = _guardLogDataProvider.GetActiveGuardDetails()
+                    .Where(x => string.Equals(x.TourMode, "PCAR", StringComparison.OrdinalIgnoreCase))
+                    .GroupBy(x => x.GuardId)
+                    .Select(g => g.First())
+                    .ToList();
+                if (pcarGuards.Count == 0)
+                    return new JsonResult(Array.Empty<object>());
+
+                var guardIds = pcarGuards.Select(x => x.GuardId).ToList();
+                var today = DateTime.Today;
+                var visits = _context.PcarRouteDailyVisits
+                    .Where(v => v.CreatedAt >= today && v.GuardId != null && guardIds.Contains(v.GuardId.Value))
+                    .OrderBy(v => v.CreatedAt)
+                    .ToList();
+                var siteIds = visits.Select(v => v.SiteId).Distinct().ToList();
+                var siteNames = _context.ClientSites
+                    .Where(s => siteIds.Contains(s.Id))
+                    .Select(s => new { s.Id, s.Name })
+                    .ToList()
+                    .ToDictionary(s => s.Id, s => s.Name);
+                var routeIds = visits.Select(v => v.PcarRouteId).Distinct().ToList();
+                var carByRoute = _context.PcarRoute
+                    .Where(r => routeIds.Contains(r.Id))
+                    .Select(r => new { r.Id, Car = r.SmartWand.PatrolCarName })
+                    .ToList()
+                    .ToDictionary(r => r.Id, r => r.Car);
+
+                var now = DateTime.Now;
+                var result = pcarGuards.Select(a =>
+                {
+                    var last = visits.LastOrDefault(v => v.GuardId == a.GuardId);
+                    var onSite = last != null && !string.IsNullOrWhiteSpace(last.TimeOn) && string.IsNullOrWhiteSpace(last.TimeOff);
+                    var minutes = last != null ? (int)Math.Max(0, (now - last.CreatedAt).TotalMinutes) : a.LatestDate;
+                    var stale = minutes >= 30;
+                    return new
+                    {
+                        guardId = a.GuardId,
+                        guard = a.GuardName,
+                        car = last != null && carByRoute.ContainsKey(last.PcarRouteId) ? carByRoute[last.PcarRouteId] : null,
+                        /* The login position ("Mobile Patrols (Car) M1") — the client shows its
+                           M-number as a small badge beside the guard. */
+                        position = a.OnlySiteName,
+                        status = last == null || stale ? "lastknown" : onSite ? "onsite" : "transit",
+                        site = last != null
+                            ? (onSite || stale
+                                ? (siteNames.ContainsKey(last.SiteId) ? siteNames[last.SiteId] : "Site " + last.SiteId)
+                                : "Off Site")
+                            : a.OnlySiteName,
+                        minutesAgo = minutes
+                    };
+                }).ToList();
+
+                return new JsonResult(result);
+            }
+            catch (Exception)
+            {
+                /* The fleet button shows 0 rather than the page breaking over a summary. */
+                return new JsonResult(Array.Empty<object>());
+            }
         }
 
         public IActionResult OnGetClientSiteInActivityStatus(string clientSiteIds)
