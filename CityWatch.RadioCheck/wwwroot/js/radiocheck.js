@@ -10823,24 +10823,13 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     var pcarOnly = false;
     var PCAR_TABLES = ['clientSiteActiveGuards', 'clientSiteActiveGuardsSinglePage'];
 
-    /* tourMode is a property of the SITE row, not the guard (field finding, 20 Aug):
-       a Romeo guard's row at the base site says PCAR, but the rows created as they
-       scan into client sites carry THAT site's mode — filtering rows by tourMode
-       showed one row and hid the actual patrol. So: first index the GUARDS who have
-       a PCAR row anywhere, then show every row belonging to those guards, whichever
-       site they are at right now. */
+    /* WHO is a patrol car is the SERVER's answer, not the table's (field finding,
+       20 Aug): the activity feed keeps one row per guard at their LATEST site, so a
+       Romeo guard mid-patrol carries no PCAR mark in the browser at all. The
+       PcarSummary handler defines it properly — first login TODAY was the PCAR base
+       site — and the fleet fetch below keeps this set current. The switch then shows
+       every row belonging to those guards, whichever site they stand on now. */
     var pcarGuardIds = {};
-    function rebuildPcarGuardIndex() {
-        pcarGuardIds = {};
-        PCAR_TABLES.forEach(function (id) {
-            var el = $('#' + id);
-            if (el.length && $.fn.DataTable.isDataTable(el)) {
-                el.DataTable().rows().data().each(function (r) {
-                    if (r && r.tourMode === 'PCAR' && r.guardId != null) pcarGuardIds[r.guardId] = true;
-                });
-            }
-        });
-    }
 
     $.fn.dataTable.ext.search.push(function (settings, searchData, index, rowData) {
         if (!pcarOnly) return true;                                   // OFF = no logic change
@@ -10849,7 +10838,6 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     });
 
     function redrawPcarTables() {
-        rebuildPcarGuardIndex();
         PCAR_TABLES.forEach(function (id) {
             var el = $('#' + id);
             if (el.length && $.fn.DataTable.isDataTable(el)) el.DataTable().draw();
@@ -10870,6 +10858,7 @@ $('#selectRadioFrequencyStatus').on('change', function () {
         ctl.find('input').on('change', function () {
             pcarOnly = this.checked;
             $('.pcar-switch input').prop('checked', pcarOnly);        // twin tables stay in step
+            if (pcarOnly) refreshFleet();     // freshest guard set the moment it is asked for
             redrawPcarTables();
         });
         ctl.find('.pcar-fleet-btn').on('click', function (e) { e.stopPropagation(); toggleFleetPanel(); });
@@ -10880,8 +10869,6 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     function hookHeaderCount(tableId) {
         var el = $('#' + tableId);
         if (!el.length) return;
-        /* Fresh data, fresh guard index — BEFORE the filter predicate runs. */
-        el.on('preDraw.dt', function () { if (pcarOnly) rebuildPcarGuardIndex(); });
         el.on('draw.dt', function () {
             var h3 = el.closest('.card').find('h3').first();
             if (!h3.length) return;
@@ -10944,8 +10931,11 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     function refreshFleet() {
         $.getJSON('/ActiveGuardSinglePage?handler=PcarSummary').done(function (d) {
             fleet = Array.isArray(d) ? d : [];
+            pcarGuardIds = {};
+            fleet.forEach(function (c) { if (c && c.guardId != null) pcarGuardIds[c.guardId] = true; });
             $('.pcar-fleet-count').text(fleet.length);   // every toolbar badge, every table
             if (fleetOpen) renderFleetPanel();
+            if (pcarOnly) redrawPcarTables();            // the filter follows the fresh set
         });
     }
 
