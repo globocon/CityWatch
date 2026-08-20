@@ -10823,13 +10823,33 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     var pcarOnly = false;
     var PCAR_TABLES = ['clientSiteActiveGuards', 'clientSiteActiveGuardsSinglePage'];
 
+    /* tourMode is a property of the SITE row, not the guard (field finding, 20 Aug):
+       a Romeo guard's row at the base site says PCAR, but the rows created as they
+       scan into client sites carry THAT site's mode — filtering rows by tourMode
+       showed one row and hid the actual patrol. So: first index the GUARDS who have
+       a PCAR row anywhere, then show every row belonging to those guards, whichever
+       site they are at right now. */
+    var pcarGuardIds = {};
+    function rebuildPcarGuardIndex() {
+        pcarGuardIds = {};
+        PCAR_TABLES.forEach(function (id) {
+            var el = $('#' + id);
+            if (el.length && $.fn.DataTable.isDataTable(el)) {
+                el.DataTable().rows().data().each(function (r) {
+                    if (r && r.tourMode === 'PCAR' && r.guardId != null) pcarGuardIds[r.guardId] = true;
+                });
+            }
+        });
+    }
+
     $.fn.dataTable.ext.search.push(function (settings, searchData, index, rowData) {
         if (!pcarOnly) return true;                                   // OFF = no logic change
         if (PCAR_TABLES.indexOf(settings.nTable.id) === -1) return true;
-        return !!rowData && rowData.tourMode === 'PCAR';
+        return !!rowData && pcarGuardIds[rowData.guardId] === true;
     });
 
     function redrawPcarTables() {
+        rebuildPcarGuardIndex();
         PCAR_TABLES.forEach(function (id) {
             var el = $('#' + id);
             if (el.length && $.fn.DataTable.isDataTable(el)) el.DataTable().draw();
@@ -10860,6 +10880,8 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     function hookHeaderCount(tableId) {
         var el = $('#' + tableId);
         if (!el.length) return;
+        /* Fresh data, fresh guard index — BEFORE the filter predicate runs. */
+        el.on('preDraw.dt', function () { if (pcarOnly) rebuildPcarGuardIndex(); });
         el.on('draw.dt', function () {
             var h3 = el.closest('.card').find('h3').first();
             if (!h3.length) return;
