@@ -101,6 +101,57 @@ namespace CityWatch.RadioCheck.Pages
         }
 
         /// <summary>
+        /// Guard identity for the popup (#153 Part 2): full name, licence (+ issuing state)
+        /// and contact. Fetched only when a popup opens, so the activity feed stays lean.
+        /// The HR pin is deliberately never served — it is an HR credential, not an identity.
+        /// </summary>
+        public IActionResult OnGetGuardIdentity(int guardId)
+        {
+            if (!IsLoggedIn)
+                return new UnauthorizedResult();
+            try
+            {
+                var g = _context.Guards
+                    .Where(x => x.Id == guardId)
+                    .Select(x => new { x.Name, x.SecurityNo, x.State, x.Mobile, x.Email })
+                    .FirstOrDefault();
+                if (g == null)
+                    return new JsonResult(new { });
+
+                /* App build the guard's phone last reported (P4#153). Guarded separately:
+                   until DbScript 371 runs, the identity answer must still work — the popup
+                   then shows "not reported", which also reads correctly as "old build". */
+                string appVersion = null;
+                DateTime? appVersionSeen = null;
+                try
+                {
+                    var v = _context.GuardMobileAppVersions
+                        .Where(x => x.GuardId == guardId)
+                        .OrderByDescending(x => x.LastSeen)
+                        .Select(x => new { x.AppVersion, x.LastSeen })
+                        .FirstOrDefault();
+                    if (v != null) { appVersion = v.AppVersion; appVersionSeen = v.LastSeen; }
+                }
+                catch (Exception) { /* table not deployed yet — identity still answers */ }
+
+                return new JsonResult(new
+                {
+                    name = g.Name,
+                    license = g.SecurityNo,
+                    state = g.State,
+                    mobile = g.Mobile,
+                    email = g.Email,
+                    appVersion,
+                    appVersionSeen
+                });
+            }
+            catch (Exception)
+            {
+                return new JsonResult(new { });
+            }
+        }
+
+        /// <summary>
         /// Base URL of the KPI site that hosts the uploaded site images.
         /// Prefers Settings:KpiWebUrl from configuration; falls back to the same
         /// hard-coded base the Site Settings page uses (localhost dev values are

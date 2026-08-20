@@ -417,6 +417,9 @@ namespace CityWatch.Tracking.Api
                     lon = p.Longitude,
                     speedKph = p.SpeedKph,
                     headingDeg = p.HeadingDeg,
+                    /* Confidence travels with every point (#153 P7): the client's
+                       trusted-line rule needs the same evidence live already gets. */
+                    accuracyM = p.AccuracyM,
                     source = p.SourceType,
                     flags = p.Flags,
                     tag = p.AnchorTagUid
@@ -437,13 +440,26 @@ namespace CityWatch.Tracking.Api
                 .Select(s => new
                 {
                     s.Id, s.GuardId, s.StartedUtc, s.EndedUtc,
-                    s.Callsign, s.PatrolCarPositionName
+                    s.Callsign, s.PatrolCarPositionName, s.IsPatrolCar, s.ClientSiteId
                 })
                 .ToListAsync(ct);
             var guardIds = sessions.Select(s => s.GuardId).Distinct().ToList();
             var guardNames = await _db.PlatformGuards
                 .Where(g => guardIds.Contains(g.Id))
                 .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
+            /* Same naming rule as the live map (#153 Part 1): a car session that declared
+               no position at login is named by its login site, so the replay ribbon and the
+               live card answer to the same name. */
+            var unnamedSiteIds = sessions
+                .Where(s => string.IsNullOrWhiteSpace(s.PatrolCarPositionName))
+                .Select(s => s.ClientSiteId)
+                .Distinct()
+                .ToList();
+            var loginSiteNames = unnamedSiteIds.Count == 0
+                ? new Dictionary<int, string?>()
+                : await _db.PlatformClientSites
+                    .Where(cs => unnamedSiteIds.Contains(cs.Id))
+                    .ToDictionaryAsync(cs => cs.Id, cs => cs.Name, ct);
             var sessionById = sessions.ToDictionary(s => s.Id);
 
             var grouped = points
@@ -478,7 +494,7 @@ namespace CityWatch.Tracking.Api
                         {
                             raw[i].utc, raw[i].lat, raw[i].lon,
                             speedKph = speed, speedDerived = derived,
-                            raw[i].headingDeg, raw[i].source, raw[i].flags, raw[i].tag
+                            raw[i].headingDeg, raw[i].accuracyM, raw[i].source, raw[i].flags, raw[i].tag
                         });
                     }
 
@@ -499,7 +515,13 @@ namespace CityWatch.Tracking.Api
                         guardId = s?.GuardId ?? 0,
                         guardName = s != null && guardNames.TryGetValue(s.GuardId, out var name) ? name : null,
                         callsign = s?.Callsign,
-                        patrolCar = s?.PatrolCarPositionName,
+                        patrolCar = !string.IsNullOrWhiteSpace(s?.PatrolCarPositionName)
+                            ? s!.PatrolCarPositionName
+                            : (s?.IsPatrolCar == true || TrackingUnitKey.IsPosition(unitId))
+                                && loginSiteNames.TryGetValue(s?.ClientSiteId ?? 0, out var homeSite)
+                                && !string.IsNullOrWhiteSpace(homeSite)
+                                ? homeSite
+                                : null,
                         startedUtc = s?.StartedUtc,
                         endedUtc = s?.EndedUtc,
                         firstUtc = raw[0].utc,
@@ -591,6 +613,12 @@ namespace CityWatch.Tracking.Api
                     callsign = u.Callsign,
                     guardId = u.GuardId,
                     guardName = u.GuardName,
+                    /* Guard identity (#153 Part 2): licence + contact so the control room can
+                       tell WHICH Muhammad. The HR pin never leaves the platform. */
+                    guardLicense = u.GuardLicense,
+                    guardState = u.GuardState,
+                    guardMobile = u.GuardMobile,
+                    guardEmail = u.GuardEmail,
                     patrolCar = u.PatrolCar,
                     travelState = u.TravelState,
                     currentSite = u.CurrentSiteName,

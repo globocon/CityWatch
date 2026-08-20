@@ -29,6 +29,7 @@ namespace CityWatch.Data.Providers
         GuardLogin GetGuardLastLogin(int guardId, int? userId);
         int SaveGuardLogin(GuardLogin guardLogin);
         void UpdateGuardOffDuty(int guardLoginId, DateTime offDuty);
+        void SaveGuardMobileAppVersion(int guardId, string appVersion, string platform, string deviceInfo);
         List<GuardLicense> GetAllGuardLicenses();
         List<GuardComplianceAndLicense> GetAllGuardLicensesAndCompliances();
         List<GuardLicense> GetGuardLicenses(int guardId);
@@ -650,6 +651,41 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
                 _events.Publish(new CityWatch.Events.Events.OfficerLoggedOut(guardLoginToUpdate.GuardId, guardLoginToUpdate.SmartWandId, DateTime.UtcNow)); // after commit (D17); tracking hard-stops on this
             }
+        }
+
+        /// <summary>
+        /// P4#153: upsert of the guard's reported mobile app build — one row per guard per
+        /// platform. Its own table and its own save: a failure here (including the table not
+        /// existing yet) must never touch the login flow, so callers wrap it accordingly.
+        /// </summary>
+        public void SaveGuardMobileAppVersion(int guardId, string appVersion, string platform, string deviceInfo)
+        {
+            if (guardId <= 0 || string.IsNullOrWhiteSpace(appVersion))
+                return;
+            platform = string.IsNullOrWhiteSpace(platform) ? "android" : platform.Trim().ToLowerInvariant();
+
+            var existing = _context.GuardMobileAppVersions
+                .FirstOrDefault(x => x.GuardId == guardId && x.Platform == platform);
+            if (existing == null)
+            {
+                _context.GuardMobileAppVersions.Add(new GuardMobileAppVersion
+                {
+                    GuardId = guardId,
+                    AppVersion = appVersion.Trim(),
+                    Platform = platform,
+                    DeviceInfo = string.IsNullOrWhiteSpace(deviceInfo) ? null : deviceInfo.Trim(),
+                    FirstSeen = DateTime.Now,
+                    LastSeen = DateTime.Now
+                });
+            }
+            else
+            {
+                existing.AppVersion = appVersion.Trim();
+                if (!string.IsNullOrWhiteSpace(deviceInfo))
+                    existing.DeviceInfo = deviceInfo.Trim();
+                existing.LastSeen = DateTime.Now;
+            }
+            _context.SaveChanges();
         }
 
         private string MakeGuardInitials(string initial)

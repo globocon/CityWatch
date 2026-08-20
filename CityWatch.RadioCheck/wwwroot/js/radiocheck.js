@@ -10804,3 +10804,179 @@ $('#selectRadioFrequencyStatus').on('change', function () {
 });
 
 ///p1-131-message-scheduler-end
+
+/* ================= P4#153 Part 4: PCAR mode for the control room =================
+   Two pieces, both from existing RC data only (no tracking-pack dependency):
+   4A — a PCAR-only switch beside the activity table's search box. OFF (default)
+        changes nothing; ON hides every row whose user is not in PCAR tour mode.
+   4B — a 🚓 fleet button on the activity header opening a compact popover:
+        one card per active patrol car — car first, status + site, driver, freshness —
+        so control never has to know a driver's name to find a car. */
+(function () {
+    'use strict';
+    if (!window.jQuery || !$.fn.dataTable) return;
+
+    var esc = function (s) { return $('<div>').text(s == null ? '' : String(s)).html(); };
+    var strip = function (s) { return $('<div>').html(s == null ? '' : String(s)).text(); };
+
+    /* ---------------- 4A: PCAR-only switch ---------------- */
+    var pcarOnly = false;
+    var PCAR_TABLES = ['clientSiteActiveGuards', 'clientSiteActiveGuardsSinglePage'];
+
+    $.fn.dataTable.ext.search.push(function (settings, searchData, index, rowData) {
+        if (!pcarOnly) return true;                                   // OFF = no logic change
+        if (PCAR_TABLES.indexOf(settings.nTable.id) === -1) return true;
+        return !!rowData && rowData.tourMode === 'PCAR';
+    });
+
+    function redrawPcarTables() {
+        PCAR_TABLES.forEach(function (id) {
+            var el = $('#' + id);
+            if (el.length && $.fn.DataTable.isDataTable(el)) el.DataTable().draw();
+        });
+    }
+
+    function addPcarSwitch(tableId) {
+        var filter = $('#' + tableId + '_filter');
+        if (!filter.length || filter.find('.pcar-switch').length) return;
+        var sw = $('<label class="pcar-switch" title="PCAR mode: show only patrol-car users">' +
+            '<i class="fa fa-car" aria-hidden="true"></i>' +
+            '<input type="checkbox"><span class="pcar-slider"></span></label>');
+        sw.find('input').on('change', function () {
+            pcarOnly = this.checked;
+            $('.pcar-switch input').prop('checked', pcarOnly);        // twin tables stay in step
+            redrawPcarTables();
+        });
+        filter.prepend(sw);
+    }
+
+    /* The header count follows what the operator is actually looking at. */
+    function hookHeaderCount(tableId) {
+        var el = $('#' + tableId);
+        if (!el.length) return;
+        el.on('draw.dt', function () {
+            var h3 = el.closest('.card').find('h3').first();
+            if (!h3.length) return;
+            if (!h3.data('pcarOriginal')) h3.data('pcarOriginal', h3.contents().first().text());
+            var original = h3.data('pcarOriginal');
+            if (pcarOnly) {
+                var shown = el.DataTable().rows({ search: 'applied' }).count();
+                h3.contents().first().replaceWith(original.replace(/\(\d+\)/, '(' + shown + ' PCAR)'));
+            } else {
+                h3.contents().first().replaceWith(original);
+            }
+        });
+    }
+
+    /* ---------------- 4B: 🚓 fleet summary popover ---------------- */
+    var fleetOpen = false;
+    var fleet = [];
+
+    function fmtAgo(min) {
+        if (min == null || isNaN(min)) return '—';
+        min = Math.round(min);
+        if (min < 1) return 'Just now';
+        if (min < 60) return min + ' min ago';
+        var h = Math.floor(min / 60);
+        return h + ' hr' + (h > 1 ? 's' : '') + ' ago';
+    }
+
+    function fleetCardHtml(c) {
+        var st = c.status === 'onsite' ? { cls: 'on', dot: '🟢', label: 'On Site' }
+            : c.status === 'transit' ? { cls: 'transit', dot: '🔵', label: 'In Transit' }
+                : { cls: 'stale', dot: '⚪', label: 'Last Known' };
+        var m = strip(c.position || '').match(/\bM\d+\b/i);
+        var badge = m ? ' <span class="pcar-mbadge">' + esc(m[0].toUpperCase()) + '</span>' : '';
+        return '<div class="pcar-card">' +
+            '<div class="pcar-card-car">🚓 ' + esc(strip(c.car) || 'Patrol Car') + '</div>' +
+            '<div class="pcar-card-status ' + st.cls + '">' + st.dot + ' <b>' + st.label + '</b> · ' + esc(strip(c.site) || '—') + '</div>' +
+            '<div class="pcar-card-guard">👤 ' + esc(strip(c.guard) || '—') + badge + '</div>' +
+            '<div class="pcar-card-ago">Last activity: ' + fmtAgo(c.minutesAgo) + '</div>' +
+            '</div>';
+    }
+
+    function renderFleetPanel() {
+        var panel = $('#pcarFleetPanel');
+        if (!panel.length) return;
+        var head = '<div class="pcar-fleet-head">🚓 <b>Patrol Cars</b><span>' + fleet.length + ' Active</span></div>';
+        var list = fleet.length
+            ? '<div class="pcar-fleet-list">' + fleet.map(fleetCardHtml).join('') + '</div>'
+            : '<div class="pcar-fleet-empty">No active patrol cars</div>';
+        panel.html(head + list);
+    }
+
+    function toggleFleetPanel(force) {
+        fleetOpen = force !== undefined ? !!force : !fleetOpen;
+        if (fleetOpen) { renderFleetPanel(); refreshFleet(); }
+        $('#pcarFleetPanel').toggle(fleetOpen);
+    }
+
+    function refreshFleet() {
+        $.getJSON('/ActiveGuardSinglePage?handler=PcarSummary').done(function (d) {
+            fleet = Array.isArray(d) ? d : [];
+            $('#pcarFleetCount').text(fleet.length);
+            if (fleetOpen) renderFleetPanel();
+        });
+    }
+
+    function ensureFleetUi() {
+        var h3 = $('h3').filter(function () { return /Activity in Last 2 hrs/.test($(this).text()); }).first();
+        if (!h3.length || $('#pcarFleetBtn').length) return false;
+        h3.append('<button type="button" id="pcarFleetBtn" title="Patrol cars — how many, where, how fresh">' +
+            '<span class="pcar-fleet-ico">🚓</span><span class="pcar-fleet-count" id="pcarFleetCount">0</span></button>');
+        $(document.body).append('<div id="pcarFleetPanel" class="pcar-fleet-panel" style="display:none"></div>');
+        $('#pcarFleetBtn').on('click', function (e) { e.stopPropagation(); toggleFleetPanel(); });
+        $(document).on('click', function (e) {
+            if (fleetOpen && !$(e.target).closest('#pcarFleetPanel,#pcarFleetBtn').length) toggleFleetPanel(false);
+        });
+        return true;
+    }
+
+    /* ---------------- styles + boot ---------------- */
+    $('<style>').text(
+        '.pcar-switch{display:inline-flex;align-items:center;gap:5px;margin-right:14px;cursor:pointer;vertical-align:middle;}' +
+        '.pcar-switch .fa-car{color:#2563eb;font-size:14px;}' +
+        '.pcar-switch input{display:none;}' +
+        '.pcar-switch .pcar-slider{width:30px;height:16px;border-radius:999px;background:#cbd5e1;position:relative;transition:background .15s;}' +
+        '.pcar-switch .pcar-slider:after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25);}' +
+        '.pcar-switch input:checked+.pcar-slider{background:#2563eb;}' +
+        '.pcar-switch input:checked+.pcar-slider:after{left:16px;}' +
+        '#pcarFleetBtn{border:1px solid #dde5ef;background:#f8fafc;border-radius:999px;padding:2px 10px 2px 6px;margin-left:12px;cursor:pointer;vertical-align:middle;line-height:1;}' +
+        '#pcarFleetBtn:hover{background:#eff4ff;}' +
+        '.pcar-fleet-ico{font-size:15px;}' +
+        '.pcar-fleet-count{font:700 12px system-ui,sans-serif;color:#fff;background:#2563eb;border-radius:999px;padding:1px 7px;margin-left:5px;vertical-align:2px;}' +
+        '.pcar-fleet-panel{position:fixed;top:120px;right:24px;z-index:3000;width:290px;max-height:70vh;overflow-y:auto;background:#fff;border:1px solid #dde5ef;border-radius:14px;box-shadow:0 12px 32px rgba(15,23,42,.18);padding:10px;}' +
+        '.pcar-fleet-head{display:flex;align-items:center;gap:6px;font:700 14px system-ui,sans-serif;color:#0f172a;padding:2px 4px 8px;}' +
+        '.pcar-fleet-head span{margin-left:auto;font:700 11px system-ui,sans-serif;color:#2563eb;background:#eff4ff;border-radius:999px;padding:2px 8px;}' +
+        '.pcar-fleet-list{display:flex;flex-direction:column;gap:8px;}' +
+        '.pcar-fleet-empty{font:500 12.5px system-ui,sans-serif;color:#64748b;padding:10px 4px 6px;}' +
+        '.pcar-card{border:1px solid #e5ecf5;border-left:3px solid #2563eb;border-radius:10px;padding:8px 10px;background:#f8fafc;}' +
+        '.pcar-card-car{font:800 13px system-ui,sans-serif;color:#0f172a;}' +
+        '.pcar-card-status{font:600 12px system-ui,sans-serif;color:#334155;margin-top:3px;}' +
+        '.pcar-card-status.on b{color:#16a34a;}' +
+        '.pcar-card-status.transit b{color:#2563eb;}' +
+        '.pcar-card-status.stale b{color:#64748b;}' +
+        '.pcar-card-guard{font:500 12px system-ui,sans-serif;color:#334155;margin-top:3px;}' +
+        '.pcar-mbadge{font:800 9px system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:#0ea5e9;border-radius:4px;padding:1px 5px;vertical-align:1px;}' +
+        '.pcar-card-ago{font:500 11px system-ui,sans-serif;color:#94a3b8;margin-top:3px;}' +
+        '@media (max-width:600px){.pcar-fleet-panel{right:8px;left:8px;width:auto;top:100px;}}'
+    ).appendTo(document.head);
+
+    $(function () {
+        /* The DataTables and header exist by DOM-ready (built above in this file);
+           retry briefly to be safe on the slower pages. */
+        var tries = 0;
+        var boot = setInterval(function () {
+            PCAR_TABLES.forEach(function (id) { addPcarSwitch(id); hookHeaderCount(id); });
+            var uiReady = ensureFleetUi() || $('#pcarFleetBtn').length;
+            var switchReady = $('.pcar-switch').length;
+            if ((uiReady && switchReady) || ++tries > 20) {
+                clearInterval(boot);
+                if ($('#pcarFleetBtn').length) {
+                    refreshFleet();
+                    setInterval(refreshFleet, 60000);   // the count stays current on its own
+                }
+            }
+        }, 500);
+    });
+})();

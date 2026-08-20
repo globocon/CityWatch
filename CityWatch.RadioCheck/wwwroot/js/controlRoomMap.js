@@ -660,6 +660,36 @@
 
     /* ================= guard detail card ================= */
     let openGuardKey = null;
+    let guardIdentCache = {};     // guardId -> null while in flight, identity object after
+    let guardContactOpen = false;
+
+    /* #153 Part 2: the popup wears the guard's licence the way the guard wears the
+       physical one — number always in view, phone/email one tap behind Contact.
+       (The HR pin is an HR credential, not an identity — the server never sends it.) */
+    function identHtml(g) {
+        const ident = guardIdentCache[g.guardId];
+        if (!ident) return '<div class="crm-idbadge"><span class="lic" style="color:var(--text-dim)">Loading guard ID&hellip;</span></div>';
+        const dim = t => `<span style="color:var(--text-dim)">${t}</span>`;
+        const lic = ident.license ? esc(ident.license) : dim('no licence on file');
+        const st = ident.state ? `<span class="st">${esc(ident.state)}</span>` : '';
+        const tel = ident.mobile ? String(ident.mobile).replace(/[^+\d]/g, '') : null;
+        /* P4#153: app build the phone last reported. No report = a build from before the
+           app started reporting — say so, because "old app" is the triage answer. */
+        const appLine = ident.appVersion
+            ? `&#128241; App ${esc(ident.appVersion)}${ident.appVersionSeen ? ' <span style="color:var(--text-dim)">· reported ' + esc(new Date(ident.appVersionSeen).toLocaleDateString()) + '</span>' : ''}`
+            : `&#128241; ${dim('app version not reported — likely an old build')}`;
+        return `
+            <div class="crm-idbadge">
+              <span class="lic">&#127380; ${lic}${st}</span>
+              <button type="button" id="crmIdentMore">${guardContactOpen ? 'Hide &#9650;' : 'Contact &#9660;'}</button>
+            </div>
+            ${guardContactOpen ? `<div class="crm-idrows">
+              <div>&#128222; ${tel ? `<a href="tel:${esc(tel)}">${esc(ident.mobile)}</a>` : dim('no mobile on file')}</div>
+              <div>&#9993; ${ident.email ? `<a href="mailto:${esc(ident.email)}">${esc(ident.email)}</a>` : dim('no email on file')}</div>
+              <div>${appLine}</div>
+            </div>` : ''}`;
+    }
+
     function openGuard(g, fly) {
         const s = sites[g.siteId] || {};
         const st = guardStatus(g);
@@ -667,7 +697,17 @@
         const backdrop = document.getElementById('crmBackdrop');
         const upd = recentUpdates[gKey(g)];
         const rc = rcState(g);
+        if (openGuardKey !== gKey(g)) guardContactOpen = false;   // a new guard starts folded
         openGuardKey = gKey(g);
+
+        /* Identity on demand — fetched once per guard, cached for the session, so the
+           polling refresh that re-renders this card never refetches it. */
+        if (guardIdentCache[g.guardId] === undefined) {
+            guardIdentCache[g.guardId] = null;
+            fetchJson('/ControlRoomMap?handler=GuardIdentity&guardId=' + g.guardId)
+                .then(d => { guardIdentCache[g.guardId] = d || {}; if (openGuardKey === gKey(g)) openGuard(g); })
+                .catch(() => { guardIdentCache[g.guardId] = {}; });
+        }
 
         /* PCAR patrol route section */
         const route = g.tourMode === 'PCAR' ? pcarRoutes[g.guardId] : null;
@@ -726,6 +766,7 @@
               <div class="sub">${esc(s.name || '')} &middot; ${tag}</div></span>
             </div>
             <div class="bd">
+              ${identHtml(g)}
               <dl>
                 <dt>&#127970; Site</dt><dd>${esc(s.name || '—')}</dd>
                 <dt>&#128205; Location</dt><dd>${esc(s.address || '—')}</dd>
@@ -766,6 +807,8 @@
         };
         card.querySelector('#crmGuardClose').addEventListener('click', close);
         backdrop.onclick = close;
+        const identMore = card.querySelector('#crmIdentMore');
+        if (identMore) identMore.addEventListener('click', () => { guardContactOpen = !guardContactOpen; openGuard(g); });
         card.querySelector('#crmGuardFly').addEventListener('click', () => {
             close();
             const pos = g.gps || s.gps;
