@@ -117,13 +117,32 @@ namespace CityWatch.RadioCheck.Pages
                     .FirstOrDefault();
                 if (g == null)
                     return new JsonResult(new { });
+
+                /* App build the guard's phone last reported (P4#153). Guarded separately:
+                   until DbScript 371 runs, the identity answer must still work — the popup
+                   then shows "not reported", which also reads correctly as "old build". */
+                string appVersion = null;
+                DateTime? appVersionSeen = null;
+                try
+                {
+                    var v = _context.GuardMobileAppVersions
+                        .Where(x => x.GuardId == guardId)
+                        .OrderByDescending(x => x.LastSeen)
+                        .Select(x => new { x.AppVersion, x.LastSeen })
+                        .FirstOrDefault();
+                    if (v != null) { appVersion = v.AppVersion; appVersionSeen = v.LastSeen; }
+                }
+                catch (Exception) { /* table not deployed yet — identity still answers */ }
+
                 return new JsonResult(new
                 {
                     name = g.Name,
                     license = g.SecurityNo,
                     state = g.State,
                     mobile = g.Mobile,
-                    email = g.Email
+                    email = g.Email,
+                    appVersion,
+                    appVersionSeen
                 });
             }
             catch (Exception)

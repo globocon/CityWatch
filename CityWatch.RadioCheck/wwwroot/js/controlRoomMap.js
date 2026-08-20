@@ -673,6 +673,11 @@
         const lic = ident.license ? esc(ident.license) : dim('no licence on file');
         const st = ident.state ? `<span class="st">${esc(ident.state)}</span>` : '';
         const tel = ident.mobile ? String(ident.mobile).replace(/[^+\d]/g, '') : null;
+        /* P4#153: app build the phone last reported. No report = a build from before the
+           app started reporting — say so, because "old app" is the triage answer. */
+        const appLine = ident.appVersion
+            ? `&#128241; App ${esc(ident.appVersion)}${ident.appVersionSeen ? ' <span style="color:var(--text-dim)">· reported ' + esc(new Date(ident.appVersionSeen).toLocaleDateString()) + '</span>' : ''}`
+            : `&#128241; ${dim('app version not reported — likely an old build')}`;
         return `
             <div class="crm-idbadge">
               <span class="lic">&#127380; ${lic}${st}</span>
@@ -681,6 +686,7 @@
             ${guardContactOpen ? `<div class="crm-idrows">
               <div>&#128222; ${tel ? `<a href="tel:${esc(tel)}">${esc(ident.mobile)}</a>` : dim('no mobile on file')}</div>
               <div>&#9993; ${ident.email ? `<a href="mailto:${esc(ident.email)}">${esc(ident.email)}</a>` : dim('no email on file')}</div>
+              <div>${appLine}</div>
             </div>` : ''}`;
     }
 

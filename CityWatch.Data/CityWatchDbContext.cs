@@ -122,6 +122,7 @@ namespace CityWatch.Data
         public DbSet<RCActionList> RCActionList { get; set; }
         public DbSet<ClientSiteSmartWand> ClientSiteSmartWands { get; set; }
         public DbSet<GuardLogin> GuardLogins { get; set; }
+        public DbSet<GuardMobileAppVersion> GuardMobileAppVersions { get; set; }
         public DbSet<IncidentReportPosition> IncidentReportPositions { get; set; }
         public DbSet<IncidentReportPSPF> IncidentReportPSPF { get; set; }
         public DbSet<KpiSendScheduleSummaryNote> KpiSendScheduleSummaryNotes { get; set; }

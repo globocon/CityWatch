@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -14,10 +15,12 @@ namespace CityWatch.Web.API
     public class LoginController : ControllerBase
     {
         private readonly IUserAuthenticationService _userAuthentication;
+        private readonly IGuardDataProvider _guardDataProvider;
 
-        public LoginController(IUserAuthenticationService userAuthentication)
+        public LoginController(IUserAuthenticationService userAuthentication, IGuardDataProvider guardDataProvider)
         {
             _userAuthentication = userAuthentication;
+            _guardDataProvider = guardDataProvider;
         }
       
         public User LoginUser = new User();
@@ -50,6 +53,28 @@ namespace CityWatch.Web.API
             //return Redirect(Url.Page(returnUrl));
             //return new JsonResult(Message);
         }
+        /// <summary>
+        /// P4#153: the app reports what build it is running, once after login. Fire-and-forget
+        /// by design — new APKs call it, old APKs never will, and NOTHING in the login flow
+        /// depends on it. A guard with no report on file is therefore known to be on a
+        /// pre-reporting (old) build, which is the diagnostic signal the control room wants.
+        /// </summary>
+        [Route("[action]", Name = "ReportAppVersion")]
+        public JsonResult ReportAppVersion(int guardId, string version, string platform = null, string deviceInfo = null)
+        {
+            try
+            {
+                _guardDataProvider.SaveGuardMobileAppVersion(guardId, version, platform, deviceInfo);
+                return new JsonResult(true);
+            }
+            catch (Exception)
+            {
+                /* Never bounce the app over telemetry — including when the table has not
+                   been created on this database yet (DbScript 371). */
+                return new JsonResult(false);
+            }
+        }
+
         private void SignInUser(User user)
         {
             var claims = new List<Claim>
