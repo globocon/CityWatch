@@ -310,8 +310,34 @@ namespace CityWatch.RadioCheck.Pages.Radio
         {
             try
             {
+                var today = DateTime.Today;
+
+                /* THE definition (field feedback, 20 Aug): a patrol-car guard is one whose
+                   FIRST login TODAY was at a PCAR-mode site (the Romeo base). The activity
+                   feed keeps one row per guard at their LATEST site, so a guard mid-patrol
+                   carries no PCAR mark there — GuardLogins is where the day began. */
+                var todaysLogins = _context.GuardLogins
+                    .Where(x => x.OnDuty >= today)
+                    .Select(x => new { x.GuardId, x.ClientSiteId, x.OnDuty })
+                    .ToList();
+                var pcarSiteIds = _context.ClientSites
+                    .Where(cs => cs.PatrolTourMode == PatrolTouringMode.PCAR)
+                    .Select(cs => new { cs.Id, cs.Name })
+                    .ToList();
+                var pcarSiteNames = pcarSiteIds.ToDictionary(cs => cs.Id, cs => cs.Name);
+                var firstLoginByGuard = todaysLogins
+                    .GroupBy(x => x.GuardId)
+                    .ToDictionary(g => g.Key, g => g.OrderBy(x => x.OnDuty).First().ClientSiteId);
+                var pcarGuardIds = firstLoginByGuard
+                    .Where(kv => pcarSiteNames.ContainsKey(kv.Value))
+                    .Select(kv => kv.Key)
+                    .ToHashSet();
+                if (pcarGuardIds.Count == 0)
+                    return new JsonResult(Array.Empty<object>());
+
+                /* Their CURRENT activity row — wherever the patrol has taken them. */
                 var pcarGuards = _guardLogDataProvider.GetActiveGuardDetails()
-                    .Where(x => string.Equals(x.TourMode, "PCAR", StringComparison.OrdinalIgnoreCase))
+                    .Where(x => pcarGuardIds.Contains(x.GuardId))
                     .GroupBy(x => x.GuardId)
                     .Select(g => g.First())
                     .ToList();
@@ -319,7 +345,6 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     return new JsonResult(Array.Empty<object>());
 
                 var guardIds = pcarGuards.Select(x => x.GuardId).ToList();
-                var today = DateTime.Today;
                 var visits = _context.PcarRouteDailyVisits
                     .Where(v => v.CreatedAt >= today && v.GuardId != null && guardIds.Contains(v.GuardId.Value))
                     .OrderBy(v => v.CreatedAt)
@@ -349,9 +374,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         guardId = a.GuardId,
                         guard = a.GuardName,
                         car = last != null && carByRoute.ContainsKey(last.PcarRouteId) ? carByRoute[last.PcarRouteId] : null,
-                        /* The login position ("Mobile Patrols (Car) M1") — the client shows its
-                           M-number as a small badge beside the guard. */
-                        position = a.OnlySiteName,
+                        /* The BASE site the day started at ("Citywatch M1 - Romeo Patrol
+                           Cars") — the client shows its M-number as a badge. */
+                        position = firstLoginByGuard.TryGetValue(a.GuardId, out var baseSiteId)
+                            && pcarSiteNames.ContainsKey(baseSiteId) ? pcarSiteNames[baseSiteId] : a.OnlySiteName,
                         status = last == null || stale ? "lastknown" : onSite ? "onsite" : "transit",
                         site = last != null
                             ? (onSite || stale

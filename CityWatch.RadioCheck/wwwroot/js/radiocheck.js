@@ -10823,10 +10823,18 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     var pcarOnly = false;
     var PCAR_TABLES = ['clientSiteActiveGuards', 'clientSiteActiveGuardsSinglePage'];
 
+    /* WHO is a patrol car is the SERVER's answer, not the table's (field finding,
+       20 Aug): the activity feed keeps one row per guard at their LATEST site, so a
+       Romeo guard mid-patrol carries no PCAR mark in the browser at all. The
+       PcarSummary handler defines it properly — first login TODAY was the PCAR base
+       site — and the fleet fetch below keeps this set current. The switch then shows
+       every row belonging to those guards, whichever site they stand on now. */
+    var pcarGuardIds = {};
+
     $.fn.dataTable.ext.search.push(function (settings, searchData, index, rowData) {
         if (!pcarOnly) return true;                                   // OFF = no logic change
         if (PCAR_TABLES.indexOf(settings.nTable.id) === -1) return true;
-        return !!rowData && rowData.tourMode === 'PCAR';
+        return !!rowData && pcarGuardIds[rowData.guardId] === true;
     });
 
     function redrawPcarTables() {
@@ -10850,6 +10858,7 @@ $('#selectRadioFrequencyStatus').on('change', function () {
         ctl.find('input').on('change', function () {
             pcarOnly = this.checked;
             $('.pcar-switch input').prop('checked', pcarOnly);        // twin tables stay in step
+            if (pcarOnly) refreshFleet();     // freshest guard set the moment it is asked for
             redrawPcarTables();
         });
         ctl.find('.pcar-fleet-btn').on('click', function (e) { e.stopPropagation(); toggleFleetPanel(); });
@@ -10922,8 +10931,11 @@ $('#selectRadioFrequencyStatus').on('change', function () {
     function refreshFleet() {
         $.getJSON('/ActiveGuardSinglePage?handler=PcarSummary').done(function (d) {
             fleet = Array.isArray(d) ? d : [];
+            pcarGuardIds = {};
+            fleet.forEach(function (c) { if (c && c.guardId != null) pcarGuardIds[c.guardId] = true; });
             $('.pcar-fleet-count').text(fleet.length);   // every toolbar badge, every table
             if (fleetOpen) renderFleetPanel();
+            if (pcarOnly) redrawPcarTables();            // the filter follows the fresh set
         });
     }
 
