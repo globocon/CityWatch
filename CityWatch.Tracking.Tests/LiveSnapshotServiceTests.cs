@@ -132,6 +132,56 @@ namespace CityWatch.Tracking.Tests
         }
 
         [TestMethod]
+        public async Task CarWithoutDeclaredPosition_IsNamedByItsLoginSite()
+        {
+            /* #153 Part 1: R1's phone declared no position at login, so its card said only
+               "Patrol Car" while R5 said "Mobile Patrols (Car) M1 · Patrol Car". The login
+               site is the car's identity in the platform — fall back to it. */
+            var session = await _db.TrackingSessions.SingleAsync();
+            session.IsPatrolCar = true;
+            session.Callsign = "R1";
+            _db.PlatformClientSites.Add(new PlatformClientSite { Id = 12, Name = "Mobile Patrols (Car) M1", IsActive = true });
+            _db.TrackPoints.Add(new TrackPoint { UnitId = Unit, SessionId = Session, Seq = 1, RecordedUtc = Now.AddMinutes(-1), ReceivedUtc = Now.AddMinutes(-1), Latitude = -33.9m, Longitude = 151.1m, SourceType = 2, ModeAtCapture = 2 });
+            await _db.SaveChangesAsync();
+
+            var snapshot = await _service.GetSnapshotAsync(CancellationToken.None);
+
+            Assert.AreEqual("Mobile Patrols (Car) M1", snapshot[0].PatrolCar,
+                "A car with no declared position is named by its login site, not left blank.");
+        }
+
+        [TestMethod]
+        public async Task DeclaredPosition_IsNeverOverriddenByTheLoginSite()
+        {
+            var session = await _db.TrackingSessions.SingleAsync();
+            session.IsPatrolCar = true;
+            session.PatrolCarPositionName = "Mobile Patrols (Car) M2";
+            _db.PlatformClientSites.Add(new PlatformClientSite { Id = 12, Name = "Head Office", IsActive = true });
+            _db.TrackPoints.Add(new TrackPoint { UnitId = Unit, SessionId = Session, Seq = 1, RecordedUtc = Now.AddMinutes(-1), ReceivedUtc = Now.AddMinutes(-1), Latitude = -33.9m, Longitude = 151.1m, SourceType = 2, ModeAtCapture = 2 });
+            await _db.SaveChangesAsync();
+
+            var snapshot = await _service.GetSnapshotAsync(CancellationToken.None);
+
+            Assert.AreEqual("Mobile Patrols (Car) M2", snapshot[0].PatrolCar,
+                "What the officer declared at login wins over any fallback.");
+        }
+
+        [TestMethod]
+        public async Task GuardWithoutPosition_GetsNoCarName()
+        {
+            var session = await _db.TrackingSessions.SingleAsync();
+            session.IsPatrolCar = false;
+            _db.PlatformClientSites.Add(new PlatformClientSite { Id = 12, Name = "Mobile Patrols (Car) M1", IsActive = true });
+            _db.TrackPoints.Add(new TrackPoint { UnitId = Unit, SessionId = Session, Seq = 1, RecordedUtc = Now.AddMinutes(-1), ReceivedUtc = Now.AddMinutes(-1), Latitude = -33.9m, Longitude = 151.1m, SourceType = 2, ModeAtCapture = 2 });
+            await _db.SaveChangesAsync();
+
+            var snapshot = await _service.GetSnapshotAsync(CancellationToken.None);
+
+            Assert.IsNull(snapshot[0].PatrolCar,
+                "The fallback is a car-naming rule; a guard on foot has no car name.");
+        }
+
+        [TestMethod]
         public async Task DuressMarker_Persists_WhileTheAlarmIsOn()
         {
             _db.PlatformClientSiteDuress.Add(new PlatformClientSiteDuress

@@ -85,7 +85,7 @@ namespace CityWatch.Tracking.Services
                 {
                     s.Id, s.UnitId, s.GuardId, s.IsPatrolCar, s.Callsign,
                     s.PatrolCarPositionName, s.TravelState, s.CurrentSiteName, s.TravelStateSinceUtc,
-                    s.StartedUtc
+                    s.StartedUtc, s.ClientSiteId
                 })
                 .ToListAsync(ct);
             if (sessions.Count == 0)
@@ -109,6 +109,19 @@ namespace CityWatch.Tracking.Services
             var guardNames = await _db.PlatformGuards
                 .Where(g => guardIds.Contains(g.Id))
                 .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
+            /* A car whose login declared no position (#153 Part 1) still needs its home name
+               under the callsign — the login site IS the car in the platform's model
+               ("Mobile Patrols (Car) M1" is a ClientSite). Bounded to the sessions missing it. */
+            var unnamedSiteIds = sessions
+                .Where(s => string.IsNullOrWhiteSpace(s.PatrolCarPositionName))
+                .Select(s => s.ClientSiteId)
+                .Distinct()
+                .ToList();
+            var loginSiteNames = unnamedSiteIds.Count == 0
+                ? new Dictionary<int, string?>()
+                : await _db.PlatformClientSites
+                    .Where(cs => unnamedSiteIds.Contains(cs.Id))
+                    .ToDictionaryAsync(cs => cs.Id, cs => cs.Name, ct);
             var carSet = carUnits.ToHashSet();
             var sessionById = sessions.ToDictionary(s => s.Id);
 
@@ -135,7 +148,12 @@ namespace CityWatch.Tracking.Services
                     GuardId = guardId,
                     GuardName = guardNames.TryGetValue(guardId, out var name) ? name : null,
                     Callsign = string.IsNullOrWhiteSpace(session?.Callsign) ? null : session!.Callsign,
-                    PatrolCar = string.IsNullOrWhiteSpace(session?.PatrolCarPositionName) ? null : session!.PatrolCarPositionName,
+                    PatrolCar = !string.IsNullOrWhiteSpace(session?.PatrolCarPositionName)
+                        ? session!.PatrolCarPositionName
+                        : isCar && loginSiteNames.TryGetValue(session?.ClientSiteId ?? 0, out var homeSite)
+                            && !string.IsNullOrWhiteSpace(homeSite)
+                            ? homeSite
+                            : null,
                     TravelState = string.IsNullOrWhiteSpace(session?.TravelState) ? "Transit" : session!.TravelState,
                     CurrentSiteName = string.IsNullOrWhiteSpace(session?.CurrentSiteName) ? null : session!.CurrentSiteName,
                     StateMinutes = stateMinutes,
