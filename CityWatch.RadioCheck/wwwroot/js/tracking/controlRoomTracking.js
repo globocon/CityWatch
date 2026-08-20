@@ -339,6 +339,7 @@
     }
 
     function openCard(unitId) {
+        if (selectedUnitId !== unitId) guardIdOpen = false;   // a new card starts folded
         selectedUnitId = unitId;
         selectedSite = null;
         document.body.classList.add('trk-card-open');
@@ -656,6 +657,36 @@
             </div>`;
     }
 
+    /* #153 Part 2: with a hundred Muhammads on the books a truncated first name
+       identifies nobody. The card wears the guard's ID the way the guard wears the
+       physical one — full name and licence number always in view on a badge strip,
+       contact details one tap behind it. (The HR pin is an HR credential, not an
+       identity: it never reaches this payload.) */
+    let guardIdOpen = false;
+
+    function guardIdHtml(u, isCar) {
+        if (!u.guardName && !u.guardLicense) return '';
+        const licence = u.guardLicense ? esc(u.guardLicense) : '<span class="dim">no licence on file</span>';
+        const state = u.guardState ? `<span class="trk-id-state">${esc(u.guardState)}</span>` : '';
+        const tel = u.guardMobile ? String(u.guardMobile).replace(/[^+\d]/g, '') : null;
+        const missing = what => `<span class="dim">no ${what} on file</span>`;
+        /* A guard card's head already headlines the full name (wrapped, never clipped);
+           a car card headlines the callsign, so the badge names its officer. */
+        const officer = isCar && u.guardName
+            ? `<span class="trk-idbadge-name">${esc(u.guardName)}</span>` : '';
+        return `
+            <div class="trk-idbadge">
+              <div class="trk-idbadge-main">
+                ${officer}
+                <span class="trk-idbadge-lic">🆔 ${licence} ${state}</span>
+              </div>
+              <button class="trk-idbadge-more" data-trk-guardid="1" aria-expanded="${guardIdOpen}">${guardIdOpen ? 'Hide ▴' : 'Contact ▾'}</button>
+            </div>
+            ${guardIdOpen ? `
+              <div class="trk-row trk-id-row">📞 ${tel ? `<a class="trk-idlink" href="tel:${esc(tel)}">${esc(u.guardMobile)}</a>` : missing('mobile')}</div>
+              <div class="trk-row trk-id-row">✉ ${u.guardEmail ? `<a class="trk-idlink" href="mailto:${esc(u.guardEmail)}">${esc(u.guardEmail)}</a>` : missing('email')}</div>` : ''}`;
+    }
+
     function renderCard() {
         if (selectedSite) { renderSiteCard(); return; }
         const el = cardEl();
@@ -691,14 +722,14 @@
             <div class="trk-card-head">
               <span class="trk-card-glyph">${isCar ? carSvg(mode.color) : `<div class="trk-avatar trk-avatar-lg" style="border-color:${mode.color}">${esc(initialsOf(u.guardName))}</div>`}</span>
               <span class="trk-card-title">
-                <b>${esc(title)}</b>
+                <b${isCar ? '' : ' class="trk-title-wrap"'}>${esc(title)}</b>
                 <span>${u.callsign && u.patrolCar ? esc(u.patrolCar) + ' · ' : ''}${isCar ? 'Patrol Car' : 'Guard'}</span>
               </span>
               <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>
               <button class="trk-card-close" data-trk-card-close="1" aria-label="Close">×</button>
             </div>
             <div class="trk-card-body">
-              ${u.guardName && isCar ? `<div class="trk-row">👤 ${esc(u.guardName)}</div>` : ''}
+              ${guardIdHtml(u, isCar)}
               <div class="trk-row trk-row-state">${statusLine(u)}</div>
               ${locationRow}
               ${u.currentSite ? `<button class="trk-sitelink" data-trk-site="${esc(u.currentSite)}">🏢 ${esc(u.currentSite)} — who's here ›</button>` : ''}
@@ -1331,6 +1362,7 @@
             renderFollowBar();
             return;
         }
+        if (attr('data-trk-guardid')) { guardIdOpen = !guardIdOpen; renderCard(); return; }
         if (attr('data-trk-card-close')) { closeCard(); return; }
         if (attr('data-trk-search-close')) { toggleSearch(false); return; }
         if (attr('data-trk-alerts-close')) { toggleAlerts(false); return; }

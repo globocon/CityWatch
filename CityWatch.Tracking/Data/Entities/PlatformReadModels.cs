@@ -23,7 +23,9 @@ namespace CityWatch.Tracking.Data.Entities
         public bool IsDeleted { get; set; }
     }
 
-    /// <summary>Guards, read-only. Names for the control-room display and idle list.</summary>
+    /// <summary>Guards, read-only. Identity for the control-room display: with a hundred
+    /// Muhammads on the books a name alone identifies nobody — the licence does (#153 Part 2).
+    /// The HR pin is deliberately NOT mapped: it is an HR credential, not an identity.</summary>
     [Table("Guards")]
     public class PlatformGuard
     {
@@ -31,6 +33,17 @@ namespace CityWatch.Tracking.Data.Entities
         public int Id { get; set; }
 
         public string? Name { get; set; }
+
+        /// <summary>Security licence number — the HR screen's "License No (Primary)".</summary>
+        public string? SecurityNo { get; set; }
+
+        /// <summary>Issuing state of the licence ("VIC") — a licence number means
+        /// nothing without it.</summary>
+        public string? State { get; set; }
+
+        public string? Mobile { get; set; }
+
+        public string? Email { get; set; }
     }
 
     /// <summary>ClientSiteDuress, read-only. THE truth table for duress: raising the alarm

@@ -610,6 +610,12 @@ namespace CityWatch.Tracking.Api
                     callsign = u.Callsign,
                     guardId = u.GuardId,
                     guardName = u.GuardName,
+                    /* Guard identity (#153 Part 2): licence + contact so the control room can
+                       tell WHICH Muhammad. The HR pin never leaves the platform. */
+                    guardLicense = u.GuardLicense,
+                    guardState = u.GuardState,
+                    guardMobile = u.GuardMobile,
+                    guardEmail = u.GuardEmail,
                     patrolCar = u.PatrolCar,
                     travelState = u.TravelState,
                     currentSite = u.CurrentSiteName,

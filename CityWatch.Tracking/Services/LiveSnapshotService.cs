@@ -38,6 +38,17 @@ namespace CityWatch.Tracking.Services
 
         public string? GuardName { get; init; }
 
+        /// <summary>Security licence number — with a hundred Muhammads on the books, this is
+        /// what actually identifies the guard on the card (#153 Part 2).</summary>
+        public string? GuardLicense { get; init; }
+
+        /// <summary>Issuing state of the licence ("VIC").</summary>
+        public string? GuardState { get; init; }
+
+        public string? GuardMobile { get; init; }
+
+        public string? GuardEmail { get; init; }
+
         /// <summary>Callsign from the login screen ("Romeo 1") — the label operators use.</summary>
         public string? Callsign { get; init; }
 
@@ -106,9 +117,9 @@ namespace CityWatch.Tracking.Services
                     .Select(w => w.Id)
                     .ToListAsync(ct);
             var guardIds = sessions.Select(s => s.GuardId).Distinct().ToList();
-            var guardNames = await _db.PlatformGuards
+            var guardsById = await _db.PlatformGuards
                 .Where(g => guardIds.Contains(g.Id))
-                .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
+                .ToDictionaryAsync(g => g.Id, ct);
             /* A car whose login declared no position (#153 Part 1) still needs its home name
                under the callsign — the login site IS the car in the platform's model
                ("Mobile Patrols (Car) M1" is a ClientSite). Bounded to the sessions missing it. */
@@ -142,11 +153,17 @@ namespace CityWatch.Tracking.Services
                     ? (int)Math.Max(0, (now - since).TotalMinutes)
                     : 0;
 
+                guardsById.TryGetValue(guardId, out var guard);
+
                 return dto with
                 {
                     Kind = isCar ? "car" : "guard",
                     GuardId = guardId,
-                    GuardName = guardNames.TryGetValue(guardId, out var name) ? name : null,
+                    GuardName = guard?.Name,
+                    GuardLicense = string.IsNullOrWhiteSpace(guard?.SecurityNo) ? null : guard!.SecurityNo,
+                    GuardState = string.IsNullOrWhiteSpace(guard?.State) ? null : guard!.State,
+                    GuardMobile = string.IsNullOrWhiteSpace(guard?.Mobile) ? null : guard!.Mobile,
+                    GuardEmail = string.IsNullOrWhiteSpace(guard?.Email) ? null : guard!.Email,
                     Callsign = string.IsNullOrWhiteSpace(session?.Callsign) ? null : session!.Callsign,
                     PatrolCar = !string.IsNullOrWhiteSpace(session?.PatrolCarPositionName)
                         ? session!.PatrolCarPositionName

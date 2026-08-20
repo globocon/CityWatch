@@ -132,6 +132,28 @@ namespace CityWatch.Tracking.Tests
         }
 
         [TestMethod]
+        public async Task GuardIdentity_FlowsThroughTheSnapshot()
+        {
+            /* #153 Part 2: with a hundred Muhammads on the books, the card must say WHICH
+               one — full name, licence (+ state), and contact. */
+            _db.PlatformGuards.Add(new PlatformGuard
+            {
+                Id = 7, Name = "Muhammad Bilal", SecurityNo = "569-829-111",
+                State = "VIC", Mobile = "+61 421 945 291", Email = "m.bilal@citywatchsecurity.com"
+            });
+            _db.TrackPoints.Add(new TrackPoint { UnitId = Unit, SessionId = Session, Seq = 1, RecordedUtc = Now.AddMinutes(-1), ReceivedUtc = Now.AddMinutes(-1), Latitude = -33.9m, Longitude = 151.1m, SourceType = 2, ModeAtCapture = 2 });
+            await _db.SaveChangesAsync();
+
+            var snapshot = await _service.GetSnapshotAsync(CancellationToken.None);
+
+            Assert.AreEqual("Muhammad Bilal", snapshot[0].GuardName);
+            Assert.AreEqual("569-829-111", snapshot[0].GuardLicense);
+            Assert.AreEqual("VIC", snapshot[0].GuardState);
+            Assert.AreEqual("+61 421 945 291", snapshot[0].GuardMobile);
+            Assert.AreEqual("m.bilal@citywatchsecurity.com", snapshot[0].GuardEmail);
+        }
+
+        [TestMethod]
         public async Task CarWithoutDeclaredPosition_IsNamedByItsLoginSite()
         {
             /* #153 Part 1: R1's phone declared no position at login, so its card said only
