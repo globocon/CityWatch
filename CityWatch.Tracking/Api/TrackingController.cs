@@ -417,6 +417,9 @@ namespace CityWatch.Tracking.Api
                     lon = p.Longitude,
                     speedKph = p.SpeedKph,
                     headingDeg = p.HeadingDeg,
+                    /* Confidence travels with every point (#153 P7): the client's
+                       trusted-line rule needs the same evidence live already gets. */
+                    accuracyM = p.AccuracyM,
                     source = p.SourceType,
                     flags = p.Flags,
                     tag = p.AnchorTagUid
@@ -491,7 +494,7 @@ namespace CityWatch.Tracking.Api
                         {
                             raw[i].utc, raw[i].lat, raw[i].lon,
                             speedKph = speed, speedDerived = derived,
-                            raw[i].headingDeg, raw[i].source, raw[i].flags, raw[i].tag
+                            raw[i].headingDeg, raw[i].accuracyM, raw[i].source, raw[i].flags, raw[i].tag
                         });
                     }
 

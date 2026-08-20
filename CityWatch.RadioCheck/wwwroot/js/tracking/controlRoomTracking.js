@@ -105,6 +105,41 @@
        server-side), not driving — snap, never animate the vehicle across the map. */
     const GLIDE_MAX_KM = 3;
 
+    /* ---- confidence (#153 Part 7) ----
+       The server flags what it does not trust (LowAccuracy >100m, Implausible speed)
+       but stores everything — evidence is never deleted. The MAP is where trust is
+       enforced: only trusted fixes move markers or extend lines; an untrusted fix
+       anchors the unit at its last trusted position and shows the uncertainty as an
+       honest circle instead of fake movement (the Webb Dock star). ONE rule, used by
+       live and replay alike, so the two never disagree about the same journey. */
+    const FLAG_LOWACC = 2, FLAG_IMPLAUSIBLE = 4;
+    const TRUST_MAX_ACC_M = 100;   // mirrors the server's MaxAcceptedAccuracyMetres
+    function isTrustedFix(f) {
+        if ((((f && f.flags) || 0) & (FLAG_LOWACC | FLAG_IMPLAUSIBLE)) !== 0) return false;
+        return f.accuracyM == null || Number(f.accuracyM) <= TRUST_MAX_ACC_M;
+    }
+
+    /* The honest circle: "the phone is somewhere in here". Anchored to the marker —
+       which holds the last trusted position — never to the scattered fix itself. */
+    function approxShow(entry, accM) {
+        entry.approxAccM = accM == null ? null : Math.round(Number(accM));
+        const anchor = entry.marker.getLatLng();
+        const radius = Math.min(Math.max(Number(accM) || 150, 30), 2000);
+        if (!entry.approxCircle) {
+            entry.approxCircle = L.circle(anchor, {
+                radius, color: '#f59e0b', weight: 1.5, dashArray: '6 6',
+                fillColor: '#f59e0b', fillOpacity: .08, interactive: false
+            }).addTo(entry.trailGroup);
+        } else {
+            entry.approxCircle.setLatLng(anchor);
+            entry.approxCircle.setRadius(radius);
+        }
+    }
+    function approxClear(entry) {
+        if (entry.approxCircle) { entry.trailGroup.removeLayer(entry.approxCircle); entry.approxCircle = null; }
+        entry.approxAccM = null;
+    }
+
     /* Mode → accent. Colour still means urgency: duress uses the existing alarm red. */
     const MODE = {
         1: { label: 'NORMAL', cls: 'trk-normal', color: '#16a34a' },
@@ -731,6 +766,7 @@
             <div class="trk-card-body">
               ${guardIdHtml(u, isCar)}
               <div class="trk-row trk-row-state">${statusLine(u)}</div>
+              ${entry.approxAccM != null ? `<div class="trk-row trk-row-approx">🟡 Approximate location — GPS confidence ±${entry.approxAccM}m · marker holds the last trusted position</div>` : ''}
               ${locationRow}
               ${u.currentSite ? `<button class="trk-sitelink" data-trk-site="${esc(u.currentSite)}">🏢 ${esc(u.currentSite)} — who's here ›</button>` : ''}
               <div class="trk-row">🚀 ${speed}${dir} &nbsp; ${u.accuracyM == null ? '' : `±${u.accuracyM}m`} ${u.batteryPct == null ? '' : `&nbsp; 🔋${u.batteryPct}%`}</div>
@@ -1015,11 +1051,12 @@
     function dayOf(v) { return v ? utcDate(v).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : ''; }
 
     function replayBarHtml(label, s) {
-        const t0 = s.points[0].utc, t1 = s.points[s.points.length - 1].utc;
+        const t0 = replay.points[0].utc, t1 = replay.points[replay.points.length - 1].utc;
         return `<div class="trk-replay-bar" id="trkReplayBar">
             <div class="trk-replay-head">
               <b>REPLAY · ${esc(label)} · ${dayOf(t0)}${s.guardName ? ' · ' + esc(s.guardName) : ''}</b>
               ${replay.truncated ? '<span class="trk-replay-trunc">⚠ window truncated at 5000 points — oldest not shown</span>' : ''}
+              ${replay.hiddenCount ? `<span class="trk-replay-trunc">◌ ${replay.hiddenCount} low-confidence fixes kept in audit, not drawn</span>` : ''}
               <button id="trkReplayLive" class="trk-btn">⟳ LIVE</button>
             </div>
             <div class="trk-replay-main">
@@ -1093,16 +1130,27 @@
 
     function playSession(unitId, session, truncated) {
         const label = units[unitId] ? unitLabel(units[unitId].data) : ('Unit ' + unitId);
+        /* #153 P7: the line is drawn through TRUSTED fixes only — the same rule as the
+           live map, so replay and live never tell different stories about one journey.
+           Untrusted fixes stay in the audit record; the bar says how many were held
+           back, because a silent cut would read as "covered everything". */
+        const trustedPts = (session.points || []).filter(isTrustedFix);
+        const hiddenCount = (session.points || []).length - trustedPts.length;
+        if (trustedPts.length < 2) {
+            notice(`Every fix in this window is low-confidence GPS (${(session.points || []).length} kept in audit) — nothing trustworthy to draw.`, 'alarm');
+            return;
+        }
         replay.active = true;
         replay.playing = true;
         replay.unitId = unitId;
         replay.session = session;
-        replay.points = session.points;
+        replay.points = trustedPts;
+        replay.hiddenCount = hiddenCount;
         replay.stops = session.stops || [];
         replay.truncated = !!truncated;
         replay.idx = 0;
 
-        const pts = session.points;
+        const pts = trustedPts;
         const latlngs = pts.map(p => [p.lat, p.lon]);
 
         /* The whole journey, faint — what remains to be driven. */
@@ -1578,12 +1626,15 @@
                 const s = (body.sessions || []).find(x => String(x.sessionId).toLowerCase() === sid);
                 if (!s || !s.points || s.points.length < 2) return;
                 /* Thin to a drawable size, keeping the start; the trail is a picture,
-                   the audit record stays server-side. */
-                let pts = s.points;
+                   the audit record stays server-side. Trusted fixes only (#153 P7) —
+                   the same rule the live append path enforces. */
+                let pts = s.points.filter(isTrustedFix);
+                if (pts.length < 2) return;
                 const budget = TRAIL_MAX - 200;
                 if (pts.length > budget) {
                     const step = Math.ceil(pts.length / budget);
-                    pts = pts.filter((p, i) => i % step === 0 || i === s.points.length - 1);
+                    const lastIdx = pts.length - 1;
+                    pts = pts.filter((p, i) => i % step === 0 || i === lastIdx);
                 }
                 let seed = pts.map(p => L.latLng(Number(p.lat), Number(p.lon)));
                 /* Jump-break invariant (same rule as the live append path): a >3 km hop is
@@ -1628,6 +1679,9 @@
             entry = units[u.unitId] = { marker, trail, trailCasing, markerGroup, trailGroup, data: u, lastSeenMs: nowMs, iconSig: iconSig(u) };
             seedTrail(entry);      // cars: back-fill this session's route so the start shows
             applyOfflineVisibility(entry);   // yesterday's leftovers arrive hidden
+            /* First sighting on an untrusted fix: show the unit (best available beats
+               invisible) but say so — circle up until a trusted fix arrives. */
+            if (!isTrustedFix(u)) approxShow(entry, u.accuracyM);
         } else {
             /* SESSION BOUNDARY: the unit changed hands. The trail belongs to the previous
                officer — reset it, and tell the operator out loud (§B2/B3). A trail that
@@ -1635,6 +1689,7 @@
             if (entry.data.sessionId && u.sessionId && entry.data.sessionId !== u.sessionId) {
                 setTrailLine(entry, [pos]);
                 entry.trailSeeded = false;      // new session, new seed (covers reconnects too)
+                approxClear(entry);             // the old officer's uncertainty is not the new one's
                 notice(`⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, 'alarm');
                 addAlert('alarm', `⚠ <b>${esc(unitLabel(u))}</b> — session taken over${u.guardName ? ' by ' + esc(u.guardName) : ''}`, u.unitId);
             }
@@ -1645,20 +1700,29 @@
             if (entry.data.ageSeconds <= HOLLOW_S && u.ageSeconds > HOLLOW_S) {
                 addAlert('warn', `⚠ <b>${esc(unitLabel(u))}</b> has not reported for ${fmtAge(u.ageSeconds)}`, u.unitId);
             }
-            moveMarker(entry, pos);
+            /* #153 P7: an untrusted fix is evidence, not movement. The marker HOLDS the
+               last trusted position, the trail gains nothing, and the uncertainty shows
+               as a circle — a stationary guard in a metal shed must never become a
+               star of lines shooting over the site boundary. */
+            if (isTrustedFix(u)) {
+                approxClear(entry);
+                moveMarker(entry, pos);
+                const pts = entry.trail.getLatLngs();
+                const last = pts[pts.length - 1];
+                if (last && haversineKm(last.lat, last.lng, pos[0], pos[1]) > GLIDE_MAX_KM) {
+                    /* A jump is not a journey: restart the trail rather than draw a line
+                       across ground nobody covered (first coarse fix → real fix, etc.). */
+                    setTrailLine(entry, [pos]);
+                } else if (!last || last.lat !== pos[0] || last.lng !== pos[1]) {
+                    pts.push(L.latLng(pos[0], pos[1]));
+                    if (pts.length > TRAIL_MAX) pts.shift();   // bounded, but big enough for a whole shift
+                    setTrailLine(entry, pts);
+                }
+            } else {
+                approxShow(entry, u.accuracyM);
+            }
             entry.data = u;
             applyIcon(entry, false);
-            const pts = entry.trail.getLatLngs();
-            const last = pts[pts.length - 1];
-            if (last && haversineKm(last.lat, last.lng, pos[0], pos[1]) > GLIDE_MAX_KM) {
-                /* A jump is not a journey: restart the trail rather than draw a line
-                   across ground nobody covered (first coarse fix → real fix, etc.). */
-                setTrailLine(entry, [pos]);
-            } else if (!last || last.lat !== pos[0] || last.lng !== pos[1]) {
-                pts.push(L.latLng(pos[0], pos[1]));
-                if (pts.length > TRAIL_MAX) pts.shift();   // bounded, but big enough for a whole shift
-                setTrailLine(entry, pts);
-            }
             if (!entry.trailSeeded) seedTrail(entry);      // hub-created or post-takeover entries
             entry.lastSeenMs = nowMs;
             applyOfflineVisibility(entry);   // crossing the 4h line hides it; a fresh fix reveals it
@@ -1712,6 +1776,7 @@
                 units[id].markerGroup.removeLayer(units[id].marker);
                 units[id].trailGroup.removeLayer(units[id].trail);
                 if (units[id].trailCasing) units[id].trailGroup.removeLayer(units[id].trailCasing);
+                if (units[id].approxCircle) units[id].trailGroup.removeLayer(units[id].approxCircle);
                 delete units[id];
             }
         });

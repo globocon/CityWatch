@@ -137,6 +137,9 @@
 }
 .trk-card-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
 .trk-card .trk-row-state { font-weight: 700; color: #2563eb; }
+/* #153 P7: the honest state — poor GPS shown as uncertainty, never as movement. */
+.trk-card .trk-row-approx { color: #b45309; font-weight: 600; font-size: 12px; }
+body.trk-dark .trk-card .trk-row-approx { color: #fbbf24; }
 .trk-card .dim { color: #64748b; font-size: 12px; }
 .trk-card-actions {
     display: flex; gap: 8px; flex-wrap: wrap;
