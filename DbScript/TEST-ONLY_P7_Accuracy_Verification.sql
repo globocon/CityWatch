@@ -67,6 +67,11 @@ WITH Centred AS (
            AVG(CAST(tp.Latitude  AS FLOAT)) OVER (PARTITION BY tp.SessionId) AS CLat,
            AVG(CAST(tp.Longitude AS FLOAT)) OVER (PARTITION BY tp.SessionId) AS CLon
     FROM dbo.TrackPoint tp
+    /* STATIONARY fixes only: a patrol car legitimately drives kilometres from its
+       session centre — including moving points buried the spikes in real journeys
+       on the first run of this report. A stationary point far off centre has no
+       such excuse: it IS the star vertex. */
+    WHERE tp.SpeedKph IS NULL OR tp.SpeedKph < 2
 ),
 Measured AS (
     SELECT SessionId, AccuracyM, Flags,
