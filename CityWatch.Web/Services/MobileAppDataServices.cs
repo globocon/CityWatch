@@ -17,7 +17,7 @@ namespace CityWatch.Web.Services
         //public Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel)> CreateSmartWandNFCHitLogRecord(int siteId, string TagUid, int GuardId,
         //    int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, int? SmartWandId = null);
 
-        public Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId, int RowIdInServer)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
+        public Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId, int RowIdInServer, int TagSiteId, string TagSiteName)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
           int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, string gpsCordinates, int? SmartWandId = null);
 
         public (bool IsSuccess, string msg, int guardLoginId) PostMobileLogActivity(PostActivityRequest request, string IPAddress);
@@ -55,7 +55,7 @@ namespace CityWatch.Web.Services
             _events = events ?? CityWatch.Events.NullDomainEventPublisher.Instance;
         }
 
-        public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId, int RowIdInServer)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
+        public async Task<(bool IsSuccess, bool TagFound, string message, string TagInfoLabel, int ScanFromLinkedSiteId, int RowIdInServer, int TagSiteId, string TagSiteName)> CreateSmartWandScannerHitLogRecord(int siteId, string TagUid, int GuardId,
            int UserId, bool IsOfflineRecord, Guid uniqueRecordID, DateTime HitUtcDateTime, ScanningType scanningType, string gpsCordinates, int? SmartWandId = null)
         {
             bool IsSuccess = false;
@@ -65,6 +65,8 @@ namespace CityWatch.Web.Services
             int ScanFromLinkedSiteId = siteId;
             string _tagEndDesc = "[NFC]";
             int RowIdInServer = 0;
+            int TagSiteId = 0;
+            string TagSiteName = string.Empty;
 
             ClientSiteSmartWandTagsHitLog _clientSiteSmartWandTagsHitLog = new ClientSiteSmartWandTagsHitLog();
             try
@@ -80,7 +82,7 @@ namespace CityWatch.Web.Services
                         if (scanningType == ScanningType.NFC) { message = "Tag already scanned !!!"; }
                         else if (scanningType == ScanningType.BLUETOOTH) { message = "iBeacon already scanned !!!"; }
 
-                        return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
+                        return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer, TagSiteId, TagSiteName);
                     }
                 }
                 var _ClientSiteTourMode = _clientDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
@@ -139,13 +141,15 @@ namespace CityWatch.Web.Services
                     else if (scanningType == ScanningType.BLUETOOTH)
                     {  // if ibeacon not found dont show in log book entry
                         message = "iBeacon Not Found";
-                        return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
+                        return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer, TagSiteId, TagSiteName);
                     }
                 }
                 else
                 {
                     _clientSiteSmartWandTagsHitLog.LabelDescription = TagInfoDetails.LabelDescription;
                     _clientSiteSmartWandTagsHitLog.TagLinkedClientSiteId = TagInfoDetails.ClientSiteId;
+                    TagSiteId = TagInfoDetails.ClientSiteId;
+                    TagSiteName = TagInfoDetails.ClientSiteName ?? string.Empty;
                     if (TagInfoDetails.ClientSiteId != siteId)
                     {
                         if (TagInfoDetails.ClientSiteId == 0)
@@ -160,7 +164,7 @@ namespace CityWatch.Web.Services
                             else if (scanningType == ScanningType.BLUETOOTH)
                             {  // if ibeacon
                                 message = "iBeacon Not Found";
-                                return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
+                                return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer, TagSiteId, TagSiteName);
                             }
                         }
                         else
@@ -225,19 +229,25 @@ namespace CityWatch.Web.Services
                             }
                             else
                             {
+                                /* P4#153: tour-mode guard on another site's tag — the owning site
+                                   leads the label because the app's toast truncates at 35 chars;
+                                   a trailing site name would never reach the guard's screen. The
+                                   same string becomes the logbook entry text (online via the app,
+                                   offline via SyncOfflineSmartWandTagHitData). */
+                                var _tagSitePrefix = string.IsNullOrWhiteSpace(TagInfoDetails.ClientSiteName) ? string.Empty : $"[{TagInfoDetails.ClientSiteName}] ";
                                 if (scanningType == ScanningType.NFC)
                                 {
                                     IsSuccess = true;
                                     TagFound = true;
                                     message = "Tag Found";
-                                    TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
+                                    TagInfoLabel = $"{_tagSitePrefix}{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                                 }
                                 else if (scanningType == ScanningType.BLUETOOTH)
                                 {  // if ibeacon
                                     IsSuccess = true;
                                     TagFound = true;
                                     message = "iBeacon Found";
-                                    TagInfoLabel = $"{TagInfoDetails.LabelDescription} {_tagEndDesc}";
+                                    TagInfoLabel = $"{_tagSitePrefix}{TagInfoDetails.LabelDescription} {_tagEndDesc}";
                                 }
                             }
                         }
@@ -395,7 +405,7 @@ namespace CityWatch.Web.Services
                 message = ex.Message;
             }
 
-            return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer);
+            return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer, TagSiteId, TagSiteName);
         }
 
         
