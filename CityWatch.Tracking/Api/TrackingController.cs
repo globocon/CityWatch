@@ -619,6 +619,7 @@ namespace CityWatch.Tracking.Api
                     guardState = u.GuardState,
                     guardMobile = u.GuardMobile,
                     guardEmail = u.GuardEmail,
+                    guardAppVersion = u.GuardAppVersion,
                     patrolCar = u.PatrolCar,
                     travelState = u.TravelState,
                     currentSite = u.CurrentSiteName,

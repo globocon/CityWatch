@@ -27,7 +27,7 @@ namespace CityWatch.Tracking.Tests
         private static readonly string[] PlatformProjections =
         {
             nameof(PlatformSmartWand), nameof(PlatformGuard), nameof(PlatformClientSite),
-            nameof(PlatformClientSiteDuress)
+            nameof(PlatformClientSiteDuress), nameof(PlatformGuardAppVersion)
         };
 
         [TestMethod]
@@ -79,6 +79,8 @@ namespace CityWatch.Tracking.Tests
                 context.Model.FindEntityType(typeof(PlatformClientSite))!.GetTableName());
             Assert.AreEqual("ClientSiteDuress",
                 context.Model.FindEntityType(typeof(PlatformClientSiteDuress))!.GetTableName());
+            Assert.AreEqual("GuardMobileAppVersions",
+                context.Model.FindEntityType(typeof(PlatformGuardAppVersion))!.GetTableName());
         }
 
         [TestMethod]
