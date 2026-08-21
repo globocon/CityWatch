@@ -73,7 +73,9 @@ namespace CityWatch.Web.API
             bool TagFound = false;
             string TagInfoLabel = string.Empty;
             int ScannedFromLinkedSite = siteId;
-            int rowIdInServer = 0;            
+            int rowIdInServer = 0;
+            int tagSiteId = 0;
+            string tagSiteName = string.Empty;
             if (!string.IsNullOrEmpty(gpsCoordinates))
             {
                 gpsCoordinates = Uri.UnescapeDataString(gpsCoordinates.Trim());
@@ -82,7 +84,7 @@ namespace CityWatch.Web.API
 
             try
             {
-                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
+                var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR, TagSiteIdR, TagSiteNameR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(siteId, TagUid, GuardId, UserId, false,
                     Guid.NewGuid(), DateTime.UtcNow, (ScanningType)TagsTypeId, gpsCoordinates, SmartWandId);
                 IsSuccess = IsSuccessR;
                 message = messageR;
@@ -90,6 +92,8 @@ namespace CityWatch.Web.API
                 TagInfoLabel = TagInfoLabelR;
                 ScannedFromLinkedSite = ScanFromLinkedSiteId;
                 rowIdInServer = RowIdInServerR;
+                tagSiteId = TagSiteIdR;
+                tagSiteName = TagSiteNameR;
 
             }
             catch (Exception ex)
@@ -97,7 +101,7 @@ namespace CityWatch.Web.API
                 message = ex.Message;
             }
 
-            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite, RowIdInServer = rowIdInServer });
+            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite, RowIdInServer = rowIdInServer, TagSiteId = tagSiteId, TagSiteName = tagSiteName });
         }
 
         [HttpPost("SyncOfflineSmartWandTagHitData")]
@@ -111,7 +115,7 @@ namespace CityWatch.Web.API
                     try
                     {
                         //Save tag hit 
-                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
+                        var (IsSuccessR, TagFoundR, messageR, TagInfoLabelR, ScanFromLinkedSiteId, RowIdInServerR, TagSiteIdR, TagSiteNameR) = await _mobileAppDataServices.CreateSmartWandScannerHitLogRecord(offlineRecord.LoggedInClientSiteId,
                             offlineRecord.TagUId, offlineRecord.LoggedInGuardId, offlineRecord.LoggedInUserId, true, offlineRecord.UniqueRecordId,
                             offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.GPScoordinates, offlineRecord.SmartWandId);
 

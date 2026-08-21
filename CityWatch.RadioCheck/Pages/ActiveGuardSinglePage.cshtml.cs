@@ -312,10 +312,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
             {
                 var today = DateTime.Today;
 
-                /* THE definition (field feedback, 20 Aug): a patrol-car guard is one whose
-                   FIRST login TODAY was at a PCAR-mode site (the Romeo base). The activity
-                   feed keeps one row per guard at their LATEST site, so a guard mid-patrol
-                   carries no PCAR mark there — GuardLogins is where the day began. */
+                /* THE definition (field feedback, 21 Aug): a patrol-car guard is one with ANY
+                   login TODAY at a PCAR-mode site (the Romeo base). Strictly "first login of
+                   the day" proved brittle in the field — a 17-second HQ report-in before the
+                   M1 sign-on silently dropped the guard from the fleet. The earliest PCAR
+                   login of the day names the base site (the M-badge). */
                 var todaysLogins = _context.GuardLogins
                     .Where(x => x.OnDuty >= today)
                     .Select(x => new { x.GuardId, x.ClientSiteId, x.OnDuty })
@@ -325,13 +326,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     .Select(cs => new { cs.Id, cs.Name })
                     .ToList();
                 var pcarSiteNames = pcarSiteIds.ToDictionary(cs => cs.Id, cs => cs.Name);
-                var firstLoginByGuard = todaysLogins
+                var pcarBaseByGuard = todaysLogins
+                    .Where(x => pcarSiteNames.ContainsKey(x.ClientSiteId))
                     .GroupBy(x => x.GuardId)
                     .ToDictionary(g => g.Key, g => g.OrderBy(x => x.OnDuty).First().ClientSiteId);
-                var pcarGuardIds = firstLoginByGuard
-                    .Where(kv => pcarSiteNames.ContainsKey(kv.Value))
-                    .Select(kv => kv.Key)
-                    .ToHashSet();
+                var pcarGuardIds = pcarBaseByGuard.Keys.ToHashSet();
                 if (pcarGuardIds.Count == 0)
                     return new JsonResult(Array.Empty<object>());
 
@@ -374,9 +373,9 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         guardId = a.GuardId,
                         guard = a.GuardName,
                         car = last != null && carByRoute.ContainsKey(last.PcarRouteId) ? carByRoute[last.PcarRouteId] : null,
-                        /* The BASE site the day started at ("Citywatch M1 - Romeo Patrol
-                           Cars") — the client shows its M-number as a badge. */
-                        position = firstLoginByGuard.TryGetValue(a.GuardId, out var baseSiteId)
+                        /* The BASE site ("Citywatch M1 - Romeo Patrol Cars") — the client
+                           shows its M-number as a badge. */
+                        position = pcarBaseByGuard.TryGetValue(a.GuardId, out var baseSiteId)
                             && pcarSiteNames.ContainsKey(baseSiteId) ? pcarSiteNames[baseSiteId] : a.OnlySiteName,
                         status = last == null || stale ? "lastknown" : onSite ? "onsite" : "transit",
                         site = last != null
