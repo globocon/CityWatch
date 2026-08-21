@@ -49,6 +49,10 @@ namespace CityWatch.Tracking.Services
 
         public string? GuardEmail { get; init; }
 
+        /// <summary>App build the guard's phone last reported at login ("1.54.3") — null
+        /// until the phone reports one, or where DbScript 371 has not run.</summary>
+        public string? GuardAppVersion { get; init; }
+
         /// <summary>Callsign from the login screen ("Romeo 1") — the label operators use.</summary>
         public string? Callsign { get; init; }
 
@@ -120,6 +124,18 @@ namespace CityWatch.Tracking.Services
             var guardsById = await _db.PlatformGuards
                 .Where(g => guardIds.Contains(g.Id))
                 .ToDictionaryAsync(g => g.Id, ct);
+            /* App build per guard (#153): freshest report wins across platforms. DbScript 371
+               may not have run everywhere — the snapshot must answer without the table. */
+            var appVersionByGuard = new Dictionary<int, string?>();
+            try
+            {
+                appVersionByGuard = (await _db.PlatformGuardAppVersions
+                        .Where(v => guardIds.Contains(v.GuardId))
+                        .ToListAsync(ct))
+                    .GroupBy(v => v.GuardId)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(v => v.LastSeen).First().AppVersion);
+            }
+            catch { appVersionByGuard = new Dictionary<int, string?>(); }
             /* A car whose login declared no position (#153 Part 1) still needs its home name
                under the callsign — the login site IS the car in the platform's model
                ("Mobile Patrols (Car) M1" is a ClientSite). Bounded to the sessions missing it. */
@@ -164,6 +180,8 @@ namespace CityWatch.Tracking.Services
                     GuardState = string.IsNullOrWhiteSpace(guard?.State) ? null : guard!.State,
                     GuardMobile = string.IsNullOrWhiteSpace(guard?.Mobile) ? null : guard!.Mobile,
                     GuardEmail = string.IsNullOrWhiteSpace(guard?.Email) ? null : guard!.Email,
+                    GuardAppVersion = appVersionByGuard.TryGetValue(guardId, out var appVer)
+                        && !string.IsNullOrWhiteSpace(appVer) ? appVer : null,
                     Callsign = string.IsNullOrWhiteSpace(session?.Callsign) ? null : session!.Callsign,
                     PatrolCar = !string.IsNullOrWhiteSpace(session?.PatrolCarPositionName)
                         ? session!.PatrolCarPositionName

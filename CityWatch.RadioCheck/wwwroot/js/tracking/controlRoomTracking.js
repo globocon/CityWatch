@@ -709,11 +709,13 @@
            a car card headlines the callsign, so the badge names its officer. */
         const officer = isCar && u.guardName
             ? `<span class="trk-idbadge-name">${esc(u.guardName)}</span>` : '';
+        const appVer = u.guardAppVersion
+            ? `<span class="trk-id-state">📱 v${esc(u.guardAppVersion)}</span>` : '';
         return `
             <div class="trk-idbadge">
               <div class="trk-idbadge-main">
                 ${officer}
-                <span class="trk-idbadge-lic">🆔 ${licence} ${state}</span>
+                <span class="trk-idbadge-lic">🆔 ${licence} ${state} ${appVer}</span>
               </div>
               <button class="trk-idbadge-more" data-trk-guardid="1" aria-expanded="${guardIdOpen}">${guardIdOpen ? 'Hide ▴' : 'Contact ▾'}</button>
             </div>
@@ -826,9 +828,17 @@
         const mode = MODE[u.mode] || MODE[1];
         const isCar = u.kind !== 'guard';
         const online = u.ageSeconds <= HOLLOW_S;
+        /* #153 field feedback: the row must IDENTIFY the person — full name (clipped by
+           CSS, never spilling out of the panel), licence, and the app build the phone
+           reported. A car keeps its callsign as the title; its officer identifies below. */
+        const title = isCar ? unitLabel(u) : (u.guardName || unitLabel(u));
+        const idBits = [];
+        if (u.guardLicense) idBits.push('🆔 ' + esc(u.guardLicense) + (u.guardState ? ' ' + esc(u.guardState) : ''));
+        if (u.guardAppVersion) idBits.push('📱 v' + esc(u.guardAppVersion));
+        const idText = idBits.length ? ' · ' + idBits.join(' · ') : '';
         return `<div class="trk-search-row" data-trk-open="${u.unitId}">
                   <span class="g">${isCar ? '🚓' : `<span class="trk-avatar trk-avatar-sm" style="border-color:${mode.color}">${esc(initialsOf(u.guardName))}</span>`}</span>
-                  <span class="m"><b>${esc(unitLabel(u))}</b><span>${esc(isCar ? (u.guardName || 'Patrol car') : 'Guard')}${u.currentSite ? ' · ' + esc(u.currentSite) : ''} · ${online ? '' : 'offline '}${fmtAge(u.ageSeconds)} ago</span></span>
+                  <span class="m"><b>${esc(title)}</b><span>${esc(isCar ? (u.guardName || 'Patrol car') : 'Guard')}${idText}${u.currentSite ? ' · ' + esc(u.currentSite) : ''} · ${online ? '' : 'offline '}${fmtAge(u.ageSeconds)} ago</span></span>
                   <span class="trk-mode-chip ${mode.cls}">${mode.label}</span>
                 </div>`;
     }
@@ -863,7 +873,7 @@
 
         const list = all
             .filter(u => [unitLabel(u), u.callsign, u.patrolCar, u.guardName, u.currentSite,
-                          initialsOf(u.guardName)]
+                          u.guardLicense, u.guardAppVersion, initialsOf(u.guardName)]
                 .some(v => v && String(v).toLowerCase().includes(q)))
             .sort((a, b) => (b.mode - a.mode) || String(unitLabel(a)).localeCompare(String(unitLabel(b))))
             .slice(0, 12);

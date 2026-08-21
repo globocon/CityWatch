@@ -24,6 +24,7 @@ namespace CityWatch.Tracking.Data
         /// <summary>Read-only platform projections (§13.3 boundary). Never written.</summary>
         public DbSet<PlatformSmartWand> PlatformSmartWands { get; set; } = null!;
         public DbSet<PlatformGuard> PlatformGuards { get; set; } = null!;
+        public DbSet<PlatformGuardAppVersion> PlatformGuardAppVersions { get; set; } = null!;
         public DbSet<PlatformClientSite> PlatformClientSites { get; set; } = null!;
         public DbSet<PlatformClientSiteDuress> PlatformClientSiteDuress { get; set; } = null!;
         public DbSet<TrackSegment> TrackSegments { get; set; } = null!;

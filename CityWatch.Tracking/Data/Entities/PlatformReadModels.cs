@@ -46,6 +46,25 @@ namespace CityWatch.Tracking.Data.Entities
         public string? Email { get; set; }
     }
 
+    /// <summary>GuardMobileAppVersions, read-only (P4#153): the app build each guard's phone
+    /// last reported at login. The table ships with DbScript 371 — every reader must tolerate
+    /// its absence, because an older database still has to answer.</summary>
+    [Table("GuardMobileAppVersions")]
+    public class PlatformGuardAppVersion
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int GuardId { get; set; }
+
+        /// <summary>"1.54.3" — exactly as the APK reports itself.</summary>
+        public string? AppVersion { get; set; }
+
+        public string? Platform { get; set; }
+
+        public System.DateTime LastSeen { get; set; }
+    }
+
     /// <summary>ClientSiteDuress, read-only. THE truth table for duress: raising the alarm
     /// inserts rows (and only then publishes DuressActivated); the control room deactivating
     /// it DELETES them. Tracking keeps a unit in Duress Mode exactly as long as a row backs
