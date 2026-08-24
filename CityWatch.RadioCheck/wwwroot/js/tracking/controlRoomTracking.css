@@ -159,8 +159,10 @@ body.trk-dark .trk-card .trk-row-approx { color: #fbbf24; }
 .trk-idbadge-lic {
     font: 600 12px ui-monospace, 'Cascadia Mono', Consolas, monospace;
     font-variant-numeric: tabular-nums; letter-spacing: .04em; color: #334155;
-    display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere;
+    /* The row wraps BETWEEN items; the licence itself never breaks (v2.76). */
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
 }
+.trk-idbadge-licno { white-space: nowrap; }
 .trk-id-state {
     font: 800 9px system-ui, sans-serif; letter-spacing: .08em;
     background: #2563eb; color: #fff; border-radius: 4px; padding: 2px 5px;
