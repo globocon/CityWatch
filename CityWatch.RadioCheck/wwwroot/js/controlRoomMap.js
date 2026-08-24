@@ -349,21 +349,31 @@
             let entry = markers[s.id];
             if (!entry) entry = markers[s.id] = { site: null, iconSig: '', cars: {} };
 
-            const sig = siteIconSig(s);
-            if (!entry.site) {
-                entry.site = L.marker(s.gps, { icon: siteIcon(s), crmStatus: siteStatus(s), crmGuards: s.guards.length })
-                    .on('click', () => openPanel(s.id));
-                entry.iconSig = sig;
-                clusterGroup.addLayer(entry.site);
+            /* A PCAR base ("Citywatch M1 - Romeo Patrol Cars") is a fleet home, not a
+               guarded site: every row on it is a roaming car, so a building pin there
+               reads as the whole fleet stuck at one address (v2.76 field report). The
+               cars below still render and glide; only the site pin is suppressed. The
+               guards stay active everywhere else - lists, counters, RC. */
+            const isPcarBase = s.guards.length > 0 && s.guards.every(g => g.tourMode === 'PCAR');
+            if (isPcarBase) {
+                if (entry.site) { clusterGroup.removeLayer(entry.site); entry.site = null; entry.iconSig = ''; }
             } else {
-                if (entry.iconSig !== sig) {          /* only touch DOM when something changed */
-                    entry.site.setIcon(siteIcon(s));
-                    entry.site.options.crmStatus = siteStatus(s);
-                    entry.site.options.crmGuards = s.guards.length;
+                const sig = siteIconSig(s);
+                if (!entry.site) {
+                    entry.site = L.marker(s.gps, { icon: siteIcon(s), crmStatus: siteStatus(s), crmGuards: s.guards.length })
+                        .on('click', () => openPanel(s.id));
                     entry.iconSig = sig;
-                    clusterGroup.refreshClusters(entry.site);
+                    clusterGroup.addLayer(entry.site);
+                } else {
+                    if (entry.iconSig !== sig) {          /* only touch DOM when something changed */
+                        entry.site.setIcon(siteIcon(s));
+                        entry.site.options.crmStatus = siteStatus(s);
+                        entry.site.options.crmGuards = s.guards.length;
+                        entry.iconSig = sig;
+                        clusterGroup.refreshClusters(entry.site);
+                    }
+                    if (!entry.site.getLatLng().equals(L.latLng(s.gps))) entry.site.setLatLng(s.gps);
                 }
-                if (!entry.site.getLatLng().equals(L.latLng(s.gps))) entry.site.setLatLng(s.gps);
             }
 
             /* PCAR guards glide on their own layer (not clustered).
