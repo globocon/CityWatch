@@ -701,8 +701,11 @@
 
     function guardIdHtml(u, isCar) {
         if (!u.guardName && !u.guardLicense) return '';
-        const licence = u.guardLicense ? esc(u.guardLicense) : '<span class="dim">no licence on file</span>';
-        const state = u.guardState ? `<span class="trk-id-state">${esc(u.guardState)}</span>` : '';
+        /* The licence number is the identity: it renders whole, on one line, never
+           split (v2.76 field feedback — no state chip crowding it off the badge). */
+        const licence = u.guardLicense
+            ? `<span class="trk-idbadge-licno">${esc(u.guardLicense)}</span>`
+            : '<span class="dim">no licence on file</span>';
         const tel = u.guardMobile ? String(u.guardMobile).replace(/[^+\d]/g, '') : null;
         const missing = what => `<span class="dim">no ${what} on file</span>`;
         /* A guard card's head already headlines the full name (wrapped, never clipped);
@@ -715,7 +718,7 @@
             <div class="trk-idbadge">
               <div class="trk-idbadge-main">
                 ${officer}
-                <span class="trk-idbadge-lic">🆔 ${licence} ${state} ${appVer}</span>
+                <span class="trk-idbadge-lic">🆔 ${licence} ${appVer}</span>
               </div>
               <button class="trk-idbadge-more" data-trk-guardid="1" aria-expanded="${guardIdOpen}">${guardIdOpen ? 'Hide ▴' : 'Contact ▾'}</button>
             </div>
@@ -833,7 +836,7 @@
            reported. A car keeps its callsign as the title; its officer identifies below. */
         const title = isCar ? unitLabel(u) : (u.guardName || unitLabel(u));
         const idBits = [];
-        if (u.guardLicense) idBits.push('🆔 ' + esc(u.guardLicense) + (u.guardState ? ' ' + esc(u.guardState) : ''));
+        if (u.guardLicense) idBits.push('🆔 ' + esc(u.guardLicense));
         if (u.guardAppVersion) idBits.push('📱 v' + esc(u.guardAppVersion));
         const idText = idBits.length ? ' · ' + idBits.join(' · ') : '';
         return `<div class="trk-search-row" data-trk-open="${u.unitId}">
@@ -1068,6 +1071,7 @@
               ${replay.truncated ? '<span class="trk-replay-trunc">⚠ window truncated at 5000 points — oldest not shown</span>' : ''}
               ${replay.hiddenCount ? `<span class="trk-replay-trunc">◌ ${replay.hiddenCount} low-confidence fixes kept in audit, not drawn</span>` : ''}
               <button id="trkReplayLive" class="trk-btn">⟳ LIVE</button>
+              <button id="trkReplayClose" title="Exit replay" aria-label="Exit replay">✕</button>
             </div>
             <div class="trk-replay-main">
               <button data-trk-rctl="prev" title="Previous event" aria-label="Previous event">⏮</button>
@@ -1409,7 +1413,7 @@
             renderProgress();
             return;
         }
-        if (ev.target.id === 'trkReplayLive') { endReplay(); return; }
+        if (ev.target.id === 'trkReplayLive' || ev.target.id === 'trkReplayClose') { endReplay(); return; }
         const fid = attr('data-trk-follow');
         if (fid) { follow.unitId === Number(fid) ? stopFollow() : startFollow(Number(fid)); return; }
         if (attr('data-trk-unfollow')) { stopFollow(); return; }
