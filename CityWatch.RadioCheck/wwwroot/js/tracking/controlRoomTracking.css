@@ -298,6 +298,8 @@ body.trk-dark .trk-idbadge-more { color: #60a5fa; }
    background white while .trk-btn's white text stayed - LIVE rendered blank
    (v2.76 field report). The ID rule outranks every bar/dark variant. */
 #trkReplayLive { background: #2563eb; border-color: #2563eb; color: #fff; }
+/* The corner close: same exit, the affordance operators reach for first. */
+#trkReplayClose { min-width: 34px; min-height: 30px; padding: 4px 8px; font-size: 14px; line-height: 1; }
 #trkReplayPlay { font-size: 15px; min-width: 48px; }
 .trk-replay-speeds { display: flex; gap: 4px; }
 .trk-replay-time {

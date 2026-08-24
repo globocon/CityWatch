@@ -1071,6 +1071,7 @@
               ${replay.truncated ? '<span class="trk-replay-trunc">⚠ window truncated at 5000 points — oldest not shown</span>' : ''}
               ${replay.hiddenCount ? `<span class="trk-replay-trunc">◌ ${replay.hiddenCount} low-confidence fixes kept in audit, not drawn</span>` : ''}
               <button id="trkReplayLive" class="trk-btn">⟳ LIVE</button>
+              <button id="trkReplayClose" title="Exit replay" aria-label="Exit replay">✕</button>
             </div>
             <div class="trk-replay-main">
               <button data-trk-rctl="prev" title="Previous event" aria-label="Previous event">⏮</button>
@@ -1412,7 +1413,7 @@
             renderProgress();
             return;
         }
-        if (ev.target.id === 'trkReplayLive') { endReplay(); return; }
+        if (ev.target.id === 'trkReplayLive' || ev.target.id === 'trkReplayClose') { endReplay(); return; }
         const fid = attr('data-trk-follow');
         if (fid) { follow.unitId === Number(fid) ? stopFollow() : startFollow(Number(fid)); return; }
         if (attr('data-trk-unfollow')) { stopFollow(); return; }
