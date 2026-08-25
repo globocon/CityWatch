@@ -71,20 +71,13 @@ namespace CityWatch.Tracking.Services
                 DesiredMode = TrackingMode.Normal   // M1.8 replaces this with the command channel
             };
 
-            /* ---- Gate 1: the unit must be enrolled, enabled, and have consent on file.
-               Consent is the structural guarantee (§13.5): IsEnabled without consent is
-               refused exactly like no enrolment at all. ---- */
-            var enrolment = await _db.TrackingUnitEnrolments
-                .FirstOrDefaultAsync(e => e.UnitId == batch.UnitId, ct);
-            if (enrolment is not { IsEnabled: true } || enrolment.ConsentRecordedUtc == null)
-            {
-                response.Rejected = batch.Points.Count;
-                return response;   // 200 with zero accepted: the device backs off to Normal
-            }
-
-            /* ---- Gate 2: no session, no tracking (§6.5). ---- */
+            /* ---- Gate 1: no session, no tracking (§6.5). The SESSION is the identity
+               anchor: session/start may have re-keyed the unit (the callsign names the
+               car — P4 #153, 25 Aug 2026), and the phone keeps stamping whatever unit it
+               chose at login. Resolve by session id — an unguessable GUID the server
+               issued — and take the session's unit as authoritative from here on. ---- */
             var session = await _db.TrackingSessions
-                .FirstOrDefaultAsync(s => s.Id == batch.SessionId && s.UnitId == batch.UnitId, ct);
+                .FirstOrDefaultAsync(s => s.Id == batch.SessionId, ct);
             if (session is not { Status: "Active" })
             {
                 response.Rejected = batch.Points.Count;
@@ -94,16 +87,31 @@ namespace CityWatch.Tracking.Services
                 response.SessionSuperseded = session?.EndReason == "SupersededByNewSession";
                 return response;
             }
+            var unitId = session.UnitId;
+            if (unitId != batch.UnitId)
+                _logger.LogDebug("Ingest: session {Session} is keyed to unit {Unit}; device still stamps {Claimed}.",
+                    session.Id, unitId, batch.UnitId);
+
+            /* ---- Gate 2: the unit must be enrolled, enabled, and have consent on file.
+               Consent is the structural guarantee (§13.5): IsEnabled without consent is
+               refused exactly like no enrolment at all. ---- */
+            var enrolment = await _db.TrackingUnitEnrolments
+                .FirstOrDefaultAsync(e => e.UnitId == unitId, ct);
+            if (enrolment is not { IsEnabled: true } || enrolment.ConsentRecordedUtc == null)
+            {
+                response.Rejected = batch.Points.Count;
+                return response;   // 200 with zero accepted: the device backs off to Normal
+            }
 
             /* ---- Gate 3: a runaway device cannot flood the pipeline. ---- */
-            if (!_rateLimiter.TryAcquire(batch.UnitId, serverUtc))
+            if (!_rateLimiter.TryAcquire(unitId, serverUtc))
             {
                 response.Rejected = batch.Points.Count;
                 response.RetryAfterSeconds = 60;
                 return response;
             }
 
-            var previous = _liveState.Get(batch.UnitId);
+            var previous = _liveState.Get(unitId);
             var geoFixes = new List<Geofencing.GeoFix>();
 
             foreach (var p in batch.Points)
@@ -117,7 +125,7 @@ namespace CityWatch.Tracking.Services
                 }
 
                 var flags = ComputeFlags(p, previous);
-                var point = ToEntity(batch, p, flags, serverUtc);
+                var point = ToEntity(unitId, batch, p, flags, serverUtc);
 
                 /* TryWrite on a DropOldest bounded channel fails only at shutdown. */
                 if (!_writer.TryWrite(point))
@@ -132,7 +140,7 @@ namespace CityWatch.Tracking.Services
                    also rejects clock regressions on its own. */
                 if (!p.Backfilled)
                 {
-                    var state = ToLiveState(batch, p, flags, serverUtc);
+                    var state = ToLiveState(unitId, batch, p, flags, serverUtc);
                     _liveState.Update(state);
                     previous = state;
 
@@ -164,13 +172,13 @@ namespace CityWatch.Tracking.Services
             {
                 try
                 {
-                    var isCar = session.IsPatrolCar ?? TrackingUnitKey.IsPosition(batch.UnitId);
-                    await _arrivals.EvaluateAsync(batch.UnitId, session.Id, isCar, geoFixes, ct);
+                    var isCar = session.IsPatrolCar ?? TrackingUnitKey.IsPosition(unitId);
+                    await _arrivals.EvaluateAsync(unitId, session.Id, isCar, geoFixes, ct);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Site geofence evaluation failed for unit {Unit}; positions were still accepted.",
-                        batch.UnitId);
+                        unitId);
                 }
             }
 
@@ -179,7 +187,7 @@ namespace CityWatch.Tracking.Services
                Push only ever accelerates this; it never replaces it. */
             if (_commands != null)
             {
-                var resolution = await _commands.ResolveAsync(batch.UnitId, batch.CommandSeqSeen, ct);
+                var resolution = await _commands.ResolveAsync(unitId, batch.CommandSeqSeen, ct);
                 response.DesiredMode = resolution.DesiredMode;
                 response.CommandSeq = resolution.CommandSeq;
                 response.CommandTtlSeconds = resolution.TtlSecondsRemaining;
@@ -239,10 +247,10 @@ namespace CityWatch.Tracking.Services
         internal static double ImpliedSpeedKph(decimal lat1, decimal lon1, decimal lat2, decimal lon2, double hours)
             => GeoMath.ImpliedSpeedKph(lat1, lon1, lat2, lon2, hours);
 
-        private static TrackPoint ToEntity(PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
+        private static TrackPoint ToEntity(int unitId, PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
             => new()
             {
-                UnitId = batch.UnitId,
+                UnitId = unitId,
                 SessionId = batch.SessionId,
                 Seq = p.Seq,
                 RecordedUtc = p.Utc,
@@ -259,14 +267,14 @@ namespace CityWatch.Tracking.Services
                 AnchorTagUid = p.TagUid
             };
 
-        private UnitLiveState ToLiveState(PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
+        private UnitLiveState ToLiveState(int unitId, PositionBatch batch, PositionPoint p, TrackPointFlags flags, DateTime serverUtc)
         {
             /* Speed fallback (§Phase 2.3): device speed when given; otherwise implied from
                the previous live fix — only when the interval is sane and the result is
                plausible, and always marked derived. No value beats a misleading one. */
             short? speed = p.SpeedKph is { } s ? (short)Math.Clamp(s, short.MinValue, short.MaxValue) : null;
             var derived = false;
-            var previous = _liveState.Get(batch.UnitId);
+            var previous = _liveState.Get(unitId);
             if (speed == null && previous != null && !p.Backfilled &&
                 (flags & TrackPointFlags.Implausible) == 0 &&
                 (flags & TrackPointFlags.LowAccuracy) == 0)
@@ -285,7 +293,7 @@ namespace CityWatch.Tracking.Services
 
             return new()
             {
-                UnitId = batch.UnitId,
+                UnitId = unitId,
                 SessionId = batch.SessionId,
                 Lat = p.Lat,
                 Lon = p.Lon,

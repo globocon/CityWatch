@@ -92,10 +92,14 @@ namespace CityWatch.Tracking.Tests
         [TestMethod]
         public async Task UnenrolledUnit_IsRefused_Entirely()
         {
-            var batch = Batch(Point(1));
-            batch.UnitId = 999;
+            /* The enrolment gate follows the SESSION's unit — the phone's stamp is
+               advisory, because session/start may have re-keyed the unit and the phone
+               keeps stamping the one it chose (see CallsignReKeyTests). Enrolment
+               revoked after start ⇒ every later batch is refused. */
+            _db.TrackingUnitEnrolments.Remove(await _db.TrackingUnitEnrolments.FirstAsync(e => e.UnitId == Unit));
+            await _db.SaveChangesAsync();
 
-            var response = await _service.IngestAsync(batch, CancellationToken.None);
+            var response = await _service.IngestAsync(Batch(Point(1)), CancellationToken.None);
 
             Assert.AreEqual(0, response.Accepted);
             Assert.AreEqual(1, response.Rejected);

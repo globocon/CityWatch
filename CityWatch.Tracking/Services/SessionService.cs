@@ -59,11 +59,72 @@ namespace CityWatch.Tracking.Services
             CancellationToken ct, bool? isPatrolCar = null, string? callsign = null,
             int? positionId = null, string? positionName = null)
         {
+            /* THE CALLSIGN NAMES THE CAR (P4 #153, 25 Aug 2026). Phones auto-restore a
+               stale saved Position, so all six Romeo crews arrived keyed to the one old
+               shared position and superseded each other off the map — twelve logins, one
+               visible car. When a patrol-car login's callsign names a real car position
+               ("R4" → "Mobile Patrols (Car) R4"), the SERVER re-keys the session to that
+               car, whatever the phone sent. Ingest resolves by session id, so the phone's
+               stale unit stamp keeps working; a callsign that names no car changes nothing. */
+            if (isPatrolCar == true && !string.IsNullOrWhiteSpace(callsign))
+            {
+                var cs = callsign.Trim();
+                var matches = (await _db.PlatformPositions
+                        .Where(p => p.IsPatrolCar && p.Name != null)
+                        .Select(p => new { p.Id, p.Name })
+                        .ToListAsync(ct))
+                    .Where(p => p.Name!.TrimEnd()
+                        .EndsWith(") " + cs, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                if (matches.Count == 1)
+                {
+                    var car = matches[0];
+                    if (Contracts.TrackingUnitKey.FromPosition(car.Id) != unitId)
+                    {
+                        _logger.LogInformation(
+                            "Session start: callsign {Callsign} re-keys unit {From} → {To} ({Car}).",
+                            cs, unitId, Contracts.TrackingUnitKey.FromPosition(car.Id), car.Name);
+                        unitId = Contracts.TrackingUnitKey.FromPosition(car.Id);
+                        positionId = car.Id;
+                        positionName = car.Name;
+                    }
+                }
+                else if (matches.Count > 1)
+                {
+                    /* Two cars answering to one callsign is a config defect — guessing
+                       would file one crew's evidence under another crew's car. */
+                    _logger.LogWarning(
+                        "Session start: callsign {Callsign} names {Count} patrol-car positions — ambiguous, NOT re-keyed. Fix the position names.",
+                        cs, matches.Count);
+                }
+                else if (Contracts.TrackingUnitKey.IsPosition(unitId))
+                {
+                    /* A car login whose callsign names no position lands on whatever the
+                       phone sent — if several crews share that position, they will fight
+                       over one map marker (the 25 Aug Romeo collision). Say so loudly:
+                       the fix is creating a position named '…) {callsign}'. */
+                    _logger.LogWarning(
+                        "Session start: patrol-car callsign {Callsign} names NO car position; unit {Unit} stays as sent — shared-unit collision risk.",
+                        cs, unitId);
+                }
+            }
+
             var enrolment = await _db.TrackingUnitEnrolments.FirstOrDefaultAsync(e => e.UnitId == unitId, ct);
             if (enrolment is not { IsEnabled: true } || enrolment.ConsentRecordedUtc == null)
                 return null;   // not enrolled / no consent — tracking simply does not start (§13.5)
 
             var now = _utcNow();
+
+            /* One officer, one unit. The phone cannot close a session it never knew the
+               key of once the server re-keys — any OTHER active session this guard holds
+               is stale the moment they sign in again (crew moved cars, or an old
+               guard-keyed fallback session waiting for the reaper). */
+            var elsewhere = await _db.TrackingSessions
+                .AsTracking()
+                .Where(s => s.GuardId == guardId && s.Status == "Active" && s.UnitId != unitId)
+                .ToListAsync(ct);
+            foreach (var stale in elsewhere)
+                await CloseAsync(stale, "OfficerChangedCar", now, ct);
             /* AsTracking: the same-officer branch below mutates this row, and the context
                defaults to NoTracking — without it the callsign/position refresh silently
                never persisted (the takeover branch was safe: CloseAsync calls Update). */
