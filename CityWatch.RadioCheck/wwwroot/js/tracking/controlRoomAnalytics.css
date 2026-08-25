@@ -136,11 +136,14 @@
 }
 .ana-more { color: #9aa0ad; font-size: 11px; margin-top: 6px; }
 
-/* ranked bar rows — the value is the number; the story is in the hover tip */
+/* ranked bar rows — the value is the number; the story is in the hover tip;
+   the row is a doorway: click → drill-down (A3) */
 .ana-row {
-    display: grid; grid-template-columns: 108px 1fr 44px; align-items: center; gap: 8px;
-    padding: 4px 0; cursor: crosshair;
+    display: grid; grid-template-columns: 104px 1fr 44px 10px; align-items: center; gap: 8px;
+    padding: 4px 0; cursor: pointer;
 }
+.ana-row .chev, .ana-wrow .chev { color: #9aa0ad; font-size: 13px; }
+.ana-row:hover .chev, .ana-wrow:hover .chev { color: #fff; }
 .ana-row .t { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ana-row .bar { height: 9px; background: #262a35; border-radius: 4px; overflow: hidden; }
 .ana-row .bar i { display: block; height: 100%; background: #3987e5; border-radius: 4px; }
@@ -152,8 +155,8 @@
 
 /* wand rows — name + home site, rate vs baseline, state chip */
 .ana-wrow {
-    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px;
-    padding: 5px 0; cursor: crosshair;
+    display: grid; grid-template-columns: 1fr auto auto 10px; align-items: center; gap: 8px;
+    padding: 5px 0; cursor: pointer;
 }
 .ana-wrow .t { font-size: 12.5px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ana-wrow .t .s { display: block; font-size: 10.5px; color: #9aa0ad; }
@@ -171,6 +174,45 @@
     font-size: 11.5px; color: #9aa0ad;
 }
 .ana-quiet b { color: #fab219; font-size: 11px; }
+
+/* ================= A3: drill-down view ================= */
+
+#anaDrill { padding: 2px 16px 12px; }
+.ana-crumb { padding: 2px 0 8px; }
+.ana-dhead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.ana-dhead .i { font-size: 20px; }
+.ana-dhead .t { display: flex; flex-direction: column; min-width: 0; }
+.ana-dhead .t b { font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
+.ana-dhead .t span { font-size: 11.5px; color: #9aa0ad; }
+.ana-chiprow { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.ana-schip {
+    display: inline-flex; flex-direction: column; gap: 1px;
+    background: #1b1e26; border: 1px solid #262a35; border-radius: 8px;
+    padding: 6px 9px; font: 600 9.5px system-ui, sans-serif;
+    letter-spacing: .07em; text-transform: uppercase; color: #9aa0ad;
+}
+.ana-schip b {
+    font-size: 14px; letter-spacing: 0; text-transform: none; color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+.ana-ribbon { width: 100%; height: auto; display: block; }
+.ana-ribbon rect { cursor: crosshair; }
+.ana-evs { border-left: 2px solid #262a35; margin-left: 4px; }
+.ana-ev {
+    display: grid; grid-template-columns: 66px 18px 1fr; gap: 6px; align-items: baseline;
+    padding: 4px 0 4px 8px; font-size: 12px;
+}
+.ana-ev .t { color: #9aa0ad; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ana-ev .m { color: #e8e9ee; overflow-wrap: anywhere; }
+.ana-ev .m b { color: #fff; }
+.ana-replayrow { margin-top: 14px; }
+.ana-replaybtn {
+    width: 100%; border: 1px solid #7c3aed; background: #7c3aed; color: #fff;
+    border-radius: 10px; padding: 10px; cursor: pointer;
+    font: 700 13px system-ui, sans-serif; min-height: 42px;
+}
+.ana-replaybtn:hover { background: #6d28d9; }
+.ana-quiet .ana-linkbtn { font-size: 11.5px; }
 
 /* the one shared tooltip — positioned by the module, never intercepts the mouse */
 .ana-tip {

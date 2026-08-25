@@ -1330,13 +1330,25 @@
     function openReplayMenu(prefill) {
         rmClose();
         rm.prefillUnitId = prefill && prefill.unitId ? Number(prefill.unitId) : null;
-        rm.preset = 'today';
-        rm.win = rmPresetWindow('today');
+        rm.prefillSiteId = prefill && prefill.siteId ? Number(prefill.siteId) : null;
+        /* A caller may bring its own window (the Insights drawer hands over what the
+           operator was looking at) — accepted when it fits the replay engine's cap. */
+        if (prefill && prefill.fromUtc && prefill.toUtc
+            && (prefill.toUtc - prefill.fromUtc) > 0
+            && (prefill.toUtc - prefill.fromUtc) <= 26 * 3600 * 1000) {
+            rm.preset = null;
+            rm.win = { fromUtc: new Date(prefill.fromUtc), toUtc: new Date(prefill.toUtc) };
+        } else {
+            rm.preset = 'today';
+            rm.win = rmPresetWindow('today');
+        }
         rm.rows = null;
         /* A card's ▶ lands here pre-aimed at its own unit; the rail's ▶ starts at Site —
            the ask that drove this popup ("show me the whole site's day"). */
         let type = 'site';
-        if (rm.prefillUnitId && units[rm.prefillUnitId])
+        if (prefill && ['site', 'guard', 'car', 'all'].includes(prefill.type))
+            type = prefill.type;
+        else if (rm.prefillUnitId && units[rm.prefillUnitId])
             type = units[rm.prefillUnitId].data.kind === 'guard' ? 'guard' : 'car';
         const today = new Date().toISOString().slice(0, 10);
         const el = document.createElement('div');
@@ -1359,7 +1371,7 @@
                 <select id="trkRmWho" aria-label="Replay target"></select></label>
               <div class="trk-rm-presets">
                 <button data-trk-rm-preset="8h">Last 8 h</button>
-                <button data-trk-rm-preset="today" class="on">Today</button>
+                <button data-trk-rm-preset="today"${rm.preset === 'today' ? ' class="on"' : ''}>Today</button>
                 <button data-trk-rm-preset="yesterday">Yesterday</button>
               </div>
               <div class="trk-win-custom">
@@ -1390,7 +1402,7 @@
             if (ev.target.id === 'trkRmStart') rmStart();
         });
         el.addEventListener('change', ev => {
-            if (ev.target.id === 'trkRmType') { rm.prefillUnitId = null; rmRenderWho(); }
+            if (ev.target.id === 'trkRmType') { rm.prefillUnitId = null; rm.prefillSiteId = null; rmRenderWho(); }
             if (ev.target.id === 'trkRmWho') el.querySelector('#trkRmStart').disabled = !ev.target.value;
         });
         /* Touching the custom fields makes them the window; the preset chips light off. */
@@ -1490,7 +1502,9 @@
         who.innerHTML = '<option value="">Select…</option>' + choices.map(c =>
             `<option value="${c.id}">${esc(c.label)} · ${c.n} session${c.n === 1 ? '' : 's'}</option>`).join('');
         who.disabled = false;
-        if (type !== 'site' && rm.prefillUnitId && choices.some(c => c.id === rm.prefillUnitId))
+        if (type === 'site' && rm.prefillSiteId && choices.some(c => c.id === rm.prefillSiteId))
+            who.value = String(rm.prefillSiteId);
+        else if (type !== 'site' && rm.prefillUnitId && choices.some(c => c.id === rm.prefillUnitId))
             who.value = String(rm.prefillUnitId);
         else if (choices.length === 1)
             who.value = String(choices[0].id);
@@ -1548,6 +1562,11 @@
             fetchReplay(r.unitId, win.fromUtc, win.toUtc, r.sessionId);
         });
     }
+
+    /* The Insights drawer's "Open Replay" (analytics A3) enters here — the drawer's ONE
+       touch into this layer, invoking the selector exactly the way a user's click would:
+       { type, unitId | siteId, fromUtc, toUtc } all optional, all just pre-selection. */
+    window.CRM.openReplay = openReplayMenu;
 
     /* A phone's first fix after login can be a cold-start ghost from a stale A-GPS
        cache, thousands of km from the shift — every 17 Aug replay "started in India"

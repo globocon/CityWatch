@@ -48,8 +48,8 @@ namespace CityWatch.Tracking.Api
                 return NotFound();
             if (toUtc <= fromUtc)
                 return BadRequest();
-            if ((toUtc - fromUtc) > TimeSpan.FromDays(8))
-                return BadRequest("Window too large; request at most 8 days (the 7-day view with margin).");
+            if ((toUtc - fromUtc) > TimeSpan.FromDays(15))
+                return BadRequest("Window too large; request at most 15 days (the 14-day trend with margin).");
             if (OperatorUserId() is not { } userId)
                 return StatusCode(403, new { error = "Operator identity not found on the session." });
 
@@ -471,5 +471,188 @@ namespace CityWatch.Tracking.Api
             var truncated = rows.Count > 100;
             return Ok(new { wands = rows.Take(100), truncated });
         }
+
+        /* ==================== A3: the entity timeline ==================== */
+
+        /// <summary>One event on somebody's day. A uniform shape so every drill-down
+        /// renders the same list: sign-ins, arrivals (with the stay), scans, and legs.</summary>
+        public sealed record TimelineEvent(DateTime Utc, string Type, string Who,
+            int? SiteId, string? SiteName, int? UnitId, int? GuardId, string? WandName,
+            DateTime? ExitedUtc, int? Minutes, double? Km);
+
+        /// <summary>
+        /// The merged event stream behind every drill-down (plan A3): what one guard, one
+        /// patrol car, one site, or one smart wand actually did in the window, in order.
+        /// Exactly one entity per call — a timeline of everything is the pulse's job.
+        /// This is where "unusual bar on a chart" turns into "08:02 arrived, 08:14
+        /// scanned, 09:00 left" — and from there, one click into Replay.
+        /// </summary>
+        [Authorize]
+        [HttpGet("timeline")]
+        public async Task<IActionResult> Timeline([FromQuery] DateTime fromUtc,
+            [FromQuery] DateTime toUtc, [FromQuery] int? guardId, [FromQuery] int? unitId,
+            [FromQuery] int? siteId, [FromQuery] int? wandId, CancellationToken ct)
+        {
+            if (await GateAsync(fromUtc, toUtc, ct) is { } refused)
+                return refused;
+            var filters = new[] { guardId.HasValue, unitId.HasValue, siteId.HasValue, wandId.HasValue }
+                .Count(f => f);
+            if (filters != 1)
+                return BadRequest("Name exactly one entity: guardId, unitId, siteId or wandId.");
+
+            const int cap = 400;
+            var events = new List<TimelineEvent>();
+
+            /* Sessions relevant to the entity — they carry sign-ins/outs, the unit→guard
+               mapping, and the labels everything else is named with. */
+            var sessionQuery = _db.TrackingSessions
+                .Where(s => s.StartedUtc < toUtc && (s.EndedUtc == null || s.EndedUtc > fromUtc));
+            if (guardId is { } gId) sessionQuery = sessionQuery.Where(s => s.GuardId == gId);
+            else if (unitId is { } uId) sessionQuery = sessionQuery.Where(s => s.UnitId == uId);
+            else if (siteId is { } stId) sessionQuery = sessionQuery.Where(s => s.ClientSiteId == stId);
+            else sessionQuery = sessionQuery.Where(s => false);       // wand: scans only
+
+            var sessions = await sessionQuery
+                .Select(s => new { s.UnitId, s.GuardId, s.ClientSiteId, s.StartedUtc, s.EndedUtc, s.IsPatrolCar, s.Callsign })
+                .ToListAsync(ct);
+
+            /* Which units' movement belongs to this entity. */
+            var units = guardId is { } g2
+                ? sessions.Select(s => s.UnitId).Append(TrackingUnitKey.FromGuard(g2)).Distinct().ToList()
+                : unitId is { } u2 ? new List<int> { u2 }
+                : new List<int>();
+
+            /* Visits: the entity's own units, or everyone's stays at the one site. */
+            var visitQuery = _db.TrackingSiteVisits
+                .Where(v => v.ConfirmedUtc != null && v.ConfirmedUtc >= fromUtc && v.ConfirmedUtc < toUtc);
+            visitQuery = siteId is { } st3 ? visitQuery.Where(v => v.SiteId == st3)
+                : units.Count > 0 ? visitQuery.Where(v => units.Contains(v.UnitId))
+                : visitQuery.Where(v => false);
+            var visits = await visitQuery
+                .Select(v => new { v.UnitId, v.SiteId, v.SiteName, v.EnteredUtc, v.ConfirmedUtc, v.ExitedUtc })
+                .ToListAsync(ct);
+
+            /* A site is visited by units whose sessions were opened elsewhere — the Romeo
+               car signed in at its base, calling at a client site. Fetch those sessions
+               too, for the LABEL only: their sign-ins belong to their own timeline. */
+            var labelSessions = sessions;
+            var strayUnits = visits.Select(v => v.UnitId)
+                .Where(u => sessions.All(s => s.UnitId != u))
+                .Distinct().ToList();
+            if (strayUnits.Count > 0)
+            {
+                var stray = await _db.TrackingSessions
+                    .Where(s => strayUnits.Contains(s.UnitId)
+                        && s.StartedUtc < toUtc && (s.EndedUtc == null || s.EndedUtc > fromUtc))
+                    .Select(s => new { s.UnitId, s.GuardId, s.ClientSiteId, s.StartedUtc, s.EndedUtc, s.IsPatrolCar, s.Callsign })
+                    .ToListAsync(ct);
+                labelSessions = sessions.Concat(stray).ToList();
+            }
+
+            /* Scans: by the guard, by the site's tags, by the one wand — or, for a car,
+               by whoever was signed in to it. */
+            var scanQuery = _db.PlatformWandScans
+                .Where(h => h.HitUtcDateTime >= fromUtc && h.HitUtcDateTime < toUtc);
+            if (guardId is { } g3) scanQuery = scanQuery.Where(h => h.LoggedInGuardId == g3);
+            else if (wandId is { } w3) scanQuery = scanQuery.Where(h => h.SmartWandId == w3);
+            else if (siteId is { } st4)
+                scanQuery = scanQuery.Where(h => (h.TagLinkedClientSiteId ?? h.LoggedInClientSiteId) == st4);
+            else
+            {
+                var carGuards = sessions.Select(s => s.GuardId).Distinct().ToList();
+                scanQuery = scanQuery.Where(h => carGuards.Contains(h.LoggedInGuardId));
+            }
+            var scans = await scanQuery
+                .Select(h => new { h.LoggedInGuardId, h.SmartWandId, h.HitUtcDateTime, SiteId = h.TagLinkedClientSiteId ?? h.LoggedInClientSiteId })
+                .ToListAsync(ct);
+
+            /* Legs (TrackSegments): only for entities that own units — km on the timeline. */
+            var legs = units.Count == 0
+                ? new List<TrackSegmentRow>()
+                : await _db.TrackSegments
+                    .Where(t => units.Contains(t.UnitId) && t.EndUtc >= fromUtc && t.EndUtc < toUtc)
+                    .Select(t => new TrackSegmentRow(t.UnitId, t.StartUtc, t.EndUtc, t.DistanceM, t.ToSiteId))
+                    .ToListAsync(ct);
+
+            /* ---- names, once, in batches ---- */
+            var guardIds = labelSessions.Select(s => s.GuardId)
+                .Concat(scans.Select(s => s.LoggedInGuardId))
+                .Concat(visits.Select(v => TrackingUnitKey.ToGuardId(v.UnitId) ?? 0))
+                .Where(id => id > 0).Distinct().ToList();
+            var guardNames = await _db.PlatformGuards
+                .Where(p => guardIds.Contains(p.Id))
+                .ToDictionaryAsync(p => p.Id, p => p.Name, ct);
+            var siteIds = sessions.Select(s => s.ClientSiteId)
+                .Concat(scans.Select(s => s.SiteId))
+                .Concat(legs.Select(l => l.ToSiteId ?? 0))
+                .Where(id => id > 0).Distinct().ToList();
+            var siteNames = await _db.PlatformClientSites
+                .Where(cs => siteIds.Contains(cs.Id))
+                .ToDictionaryAsync(cs => cs.Id, cs => cs.Name, ct);
+            var wandIds = scans.Where(s => s.SmartWandId != null).Select(s => s.SmartWandId!.Value).Distinct().ToList();
+            var wandNames = await _db.PlatformSmartWands
+                .Where(w => wandIds.Contains(w.Id))
+                .ToDictionaryAsync(w => w.Id, w => w.WandName, ct);
+
+            string GuardName(int id) => guardNames.TryGetValue(id, out var n) && !string.IsNullOrWhiteSpace(n)
+                ? n! : ("Guard " + id);
+            string SiteName(int id) => siteNames.TryGetValue(id, out var n) && !string.IsNullOrWhiteSpace(n)
+                ? n! : ("Site " + id);
+            /* A unit answers to its officer's name on foot and its callsign in a car —
+               the same identity the map and replay use. */
+            var unitWho = labelSessions.GroupBy(s => s.UnitId).ToDictionary(gr => gr.Key, gr =>
+            {
+                var latest = gr.OrderByDescending(s => s.StartedUtc).First();
+                return IsCar(latest.IsPatrolCar, gr.Key)
+                    ? (!string.IsNullOrWhiteSpace(latest.Callsign) ? latest.Callsign! : "PC-" + gr.Key)
+                    : GuardName(latest.GuardId);
+            });
+            string WhoOf(int unit) => unitWho.TryGetValue(unit, out var w) ? w
+                : TrackingUnitKey.ToGuardId(unit) is { } vg ? GuardName(vg)
+                : ("Unit " + unit);
+
+            /* ---- merge ---- */
+            foreach (var s in sessions)
+            {
+                var who = WhoOf(s.UnitId);
+                if (s.StartedUtc >= fromUtc)
+                    events.Add(new TimelineEvent(s.StartedUtc, "signin", who,
+                        s.ClientSiteId, SiteName(s.ClientSiteId), s.UnitId, s.GuardId, null, null, null, null));
+                if (s.EndedUtc is { } ended && ended < toUtc)
+                    events.Add(new TimelineEvent(ended, "signout", who,
+                        s.ClientSiteId, SiteName(s.ClientSiteId), s.UnitId, s.GuardId, null, null, null, null));
+            }
+            foreach (var v in visits)
+            {
+                var mins = v.ExitedUtc is { } ex ? (int?)Math.Max(1, (int)(ex - v.EnteredUtc).TotalMinutes) : null;
+                events.Add(new TimelineEvent(v.ConfirmedUtc!.Value, "arrived", WhoOf(v.UnitId),
+                    v.SiteId, SiteName(v.SiteId), v.UnitId, TrackingUnitKey.ToGuardId(v.UnitId), null,
+                    v.ExitedUtc, mins, null));
+            }
+            foreach (var sc in scans)
+            {
+                events.Add(new TimelineEvent(sc.HitUtcDateTime, "scan", GuardName(sc.LoggedInGuardId),
+                    sc.SiteId, SiteName(sc.SiteId), null, sc.LoggedInGuardId,
+                    sc.SmartWandId is { } wid && wandNames.TryGetValue(wid, out var wn) ? wn : null,
+                    null, null, null));
+            }
+            foreach (var l in legs)
+            {
+                events.Add(new TimelineEvent(l.EndUtc, "leg", WhoOf(l.UnitId),
+                    l.ToSiteId, l.ToSiteId is { } to ? SiteName(to) : null, l.UnitId, null, null,
+                    null, Math.Max(1, (int)(l.EndUtc - l.StartUtc).TotalMinutes),
+                    Math.Round(l.DistanceM / 1000.0, 1)));
+            }
+
+            var ordered = events.OrderBy(e => e.Utc).ToList();
+            var truncated = ordered.Count > cap;
+            if (truncated)
+                ordered = ordered.Skip(ordered.Count - cap).ToList();   // keep the most recent
+
+            return Ok(new { fromUtc, toUtc, events = ordered, truncated });
+        }
+
+        private sealed record TrackSegmentRow(int UnitId, DateTime StartUtc, DateTime EndUtc,
+            int DistanceM, int? ToSiteId);
     }
 }

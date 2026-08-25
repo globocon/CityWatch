@@ -186,7 +186,7 @@ namespace CityWatch.Tracking.Tests
         {
             Assert.IsInstanceOfType(await Controller().Summary(Now, Now.AddHours(-1), default),
                 typeof(BadRequestResult));
-            Assert.IsInstanceOfType(await Controller().Summary(Now.AddDays(-9), Now, default),
+            Assert.IsInstanceOfType(await Controller().Summary(Now.AddDays(-16), Now, default),
                 typeof(BadRequestObjectResult));
         }
 

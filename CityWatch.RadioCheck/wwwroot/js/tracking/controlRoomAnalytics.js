@@ -15,6 +15,7 @@
     var isOpen = false, seq = 0, timer = null;
     var winKind = 'today';
     var winStamp = 0;            // bumped on every window change; sections compare against it
+    var drill = null, drillSeq = 0;   // A3: { kind: guard|site|pcar|wand, id }
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -136,6 +137,7 @@
             var data = await res.json();
             if (mySeq !== sec.seq || !isOpen) return;
             sec.stamp = winStamp;
+            sec.data = data;                 // drill-down headers reuse the card's numbers
             sec.render(body, data, w);
         } catch (e) {
             if (mySeq !== sec.seq || !isOpen) return;
@@ -155,15 +157,18 @@
         if (n) n.textContent = text || '';
     }
 
-    /* ---- shared row: name · relative bar · value; detail lives in the hover tip ---- */
-    function barRows(items, opts) {
+    /* ---- shared row: name · relative bar · value; detail lives in the hover tip;
+       the row itself is the doorway (A3): click → drill-down ---- */
+    function barRows(items) {
         var max = 1;
         items.forEach(function (it) { if (it.value > max) max = it.value; });
         return items.map(function (it) {
-            return '<div class="ana-row" data-tip="' + esc(it.tip) + '">' +
+            return '<div class="ana-row" data-tip="' + esc(it.tip) + '"' +
+                     (it.drill ? ' data-ana-drill="' + it.drill + '" role="button" tabindex="0"' : '') + '>' +
                      '<span class="t">' + esc(it.label) + '</span>' +
                      '<span class="bar"><i style="width:' + Math.max(3, Math.round(it.value / max * 100)) + '%"></i></span>' +
                      '<span class="v">' + esc(it.valueText != null ? it.valueText : it.value) + '</span>' +
+                     '<span class="chev">' + (it.drill ? '›' : '') + '</span>' +
                    '</div>';
         }).join('');
     }
@@ -178,6 +183,7 @@
             return {
                 label: g.name,
                 value: g.checkIns + g.visits,
+                drill: 'guard:' + g.guardId,
                 tip: g.name + ' — ' + g.checkIns + ' check-ins · ' + g.visits + ' visits · '
                     + fmtHours(g.activeMinutes) + ' · ' + g.sessions + ' shift' + (g.sessions === 1 ? '' : 's')
             };
@@ -195,12 +201,15 @@
             return {
                 label: s.name,
                 value: s.visits + s.checkIns,
+                drill: 'site:' + s.siteId,
                 tip: s.name + ' — ' + s.checkIns + ' check-ins · ' + s.visits + ' visits · ' + s.units + ' unit' + (s.units === 1 ? '' : 's')
             };
         });
         var quietHtml = quiet.length
             ? '<div class="ana-quiet"><b>😴 Quiet — signed in, no evidence:</b> ' +
-              quiet.slice(0, 5).map(function (q) { return esc(q.name); }).join(', ') +
+              quiet.slice(0, 5).map(function (q) {
+                  return '<button class="ana-linkbtn" data-ana-drill="site:' + q.siteId + '">' + esc(q.name) + '</button>';
+              }).join(', ') +
               (quiet.length > 5 ? ' +' + (quiet.length - 5) + ' more' : '') + '</div>'
             : '';
         body.innerHTML = '<div class="ana-sec-cap">busiest first · hover for detail</div>' +
@@ -218,6 +227,7 @@
                 label: c.label + (c.guardName ? ' · ' + c.guardName.split(' ')[0] : ''),
                 value: c.distanceKm,
                 valueText: c.distanceKm + ' km',
+                drill: 'pcar:' + c.unitId,
                 tip: c.label + (c.guardName ? ' — ' + c.guardName : '') + ' · ' + c.legs + ' legs · '
                     + c.visits + ' site visits · ' + fmtHours(c.activeMinutes)
             };
@@ -243,11 +253,12 @@
             var perDay = x.scans / days;
             var st = wandState(perDay, x.prevDailyAvg);
             var rate = days > 1 ? Math.round(perDay) + '/d' : String(x.scans);
-            return '<div class="ana-wrow" data-tip="' + esc(x.name + (x.siteName ? ' @ ' + x.siteName : '') +
+            return '<div class="ana-wrow" role="button" tabindex="0" data-ana-drill="wand:' + x.wandId + '" data-tip="' + esc(x.name + (x.siteName ? ' @ ' + x.siteName : '') +
                        ' — ' + x.scans + ' scans in window · 7-day avg ' + x.prevDailyAvg + '/day · last scan ' + dayHm(x.lastScanUtc)) + '">' +
                      '<span class="t">' + esc(x.name) + (x.siteName ? '<span class="s">' + esc(x.siteName) + '</span>' : '') + '</span>' +
                      '<span class="v">' + esc(rate) + ' <span class="dim">vs ' + esc(x.prevDailyAvg) + '/d</span></span>' +
                      '<span class="ana-chip ' + st.cls + '">' + st.txt + '</span>' +
+                     '<span class="chev">›</span>' +
                    '</div>';
         }).join('');
         body.innerHTML = '<div class="ana-sec-cap">worst first — a quiet wand leads the list · hover for detail</div>' + rows +
@@ -350,9 +361,12 @@
               '<button id="anaLoad">Load</button>' +
             '</div>' +
             '<div class="ana-scroll">' +
-              '<div class="ana-body" id="anaBody"></div>' +
-              '<div class="ana-pulse" id="anaPulse"></div>' +
-              Object.keys(SECTIONS).map(function (k) { return sectionShell(SECTIONS[k]); }).join('') +
+              '<div id="anaMain">' +
+                '<div class="ana-body" id="anaBody"></div>' +
+                '<div class="ana-pulse" id="anaPulse"></div>' +
+                Object.keys(SECTIONS).map(function (k) { return sectionShell(SECTIONS[k]); }).join('') +
+              '</div>' +
+              '<div id="anaDrill" style="display:none"></div>' +
             '</div>' +
             '<div class="ana-foot">' +
               '<span class="ana-note" id="anaNote"></span>' +
@@ -361,7 +375,14 @@
             '</div>';
         document.body.appendChild(el);
         el.addEventListener('click', onDrawerClick);
-        el.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+        el.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { if (drill) closeDrill(); else closeDrawer(); return; }
+            if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('[data-ana-drill]')) {
+                e.preventDefault();
+                var parts = e.target.closest('[data-ana-drill]').getAttribute('data-ana-drill').split(':');
+                openDrill(parts[0], Number(parts[1]));
+            }
+        });
         wireTips(el);
         return el;
     }
@@ -370,6 +391,7 @@
         winStamp++;
         load();
         reloadOpenSections();
+        if (drill) loadDrill();
     }
 
     function onDrawerClick(ev) {
@@ -388,6 +410,15 @@
         if (sec) { toggleSection(sec.getAttribute('data-ana-sec')); return; }
         var retry = ev.target.closest('[data-ana-retry-sec]');
         if (retry) { loadSection(SECTIONS[retry.getAttribute('data-ana-retry-sec')], true); return; }
+        var dr = ev.target.closest('[data-ana-drill]');
+        if (dr) {
+            var parts = dr.getAttribute('data-ana-drill').split(':');
+            openDrill(parts[0], Number(parts[1]));
+            return;
+        }
+        if (ev.target.closest('[data-ana-drill-back]')) { closeDrill(); return; }
+        if (ev.target.closest('[data-ana-drill-retry]')) { loadDrill(); return; }
+        if (ev.target.closest('[data-ana-replay]')) { jumpToReplay(); return; }
         if (ev.target.id === 'anaLoad') { changeWindow(); return; }
         if (ev.target.id === 'anaRefresh') { load(); Object.keys(SECTIONS).forEach(function (k) { if (isSecOpen(k)) loadSection(SECTIONS[k], true); }); return; }
         if (ev.target.id === 'anaRetry') load();
@@ -468,6 +499,267 @@
         }
     }
 
+    /* ================= drill-downs (A3): who/what is behind the number =================
+       Clicking any row swaps the drawer to that entity's detail — header stats, the
+       merged timeline, the site presence ribbon, the wand's 14-day rhythm — and ends
+       with ▶ Open Replay, pre-filled. Analytics finds it; Replay proves it. */
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function drillRow(kind, id) {
+        var d = SECTIONS[{ guard: 'guards', site: 'sites', pcar: 'pcars', wand: 'wands' }[kind]].data;
+        if (!d) return null;
+        if (kind === 'guard') return (d.guards || []).find(function (x) { return x.guardId === id; });
+        if (kind === 'site') return (d.sites || []).find(function (x) { return x.siteId === id; })
+            || (d.quiet || []).find(function (x) { return x.siteId === id; });
+        if (kind === 'pcar') return (d.cars || []).find(function (x) { return x.unitId === id; });
+        return (d.wands || []).find(function (x) { return x.wandId === id; });
+    }
+
+    function drillTitle() {
+        var r = drillRow(drill.kind, drill.id) || {};
+        if (drill.kind === 'guard') return { icon: '👮', name: r.name || ('Guard ' + drill.id) };
+        if (drill.kind === 'site') return { icon: '🏢', name: r.name || ('Site ' + drill.id) };
+        if (drill.kind === 'pcar') return { icon: '🚔', name: r.label || ('PC-' + drill.id), sub: r.guardName };
+        return { icon: '📟', name: r.name || ('Wand ' + drill.id), sub: r.siteName };
+    }
+
+    function openDrill(kind, id) {
+        drill = { kind: kind, id: id };
+        document.getElementById('anaMain').style.display = 'none';
+        document.getElementById('anaDrill').style.display = '';
+        loadDrill();
+    }
+
+    function closeDrill() {
+        drill = null;
+        var box = document.getElementById('anaDrill');
+        if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+        var main = document.getElementById('anaMain');
+        if (main) main.style.display = '';
+    }
+
+    /* Wands read a fixed 14 days — the rhythm the plan asks for; everything else
+       follows the drawer's window. */
+    function drillWindow() {
+        if (drill.kind === 'wand') {
+            var now = new Date();
+            var f = new Date(now); f.setHours(0, 0, 0, 0); f.setDate(f.getDate() - 13);
+            return { fromUtc: f, toUtc: now };
+        }
+        return currentWindow();
+    }
+
+    async function loadDrill() {
+        if (!drill) return;
+        var box = document.getElementById('anaDrill');
+        var w = drillWindow();
+        if (!box || !w) return;
+        var mySeq = ++drillSeq;
+        var t = drillTitle();
+        box.innerHTML = drillHead(t) + '<div class="ana-sec-load">loading…</div>';
+        var param = { guard: 'guardId', site: 'siteId', pcar: 'unitId', wand: 'wandId' }[drill.kind];
+        try {
+            var res = await fetch('/api/analytics/timeline?' + qs(w) + '&' + param + '=' + drill.id,
+                { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            var data = await res.json();
+            if (mySeq !== drillSeq || !isOpen || !drill) return;
+            renderDrill(box, t, data, w);
+        } catch (e) {
+            if (mySeq !== drillSeq || !isOpen || !drill) return;
+            box.innerHTML = drillHead(t) +
+                '<div class="ana-sec-load">unavailable — <button class="ana-linkbtn" data-ana-drill-retry="1">retry</button></div>';
+        }
+    }
+
+    function drillHead(t) {
+        return '<div class="ana-crumb"><button class="ana-linkbtn" data-ana-drill-back="1">‹ back to overview</button></div>' +
+               '<div class="ana-dhead"><span class="i">' + t.icon + '</span>' +
+                 '<span class="t"><b>' + esc(t.name) + '</b>' + (t.sub ? '<span>' + esc(t.sub) + '</span>' : '') + '</span></div>';
+    }
+
+    function chipStat(v, k) {
+        return '<span class="ana-schip"><b>' + esc(v) + '</b>' + esc(k) + '</span>';
+    }
+
+    function drillChips(events) {
+        var r = drillRow(drill.kind, drill.id) || {};
+        var scans = 0, arrivals = 0, legs = 0, km = 0;
+        events.forEach(function (e) {
+            if (e.type === 'scan') scans++;
+            else if (e.type === 'arrived') arrivals++;
+            else if (e.type === 'leg') { legs++; km += e.km || 0; }
+        });
+        var last = events.length ? dayHm(events[events.length - 1].utc) : '—';
+        var out;
+        if (drill.kind === 'guard') {
+            out = chipStat(scans, 'check-ins') + chipStat(arrivals, 'visits')
+                + (r.activeMinutes != null ? chipStat(fmtHours(r.activeMinutes), 'on duty') : '')
+                + (km ? chipStat(km.toFixed(1) + ' km', 'moved') : '')
+                + chipStat(last, 'last activity');
+        } else if (drill.kind === 'site') {
+            var who = {};
+            events.forEach(function (e) { if ((e.type === 'arrived' || e.type === 'scan') && e.who) who[e.who] = 1; });
+            out = chipStat(arrivals, 'visits') + chipStat(scans, 'check-ins')
+                + chipStat(Object.keys(who).length, 'people / cars')
+                + chipStat(events.length ? dayHm(events[0].utc) : '—', 'first')
+                + chipStat(last, 'last');
+        } else if (drill.kind === 'pcar') {
+            out = chipStat(km.toFixed(1) + ' km', 'driven') + chipStat(legs, 'legs')
+                + chipStat(arrivals, 'site visits')
+                + (r.activeMinutes != null ? chipStat(fmtHours(r.activeMinutes), 'on duty') : '')
+                + chipStat(last, 'last activity');
+        } else {
+            out = chipStat(scans, 'scans · 14 d')
+                + (r.prevDailyAvg != null ? chipStat(r.prevDailyAvg + '/d', '7-day avg') : '')
+                + chipStat(last, 'last scan');
+        }
+        return '<div class="ana-chiprow">' + out + '</div>';
+    }
+
+    var EV = {
+        signin: { i: '▶', f: function (e) { return 'Signed in' + (e.siteName ? ' — ' + e.siteName : ''); } },
+        signout: { i: '⏹', f: function () { return 'Signed out'; } },
+        arrived: {
+            i: '📍', f: function (e) {
+                return 'Arrived ' + (e.siteName || 'site')
+                    + (e.minutes ? ' · stayed ' + fmtHours(e.minutes) : (e.exitedUtc ? '' : ' · still there'));
+            }
+        },
+        scan: { i: '✓', f: function (e) { return 'Scan — ' + (e.siteName || '') + (e.wandName ? ' · ' + e.wandName : ''); } },
+        leg: {
+            i: '🚗', f: function (e) {
+                return 'Drove ' + (e.km || 0) + ' km' + (e.siteName ? ' → ' + e.siteName : '')
+                    + (e.minutes ? ' · ' + fmtHours(e.minutes) : '');
+            }
+        }
+    };
+
+    function evRows(events, multiDay) {
+        if (!events.length) return '<div class="ana-sec-load">no recorded activity in this window</div>';
+        var showWho = drill.kind === 'site' || drill.kind === 'wand';
+        return '<div class="ana-evs">' + events.map(function (e) {
+            var m = EV[e.type] || { i: '·', f: function () { return e.type; } };
+            return '<div class="ana-ev"><span class="t">' + (multiDay ? dayHm(e.utc) : hm(e.utc)) + '</span>' +
+                   '<span class="i">' + m.i + '</span>' +
+                   '<span class="m">' + (showWho && e.who ? '<b>' + esc(e.who) + '</b> · ' : '') + esc(m.f(e)) + '</span></div>';
+        }).join('') + '</div>';
+    }
+
+    /* The site presence ribbon: one row per person/car, blocks = confirmed stays,
+       ticks = scans, on the drawer window's own time axis. */
+    function ribbonSvg(events, w) {
+        var rows = {};
+        events.forEach(function (e) {
+            if (e.type !== 'arrived' || !e.who) return;
+            (rows[e.who] = rows[e.who] || []).push(e);
+        });
+        var names = Object.keys(rows).slice(0, 6);
+        if (!names.length) return '';
+        var W = 328, left = 80, plotW = W - left - 4, rowH = 22, top = 6;
+        var H = top + names.length * rowH + 16;
+        var t0 = w.fromUtc.getTime(), span = Math.max(1, w.toUtc.getTime() - t0);
+        function x(t) { return left + Math.max(0, Math.min(plotW, (t - t0) / span * plotW)); }
+        var colors = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#9085e9'];
+        var svg = '';
+        names.forEach(function (who, i) {
+            var y = top + i * rowH;
+            svg += '<text x="0" y="' + (y + 12) + '" font-size="10" fill="#e8e9ee">' +
+                esc(who.length > 13 ? who.slice(0, 12) + '…' : who) + '</text>';
+            rows[who].forEach(function (e) {
+                var a = utcDate(e.utc).getTime();
+                var b = e.exitedUtc ? utcDate(e.exitedUtc).getTime() : Math.min(Date.now(), w.toUtc.getTime());
+                svg += '<rect x="' + x(a).toFixed(1) + '" y="' + (y + 3) + '" width="' +
+                    Math.max(2, x(b) - x(a)).toFixed(1) + '" height="11" rx="2.5" fill="' + colors[i % colors.length] +
+                    '" data-tip="' + esc(who + ' — ' + hm(e.utc) + (e.exitedUtc ? '–' + hm(e.exitedUtc) : ' → still there')) + '"></rect>';
+            });
+        });
+        events.forEach(function (e) {
+            if (e.type !== 'scan' || !e.who) return;
+            var i = names.indexOf(e.who);
+            if (i < 0) return;
+            var xt = x(utcDate(e.utc).getTime()).toFixed(1);
+            var y = top + i * rowH;
+            svg += '<line x1="' + xt + '" y1="' + (y + 1) + '" x2="' + xt + '" y2="' + (y + 16) +
+                '" stroke="#e8e9ee" stroke-width="1.2"></line>';
+        });
+        var axisY = top + names.length * rowH + 12;
+        svg += '<text x="' + left + '" y="' + axisY + '" font-size="9" fill="#9aa0ad">' + hm(w.fromUtc) + '</text>' +
+               '<text x="' + W + '" y="' + axisY + '" font-size="9" fill="#9aa0ad" text-anchor="end">' + hm(w.toUtc) + '</text>';
+        return '<div class="ana-sec-cap" style="margin-top:12px">PRESENCE · blocks = confirmed stays · ticks = scans</div>' +
+            '<svg viewBox="0 0 ' + W + ' ' + H + '" class="ana-ribbon" role="img" aria-label="Who was at the site, and when.">' + svg + '</svg>';
+    }
+
+    /* The wand's rhythm: scans per day across 14 days; hover says who carried it. */
+    function wandDayBars(events) {
+        var days = {};
+        events.forEach(function (e) {
+            if (e.type !== 'scan') return;
+            var d = utcDate(e.utc);
+            var key = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+            var slot = days[key] = days[key] || { n: 0, who: {} };
+            slot.n++;
+            if (e.who) slot.who[e.who.split(' ')[0]] = 1;
+        });
+        var list = [];
+        for (var i = 13; i >= 0; i--) {
+            var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+            var key = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+            list.push({ d: d, n: days[key] ? days[key].n : 0, who: days[key] ? Object.keys(days[key].who) : [] });
+        }
+        var max = 1;
+        list.forEach(function (x) { if (x.n > max) max = x.n; });
+        var W = 328, H = 72, plotH = 48, bw = W / 14;
+        var bars = list.map(function (x, i) {
+            var h = Math.round(x.n / max * plotH);
+            return '<rect x="' + (i * bw + 2).toFixed(1) + '" y="' + (6 + plotH - h) + '" width="' +
+                (bw - 4).toFixed(1) + '" height="' + Math.max(2, h) + '" rx="2" fill="' +
+                (x.n === 0 ? '#262a35' : '#3987e5') + '" data-tip="' +
+                esc(x.d.toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' }) + ' — ' + x.n +
+                    ' scans' + (x.who.length ? ' · ' + x.who.join(', ') : '')) + '"></rect>';
+        }).join('');
+        return '<div class="ana-sec-cap" style="margin-top:12px">SCANS PER DAY · 14 DAYS · hover for who carried it</div>' +
+            '<svg viewBox="0 0 ' + W + ' ' + H + '" class="ana-ribbon" role="img" aria-label="Scans per day for the last 14 days.">' + bars +
+            '<text x="2" y="' + (H - 3) + '" font-size="9" fill="#9aa0ad">' +
+                list[0].d.toLocaleDateString([], { day: '2-digit', month: 'short' }) + '</text>' +
+            '<text x="' + (W - 2) + '" y="' + (H - 3) + '" font-size="9" fill="#9aa0ad" text-anchor="end">today</text></svg>';
+    }
+
+    function replayBtn() {
+        if (drill.kind === 'wand') return '';    // a wand is hardware, not a tracked unit
+        if (!(window.CRM && typeof window.CRM.openReplay === 'function')) return '';
+        return '<div class="ana-replayrow"><button class="ana-replaybtn" data-ana-replay="1">▶ Open Replay — ' +
+            esc(drillTitle().name) + '</button></div>';
+    }
+
+    function jumpToReplay() {
+        if (!drill || !(window.CRM && typeof window.CRM.openReplay === 'function')) return;
+        var w = currentWindow();
+        var pre = {};
+        if (w && (w.toUtc - w.fromUtc) <= 26 * 3600 * 1000) { pre.fromUtc = w.fromUtc; pre.toUtc = w.toUtc; }
+        /* Unit keys must match the mobile app / TrackingUnitKey: guards live at
+           1,000,000 + guardId; position-keyed cars are already unit ids. */
+        if (drill.kind === 'guard') { pre.type = 'guard'; pre.unitId = 1000000 + drill.id; }
+        else if (drill.kind === 'pcar') { pre.type = 'car'; pre.unitId = drill.id; }
+        else if (drill.kind === 'site') { pre.type = 'site'; pre.siteId = drill.id; }
+        closeDrawer();
+        window.CRM.openReplay(pre);
+    }
+
+    function renderDrill(box, t, data, w) {
+        var events = data.events || [];
+        var multiDay = (w.toUtc - w.fromUtc) > 36 * 3600 * 1000;
+        var html = drillHead(t) + drillChips(events);
+        if (drill.kind === 'site' && !multiDay) html += ribbonSvg(events, w);
+        if (drill.kind === 'wand') html += wandDayBars(events);
+        html += '<div class="ana-sec-cap" style="margin-top:12px">TIMELINE' +
+            (data.truncated ? ' · oldest not shown (capped at 400)' : '') + '</div>';
+        html += evRows(drill.kind === 'wand' ? events.slice(-40) : events, drill.kind === 'wand' ? true : multiDay);
+        html += replayBtn();
+        box.innerHTML = html;
+    }
+
     /* ================= open/close ================= */
 
     function openDrawer() {
@@ -478,6 +770,7 @@
         winStamp++;                     // windows are relative to "now" — reopen means refresh
         load();
         reloadOpenSections();
+        if (drill) loadDrill();
         clearInterval(timer);
         timer = setInterval(function () { if (isOpen) load(); }, REFRESH_MS);
     }
