@@ -654,5 +654,154 @@ namespace CityWatch.Tracking.Api
 
         private sealed record TrackSegmentRow(int UnitId, DateTime StartUtc, DateTime EndUtc,
             int DistanceM, int? ToSiteId);
+
+        /* ==================== A4: the weekly patrol-frequency grid ==================== */
+
+        /// <summary>One site's week. Cells are day states; met/missed are the row's tally.</summary>
+        public sealed record WeeklyCell(string State, int Done, int Scans);
+
+        /// <summary>
+        /// The site × day patrol-frequency grid (plan A4) — the Monday answer to "where
+        /// are we under-delivering?", and the table the client report prints. Per site
+        /// per LOCAL day: rounds done = max(traditional DailyWandFq, best guard's
+        /// smart-wand rounds) — the same conservative rule the RC board's FQ badge uses —
+        /// held against the agreed MinPatrolFreq. A day with duty but no rounds is
+        /// MISSED, declared, never hidden; worst rows sort first.
+        /// </summary>
+        [Authorize]
+        [HttpGet("weekly")]
+        public async Task<IActionResult> Weekly([FromQuery] DateTime fromUtc,
+            [FromQuery] DateTime toUtc, [FromQuery] int tzOffsetMinutes, CancellationToken ct)
+        {
+            if (await GateAsync(fromUtc, toUtc, ct) is { } refused)
+                return refused;
+            if (tzOffsetMinutes is < -840 or > 840)
+                return BadRequest("tzOffsetMinutes out of range.");
+
+            var current = await WeekAsync(fromUtc, toUtc, tzOffsetMinutes, ct);
+            var shift = CompareShift(fromUtc, toUtc);
+            var previous = await WeekAsync(fromUtc - shift, toUtc - shift, tzOffsetMinutes, ct);
+
+            var rows = current.Sites
+                .OrderByDescending(s => s.Missed)
+                .ThenBy(s => s.Met)
+                .ThenBy(s => s.Name)
+                .ToList();
+            var truncated = rows.Count > 200;
+
+            return Ok(new
+            {
+                fromUtc, toUtc,
+                days = current.Days,
+                sites = rows.Take(200),
+                totals = new { met = current.Sites.Sum(s => s.Met), missed = current.Sites.Sum(s => s.Missed) },
+                prevTotals = new { met = previous.Sites.Sum(s => s.Met), missed = previous.Sites.Sum(s => s.Missed) },
+                truncated
+            });
+        }
+
+        private sealed record WeekSiteRow(int SiteId, string Name, int Target,
+            WeeklyCell[] Cells, int Met, int Missed);
+        private sealed record WeekResult(string[] Days, List<WeekSiteRow> Sites);
+
+        private async Task<WeekResult> WeekAsync(DateTime fromUtc, DateTime toUtc,
+            int tzOffsetMinutes, CancellationToken ct)
+        {
+            var dayCount = Math.Max(1, (int)Math.Ceiling((toUtc - fromUtc).TotalDays));
+            var fromLocalDate = fromUtc.AddMinutes(tzOffsetMinutes).Date;
+            var toLocalDate = fromLocalDate.AddDays(dayCount);
+            int UtcDay(DateTime utc) => (int)((utc - fromUtc).TotalHours / 24);
+            int LocalDay(DateTime local) => (int)(local.Date - fromLocalDate).TotalDays;
+
+            /* The agreed targets — a site with a target is on the grid even if it was
+               silent all week; that silence is exactly the finding. */
+            var targets = await _db.PlatformSiteKpis
+                .Where(k => k.MinPatrolFreq != null && k.MinPatrolFreq > 0)
+                .GroupBy(k => k.ClientSiteId)
+                .Select(g => new { SiteId = g.Key, Target = g.Max(k => k.MinPatrolFreq!.Value) })
+                .ToDictionaryAsync(g => g.SiteId, g => g.Target, ct);
+
+            /* Rounds done, both wand generations, per LOCAL day. */
+            var wandFq = await _db.PlatformDailyWandFqs
+                .Where(f => f.FqDate >= fromLocalDate && f.FqDate < toLocalDate)
+                .Select(f => new { f.ClientSiteId, f.FqDate, f.Fq })
+                .ToListAsync(ct);
+            var rounds = await _db.PlatformWandRounds
+                .Where(r => r.InspectionStartDatetimeLocal >= fromLocalDate
+                    && r.InspectionStartDatetimeLocal < toLocalDate)
+                .Select(r => new { r.ClientSiteId, r.GuardId, r.InspectionStartDatetimeLocal })
+                .ToListAsync(ct);
+
+            /* Presence signals, per UTC day offset from the local-midnight instant. */
+            var scans = await _db.PlatformWandScans
+                .Where(h => h.HitUtcDateTime >= fromUtc && h.HitUtcDateTime < toUtc)
+                .Select(h => new { SiteId = h.TagLinkedClientSiteId ?? h.LoggedInClientSiteId, h.HitUtcDateTime })
+                .ToListAsync(ct);
+            var visits = await _db.TrackingSiteVisits
+                .Where(v => v.ConfirmedUtc != null && v.ConfirmedUtc >= fromUtc && v.ConfirmedUtc < toUtc)
+                .Select(v => new { v.SiteId, Utc = v.ConfirmedUtc!.Value })
+                .ToListAsync(ct);
+            var sessions = await _db.TrackingSessions
+                .Where(s => s.StartedUtc < toUtc && (s.EndedUtc == null || s.EndedUtc > fromUtc))
+                .Select(s => new { s.ClientSiteId, s.StartedUtc, s.EndedUtc })
+                .ToListAsync(ct);
+
+            var siteIds = targets.Keys
+                .Union(wandFq.Select(f => f.ClientSiteId))
+                .Union(rounds.Select(r => r.ClientSiteId))
+                .Union(scans.Select(s => s.SiteId))
+                .Union(visits.Select(v => v.SiteId))
+                .Union(sessions.Select(s => s.ClientSiteId))
+                .Where(id => id > 0).Distinct().ToList();
+            var names = await _db.PlatformClientSites
+                .Where(cs => siteIds.Contains(cs.Id))
+                .ToDictionaryAsync(cs => cs.Id, cs => cs.Name, ct);
+
+            var siteRows = new List<WeekSiteRow>();
+            foreach (var siteId in siteIds)
+            {
+                var target = targets.TryGetValue(siteId, out var t) ? t : 0;
+                var cells = new WeeklyCell[dayCount];
+                int met = 0, missed = 0;
+                for (var d = 0; d < dayCount; d++)
+                {
+                    var wf = wandFq.Where(f => f.ClientSiteId == siteId && LocalDay(f.FqDate) == d).Sum(f => f.Fq);
+                    /* The board's rule: rounds are what SOMEONE completed — the best
+                       guard's count, never a sum that invents a patrol nobody made. */
+                    var sw = rounds.Where(r => r.ClientSiteId == siteId && LocalDay(r.InspectionStartDatetimeLocal) == d)
+                        .GroupBy(r => r.GuardId)
+                        .Select(g => g.Count())
+                        .DefaultIfEmpty(0).Max();
+                    var done = Math.Max(wf, sw);
+                    var dayScans = scans.Count(s => s.SiteId == siteId && UtcDay(s.HitUtcDateTime) == d);
+                    var dayVisits = visits.Count(v => v.SiteId == siteId && UtcDay(v.Utc) == d);
+                    var dayStart = fromUtc.AddDays(d);
+                    var dayEnd = fromUtc.AddDays(d + 1);
+                    var duty = sessions.Any(s => s.ClientSiteId == siteId
+                        && s.StartedUtc < dayEnd && (s.EndedUtc == null || s.EndedUtc > dayStart));
+
+                    string state;
+                    if (target > 0)
+                    {
+                        if (done >= target) { state = "met"; met++; }
+                        else if (duty || done > 0 || dayScans > 0 || dayVisits > 0) { state = "missed"; missed++; }
+                        else { state = "noduty"; }
+                    }
+                    else
+                    {
+                        state = (done > 0 || dayScans > 0 || dayVisits > 0) ? "active" : "noduty";
+                    }
+                    cells[d] = new WeeklyCell(state, done, dayScans);
+                }
+                siteRows.Add(new WeekSiteRow(siteId,
+                    names.TryGetValue(siteId, out var n) && !string.IsNullOrWhiteSpace(n) ? n! : ("Site " + siteId),
+                    target, cells, met, missed));
+            }
+
+            var days = Enumerable.Range(0, dayCount)
+                .Select(d => fromLocalDate.AddDays(d).ToString("yyyy-MM-dd"))
+                .ToArray();
+            return new WeekResult(days, siteRows);
+        }
     }
 }

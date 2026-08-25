@@ -80,11 +80,20 @@
        Each activity card fetches lazily on first expand and re-fetches only when the
        window has changed since — historical reads are audited server-side, so the
        drawer asks only for what the operator actually opens. */
+    /* The week runs on its own axis — the last 7 local days — whatever the drawer's
+       window chips say: "this week" is a fixed question. */
+    function weekWindow() {
+        var now = new Date();
+        var f = new Date(now); f.setHours(0, 0, 0, 0); f.setDate(f.getDate() - 6);
+        return { fromUtc: f, toUtc: now };
+    }
+
     var SECTIONS = {
         guards: { icon: '👮', title: 'GUARDS', path: 'guards', render: renderGuards },
         sites: { icon: '🏢', title: 'SITES', path: 'sites', render: renderSites },
         pcars: { icon: '🚔', title: 'PATROL CARS', path: 'pcars', render: renderPcars },
-        wands: { icon: '📟', title: 'SMART WANDS', path: 'wands', render: renderWands }
+        wands: { icon: '📟', title: 'SMART WANDS', path: 'wands', render: renderWands },
+        week: { icon: '📅', title: 'WEEK · PATROL FQ', path: 'weekly', render: renderWeekly, window: weekWindow }
     };
     Object.keys(SECTIONS).forEach(function (k) {
         SECTIONS[k].key = k; SECTIONS[k].stamp = -1; SECTIONS[k].seq = 0;
@@ -127,12 +136,14 @@
         var body = document.getElementById('anaSecB_' + sec.key);
         if (!body) return;
         if (!force && sec.stamp === winStamp) return;      // already current for this window
-        var w = currentWindow();
+        var w = sec.window ? sec.window() : currentWindow();
         if (!w) return;
         var mySeq = ++sec.seq;
         body.innerHTML = '<div class="ana-sec-load">loading…</div>';
+        var url = '/api/analytics/' + sec.path + '?' + qs(w) +
+            (sec.path === 'weekly' ? '&tzOffsetMinutes=' + (-new Date().getTimezoneOffset()) : '');
         try {
-            var res = await fetch('/api/analytics/' + sec.path + '?' + qs(w), { credentials: 'same-origin' });
+            var res = await fetch(url, { credentials: 'same-origin' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             var data = await res.json();
             if (mySeq !== sec.seq || !isOpen) return;
@@ -263,6 +274,41 @@
         }).join('');
         body.innerHTML = '<div class="ana-sec-cap">worst first — a quiet wand leads the list · hover for detail</div>' + rows +
             (wands.length > 10 ? '<div class="ana-more">+ ' + (wands.length - 10) + ' more</div>' : '');
+    }
+
+    var WEEK_GLYPH = {
+        met: { g: '✓', cls: 'met' }, missed: { g: '✕', cls: 'missed' },
+        active: { g: '·', cls: 'act' }, noduty: { g: '–', cls: 'nod' }
+    };
+
+    function renderWeekly(body, data) {
+        var sites = data.sites || [], days = data.days || [];
+        setSecCount('week', sites.length ? '· ' + sites.length : '');
+        if (!sites.length) { body.innerHTML = '<div class="ana-sec-load">no targets or activity this week</div>'; return; }
+        var head = '<div class="ana-wkrow ana-wkhead"><span class="t"></span>' +
+            days.map(function (d) {
+                return '<span class="c">' + esc(new Date(d + 'T00:00').toLocaleDateString([], { weekday: 'narrow' })) + '</span>';
+            }).join('') + '</div>';
+        var rows = sites.slice(0, 30).map(function (s) {
+            var cells = s.cells.map(function (c, i) {
+                var g = WEEK_GLYPH[c.state] || WEEK_GLYPH.noduty;
+                return '<span class="c ' + g.cls + '" data-tip="' +
+                    esc(new Date(days[i] + 'T00:00').toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' }) +
+                        ' — ' + c.done + (s.target ? '/' + s.target : '') + ' rounds · ' + c.scans + ' scans') + '">' + g.g + '</span>';
+            }).join('');
+            return '<div class="ana-wkrow" data-ana-drill="site:' + s.siteId + '" role="button" tabindex="0" data-tip="' +
+                esc(s.name + (s.target ? ' — target ' + s.target + '/day' : ' — no target set') +
+                    ' · met ' + s.met + ' · missed ' + s.missed) + '">' +
+                '<span class="t">' + esc(s.name) + '</span>' + cells + '</div>';
+        }).join('');
+        var t = data.totals || { met: 0, missed: 0 }, p = data.prevTotals || { met: 0, missed: 0 };
+        body.innerHTML =
+            '<div class="ana-sec-cap">worst first · ✓ met · ✕ missed · – no duty · rounds vs agreed patrol frequency</div>' +
+            head + rows +
+            (sites.length > 30 ? '<div class="ana-more">+ ' + (sites.length - 30) + ' more in the printed report</div>' : '') +
+            '<div class="ana-wktotal">This week: <b class="ok">' + t.met + ' met</b> · <b class="bad">' + t.missed +
+                ' missed</b> <span class="dim">(last week ' + p.met + ' · ' + p.missed + ')</span></div>' +
+            '<div class="ana-replayrow"><button class="ana-printbtn" data-ana-print="week">📄 Print / PDF — weekly summary</button></div>';
     }
 
     /* ================= the pulse (A2): events per bucket, both windows ================= */
@@ -419,6 +465,11 @@
         if (ev.target.closest('[data-ana-drill-back]')) { closeDrill(); return; }
         if (ev.target.closest('[data-ana-drill-retry]')) { loadDrill(); return; }
         if (ev.target.closest('[data-ana-replay]')) { jumpToReplay(); return; }
+        var pr = ev.target.closest('[data-ana-print]');
+        if (pr) {
+            if (pr.getAttribute('data-ana-print') === 'week') printWeekly(); else printService();
+            return;
+        }
         if (ev.target.id === 'anaLoad') { changeWindow(); return; }
         if (ev.target.id === 'anaRefresh') { load(); Object.keys(SECTIONS).forEach(function (k) { if (isSecOpen(k)) loadSection(SECTIONS[k], true); }); return; }
         if (ev.target.id === 'anaRetry') load();
@@ -747,17 +798,134 @@
         window.CRM.openReplay(pre);
     }
 
+    /* Quiet stretches, declared: ≥2 h with no recorded event between the window's
+       edges. "No recorded activity 02:00–05:00" is a fact, and saying it is what
+       makes the report credible. */
+    function gapsOf(events, w) {
+        var end = Math.min(Date.now(), w.toUtc.getTime());
+        var marks = [w.fromUtc.getTime()].concat(
+            events.map(function (e) { return utcDate(e.utc).getTime(); }).sort(function (a, b) { return a - b; }),
+            [end]);
+        var gaps = [];
+        for (var i = 1; i < marks.length; i++)
+            if (marks[i] - marks[i - 1] >= 2 * 3600 * 1000) gaps.push({ from: marks[i - 1], to: marks[i] });
+        return gaps;
+    }
+    function gapLine(g) {
+        return '⚠ no recorded activity ' + hm(new Date(g.from)) + '–' + hm(new Date(g.to)) +
+            ' (' + fmtHours((g.to - g.from) / 60000) + ')';
+    }
+
+    var drillLast = null;     // { t, data, w } — what the proof-of-service print renders
+
     function renderDrill(box, t, data, w) {
         var events = data.events || [];
         var multiDay = (w.toUtc - w.fromUtc) > 36 * 3600 * 1000;
+        drillLast = { t: t, data: data, w: w };
         var html = drillHead(t) + drillChips(events);
-        if (drill.kind === 'site' && !multiDay) html += ribbonSvg(events, w);
+        if (drill.kind === 'site' && !multiDay) {
+            html += ribbonSvg(events, w);
+            var gaps = gapsOf(events, w);
+            if (gaps.length)
+                html += '<div class="ana-gaps">' + gaps.slice(0, 4).map(function (g) {
+                    return '<div>' + esc(gapLine(g)) + '</div>';
+                }).join('') + '</div>';
+        }
         if (drill.kind === 'wand') html += wandDayBars(events);
         html += '<div class="ana-sec-cap" style="margin-top:12px">TIMELINE' +
             (data.truncated ? ' · oldest not shown (capped at 400)' : '') + '</div>';
         html += evRows(drill.kind === 'wand' ? events.slice(-40) : events, drill.kind === 'wand' ? true : multiDay);
         html += replayBtn();
+        if (drill.kind === 'site')
+            html += '<div class="ana-replayrow"><button class="ana-printbtn" data-ana-print="service">📄 Print / PDF — proof of service</button></div>';
         box.innerHTML = html;
+    }
+
+    /* ================= client evidence (A4): print windows =================
+       The browser's own print-to-PDF: dependency-free, vector-crisp, and the page is
+       plain HTML anyone can audit. Light styling on purpose — this leaves the room. */
+
+    function openPrint(title, bodyHtml) {
+        var win = window.open('', '_blank');
+        if (!win) return;
+        win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
+            '<style>' +
+            'body{font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#111;margin:28px;}' +
+            'h1{font-size:19px;margin:0 0 2px;} .sub{color:#555;margin:0 0 18px;font-size:12px;}' +
+            'table{border-collapse:collapse;width:100%;margin:10px 0;} ' +
+            'th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#555;text-align:left;padding:5px 8px;border-bottom:1.5px solid #999;}' +
+            'td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;font-variant-numeric:tabular-nums;}' +
+            '.c{text-align:center;} .met{color:#0a7a0a;font-weight:700;} .missed{color:#b00020;font-weight:700;}' +
+            '.dim{color:#777;} .gap{color:#b00020;font-weight:600;}' +
+            '.note{margin-top:16px;font-size:11px;color:#555;border-top:1px solid #ddd;padding-top:8px;}' +
+            '@media print{ .noprint{display:none;} }' +
+            '</style></head><body>' + bodyHtml +
+            '<script>window.onload=function(){window.print();};<\/script></body></html>');
+        win.document.close();
+    }
+
+    function printService() {
+        if (!drillLast || !drill || drill.kind !== 'site') return;
+        var t = drillLast.t, w = drillLast.w, events = drillLast.data.events || [];
+        var multiDay = (w.toUtc - w.fromUtc) > 36 * 3600 * 1000;
+        var scans = 0, arrivals = 0, who = {};
+        events.forEach(function (e) {
+            if (e.type === 'scan') scans++;
+            if (e.type === 'arrived') arrivals++;
+            if ((e.type === 'arrived' || e.type === 'scan') && e.who) who[e.who] = 1;
+        });
+        var period = w.fromUtc.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) +
+            ' ' + hm(w.fromUtc) + ' → ' + (multiDay
+                ? w.toUtc.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' : '') + hm(w.toUtc);
+        var gaps = multiDay ? [] : gapsOf(events, w);
+        var rows = events.map(function (e) {
+            var m = EV[e.type] || { f: function () { return e.type; } };
+            return '<tr><td>' + esc(multiDay ? dayHm(e.utc) : hm(e.utc)) + '</td><td>' + esc(e.who || '') +
+                '</td><td>' + esc(m.f(e)) + '</td></tr>';
+        }).join('');
+        openPrint('Proof of Service — ' + t.name,
+            '<h1>CityWatch — Proof of Service</h1>' +
+            '<p class="sub">' + esc(t.name) + ' · ' + esc(period) + ' · generated ' +
+                esc(new Date().toLocaleString()) + '</p>' +
+            '<table><tr><th>Confirmed visits</th><th>Check-ins (NFC)</th><th>People / cars attended</th><th>First activity</th><th>Last activity</th></tr>' +
+            '<tr><td>' + arrivals + '</td><td>' + scans + '</td><td>' + Object.keys(who).length + '</td><td>' +
+                esc(events.length ? dayHm(events[0].utc) : '—') + '</td><td>' +
+                esc(events.length ? dayHm(events[events.length - 1].utc) : '—') + '</td></tr></table>' +
+            (gaps.length ? '<p class="gap">' + gaps.map(function (g) { return esc(gapLine(g)); }).join('<br>') + '</p>' : '') +
+            '<table><tr><th>Time</th><th>Who</th><th>Event</th></tr>' +
+            (rows || '<tr><td colspan="3" class="dim">No recorded activity in this period.</td></tr>') + '</table>' +
+            '<p class="note">Prepared from CityWatch patrol-tracking records (NFC check-ins, confirmed site arrivals, ' +
+            'signed-in sessions). Quiet periods are declared, never hidden' +
+            (drillLast.data.truncated ? '; the oldest events were capped at 400 and are retained in the system of record' : '') + '.</p>');
+    }
+
+    function printWeekly() {
+        var data = SECTIONS.week.data;
+        if (!data || !data.sites) return;
+        var days = data.days || [];
+        var head = days.map(function (d) {
+            return '<th class="c">' + esc(new Date(d + 'T00:00').toLocaleDateString([], { weekday: 'short', day: '2-digit' })) + '</th>';
+        }).join('');
+        var rows = data.sites.map(function (s) {
+            return '<tr><td>' + esc(s.name) + '</td><td class="c">' + (s.target || '—') + '</td>' +
+                s.cells.map(function (c) {
+                    var g = WEEK_GLYPH[c.state] || WEEK_GLYPH.noduty;
+                    return '<td class="c ' + g.cls + '">' + g.g + '</td>';
+                }).join('') +
+                '<td class="c met">' + s.met + '</td><td class="c missed">' + s.missed + '</td></tr>';
+        }).join('');
+        var t = data.totals || { met: 0, missed: 0 }, p = data.prevTotals || { met: 0, missed: 0 };
+        openPrint('Weekly Patrol Frequency',
+            '<h1>CityWatch — Weekly Patrol Frequency</h1>' +
+            '<p class="sub">' + esc(days[0]) + ' → ' + esc(days[days.length - 1]) + ' · generated ' +
+                esc(new Date().toLocaleString()) + ' · worst first</p>' +
+            '<table><tr><th>Site</th><th class="c">Target/day</th>' + head +
+                '<th class="c">Met</th><th class="c">Missed</th></tr>' + rows + '</table>' +
+            '<p><b class="met">' + t.met + ' met</b> · <b class="missed">' + t.missed + ' missed</b> ' +
+                '<span class="dim">(previous week: ' + p.met + ' met · ' + p.missed + ' missed)</span></p>' +
+            '<p class="note">✓ target met · ✕ target missed with duty recorded · – no duty. Rounds are the better of ' +
+            'traditional-wand counts and completed smart-wand inspection rounds — the same conservative rule the ' +
+            'control-room board uses — held against the agreed daily patrol frequency. Today’s column is the day so far.</p>');
     }
 
     /* ================= open/close ================= */

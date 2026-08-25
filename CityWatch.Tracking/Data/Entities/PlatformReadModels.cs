@@ -112,6 +112,51 @@ namespace CityWatch.Tracking.Data.Entities
         public System.DateTime HitUtcDateTime { get; set; }
     }
 
+    /// <summary>ClientSiteKpiSettings, read-only (analytics A4). MinPatrolFreq is the
+    /// AGREED patrol frequency — the number the weekly grid holds each day against.
+    /// The same field the map's FQ badge reads.</summary>
+    [Table("ClientSiteKpiSettings")]
+    public class PlatformSiteKpi
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int ClientSiteId { get; set; }
+
+        public int? MinPatrolFreq { get; set; }
+    }
+
+    /// <summary>DailyWandFq, read-only (analytics A4): traditional-wand patrol rounds per
+    /// site per LOCAL date — the platform's own durable per-day rounds record.</summary>
+    [Table("DailyWandFq")]
+    public class PlatformDailyWandFq
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int ClientSiteId { get; set; }
+
+        public int Fq { get; set; }
+
+        public System.DateTime FqDate { get; set; }
+    }
+
+    /// <summary>SmartWandScanGuardHistory, read-only (analytics A4): one row per COMPLETED
+    /// smart-wand inspection round, with LOCAL start time — the historical record behind
+    /// the board's CompletedRounds. Counting rows per guard per day mirrors the board.</summary>
+    [Table("SmartWandScanGuardHistory")]
+    public class PlatformWandRound
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int ClientSiteId { get; set; }
+
+        public int GuardId { get; set; }
+
+        public System.DateTime InspectionStartDatetimeLocal { get; set; }
+    }
+
     /// <summary>ClientSites, read-only. The geofence catalogue: where the sites ARE, so an
     /// arrival can be detected from GPS instead of waiting for a tag that may never be
     /// scanned. Gps is the platform's own free-text "lat,lon" column — parsed defensively,

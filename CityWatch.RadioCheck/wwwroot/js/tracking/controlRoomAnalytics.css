@@ -214,6 +214,44 @@
 .ana-replaybtn:hover { background: #6d28d9; }
 .ana-quiet .ana-linkbtn { font-size: 11.5px; }
 
+/* ================= A4: weekly FQ grid, gaps, print buttons ================= */
+
+.ana-wkrow {
+    display: flex; align-items: center; gap: 3px; padding: 3px 0; cursor: pointer;
+}
+.ana-wkrow .t {
+    flex: 1; min-width: 0; font-size: 12px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ana-wkrow .c {
+    flex: none; width: 20px; text-align: center;
+    font: 700 11px system-ui, sans-serif; line-height: 18px;
+    border-radius: 4px; cursor: crosshair;
+}
+.ana-wkhead { cursor: default; }
+.ana-wkhead .c { color: #9aa0ad; font-size: 9.5px; cursor: default; }
+.ana-wkrow .c.met { color: #34c759; background: rgba(52, 199, 89, .1); }
+.ana-wkrow .c.missed { color: #ff6b6b; background: rgba(255, 107, 107, .12); }
+.ana-wkrow .c.act { color: #9aa0ad; }
+.ana-wkrow .c.nod { color: #3a3f4d; }
+.ana-wkrow:hover .t { color: #fff; }
+.ana-wktotal { margin-top: 10px; font-size: 12px; color: #9aa0ad; }
+.ana-wktotal .ok { color: #34c759; }
+.ana-wktotal .bad { color: #ff6b6b; }
+.ana-wktotal .dim { color: #9aa0ad; font-weight: 400; }
+
+.ana-gaps {
+    margin-top: 8px; padding: 8px 10px; border: 1px solid #4a2a2a; border-radius: 8px;
+    font-size: 11.5px; color: #ff8a8a; display: flex; flex-direction: column; gap: 3px;
+}
+
+.ana-printbtn {
+    width: 100%; border: 1px solid #2a2d37; background: #1b1e26; color: #e8e9ee;
+    border-radius: 10px; padding: 9px; cursor: pointer;
+    font: 700 12.5px system-ui, sans-serif; min-height: 40px;
+}
+.ana-printbtn:hover { border-color: #9aa0ad; }
+
 /* the one shared tooltip — positioned by the module, never intercepts the mouse */
 .ana-tip {
     position: fixed; z-index: 1750; display: none; pointer-events: none;
