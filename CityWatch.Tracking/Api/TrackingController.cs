@@ -537,6 +537,85 @@ namespace CityWatch.Tracking.Api
             return Ok(new { unitId, fromUtc, toUtc, truncated, sessions = grouped });
         }
 
+        /// <summary>Replay directory (#153 Part 11): every session overlapping a bounded
+        /// window, with the identity labels the replay selection popup needs — so replay can
+        /// be anchored to a SITE, a guard, a car, or everything, not only to the unit the
+        /// operator happened to click. Metadata only: the points stay behind
+        /// history/{unitId}, which remains the sole replay reader of TrackPoint (§8.3).
+        /// A fleet-wide read, audited with a null unit like other fleet-wide views.</summary>
+        [Authorize]
+        [HttpGet("replay/sessions")]
+        public async Task<IActionResult> ReplaySessions([FromQuery] DateTime fromUtc,
+            [FromQuery] DateTime toUtc, CancellationToken ct)
+        {
+            if (toUtc <= fromUtc)
+                return BadRequest();
+            if ((toUtc - fromUtc) > TimeSpan.FromHours(26))
+                return BadRequest("Window too large; request at most 26 hours (one shift with margin).");
+            if (OperatorUserId() is not { } userId)
+                return StatusCode(403, new { error = "Operator identity not found on the session." });
+
+            _db.TrackingAccessAudits.Add(new Data.Entities.TrackingAccessAudit
+            {
+                UserId = userId,
+                Action = "ViewHistoryIndex",
+                UnitId = null,
+                WindowFromUtc = fromUtc,
+                WindowToUtc = toUtc,
+                AccessedUtc = DateTime.UtcNow,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            });
+            await _db.SaveChangesAsync(ct);
+
+            /* A session whose last fix predates the window has no points inside it — listing
+               it would offer a replay that can only answer "no trail recorded". */
+            var sessions = await _db.TrackingSessions
+                .Where(s => s.StartedUtc < toUtc
+                    && (s.EndedUtc == null || s.EndedUtc > fromUtc)
+                    && (s.LastFixUtc == null || s.LastFixUtc > fromUtc))
+                .OrderBy(s => s.StartedUtc)
+                .Select(s => new
+                {
+                    s.Id, s.UnitId, s.GuardId, s.ClientSiteId, s.StartedUtc, s.EndedUtc,
+                    s.Callsign, s.PatrolCarPositionName, s.IsPatrolCar
+                })
+                .ToListAsync(ct);
+
+            var guardIds = sessions.Select(s => s.GuardId).Distinct().ToList();
+            var guardNames = await _db.PlatformGuards
+                .Where(g => guardIds.Contains(g.Id))
+                .ToDictionaryAsync(g => g.Id, g => g.Name, ct);
+            var siteIds = sessions.Select(s => s.ClientSiteId).Distinct().ToList();
+            var siteNames = await _db.PlatformClientSites
+                .Where(cs => siteIds.Contains(cs.Id))
+                .ToDictionaryAsync(cs => cs.Id, cs => cs.Name, ct);
+
+            var rows = sessions.Select(s => new
+            {
+                sessionId = s.Id,
+                unitId = s.UnitId,
+                guardId = s.GuardId,
+                guardName = guardNames.TryGetValue(s.GuardId, out var name) ? name : null,
+                callsign = s.Callsign,
+                /* Same naming fallback as History (#153 Part 1): a car that declared no
+                   position at login answers to its login site's name. */
+                patrolCar = !string.IsNullOrWhiteSpace(s.PatrolCarPositionName)
+                    ? s.PatrolCarPositionName
+                    : (s.IsPatrolCar == true || TrackingUnitKey.IsPosition(s.UnitId))
+                        && siteNames.TryGetValue(s.ClientSiteId, out var homeSite)
+                        && !string.IsNullOrWhiteSpace(homeSite)
+                        ? homeSite
+                        : null,
+                isPatrolCar = s.IsPatrolCar ?? TrackingUnitKey.IsPosition(s.UnitId),
+                clientSiteId = s.ClientSiteId,
+                siteName = siteNames.TryGetValue(s.ClientSiteId, out var sn) ? sn : null,
+                startedUtc = s.StartedUtc,
+                endedUtc = s.EndedUtc
+            }).ToList();
+
+            return Ok(new { fromUtc, toUtc, sessions = rows });
+        }
+
         /// <summary>Short street address for coordinates ("Main Road, Pala"), cache-first
         /// (§Phase 2.1). Null is a normal answer — the UI falls back to site/coordinates,
         /// and the map never depends on the geocoder being up.</summary>
