@@ -25,6 +25,7 @@ namespace CityWatch.Tracking.Tests
             var feature = new ControllerFeature();
             // Seed it the way MVC's own discovery would, then let the provider filter.
             feature.Controllers.Add(typeof(Api.TrackingController).GetTypeInfo());
+            feature.Controllers.Add(typeof(Api.AnalyticsController).GetTypeInfo());
             feature.Controllers.Add(typeof(UnrelatedHostController).GetTypeInfo());
 
             new TrackingControllerFeatureProvider(enabled)
@@ -43,6 +44,8 @@ namespace CityWatch.Tracking.Tests
 
             Assert.IsFalse(feature.Controllers.Any(c => c.AsType() == typeof(Api.TrackingController)),
                 "RT2: /api/tracking/* must not be routable when the flag is off.");
+            Assert.IsFalse(feature.Controllers.Any(c => c.AsType() == typeof(Api.AnalyticsController)),
+                "The analytics module rides inside the pack: master flag off removes it too.");
         }
 
         [TestMethod]

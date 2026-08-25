@@ -146,6 +146,17 @@ namespace CityWatch.Tracking.Configuration
             public int FeedHours { get; set; } = 12;
         }
 
+        /// <summary>The Insights drawer (analytics plan A1). Its own switch inside the pack:
+        /// analytics can be turned off while tracking stays up, and vice versa the master
+        /// Enabled=false removes it with everything else. Default ON — it is a passive,
+        /// read-only layer that costs nothing until an operator opens the drawer.</summary>
+        public AnalyticsOptions Analytics { get; set; } = new();
+
+        public sealed class AnalyticsOptions
+        {
+            public bool Enabled { get; set; } = true;
+        }
+
         public GeocodingOptions Geocoding { get; set; } = new();
 
         /// <summary>Reverse geocoding (§Phase 2.1). The cache carries the load; the provider

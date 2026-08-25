@@ -40,6 +40,12 @@ namespace CityWatch.RadioCheck.Pages
         public bool TrackingEnabled => _configuration.GetSection("Tracking")["Enabled"] == "True"
                                        || _configuration.GetSection("Tracking")["Enabled"] == "true";
 
+        /* Insights drawer (analytics A1): rides inside the tracking pack, with its own
+           kill switch. Default ON when tracking is on — absent config means enabled;
+           only an explicit "false" turns the drawer off while tracking stays up. */
+        public bool AnalyticsEnabled => !string.Equals(
+            _configuration["Tracking:Analytics:Enabled"], "false", StringComparison.OrdinalIgnoreCase);
+
         // AllowAnonymousToFolder("/") in Program.cs suppresses [Authorize], so the page
         // guards itself the same way RadioCheckV2/ClientProfile do.
         private bool IsLoggedIn => User.Identity != null && User.Identity.IsAuthenticated;

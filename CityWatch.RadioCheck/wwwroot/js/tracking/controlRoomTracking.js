@@ -1088,7 +1088,7 @@
             </div>
             <div class="trk-replay-timeline">
               <span>${hm(t0)}</span>
-              <input type="range" id="trkReplayPos" min="0" max="${s.points.length - 1}" value="0" step="1" aria-label="Replay position">
+              <input type="range" id="trkReplayPos" min="0" max="${replay.points.length - 1}" value="0" step="1" aria-label="Replay position">
               <span>${hm(t1)}</span>
             </div>
         </div>`;
@@ -1104,7 +1104,7 @@
         });
         Object.assign(replay, {
             active: false, playing: false, unitId: null, session: null,
-            points: [], stops: [], events: [], idx: 0, timer: null,
+            points: [], stops: [], events: [], idx: 0, timer: null, speed: 4,
             ghost: null, ghostSprite: null, baseLine: null, buckets: [], bucketEnd: [], marks: [],
             truncated: false
         });
@@ -1300,8 +1300,22 @@
         const now = new Date();
         if (kind === '8h') return { fromUtc: new Date(now.getTime() - 8 * 3600 * 1000), toUtc: now };
         if (kind === 'today') { const f = new Date(now); f.setHours(0, 0, 0, 0); return { fromUtc: f, toUtc: now }; }
+        /* Yesterday via setDate, never fixed 24h maths: a DST transition makes a 23- or
+           25-hour day, and an evidence window must not drop or double anyone's hour. */
         const t = new Date(now); t.setHours(0, 0, 0, 0);
-        return { fromUtc: new Date(t.getTime() - 24 * 3600 * 1000), toUtc: t };   // yesterday
+        const f2 = new Date(t); f2.setDate(f2.getDate() - 1);
+        return { fromUtc: f2, toUtc: t };   // yesterday
+    }
+
+    /* The operator's calendar date — toISOString() is the UTC date, which in Australia
+       is YESTERDAY until mid-morning, locking "today" out of the date picker. */
+    function rmLocalDate(d) {
+        const p = n => String(n).padStart(2, '0');
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    }
+    function rmLocalTime(d) {
+        const p = n => String(n).padStart(2, '0');
+        return p(d.getHours()) + ':' + p(d.getMinutes());
     }
 
     function rmInputWindow() {
@@ -1330,15 +1344,35 @@
     function openReplayMenu(prefill) {
         rmClose();
         rm.prefillUnitId = prefill && prefill.unitId ? Number(prefill.unitId) : null;
-        rm.preset = 'today';
-        rm.win = rmPresetWindow('today');
+        rm.prefillSiteId = prefill && prefill.siteId ? Number(prefill.siteId) : null;
+        /* A caller may bring its own window (the Insights drawer hands over what the
+           operator was looking at) — accepted when it fits the replay engine's cap. */
+        if (prefill && prefill.fromUtc && prefill.toUtc
+            && (prefill.toUtc - prefill.fromUtc) > 0
+            && (prefill.toUtc - prefill.fromUtc) <= 26 * 3600 * 1000) {
+            rm.preset = null;
+            rm.win = { fromUtc: new Date(prefill.fromUtc), toUtc: new Date(prefill.toUtc) };
+        } else {
+            rm.preset = 'today';
+            rm.win = rmPresetWindow('today');
+        }
         rm.rows = null;
         /* A card's ▶ lands here pre-aimed at its own unit; the rail's ▶ starts at Site —
            the ask that drove this popup ("show me the whole site's day"). */
         let type = 'site';
-        if (rm.prefillUnitId && units[rm.prefillUnitId])
+        if (prefill && ['site', 'guard', 'car', 'all'].includes(prefill.type))
+            type = prefill.type;
+        else if (rm.prefillUnitId && units[rm.prefillUnitId])
             type = units[rm.prefillUnitId].data.kind === 'guard' ? 'guard' : 'car';
-        const today = new Date().toISOString().slice(0, 10);
+        const today = rmLocalDate(new Date());
+        /* The custom fields must SHOW the window that is active: a handed-over window
+           (rm.preset null) fills them, so the form never contradicts the session list —
+           and touching a field adjusts that window instead of silently replacing it. */
+        const winDate = rm.preset ? today : rmLocalDate(rm.win.fromUtc);
+        const winFrom = rm.preset ? '06:00' : rmLocalTime(rm.win.fromUtc);
+        const winTo = rm.preset ? '18:00'
+            : rmLocalDate(rm.win.toUtc) !== rmLocalDate(rm.win.fromUtc) ? '23:59'
+            : rmLocalTime(rm.win.toUtc);
         const el = document.createElement('div');
         el.id = 'trkReplayMenu';
         el.className = 'trk-session-pick trk-replay-menu';
@@ -1359,14 +1393,14 @@
                 <select id="trkRmWho" aria-label="Replay target"></select></label>
               <div class="trk-rm-presets">
                 <button data-trk-rm-preset="8h">Last 8 h</button>
-                <button data-trk-rm-preset="today" class="on">Today</button>
+                <button data-trk-rm-preset="today"${rm.preset === 'today' ? ' class="on"' : ''}>Today</button>
                 <button data-trk-rm-preset="yesterday">Yesterday</button>
               </div>
               <div class="trk-win-custom">
-                <input type="date" id="trkRmDate" value="${today}" max="${today}" aria-label="Date">
-                <input type="time" id="trkRmFrom" value="06:00" aria-label="From">
+                <input type="date" id="trkRmDate" value="${winDate}" max="${today}" aria-label="Date">
+                <input type="time" id="trkRmFrom" value="${winFrom}" aria-label="From">
                 <span>→</span>
-                <input type="time" id="trkRmTo" value="18:00" aria-label="To">
+                <input type="time" id="trkRmTo" value="${winTo}" aria-label="To">
               </div>
               <div class="trk-rm-hint" id="trkRmHint">Loading…</div>
               <div class="trk-rm-actions">
@@ -1390,7 +1424,7 @@
             if (ev.target.id === 'trkRmStart') rmStart();
         });
         el.addEventListener('change', ev => {
-            if (ev.target.id === 'trkRmType') { rm.prefillUnitId = null; rmRenderWho(); }
+            if (ev.target.id === 'trkRmType') { rm.prefillUnitId = null; rm.prefillSiteId = null; rmRenderWho(); }
             if (ev.target.id === 'trkRmWho') el.querySelector('#trkRmStart').disabled = !ev.target.value;
         });
         /* Touching the custom fields makes them the window; the preset chips light off. */
@@ -1490,7 +1524,9 @@
         who.innerHTML = '<option value="">Select…</option>' + choices.map(c =>
             `<option value="${c.id}">${esc(c.label)} · ${c.n} session${c.n === 1 ? '' : 's'}</option>`).join('');
         who.disabled = false;
-        if (type !== 'site' && rm.prefillUnitId && choices.some(c => c.id === rm.prefillUnitId))
+        if (type === 'site' && rm.prefillSiteId && choices.some(c => c.id === rm.prefillSiteId))
+            who.value = String(rm.prefillSiteId);
+        else if (type !== 'site' && rm.prefillUnitId && choices.some(c => c.id === rm.prefillUnitId))
             who.value = String(rm.prefillUnitId);
         else if (choices.length === 1)
             who.value = String(choices[0].id);
@@ -1548,6 +1584,11 @@
             fetchReplay(r.unitId, win.fromUtc, win.toUtc, r.sessionId);
         });
     }
+
+    /* The Insights drawer's "Open Replay" (analytics A3) enters here — the drawer's ONE
+       touch into this layer, invoking the selector exactly the way a user's click would:
+       { type, unitId | siteId, fromUtc, toUtc } all optional, all just pre-selection. */
+    window.CRM.openReplay = openReplayMenu;
 
     /* A phone's first fix after login can be a cold-start ghost from a stale A-GPS
        cache, thousands of km from the shift — every 17 Aug replay "started in India"
