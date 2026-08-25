@@ -50,7 +50,8 @@ WHERE s.[Status] = 'Active'
            WHERE p2.IsPatrolCar = 1
              AND RTRIM(p2.[Name]) LIKE '%) ' + RTRIM(s.Callsign));  /* exactly one car */
 
-PRINT CONCAT('373: active car sessions to re-key: ', (SELECT COUNT(*) FROM @Map));
+DECLARE @Mapped int = (SELECT COUNT(*) FROM @Map);
+PRINT CONCAT('373: active car sessions to re-key: ', @Mapped);
 
 /* Two active sessions must never land on one unit: if two crews claimed the same
    callsign, the newer login wins — the same takeover rule session/start applies. */
@@ -70,7 +71,8 @@ WHERE EXISTS (SELECT 1 FROM @Map newer
 DELETE m FROM @Map m
 WHERE EXISTS (SELECT 1 FROM dbo.TrackingSession o
               WHERE o.UnitId = m.NewUnitId AND o.[Status] = 'Active');
-PRINT CONCAT('373: sessions to re-key after collision checks: ', (SELECT COUNT(*) FROM @Map));
+DECLARE @Remaining int = (SELECT COUNT(*) FROM @Map);
+PRINT CONCAT('373: sessions to re-key after collision checks: ', @Remaining);
 
 /* The evidence moves with the session: replay/history look points up by unit. The
    (UnitId, SessionId, Seq) dedupe key stays unique — seqs are per-session. */
