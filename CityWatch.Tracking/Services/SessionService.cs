@@ -69,20 +69,43 @@ namespace CityWatch.Tracking.Services
             if (isPatrolCar == true && !string.IsNullOrWhiteSpace(callsign))
             {
                 var cs = callsign.Trim();
-                var car = (await _db.PlatformPositions
+                var matches = (await _db.PlatformPositions
                         .Where(p => p.IsPatrolCar && p.Name != null)
                         .Select(p => new { p.Id, p.Name })
                         .ToListAsync(ct))
-                    .FirstOrDefault(p => p.Name!.TrimEnd()
-                        .EndsWith(") " + cs, StringComparison.OrdinalIgnoreCase));
-                if (car != null && Contracts.TrackingUnitKey.FromPosition(car.Id) != unitId)
+                    .Where(p => p.Name!.TrimEnd()
+                        .EndsWith(") " + cs, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                if (matches.Count == 1)
                 {
-                    _logger.LogInformation(
-                        "Session start: callsign {Callsign} re-keys unit {From} → {To} ({Car}).",
-                        cs, unitId, Contracts.TrackingUnitKey.FromPosition(car.Id), car.Name);
-                    unitId = Contracts.TrackingUnitKey.FromPosition(car.Id);
-                    positionId = car.Id;
-                    positionName = car.Name;
+                    var car = matches[0];
+                    if (Contracts.TrackingUnitKey.FromPosition(car.Id) != unitId)
+                    {
+                        _logger.LogInformation(
+                            "Session start: callsign {Callsign} re-keys unit {From} → {To} ({Car}).",
+                            cs, unitId, Contracts.TrackingUnitKey.FromPosition(car.Id), car.Name);
+                        unitId = Contracts.TrackingUnitKey.FromPosition(car.Id);
+                        positionId = car.Id;
+                        positionName = car.Name;
+                    }
+                }
+                else if (matches.Count > 1)
+                {
+                    /* Two cars answering to one callsign is a config defect — guessing
+                       would file one crew's evidence under another crew's car. */
+                    _logger.LogWarning(
+                        "Session start: callsign {Callsign} names {Count} patrol-car positions — ambiguous, NOT re-keyed. Fix the position names.",
+                        cs, matches.Count);
+                }
+                else if (Contracts.TrackingUnitKey.IsPosition(unitId))
+                {
+                    /* A car login whose callsign names no position lands on whatever the
+                       phone sent — if several crews share that position, they will fight
+                       over one map marker (the 25 Aug Romeo collision). Say so loudly:
+                       the fix is creating a position named '…) {callsign}'. */
+                    _logger.LogWarning(
+                        "Session start: patrol-car callsign {Callsign} names NO car position; unit {Unit} stays as sent — shared-unit collision risk.",
+                        cs, unitId);
                 }
             }
 

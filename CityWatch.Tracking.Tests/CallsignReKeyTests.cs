@@ -124,6 +124,24 @@ namespace CityWatch.Tracking.Tests
         }
 
         [TestMethod]
+        public async Task AmbiguousCallsign_IsNeverGuessed()
+        {
+            /* Two cars answering to one callsign is a config defect: re-keying by guess
+               would file one crew's evidence under another crew's car. The session keeps
+               the phone's unit and the log screams instead. */
+            _db.PlatformPositions.Add(new PlatformPosition
+            { Id = 91, Name = "Night Fleet (Car) R4", IsPatrolCar = true });
+            await _db.SaveChangesAsync();
+
+            var session = await _sessions.StartAsync(SharedM1Unit, 694, 625, null,
+                CancellationToken.None, true, "R4", 10, "Mobile Patrols (Car) M1");
+
+            Assert.IsNotNull(session);
+            Assert.AreEqual(SharedM1Unit, session!.UnitId);
+            Assert.AreEqual(10, session.PatrolCarPositionId);
+        }
+
+        [TestMethod]
         public async Task ReKeyedUnit_MustItselfBeEnrolled()
         {
             var session = await _sessions.StartAsync(SharedM1Unit, 694, 625, null,
