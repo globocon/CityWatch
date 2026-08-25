@@ -84,6 +84,29 @@ namespace CityWatch.Tracking.Data.Entities
         public int EnabledBy { get; set; }
     }
 
+    /// <summary>ClientSiteSmartWandTagsHitLogs, read-only (analytics A1). Every NFC scan the
+    /// platform has recorded — written by the scanner path even when no tracking session is
+    /// running, which is what makes it the complete record of wand activity. Column subset:
+    /// the drawer counts and groups; it never needs the tag label or GPS text here.</summary>
+    [Table("ClientSiteSmartWandTagsHitLogs")]
+    public class PlatformWandScan
+    {
+        [Key]
+        public int Id { get; set; }
+
+        /// <summary>Nullable in the wild — PCAR logins routinely select no wand.</summary>
+        public int? SmartWandId { get; set; }
+
+        public int LoggedInGuardId { get; set; }
+
+        public int LoggedInClientSiteId { get; set; }
+
+        /// <summary>The site the scanned tag belongs to — the site the scan is evidence FOR.</summary>
+        public int? TagLinkedClientSiteId { get; set; }
+
+        public System.DateTime HitUtcDateTime { get; set; }
+    }
+
     /// <summary>ClientSites, read-only. The geofence catalogue: where the sites ARE, so an
     /// arrival can be detected from GPS instead of waiting for a tag that may never be
     /// scanned. Gps is the platform's own free-text "lat,lon" column — parsed defensively,

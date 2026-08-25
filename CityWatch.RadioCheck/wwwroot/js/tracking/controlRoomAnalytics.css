@@ -1,0 +1,124 @@
+/* CityWatch Insights drawer (plan A1) — its own ana-* namespace, no trk-* overrides.
+   Deliberately one visual world: the drawer is a dark instrument panel over whatever
+   map style is active, matching the approved concept mock. */
+
+.ana-drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 1550;
+    width: min(360px, 100vw);
+    display: flex; flex-direction: column;
+    background: #14161c; color: #e8e9ee;
+    border-left: 1px solid #262a35;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, .45);
+    font: 400 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    transform: translateX(105%);
+    transition: transform .25s ease;
+    visibility: hidden;
+}
+.ana-drawer.open { transform: translateX(0); visibility: visible; }
+@media (prefers-reduced-motion: reduce) {
+    .ana-drawer { transition: none; }
+}
+
+.ana-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 10px;
+}
+.ana-head b { flex: 1; font-size: 15px; letter-spacing: .06em; }
+.ana-x {
+    background: none; border: none; color: #9aa0ad; font-size: 24px; line-height: 1;
+    cursor: pointer; padding: 2px 8px; min-height: 36px;
+}
+.ana-x:hover { color: #e8e9ee; }
+
+.ana-chips { display: flex; gap: 6px; padding: 0 16px 12px; }
+.ana-chips button {
+    flex: 1; border: 1px solid #2a2d37; background: none; color: #9aa0ad;
+    border-radius: 14px; padding: 6px 4px; cursor: pointer;
+    font: 600 11.5px system-ui, sans-serif; min-height: 30px; white-space: nowrap;
+}
+.ana-chips button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+
+.ana-custom {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 0 16px 12px; color: #9aa0ad;
+}
+.ana-custom input {
+    border: 1px solid #2a2d37; background: #1b1e26; color: #e8e9ee;
+    border-radius: 8px; padding: 7px; font: 600 12.5px system-ui, sans-serif; min-height: 34px;
+    color-scheme: dark;
+}
+.ana-custom input[type=date] { flex: 1; min-width: 120px; }
+.ana-custom button {
+    border: 1px solid #7c3aed; background: #7c3aed; color: #fff; border-radius: 8px;
+    padding: 7px 12px; cursor: pointer; font: 700 12px system-ui, sans-serif; min-height: 34px;
+}
+
+.ana-body { flex: 1; overflow-y: auto; padding: 2px 16px 12px; }
+
+.ana-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ana-tile {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "g v" "g d" "k k";
+    align-items: baseline; column-gap: 8px;
+    background: #1b1e26; border: 1px solid #262a35; border-radius: 10px;
+    padding: 12px 12px 10px;
+}
+.ana-tile .g { grid-area: g; font-size: 16px; align-self: start; }
+.ana-tile .v {
+    grid-area: v; font-size: 24px; font-weight: 800; color: #ffffff;
+    font-variant-numeric: tabular-nums; line-height: 1.15;
+}
+.ana-tile .k {
+    grid-area: k; margin-top: 6px;
+    font: 600 9.5px system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase;
+    color: #9aa0ad;
+}
+.ana-delta { grid-area: d; font-size: 11px; font-weight: 700; }
+.ana-delta.up { color: #34c759; }
+.ana-delta.dn { color: #ff6b6b; }
+.ana-delta.flat { color: #9aa0ad; }
+.ana-skel .v, .ana-skel .k { color: #3a3f4d; }
+
+.ana-err {
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+    background: #1b1e26; border: 1px solid #4a2a2a; border-radius: 10px;
+    padding: 16px; margin-top: 4px;
+}
+.ana-err b { color: #ff8a8a; }
+.ana-err span { color: #9aa0ad; font-size: 12.5px; }
+.ana-err button {
+    border: 1px solid #2a2d37; background: none; color: #e8e9ee; border-radius: 8px;
+    padding: 7px 14px; cursor: pointer; font: 700 12px system-ui, sans-serif; min-height: 34px;
+}
+
+.ana-foot {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; border-top: 1px solid #262a35;
+    font-size: 11px; color: #9aa0ad;
+}
+.ana-foot .ana-note { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ana-foot .ana-upd { font-variant-numeric: tabular-nums; }
+#anaRefresh {
+    background: none; border: 1px solid #2a2d37; color: #9aa0ad; border-radius: 8px;
+    min-width: 32px; min-height: 30px; cursor: pointer; font-size: 14px;
+}
+#anaRefresh:hover { color: #e8e9ee; }
+
+/* standalone entry point when the tracking rail is absent */
+.ana-fab {
+    position: fixed; right: 10px; bottom: 40px; z-index: 1350;
+    width: 46px; height: 46px; border-radius: 12px;
+    border: 1px solid #dde5ef; background: #fffffff5;
+    font: 700 20px system-ui, sans-serif; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .18);
+}
+
+/* focus visibility for keyboard users */
+.ana-drawer button:focus-visible, .ana-drawer input:focus-visible, #anaBtn:focus-visible {
+    outline: 2px solid #7c3aed; outline-offset: 1px;
+}
+
+@media (max-width: 760px) {
+    .ana-drawer { width: 100vw; border-left: none; }
+}

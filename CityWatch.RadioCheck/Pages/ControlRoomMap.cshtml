@@ -696,6 +696,11 @@
     {
         <link rel="stylesheet" href="~/js/tracking/controlRoomTracking.css" asp-append-version="true" />
         <script src="~/js/tracking/controlRoomTracking.js" asp-append-version="true"></script>
+        @if (Model.AnalyticsEnabled)
+        {
+            <link rel="stylesheet" href="~/js/tracking/controlRoomAnalytics.css" asp-append-version="true" />
+            <script src="~/js/tracking/controlRoomAnalytics.js" asp-append-version="true"></script>
+        }
     }
 </body>
 </html>

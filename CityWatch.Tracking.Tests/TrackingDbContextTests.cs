@@ -27,7 +27,8 @@ namespace CityWatch.Tracking.Tests
         private static readonly string[] PlatformProjections =
         {
             nameof(PlatformSmartWand), nameof(PlatformGuard), nameof(PlatformClientSite),
-            nameof(PlatformClientSiteDuress), nameof(PlatformGuardAppVersion)
+            nameof(PlatformClientSiteDuress), nameof(PlatformGuardAppVersion),
+            nameof(PlatformWandScan)   // analytics A1: the NFC hit log, read-only
         };
 
         [TestMethod]
@@ -81,6 +82,8 @@ namespace CityWatch.Tracking.Tests
                 context.Model.FindEntityType(typeof(PlatformClientSiteDuress))!.GetTableName());
             Assert.AreEqual("GuardMobileAppVersions",
                 context.Model.FindEntityType(typeof(PlatformGuardAppVersion))!.GetTableName());
+            Assert.AreEqual("ClientSiteSmartWandTagsHitLogs",
+                context.Model.FindEntityType(typeof(PlatformWandScan))!.GetTableName());
         }
 
         [TestMethod]
