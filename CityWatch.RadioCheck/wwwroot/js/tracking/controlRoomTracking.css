@@ -279,20 +279,23 @@ body.trk-dark .trk-idbadge-more { color: #60a5fa; }
 
 /* ================= replay: the operational playback deck ================= */
 .trk-unit.trk-replay-ghost { opacity: .95; }
+/* Compact floating controller (#153 Part 11): small and translucent, so playback
+   controls never cost the operator the map they are watching. */
 .trk-replay-bar {
     position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 1300;
-    display: flex; flex-direction: column; gap: 6px;
-    width: min(560px, calc(100vw - 20px));
-    background: #fffffff2; border: 1px solid #7c3aed; border-radius: 14px;
-    padding: 10px 14px; font: 600 12px system-ui, sans-serif; color: #0f172a;
+    display: flex; flex-direction: column; gap: 4px;
+    width: min(440px, calc(100vw - 20px));
+    background: #ffffffdd; border: 1px solid #7c3aedaa; border-radius: 12px;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    padding: 8px 10px; font: 600 11px system-ui, sans-serif; color: #0f172a;
     box-shadow: 0 6px 22px rgba(0,0,0,.22);
 }
 .trk-replay-head { display: flex; align-items: center; gap: 8px; }
 .trk-replay-head b { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.trk-replay-head .trk-btn { padding: 4px 10px; min-height: 30px; }
+.trk-replay-head .trk-btn { padding: 3px 8px; min-height: 26px; }
 .trk-replay-trunc { color: #b45309; font-size: 10px; font-weight: 700; }
 .trk-replay-main { display: flex; align-items: center; gap: 8px; }
-.trk-replay-bar button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; font: 700 12px system-ui, sans-serif; min-height: 36px; min-width: 40px; }
+.trk-replay-bar button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 4px 8px; cursor: pointer; font: 700 11px system-ui, sans-serif; min-height: 30px; min-width: 34px; }
 .trk-replay-bar button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
 /* The exit-to-live button: the generic bar-button rule above repainted its
    background white while .trk-btn's white text stayed - LIVE rendered blank
@@ -343,7 +346,9 @@ body.trk-dark .trk-win-custom input { background: #16223a; border-color: #24344f
 .trk-session-pick {
     position: fixed; z-index: 1600; top: 50%; left: 50%; transform: translate(-50%,-50%);
     width: min(360px, calc(100vw - 28px));
-    background: #fff; border-radius: 14px; overflow: hidden;
+    background: #fff; border-radius: 14px; overflow: hidden auto;
+    /* a SITE's or the whole fleet's day can list dozens of sessions — scroll, never spill */
+    max-height: min(78vh, 640px);
     box-shadow: 0 16px 50px rgba(0,0,0,.4);
     font: 600 13px system-ui, sans-serif; color: #0f172a;
 }
@@ -358,6 +363,37 @@ body.trk-dark .trk-win-custom input { background: #16223a; border-color: #24344f
 .trk-session-pick .row span { color: #64748b; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .trk-session-pick .row .n { flex: none; font-size: 11px; }
 .trk-session-pick .cancel { margin: 10px 16px 14px; background: #64748b; border-color: #64748b; }
+
+/* replay selection popup (#153 Part 11): type → who → window → start */
+.trk-replay-menu { width: min(400px, calc(100vw - 28px)); }
+.trk-rm-head { flex-direction: row !important; align-items: center; gap: 10px; }
+.trk-rm-head .t { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.trk-rm-close {
+    background: none; border: none; color: #fff; font-size: 22px; line-height: 1;
+    cursor: pointer; padding: 2px 6px;
+}
+.trk-rm-body { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; }
+.trk-rm-body label {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 10px; font-weight: 800; color: #64748b;
+    text-transform: uppercase; letter-spacing: .5px;
+}
+.trk-rm-body select {
+    border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px;
+    font: 600 13px system-ui, sans-serif; min-height: 38px;
+    background: #fff; color: #0f172a; width: 100%;
+}
+.trk-rm-presets { display: flex; gap: 6px; }
+.trk-rm-presets button {
+    flex: 1; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px;
+    padding: 7px 4px; cursor: pointer; font: 700 12px system-ui, sans-serif; min-height: 34px;
+}
+.trk-rm-presets button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+.trk-replay-menu .trk-win-custom { padding: 0; border-top: none; }
+.trk-rm-hint { font-size: 11px; font-weight: 600; color: #64748b; min-height: 14px; }
+.trk-rm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.trk-rm-actions .cancel { margin: 0; }
+.trk-rm-actions #trkRmStart:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ================= guard clusters + layer chips + site pivot ================= */
 .trk-gcluster {
@@ -504,8 +540,12 @@ body.trk-dark .trk-idle-panel { background: #101a2eee; color: #e2e8f0; }
 body.trk-dark .trk-idle-row { border-top-color: #1c2b45; }
 body.trk-dark .trk-idle-row:hover { background: #2d2008; }
 body.trk-dark .trk-replay-bar {
-    background: #101a2eee; color: #e2e8f0;
+    background: #101a2ecc; color: #e2e8f0;
 }
+body.trk-dark .trk-rm-body select,
+body.trk-dark .trk-rm-presets button { background: #16223a; border-color: #24344f; color: #e2e8f0; }
+body.trk-dark .trk-rm-presets button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+body.trk-dark .trk-rm-body label, body.trk-dark .trk-rm-hint { color: #8ca3c3; }
 body.trk-dark .trk-replay-bar button { background: #16223a; border-color: #24344f; color: #e2e8f0; }
 body.trk-dark .trk-replay-bar button.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
 body.trk-dark .trk-unit .trk-id { background: #101a2eee; border-color: #24344f; color: #e2e8f0; }
@@ -523,7 +563,7 @@ body.trk-dark .trk-unit .trk-id { background: #101a2eee; border-color: #24344f; 
 
     .trk-idle-panel { top: auto; bottom: 300px; right: 10px; max-width: 220px; }
     .trk-follow-bar { bottom: 156px; }
-    .trk-replay-bar { bottom: 8px; border-radius: 12px; width: calc(100vw - 16px); }
+    .trk-replay-bar { bottom: 8px; border-radius: 12px; width: min(440px, calc(100vw - 16px)); }
     .trk-replay-bar input[type=range] { flex: 1; width: auto; min-width: 120px; }
     .trk-controls { bottom: 150px; }
     .trk-status { bottom: 8px; left: 8px; font-size: 11px; }

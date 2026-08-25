@@ -993,6 +993,7 @@
         el.innerHTML = `
             <button data-trk-ctl="alerts" title="Attention feed" aria-label="Attention feed" style="position:relative">🔔<span id="trkBellBadge" class="trk-bellbadge" style="display:none">0</span></button>
             <button data-trk-ctl="search" title="Find a patrol car or guard" aria-label="Search">🔍</button>
+            <button data-trk-ctl="replay" title="Replay recorded movement — a site, a guard, a car, or everything" aria-label="Replay">▶</button>
             <button data-trk-ctl="msg" title="Message online units" aria-label="Message online units">✉</button>
             <button data-trk-ctl="in" title="Zoom in" aria-label="Zoom in">+</button>
             <button data-trk-ctl="out" title="Zoom out" aria-label="Zoom out">−</button>
@@ -1006,6 +1007,7 @@
             if (what === 'in') map.zoomIn();
             else if (what === 'out') map.zoomOut();
             else if (what === 'search') toggleSearch(true);
+            else if (what === 'replay') openReplayMenu();
             else if (what === 'msg') openCompose(null);
             else if (what === 'alerts') toggleAlerts();
             else if (what === 'mode') {
@@ -1070,6 +1072,7 @@
               <b>REPLAY · ${esc(label)} · ${dayOf(t0)}${s.guardName ? ' · ' + esc(s.guardName) : ''}</b>
               ${replay.truncated ? '<span class="trk-replay-trunc">⚠ window truncated at 5000 points — oldest not shown</span>' : ''}
               ${replay.hiddenCount ? `<span class="trk-replay-trunc">◌ ${replay.hiddenCount} low-confidence fixes kept in audit, not drawn</span>` : ''}
+              ${lastPick && lastPick.rows.length > 1 ? '<button id="trkReplaySessions" title="Choose another session from this selection" aria-label="Choose another session">☰</button>' : ''}
               <button id="trkReplayLive" class="trk-btn">⟳ LIVE</button>
               <button id="trkReplayClose" title="Exit replay" aria-label="Exit replay">✕</button>
             </div>
@@ -1095,7 +1098,7 @@
         if (replay.timer) clearInterval(replay.timer);
         [replay.baseLine, replay.ghost, ...replay.buckets, ...replay.marks]
             .filter(Boolean).forEach(l => layer.removeLayer(l));
-        ['trkReplayBar', 'trkSessionPick', 'trkReplayWindow'].forEach(id => {
+        ['trkReplayBar', 'trkSessionPick'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.remove();
         });
@@ -1154,6 +1157,7 @@
             notice(`Every fix in this window is low-confidence GPS (${(session.points || []).length} kept in audit) — nothing trustworthy to draw.`, 'alarm');
             return;
         }
+        endReplay();       // one replay at a time: a new session replaces the previous one
         replay.active = true;
         replay.playing = true;
         replay.unitId = unitId;
@@ -1283,54 +1287,265 @@
         });
     }
 
-    /* Replay window picker (§3.1): presets for the common asks, custom date + time range
-       for the rest. The 26 h server cap is a shift with margin, stated when exceeded. */
-    function replayWindowPicker(unitId) {
-        endReplay();
-        closeCard();
-        const label = units[unitId] ? unitLabel(units[unitId].data) : ('Unit ' + unitId);
+    /* ================= replay selection (#153 Part 11) =================
+       Replay is anchored to WHAT the operator asks about — a site, a guard, a patrol
+       car, or everything — never only to the unit that happened to be clicked ("Peter
+       maybe was not on yesterday"). One light directory call (/replay/sessions) answers
+       "who has recorded movement in this window"; the points still come from the audited
+       per-unit history endpoint, and the playback engine below is untouched. */
+    const rm = { win: null, preset: 'today', rows: null, loading: false, prefillUnitId: null, seq: 0, debounce: null };
+    let lastPick = null;      // { rows, win } — powers the bar's ☰ session-switch button
+
+    function rmPresetWindow(kind) {
+        const now = new Date();
+        if (kind === '8h') return { fromUtc: new Date(now.getTime() - 8 * 3600 * 1000), toUtc: now };
+        if (kind === 'today') { const f = new Date(now); f.setHours(0, 0, 0, 0); return { fromUtc: f, toUtc: now }; }
+        const t = new Date(now); t.setHours(0, 0, 0, 0);
+        return { fromUtc: new Date(t.getTime() - 24 * 3600 * 1000), toUtc: t };   // yesterday
+    }
+
+    function rmInputWindow() {
+        const d = document.getElementById('trkRmDate').value;
+        const f = document.getElementById('trkRmFrom').value || '00:00';
+        const t = document.getElementById('trkRmTo').value || '23:59';
+        if (!d) return null;
+        const fromUtc = new Date(`${d}T${f}`);
+        const toUtc = new Date(`${d}T${t}`);
+        return toUtc > fromUtc ? { fromUtc, toUtc } : null;
+    }
+
+    /* Directory rows name units the same way the live map does: callsign first for
+       cars, the person's name for guards. */
+    function rmRowLabel(r) {
+        return r.isPatrolCar
+            ? (r.callsign || shortCar(r.patrolCar) || ('PC-' + r.unitId))
+            : (r.guardName || ('G-' + (r.guardId || r.unitId)));
+    }
+
+    function rmClose() {
+        const el = document.getElementById('trkReplayMenu');
+        if (el) el.remove();
+    }
+
+    function openReplayMenu(prefill) {
+        rmClose();
+        rm.prefillUnitId = prefill && prefill.unitId ? Number(prefill.unitId) : null;
+        rm.preset = 'today';
+        rm.win = rmPresetWindow('today');
+        rm.rows = null;
+        /* A card's ▶ lands here pre-aimed at its own unit; the rail's ▶ starts at Site —
+           the ask that drove this popup ("show me the whole site's day"). */
+        let type = 'site';
+        if (rm.prefillUnitId && units[rm.prefillUnitId])
+            type = units[rm.prefillUnitId].data.kind === 'guard' ? 'guard' : 'car';
         const today = new Date().toISOString().slice(0, 10);
         const el = document.createElement('div');
-        el.id = 'trkReplayWindow';
-        el.className = 'trk-session-pick';
+        el.id = 'trkReplayMenu';
+        el.className = 'trk-session-pick trk-replay-menu';
         el.innerHTML = `
-            <div class="head"><b>▶ Replay · ${esc(label)}</b><span>Choose what to play back</span></div>
-            <div class="row" data-trk-win="8h"><b>Last 8 hours</b><span>the shift so far</span><span class="n"></span></div>
-            <div class="row" data-trk-win="today"><b>Today</b><span>midnight → now</span><span class="n"></span></div>
-            <div class="row" data-trk-win="yesterday"><b>Yesterday</b><span>full day</span><span class="n"></span></div>
-            <div class="trk-win-custom">
-              <input type="date" id="trkWinDate" value="${today}" max="${today}" aria-label="Date">
-              <input type="time" id="trkWinFrom" value="06:00" aria-label="From">
-              <span>→</span>
-              <input type="time" id="trkWinTo" value="18:00" aria-label="To">
-              <button class="trk-btn" data-trk-win="custom">Load</button>
+            <div class="head trk-rm-head">
+              <span class="t"><b>▶ Replay</b><span>Choose what to play back</span></span>
+              <button class="trk-rm-close" data-trk-rm-close="1" aria-label="Close">×</button>
             </div>
-            <button class="trk-btn cancel" data-trk-session-cancel="1">Cancel</button>`;
+            <div class="trk-rm-body">
+              <label>Replay type
+                <select id="trkRmType" aria-label="Replay type">
+                  <option value="site">🏢 Site — everyone who worked it</option>
+                  <option value="guard">👮 Guard</option>
+                  <option value="car">🚓 Patrol car</option>
+                  <option value="all">🌐 All activity</option>
+                </select></label>
+              <label id="trkRmWhoWrap"><span id="trkRmWhoLabel">Site</span>
+                <select id="trkRmWho" aria-label="Replay target"></select></label>
+              <div class="trk-rm-presets">
+                <button data-trk-rm-preset="8h">Last 8 h</button>
+                <button data-trk-rm-preset="today" class="on">Today</button>
+                <button data-trk-rm-preset="yesterday">Yesterday</button>
+              </div>
+              <div class="trk-win-custom">
+                <input type="date" id="trkRmDate" value="${today}" max="${today}" aria-label="Date">
+                <input type="time" id="trkRmFrom" value="06:00" aria-label="From">
+                <span>→</span>
+                <input type="time" id="trkRmTo" value="18:00" aria-label="To">
+              </div>
+              <div class="trk-rm-hint" id="trkRmHint">Loading…</div>
+              <div class="trk-rm-actions">
+                <button class="trk-btn cancel" data-trk-rm-close="1">Cancel</button>
+                <button class="trk-btn" id="trkRmStart" disabled>▶ Start Replay</button>
+              </div>
+            </div>`;
+        document.body.appendChild(el);
+        el.querySelector('#trkRmType').value = type;
+
+        el.addEventListener('click', ev => {
+            if (ev.target.closest('[data-trk-rm-close]')) { rmClose(); return; }
+            const chip = ev.target.closest('[data-trk-rm-preset]');
+            if (chip) {
+                rm.preset = chip.getAttribute('data-trk-rm-preset');
+                rm.win = rmPresetWindow(rm.preset);
+                el.querySelectorAll('[data-trk-rm-preset]').forEach(b => b.classList.toggle('on', b === chip));
+                rmFetch();
+                return;
+            }
+            if (ev.target.id === 'trkRmStart') rmStart();
+        });
+        el.addEventListener('change', ev => {
+            if (ev.target.id === 'trkRmType') { rm.prefillUnitId = null; rmRenderWho(); }
+            if (ev.target.id === 'trkRmWho') el.querySelector('#trkRmStart').disabled = !ev.target.value;
+        });
+        /* Touching the custom fields makes them the window; the preset chips light off. */
+        el.addEventListener('input', ev => {
+            if (!/^trkRm(Date|From|To)$/.test(ev.target.id)) return;
+            const win = rmInputWindow();
+            if (!win) return;
+            rm.preset = null;
+            rm.win = win;
+            el.querySelectorAll('[data-trk-rm-preset]').forEach(b => b.classList.remove('on'));
+            clearTimeout(rm.debounce);
+            rm.debounce = setTimeout(rmFetch, 400);
+        });
+        el.addEventListener('keydown', ev => { if (ev.key === 'Escape') rmClose(); });
+        rmFetch();
+    }
+
+    async function rmFetch() {
+        const seq = ++rm.seq;
+        rm.loading = true;
+        rm.rows = null;
+        rmRenderWho();
+        try {
+            const res = await fetch(`/api/tracking/replay/sessions?fromUtc=${rm.win.fromUtc.toISOString()}&toUtc=${rm.win.toUtc.toISOString()}`,
+                { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const body = await res.json();
+            if (seq !== rm.seq) return;          // a newer window superseded this fetch
+            rm.rows = body.sessions || [];
+        } catch {
+            if (seq !== rm.seq) return;
+            rm.rows = null;
+        } finally {
+            if (seq === rm.seq) { rm.loading = false; rmRenderWho(); }
+        }
+    }
+
+    function rmWhoChoices(type) {
+        const rows = rm.rows || [];
+        const m = new Map();
+        if (type === 'site') {
+            rows.forEach(r => {
+                const e = m.get(r.clientSiteId) || { id: r.clientSiteId, label: r.siteName || ('Site ' + r.clientSiteId), n: 0 };
+                e.n++; m.set(r.clientSiteId, e);
+            });
+        } else {
+            const wantCar = type === 'car';
+            rows.filter(r => !!r.isPatrolCar === wantCar).forEach(r => {
+                const e = m.get(r.unitId) || { id: r.unitId, label: rmRowLabel(r), n: 0 };
+                e.n++; m.set(r.unitId, e);
+            });
+        }
+        return [...m.values()].sort((a, b) => String(a.label).localeCompare(String(b.label)));
+    }
+
+    function rmRenderWho() {
+        const el = document.getElementById('trkReplayMenu');
+        if (!el) return;
+        const type = el.querySelector('#trkRmType').value;
+        const wrap = el.querySelector('#trkRmWhoWrap');
+        const who = el.querySelector('#trkRmWho');
+        const hint = el.querySelector('#trkRmHint');
+        const start = el.querySelector('#trkRmStart');
+        wrap.style.display = type === 'all' ? 'none' : '';
+        el.querySelector('#trkRmWhoLabel').textContent =
+            type === 'site' ? 'Site' : type === 'guard' ? 'Guard' : 'Patrol car';
+
+        if (rm.loading) {
+            who.innerHTML = '<option value="">Loading…</option>';
+            who.disabled = true;
+            hint.textContent = 'Checking who has recorded movement in this window…';
+            start.disabled = true;
+            return;
+        }
+        if (!rm.rows) {
+            who.innerHTML = '<option value="">—</option>';
+            who.disabled = true;
+            hint.textContent = 'Could not load the replay directory — check the connection and reopen.';
+            start.disabled = true;
+            return;
+        }
+        const unitCount = new Set(rm.rows.map(r => r.unitId)).size;
+        hint.textContent = rm.rows.length
+            ? `${rm.rows.length} session${rm.rows.length === 1 ? '' : 's'} · ${unitCount} unit${unitCount === 1 ? '' : 's'} recorded in this window`
+            : 'No recorded movement in this window.';
+        if (type === 'all') {
+            start.disabled = !rm.rows.length;
+            return;
+        }
+        const choices = rmWhoChoices(type);
+        if (!choices.length) {
+            who.innerHTML = '<option value="">— none in this window —</option>';
+            who.disabled = true;
+            start.disabled = true;
+            return;
+        }
+        who.innerHTML = '<option value="">Select…</option>' + choices.map(c =>
+            `<option value="${c.id}">${esc(c.label)} · ${c.n} session${c.n === 1 ? '' : 's'}</option>`).join('');
+        who.disabled = false;
+        if (type !== 'site' && rm.prefillUnitId && choices.some(c => c.id === rm.prefillUnitId))
+            who.value = String(rm.prefillUnitId);
+        else if (choices.length === 1)
+            who.value = String(choices[0].id);
+        start.disabled = !who.value;
+    }
+
+    function rmStart() {
+        const el = document.getElementById('trkReplayMenu');
+        if (!el || !rm.rows || rm.loading) return;
+        const type = el.querySelector('#trkRmType').value;
+        const whoVal = el.querySelector('#trkRmWho').value;
+        let rows;
+        if (type === 'all') rows = rm.rows.slice();
+        else if (type === 'site') rows = rm.rows.filter(r => String(r.clientSiteId) === whoVal);
+        else rows = rm.rows.filter(r => String(r.unitId) === whoVal);
+        if (!rows.length) { notice('No recorded movement for that selection in this window.'); return; }
+        const win = rm.win;
+        rmClose();
+        closeCard();
+        lastPick = rows.length > 1 ? { rows, win } : null;
+        if (rows.length === 1) {
+            fetchReplay(rows[0].unitId, win.fromUtc, win.toUtc, rows[0].sessionId);
+        } else if (new Set(rows.map(r => r.unitId)).size === 1) {
+            /* One unit, several shifts: the existing per-unit picker already handles it. */
+            fetchReplay(rows[0].unitId, win.fromUtc, win.toUtc);
+        } else {
+            indexPicker(rows, win);
+        }
+    }
+
+    /* The cross-unit session list: a site's whole day, or everything in the window.
+       Each row is one officer's one journey — picking it replays that session through
+       the unchanged engine, so two journeys are still never merged into one line. */
+    function indexPicker(rows, win) {
+        const old = document.getElementById('trkSessionPick');
+        if (old) old.remove();
+        const sorted = rows.slice().sort((a, b) => utcDate(a.startedUtc) - utcDate(b.startedUtc));
+        const el = document.createElement('div');
+        el.id = 'trkSessionPick';
+        el.className = 'trk-session-pick';
+        el.innerHTML = `<div class="head"><b>${sorted.length} sessions in this window</b><span>Each journey replays separately</span></div>` +
+            sorted.map((r, i) => `
+                <div class="row" data-trk-isession="${i}">
+                  <b>${hm(r.startedUtc)}–${r.endedUtc ? hm(r.endedUtc) : 'now'}</b>
+                  <span>${r.isPatrolCar ? '🚓' : '👮'} ${esc(rmRowLabel(r))}${r.isPatrolCar && r.guardName ? ' · ' + esc(r.guardName) : ''}${r.siteName ? ' · ' + esc(r.siteName) : ''}</span>
+                </div>`).join('') +
+            `<button class="trk-btn cancel" data-trk-session-cancel="1">Cancel</button>`;
         document.body.appendChild(el);
         el.addEventListener('click', ev => {
             if (ev.target.closest('[data-trk-session-cancel]')) { el.remove(); return; }
-            const row = ev.target.closest('[data-trk-win]');
+            const row = ev.target.closest('[data-trk-isession]');
             if (!row) return;
-            const kind = row.getAttribute('data-trk-win');
-            const now = new Date();
-            let fromUtc, toUtc;
-            if (kind === '8h') { toUtc = now; fromUtc = new Date(now.getTime() - 8 * 3600 * 1000); }
-            else if (kind === 'today') { toUtc = now; fromUtc = new Date(now); fromUtc.setHours(0, 0, 0, 0); }
-            else if (kind === 'yesterday') {
-                toUtc = new Date(now); toUtc.setHours(0, 0, 0, 0);
-                fromUtc = new Date(toUtc.getTime() - 24 * 3600 * 1000);
-            } else {
-                const d = document.getElementById('trkWinDate').value;
-                const f = document.getElementById('trkWinFrom').value || '00:00';
-                const t = document.getElementById('trkWinTo').value || '23:59';
-                if (!d) return;
-                fromUtc = new Date(`${d}T${f}`);
-                toUtc = new Date(`${d}T${t}`);
-                if (!(toUtc > fromUtc)) { notice('The end time must be after the start time.', 'alarm'); return; }
-                if (toUtc - fromUtc > 26 * 3600 * 1000) { notice('Windows are capped at 26 hours — one shift with margin.', 'alarm'); return; }
-            }
+            const r = sorted[Number(row.getAttribute('data-trk-isession'))];
             el.remove();
-            fetchReplay(unitId, fromUtc, toUtc);
+            fetchReplay(r.unitId, win.fromUtc, win.toUtc, r.sessionId);
         });
     }
 
@@ -1362,7 +1577,7 @@
         return from ? pts.slice(from) : pts;
     }
 
-    async function fetchReplay(unitId, fromUtc, toUtc) {
+    async function fetchReplay(unitId, fromUtc, toUtc, sessionId) {
         let body;
         try {
             const res = await fetch(`/api/tracking/history/${unitId}?fromUtc=${fromUtc.toISOString()}&toUtc=${toUtc.toISOString()}`,
@@ -1375,12 +1590,19 @@
             .map(s => ({ ...s, points: dropGhostPrefix(s.points) }))
             .filter(s => s.points && s.points.length >= 2);
         if (!sessions.length) { notice(`No trail recorded between ${hm(fromUtc)} and ${hm(toUtc)}.`); return; }
-        if (sessions.length === 1) playSession(unitId, sessions[0], body.truncated);
+        if (sessionId) {
+            /* The selection popup already named the session; play exactly that one. */
+            const want = String(sessionId).toLowerCase();
+            const s = sessions.find(x => String(x.sessionId).toLowerCase() === want);
+            if (!s) { notice(`No trail recorded for that session between ${hm(fromUtc)} and ${hm(toUtc)}.`); return; }
+            playSession(unitId, s, body.truncated);
+        }
+        else if (sessions.length === 1) playSession(unitId, sessions[0], body.truncated);
         else sessionPicker(unitId, sessions, body.truncated);
     }
 
     function startReplay(unitId) {
-        replayWindowPicker(unitId);
+        openReplayMenu({ unitId });
     }
 
     /* ================= delegated clicks ================= */
@@ -1413,6 +1635,7 @@
             renderProgress();
             return;
         }
+        if (ev.target.id === 'trkReplaySessions' && lastPick) { indexPicker(lastPick.rows, lastPick.win); return; }
         if (ev.target.id === 'trkReplayLive' || ev.target.id === 'trkReplayClose') { endReplay(); return; }
         const fid = attr('data-trk-follow');
         if (fid) { follow.unitId === Number(fid) ? stopFollow() : startFollow(Number(fid)); return; }
