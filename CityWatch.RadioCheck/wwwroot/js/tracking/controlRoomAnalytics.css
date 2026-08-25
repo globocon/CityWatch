@@ -53,7 +53,8 @@
     padding: 7px 12px; cursor: pointer; font: 700 12px system-ui, sans-serif; min-height: 34px;
 }
 
-.ana-body { flex: 1; overflow-y: auto; padding: 2px 16px 12px; }
+.ana-scroll { flex: 1; overflow-y: auto; padding-bottom: 12px; }
+.ana-body { padding: 2px 16px 0; }
 
 .ana-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ana-tile {
@@ -104,6 +105,81 @@
     min-width: 32px; min-height: 30px; cursor: pointer; font-size: 14px;
 }
 #anaRefresh:hover { color: #e8e9ee; }
+
+/* ================= A2: pulse, sections, rows, tooltips ================= */
+
+.ana-pulse { padding: 12px 16px 2px; }
+.ana-pulse-cap, .ana-sec-cap {
+    font: 600 9.5px system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase;
+    color: #9aa0ad; margin-bottom: 6px;
+}
+.ana-pulse-cap .dim { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.ana-pulse svg { width: 100%; height: auto; display: block; }
+.ana-pulse rect { cursor: crosshair; }
+
+.ana-sec { border-top: 1px solid #262a35; margin-top: 10px; }
+.ana-sec-h {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    background: none; border: none; color: #e8e9ee; cursor: pointer;
+    padding: 10px 16px; font: 700 12px system-ui, sans-serif; letter-spacing: .07em;
+    text-align: left; min-height: 40px;
+}
+.ana-sec-h .t { flex: none; }
+.ana-sec-h .n { flex: 1; color: #9aa0ad; font-weight: 600; }
+.ana-sec-h .chev { color: #9aa0ad; }
+.ana-sec-h:hover { background: #191c24; }
+.ana-sec-b { padding: 0 16px 12px; }
+.ana-sec-load { color: #9aa0ad; font-size: 12.5px; padding: 4px 0 2px; }
+.ana-linkbtn {
+    background: none; border: none; color: #a78bfa; cursor: pointer;
+    font: 600 12.5px system-ui, sans-serif; padding: 0; text-decoration: underline;
+}
+.ana-more { color: #9aa0ad; font-size: 11px; margin-top: 6px; }
+
+/* ranked bar rows — the value is the number; the story is in the hover tip */
+.ana-row {
+    display: grid; grid-template-columns: 108px 1fr 44px; align-items: center; gap: 8px;
+    padding: 4px 0; cursor: crosshair;
+}
+.ana-row .t { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ana-row .bar { height: 9px; background: #262a35; border-radius: 4px; overflow: hidden; }
+.ana-row .bar i { display: block; height: 100%; background: #3987e5; border-radius: 4px; }
+.ana-row .v {
+    font-size: 12px; font-weight: 700; text-align: right;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.ana-row:hover .t { color: #fff; }
+
+/* wand rows — name + home site, rate vs baseline, state chip */
+.ana-wrow {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px;
+    padding: 5px 0; cursor: crosshair;
+}
+.ana-wrow .t { font-size: 12.5px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ana-wrow .t .s { display: block; font-size: 10.5px; color: #9aa0ad; }
+.ana-wrow .v { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ana-wrow .v .dim { color: #9aa0ad; font-weight: 600; }
+.ana-chip {
+    font: 700 10px system-ui, sans-serif; padding: 3px 7px; border-radius: 9px; white-space: nowrap;
+}
+.ana-chip.ok { background: rgba(52, 199, 89, .16); color: #34c759; }
+.ana-chip.warn { background: rgba(250, 178, 25, .18); color: #fab219; }
+.ana-chip.crit { background: rgba(255, 107, 107, .16); color: #ff6b6b; }
+
+.ana-quiet {
+    margin-top: 8px; padding: 8px 10px; border: 1px solid #2a2d37; border-radius: 8px;
+    font-size: 11.5px; color: #9aa0ad;
+}
+.ana-quiet b { color: #fab219; font-size: 11px; }
+
+/* the one shared tooltip — positioned by the module, never intercepts the mouse */
+.ana-tip {
+    position: fixed; z-index: 1750; display: none; pointer-events: none;
+    max-width: 280px; padding: 6px 9px; border-radius: 7px;
+    background: #0c0d11f2; color: #e8e9ee; border: 1px solid #2a2d37;
+    font: 600 11.5px/1.45 system-ui, sans-serif;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .4);
+}
 
 /* standalone entry point when the tracking rail is absent */
 .ana-fab {

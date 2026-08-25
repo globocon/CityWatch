@@ -21,6 +21,11 @@ namespace CityWatch.Tracking.Data.Entities
         public int? PatrolCarId { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        /// <summary>The platform's "SmartWandId" column is the wand's display name
+        /// ("Dell 5430"), not a key — mapped for the analytics wand card (A2).</summary>
+        [Column("SmartWandId")]
+        public string? WandName { get; set; }
     }
 
     /// <summary>Guards, read-only. Identity for the control-room display: with a hundred
