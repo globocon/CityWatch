@@ -40,8 +40,17 @@
         min = Math.max(0, Math.round(min));
         return Math.floor(min / 60) + 'h ' + (min % 60) + 'm';
     }
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    /* The operator's calendar date — toISOString() is the UTC date, which in Australia
+       is YESTERDAY until mid-morning, exactly the hours a control room reviews. */
+    function localDateStr(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
 
-    /* ---- windows: the chips' meaning, and what "previous" means for each ---- */
+    /* ---- windows: the chips' meaning, and what "previous" means for each ----
+       Day arithmetic uses setDate(), never fixed 24h milliseconds: a DST transition
+       makes a 23- or 25-hour day, and evidence windows must not drop or double an
+       hour of somebody's shift. */
     function presetWindow(kind) {
         var now = new Date();
         if (kind === 'today') {
@@ -50,9 +59,11 @@
         }
         if (kind === 'yesterday') {
             var t = new Date(now); t.setHours(0, 0, 0, 0);
-            return { fromUtc: new Date(t.getTime() - 864e5), toUtc: t, note: 'vs the day before' };
+            var f2 = new Date(t); f2.setDate(f2.getDate() - 1);
+            return { fromUtc: f2, toUtc: t, note: 'vs the day before' };
         }
-        return { fromUtc: new Date(now.getTime() - 7 * 864e5), toUtc: now, note: 'vs the previous 7 days' };
+        var f7 = new Date(now); f7.setDate(f7.getDate() - 7);
+        return { fromUtc: f7, toUtc: now, note: 'vs the previous 7 days' };
     }
 
     function customWindow() {
@@ -93,26 +104,38 @@
         sites: { icon: '🏢', title: 'SITES', path: 'sites', render: renderSites },
         pcars: { icon: '🚔', title: 'PATROL CARS', path: 'pcars', render: renderPcars },
         wands: { icon: '📟', title: 'SMART WANDS', path: 'wands', render: renderWands },
-        week: { icon: '📅', title: 'WEEK · PATROL FQ', path: 'weekly', render: renderWeekly, window: weekWindow }
+        week: {
+            icon: '📅', title: 'WEEK · PATROL FQ', path: 'weekly', render: renderWeekly,
+            window: weekWindow,
+            /* Local-day bucketing: the offset is measured AT THE WINDOW START, so a DST
+               change inside the week shifts at most the transition day. */
+            extraQs: function (w) { return '&tzOffsetMinutes=' + (-w.fromUtc.getTimezoneOffset()); }
+        }
     };
     Object.keys(SECTIONS).forEach(function (k) {
         SECTIONS[k].key = k; SECTIONS[k].stamp = -1; SECTIONS[k].seq = 0;
     });
 
-    function openSet() {
+    /* Section open/closed state lives in memory first — localStorage is only the
+       persistence layer. In private browsing setItem throws, and state that lives
+       ONLY there would make an opened section impossible to collapse. */
+    var secOpenState = (function () {
         try { return JSON.parse(localStorage.getItem('anaSecOpen') || '{}'); } catch (e) { return {}; }
-    }
+    })();
+    function openSet() { return secOpenState; }
     function saveOpen(set) {
+        secOpenState = set;
         try { localStorage.setItem('anaSecOpen', JSON.stringify(set)); } catch (e) { /* private mode */ }
     }
     function isSecOpen(key) { return !!openSet()[key]; }
 
     function sectionShell(sec) {
         return '<div class="ana-sec" id="anaSec_' + sec.key + '">' +
-                 '<button class="ana-sec-h" data-ana-sec="' + sec.key + '" aria-expanded="' + isSecOpen(sec.key) + '">' +
+                 '<button class="ana-sec-h' + (isSecOpen(sec.key) ? ' open' : '') + '" data-ana-sec="' + sec.key +
+                   '" aria-expanded="' + isSecOpen(sec.key) + '">' +
                    '<span class="i">' + sec.icon + '</span><span class="t">' + sec.title + '</span>' +
                    '<span class="n" id="anaSecN_' + sec.key + '"></span>' +
-                   '<span class="chev">' + (isSecOpen(sec.key) ? '▴' : '▾') + '</span>' +
+                   '<span class="chev">▾</span>' +
                  '</button>' +
                  '<div class="ana-sec-b" id="anaSecB_' + sec.key + '"' + (isSecOpen(sec.key) ? '' : ' style="display:none"') + '></div>' +
                '</div>';
@@ -127,7 +150,7 @@
         var body = document.getElementById('anaSecB_' + key);
         if (!head || !body) return;
         head.setAttribute('aria-expanded', String(!!set[key]));
-        head.querySelector('.chev').textContent = set[key] ? '▴' : '▾';
+        head.classList.toggle('open', !!set[key]);
         body.style.display = set[key] ? '' : 'none';
         if (set[key]) loadSection(sec);
     }
@@ -139,27 +162,30 @@
         var w = sec.window ? sec.window() : currentWindow();
         if (!w) return;
         var mySeq = ++sec.seq;
+        /* Capture the stamp NOW: certifying a response with the stamp read after the
+           await would let a stale fetch pass off old-window data as current. */
+        var myStamp = winStamp;
         body.innerHTML = '<div class="ana-sec-load">loading…</div>';
         var url = '/api/analytics/' + sec.path + '?' + qs(w) +
-            (sec.path === 'weekly' ? '&tzOffsetMinutes=' + (-new Date().getTimezoneOffset()) : '');
+            (sec.extraQs ? sec.extraQs(w) : '');
         try {
             var res = await fetch(url, { credentials: 'same-origin' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             var data = await res.json();
-            if (mySeq !== sec.seq || !isOpen) return;
-            sec.stamp = winStamp;
+            if (mySeq !== sec.seq || !isOpen || myStamp !== winStamp) return;
+            sec.stamp = myStamp;
             sec.data = data;                 // drill-down headers reuse the card's numbers
             sec.render(body, data, w);
         } catch (e) {
-            if (mySeq !== sec.seq || !isOpen) return;
+            if (mySeq !== sec.seq || !isOpen || myStamp !== winStamp) return;
             sec.stamp = -1;
             body.innerHTML = '<div class="ana-sec-load">unavailable — <button class="ana-linkbtn" data-ana-retry-sec="' + sec.key + '">retry</button></div>';
         }
     }
 
-    function reloadOpenSections() {
+    function reloadOpenSections(force) {
         Object.keys(SECTIONS).forEach(function (k) {
-            if (isSecOpen(k)) loadSection(SECTIONS[k]);
+            if (isSecOpen(k)) loadSection(SECTIONS[k], force);
         });
     }
 
@@ -173,11 +199,12 @@
     function barRows(items) {
         var max = 1;
         items.forEach(function (it) { if (it.value > max) max = it.value; });
-        return items.map(function (it) {
+        return items.map(function (it, i) {
             return '<div class="ana-row" data-tip="' + esc(it.tip) + '"' +
                      (it.drill ? ' data-ana-drill="' + it.drill + '" role="button" tabindex="0"' : '') + '>' +
                      '<span class="t">' + esc(it.label) + '</span>' +
-                     '<span class="bar"><i style="width:' + Math.max(3, Math.round(it.value / max * 100)) + '%"></i></span>' +
+                     '<span class="bar"><i style="width:' + Math.max(3, Math.round(it.value / max * 100)) +
+                       '%;animation-delay:' + (i * 45) + 'ms"></i></span>' +
                      '<span class="v">' + esc(it.valueText != null ? it.valueText : it.value) + '</span>' +
                      '<span class="chev">' + (it.drill ? '›' : '') + '</span>' +
                    '</div>';
@@ -248,10 +275,15 @@
             (cars.length > 8 ? '<div class="ana-more">+ ' + (cars.length - 8) + ' more</div>' : '');
     }
 
-    function wandState(perDay, avg) {
+    /* Judged against what the baseline EXPECTS for the elapsed part of the window —
+       a 10/day wand with 3 scans by 08:00 is on pace, not "falling", and at 00:30
+       nothing is "silent" yet. Verdicts need at least one expected scan; "falling"
+       needs two, so a slow morning never leads the worst-first list falsely. */
+    function wandState(scans, avg, elapsedDays) {
         if (avg === 0) return { cls: 'ok', txt: '✓ new' };
-        if (perDay === 0) return { cls: 'crit', txt: '✕ silent' };
-        if (perDay < avg * 0.5) return { cls: 'warn', txt: '⚠ falling' };
+        var expected = avg * elapsedDays;
+        if (scans === 0 && expected >= 1) return { cls: 'crit', txt: '✕ silent' };
+        if (expected >= 2 && scans < expected * 0.5) return { cls: 'warn', txt: '⚠ falling' };
         return { cls: 'ok', txt: '✓ steady' };
     }
 
@@ -260,10 +292,10 @@
         setSecCount('wands', wands.length ? '· ' + wands.length : '');
         if (!wands.length) { body.innerHTML = '<div class="ana-sec-load">no wand scans in this window or the 7 days before it</div>'; return; }
         var days = windowDays(w);
+        var elapsedDays = Math.max(0.02, (w.toUtc - w.fromUtc) / 864e5);
         var rows = wands.slice(0, 10).map(function (x) {
-            var perDay = x.scans / days;
-            var st = wandState(perDay, x.prevDailyAvg);
-            var rate = days > 1 ? Math.round(perDay) + '/d' : String(x.scans);
+            var st = wandState(x.scans, x.prevDailyAvg, elapsedDays);
+            var rate = days > 1 ? Math.round(x.scans / days) + '/d' : String(x.scans);
             return '<div class="ana-wrow" role="button" tabindex="0" data-ana-drill="wand:' + x.wandId + '" data-tip="' + esc(x.name + (x.siteName ? ' @ ' + x.siteName : '') +
                        ' — ' + x.scans + ' scans in window · 7-day avg ' + x.prevDailyAvg + '/day · last scan ' + dayHm(x.lastScanUtc)) + '">' +
                      '<span class="t">' + esc(x.name) + (x.siteName ? '<span class="s">' + esc(x.siteName) + '</span>' : '') + '</span>' +
@@ -328,11 +360,14 @@
             var label = pulse.bucketHours === 24
                 ? utcDate(x.utc).toLocaleDateString([], { weekday: 'short' })
                 : hm(x.utc);
+            /* The newest bucket wears the accent — "this is now". Bars rise in a wave. */
+            var fill = i === b.length - 1 ? '#a78bfa' : 'url(#anaPulseG)';
             bars += '<rect x="' + (i * bw + 1).toFixed(1) + '" y="' + (top + plotH - h) +
                 '" width="' + Math.max(1, bw - 2).toFixed(1) + '" height="' + Math.max(1, h) +
-                '" rx="1.5" fill="#3987e5" data-tip="' + esc(label + ' — ' + x.current + ' events · prev ' + x.previous) + '"></rect>';
+                '" rx="1.5" fill="' + fill + '" style="animation-delay:' + (i * 14) + 'ms" data-tip="' +
+                esc(label + ' — ' + x.current + ' events · prev ' + x.previous) + '"></rect>';
             var py = top + plotH - Math.round(x.previous / max * plotH);
-            dots += '<circle cx="' + (i * bw + bw / 2).toFixed(1) + '" cy="' + py + '" r="1.6" fill="#9aa0ad"></circle>';
+            dots += '<circle cx="' + (i * bw + bw / 2).toFixed(1) + '" cy="' + py + '" r="1.6" fill="#98a0af"></circle>';
         });
         var first = pulse.bucketHours === 24
             ? utcDate(b[0].utc).toLocaleDateString([], { day: '2-digit', month: 'short' }) : hm(b[0].utc);
@@ -342,7 +377,10 @@
             '<div class="ana-pulse-cap">ACTIVITY · scans + arrivals + sign-ins <span class="dim">· dots = previous</span></div>' +
             '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Activity per ' +
                 (pulse.bucketHours === 24 ? 'day' : 'hour') + ', current window as bars, previous as dots.">' +
-              '<line x1="0" y1="' + (top + plotH) + '" x2="' + W + '" y2="' + (top + plotH) + '" stroke="#2a2d37"></line>' +
+              '<defs><linearGradient id="anaPulseG" x1="0" y1="1" x2="0" y2="0">' +
+                '<stop offset="0" stop-color="#2a6fd0"></stop><stop offset="1" stop-color="#8b5cf6"></stop>' +
+              '</linearGradient></defs>' +
+              '<line x1="0" y1="' + (top + plotH) + '" x2="' + W + '" y2="' + (top + plotH) + '" stroke="#262b36"></line>' +
               bars + dots +
               '<text x="1" y="' + (H - 3) + '" font-size="9" fill="#9aa0ad">' + esc(first) + '</text>' +
               '<text x="' + (W - 1) + '" y="' + (H - 3) + '" font-size="9" fill="#9aa0ad" text-anchor="end">' + esc(last) + '</text>' +
@@ -362,19 +400,25 @@
         }
         return el;
     }
+    /* One measured layout per hovered element, not per mousemove — this drawer sits
+       over a live map, and a forced reflow 60×/second would jank its markers. */
+    var lastTipFor = null, tipW = 0, tipH = 0;
     function wireTips(root) {
         root.addEventListener('mousemove', function (ev) {
             var t = ev.target.closest && ev.target.closest('[data-tip]');
             var tip = tipEl();
-            if (!t) { tip.style.display = 'none'; return; }
-            tip.textContent = t.getAttribute('data-tip');
-            tip.style.display = 'block';
-            var x = Math.min(ev.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
-            var y = Math.max(8, ev.clientY - tip.offsetHeight - 10);
-            tip.style.left = x + 'px';
-            tip.style.top = y + 'px';
+            if (!t) { tip.style.display = 'none'; lastTipFor = null; return; }
+            if (t !== lastTipFor) {
+                lastTipFor = t;
+                tip.textContent = t.getAttribute('data-tip');
+                tip.style.display = 'block';
+                tipW = tip.offsetWidth;
+                tipH = tip.offsetHeight;
+            }
+            tip.style.left = Math.min(ev.clientX + 12, window.innerWidth - tipW - 8) + 'px';
+            tip.style.top = Math.max(8, ev.clientY - tipH - 10) + 'px';
         });
-        root.addEventListener('mouseleave', function () { tipEl().style.display = 'none'; });
+        root.addEventListener('mouseleave', function () { tipEl().style.display = 'none'; lastTipFor = null; });
     }
 
     /* ================= drawer shell ================= */
@@ -387,7 +431,7 @@
         el.className = 'ana-drawer';
         el.setAttribute('tabindex', '-1');
         el.setAttribute('aria-label', 'Insights');
-        var today = new Date().toISOString().slice(0, 10);
+        var today = localDateStr(new Date());
         el.innerHTML =
             '<div class="ana-head">' +
               '<b>📊 INSIGHTS</b>' +
@@ -415,6 +459,7 @@
               '<div id="anaDrill" style="display:none"></div>' +
             '</div>' +
             '<div class="ana-foot">' +
+              '<span class="ana-live" title="Live — refreshes every 60 s while open"></span>' +
               '<span class="ana-note" id="anaNote"></span>' +
               '<span class="ana-upd" id="anaUpd"></span>' +
               '<button id="anaRefresh" title="Refresh now" aria-label="Refresh">⟳</button>' +
@@ -444,12 +489,15 @@
         if (ev.target.closest('[data-ana-close]')) { closeDrawer(); return; }
         var chip = ev.target.closest('[data-ana-win]');
         if (chip) {
-            winKind = chip.getAttribute('data-ana-win');
+            var kind = chip.getAttribute('data-ana-win');
             document.querySelectorAll('#anaDrawer [data-ana-win]').forEach(function (b) {
                 b.classList.toggle('on', b === chip);
             });
-            document.getElementById('anaCustom').style.display = winKind === 'custom' ? '' : 'none';
-            if (winKind !== 'custom') changeWindow();
+            document.getElementById('anaCustom').style.display = kind === 'custom' ? '' : 'none';
+            /* Custom only ARMS the inputs — the active window must not change until
+               Load, or the 60 s timer would silently swap the KPIs to a window the
+               operator never chose. */
+            if (kind !== 'custom') { winKind = kind; changeWindow(); }
             return;
         }
         var sec = ev.target.closest('[data-ana-sec]');
@@ -470,8 +518,8 @@
             if (pr.getAttribute('data-ana-print') === 'week') printWeekly(); else printService();
             return;
         }
-        if (ev.target.id === 'anaLoad') { changeWindow(); return; }
-        if (ev.target.id === 'anaRefresh') { load(); Object.keys(SECTIONS).forEach(function (k) { if (isSecOpen(k)) loadSection(SECTIONS[k], true); }); return; }
+        if (ev.target.id === 'anaLoad') { winKind = 'custom'; changeWindow(); return; }
+        if (ev.target.id === 'anaRefresh') { load(); reloadOpenSections(true); return; }
         if (ev.target.id === 'anaRetry') load();
     }
 
@@ -509,15 +557,37 @@
     }
 
     function tile(glyph, value, deltaMarkup, label) {
+        /* Pure numbers count up on render — the drawer's open sequence. */
+        var count = typeof value === 'number' && isFinite(value) && value > 0
+            ? ' data-count="' + value + '"' : '';
         return '<div class="ana-tile">' +
                  '<span class="g">' + glyph + '</span>' +
-                 '<span class="v">' + esc(value) + '</span>' +
+                 '<span class="v"' + count + '>' + esc(value) + '</span>' +
                  deltaMarkup +
                  '<span class="k">' + esc(label) + '</span>' +
                '</div>';
     }
 
-    function renderKpis(data, note) {
+    function runCountUps(root) {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        root.querySelectorAll('[data-count]').forEach(function (el) {
+            var target = Number(el.getAttribute('data-count'));
+            if (!isFinite(target) || target <= 0) return;
+            var start = performance.now(), dur = 550;
+            function step(now) {
+                var p = Math.min(1, (now - start) / dur);
+                el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+                if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        });
+    }
+
+    function renderKpis(data, note, quiet) {
+        /* Quiet = the 60 s background refresh: no skeleton, no entrance choreography,
+           no count-ups — a wall monitor must not flash every minute. */
+        var main = document.getElementById('anaMain');
+        if (main) main.classList.toggle('ana-instant', !!quiet);
         var c = data.current, p = data.previous;
         document.getElementById('anaBody').innerHTML = '<div class="ana-grid">' +
             tile('👮', c.guardsActive, deltaHtml(c.guardsActive, p.guardsActive), 'Guards active') +
@@ -527,23 +597,24 @@
             tile('✓', c.checkIns, deltaHtml(c.checkIns, p.checkIns), 'Check-ins · NFC') +
             tile('⏱', fmtHours(c.activeMinutes), deltaHtml(c.activeMinutes, p.activeMinutes), 'Hours on duty') +
             '</div>';
+        if (!quiet) runCountUps(document.getElementById('anaBody'));
         renderPulse(data.pulse);
         document.getElementById('anaNote').textContent = note;
         document.getElementById('anaUpd').textContent =
             'updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    async function load() {
+    async function load(quiet) {
         var w = currentWindow();
         if (!w) return;
         var mySeq = ++seq;
-        renderLoading();
+        if (!quiet) renderLoading();
         try {
             var res = await fetch('/api/analytics/summary?' + qs(w), { credentials: 'same-origin' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             var body = await res.json();
             if (mySeq !== seq || !isOpen) return;
-            renderKpis(body, w.note);
+            renderKpis(body, w.note, quiet);
         } catch (e) {
             if (mySeq !== seq || !isOpen) return;
             renderError();
@@ -555,24 +626,47 @@
        merged timeline, the site presence ribbon, the wand's 14-day rhythm — and ends
        with ▶ Open Replay, pre-filled. Analytics finds it; Replay proves it. */
 
-    function pad2(n) { return String(n).padStart(2, '0'); }
+    /* One declaration per drill kind — where its cache lives, which API parameter
+       names it, what icon it wears. Adding a kind is one entry here, not four maps. */
+    var DRILLS = {
+        guard: { sec: 'guards', param: 'guardId', icon: '👮' },
+        site: { sec: 'sites', param: 'siteId', icon: '🏢' },
+        pcar: { sec: 'pcars', param: 'unitId', icon: '🚔' },
+        wand: { sec: 'wands', param: 'wandId', icon: '📟' }
+    };
 
     function drillRow(kind, id) {
-        var d = SECTIONS[{ guard: 'guards', site: 'sites', pcar: 'pcars', wand: 'wands' }[kind]].data;
-        if (!d) return null;
-        if (kind === 'guard') return (d.guards || []).find(function (x) { return x.guardId === id; });
-        if (kind === 'site') return (d.sites || []).find(function (x) { return x.siteId === id; })
-            || (d.quiet || []).find(function (x) { return x.siteId === id; });
-        if (kind === 'pcar') return (d.cars || []).find(function (x) { return x.unitId === id; });
-        return (d.wands || []).find(function (x) { return x.wandId === id; });
+        var d = SECTIONS[DRILLS[kind].sec].data;
+        if (kind === 'guard') return d && (d.guards || []).find(function (x) { return x.guardId === id; });
+        if (kind === 'pcar') return d && (d.cars || []).find(function (x) { return x.unitId === id; });
+        if (kind === 'wand') return d && (d.wands || []).find(function (x) { return x.wandId === id; });
+        /* A site drill can be entered from the sites card, its quiet list, OR the week
+           grid — whichever cache knows the site names it. */
+        var row = d && ((d.sites || []).find(function (x) { return x.siteId === id; })
+            || (d.quiet || []).find(function (x) { return x.siteId === id; }));
+        if (row) return row;
+        var wk = SECTIONS.week.data;
+        return wk && (wk.sites || []).find(function (x) { return x.siteId === id; });
+    }
+
+    /* The cached card row may belong to a previous window — its numbers must not sit
+       beside a fresh timeline. Only a cache stamped for the CURRENT window is used. */
+    function freshDrillRow() {
+        if (drill.kind === 'site') {
+            if (SECTIONS.sites.stamp === winStamp || SECTIONS.week.stamp === winStamp)
+                return drillRow('site', drill.id);
+            return null;
+        }
+        return SECTIONS[DRILLS[drill.kind].sec].stamp === winStamp
+            ? drillRow(drill.kind, drill.id) : null;
     }
 
     function drillTitle() {
         var r = drillRow(drill.kind, drill.id) || {};
-        if (drill.kind === 'guard') return { icon: '👮', name: r.name || ('Guard ' + drill.id) };
-        if (drill.kind === 'site') return { icon: '🏢', name: r.name || ('Site ' + drill.id) };
-        if (drill.kind === 'pcar') return { icon: '🚔', name: r.label || ('PC-' + drill.id), sub: r.guardName };
-        return { icon: '📟', name: r.name || ('Wand ' + drill.id), sub: r.siteName };
+        if (drill.kind === 'guard') return { icon: DRILLS.guard.icon, name: r.name || ('Guard ' + drill.id) };
+        if (drill.kind === 'site') return { icon: DRILLS.site.icon, name: r.name || ('Site ' + drill.id) };
+        if (drill.kind === 'pcar') return { icon: DRILLS.pcar.icon, name: r.label || ('PC-' + drill.id), sub: r.guardName };
+        return { icon: DRILLS.wand.icon, name: r.name || ('Wand ' + drill.id), sub: r.siteName };
     }
 
     function openDrill(kind, id) {
@@ -590,12 +684,13 @@
         if (main) main.style.display = '';
     }
 
-    /* Wands read a fixed 14 days — the rhythm the plan asks for; everything else
-       follows the drawer's window. */
+    /* Wands read a fixed trend window — the rhythm the plan asks for; everything else
+       follows the drawer's window. The server's 15-day gate is sized against this. */
+    var WAND_TREND_DAYS = 14;
     function drillWindow() {
         if (drill.kind === 'wand') {
             var now = new Date();
-            var f = new Date(now); f.setHours(0, 0, 0, 0); f.setDate(f.getDate() - 13);
+            var f = new Date(now); f.setHours(0, 0, 0, 0); f.setDate(f.getDate() - (WAND_TREND_DAYS - 1));
             return { fromUtc: f, toUtc: now };
         }
         return currentWindow();
@@ -609,7 +704,7 @@
         var mySeq = ++drillSeq;
         var t = drillTitle();
         box.innerHTML = drillHead(t) + '<div class="ana-sec-load">loading…</div>';
-        var param = { guard: 'guardId', site: 'siteId', pcar: 'unitId', wand: 'wandId' }[drill.kind];
+        var param = DRILLS[drill.kind].param;
         try {
             var res = await fetch('/api/analytics/timeline?' + qs(w) + '&' + param + '=' + drill.id,
                 { credentials: 'same-origin' });
@@ -635,7 +730,7 @@
     }
 
     function drillChips(events) {
-        var r = drillRow(drill.kind, drill.id) || {};
+        var r = freshDrillRow() || {};
         var scans = 0, arrivals = 0, legs = 0, km = 0;
         events.forEach(function (e) {
             if (e.type === 'scan') scans++;
@@ -743,7 +838,7 @@
     }
 
     /* The wand's rhythm: scans per day across 14 days; hover says who carried it. */
-    function wandDayBars(events) {
+    function wandDayBars(events, truncated) {
         var days = {};
         events.forEach(function (e) {
             if (e.type !== 'scan') return;
@@ -754,14 +849,14 @@
             if (e.who) slot.who[e.who.split(' ')[0]] = 1;
         });
         var list = [];
-        for (var i = 13; i >= 0; i--) {
+        for (var i = WAND_TREND_DAYS - 1; i >= 0; i--) {
             var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
             var key = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
             list.push({ d: d, n: days[key] ? days[key].n : 0, who: days[key] ? Object.keys(days[key].who) : [] });
         }
         var max = 1;
         list.forEach(function (x) { if (x.n > max) max = x.n; });
-        var W = 328, H = 72, plotH = 48, bw = W / 14;
+        var W = 328, H = 72, plotH = 48, bw = W / WAND_TREND_DAYS;
         var bars = list.map(function (x, i) {
             var h = Math.round(x.n / max * plotH);
             return '<rect x="' + (i * bw + 2).toFixed(1) + '" y="' + (6 + plotH - h) + '" width="' +
@@ -770,7 +865,8 @@
                 esc(x.d.toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' }) + ' — ' + x.n +
                     ' scans' + (x.who.length ? ' · ' + x.who.join(', ') : '')) + '"></rect>';
         }).join('');
-        return '<div class="ana-sec-cap" style="margin-top:12px">SCANS PER DAY · 14 DAYS · hover for who carried it</div>' +
+        return '<div class="ana-sec-cap" style="margin-top:12px">SCANS PER DAY · ' + WAND_TREND_DAYS + ' DAYS · hover for who carried it' +
+            (truncated ? ' · ⚠ earliest days partial (event cap)' : '') + '</div>' +
             '<svg viewBox="0 0 ' + W + ' ' + H + '" class="ana-ribbon" role="img" aria-label="Scans per day for the last 14 days.">' + bars +
             '<text x="2" y="' + (H - 3) + '" font-size="9" fill="#9aa0ad">' +
                 list[0].d.toLocaleDateString([], { day: '2-digit', month: 'short' }) + '</text>' +
@@ -788,10 +884,16 @@
         if (!drill || !(window.CRM && typeof window.CRM.openReplay === 'function')) return;
         var w = currentWindow();
         var pre = {};
-        if (w && (w.toUtc - w.fromUtc) <= 26 * 3600 * 1000) { pre.fromUtc = w.fromUtc; pre.toUtc = w.toUtc; }
-        /* Unit keys must match the mobile app / TrackingUnitKey: guards live at
-           1,000,000 + guardId; position-keyed cars are already unit ids. */
-        if (drill.kind === 'guard') { pre.type = 'guard'; pre.unitId = 1000000 + drill.id; }
+        /* The window is handed over unconditionally — the replay selector owns its own
+           cap and falls back to Today itself. One owner per policy. */
+        if (w) { pre.fromUtc = w.fromUtc; pre.toUtc = w.toUtc; }
+        if (drill.kind === 'guard') {
+            pre.type = 'guard';
+            /* The guards payload carries the unit key; the constant fallback mirrors
+               TrackingUnitKey.GuardOffset for a stale cache and must match the server. */
+            var row = drillRow('guard', drill.id);
+            pre.unitId = row && row.unitId ? row.unitId : 1000000 + drill.id;
+        }
         else if (drill.kind === 'pcar') { pre.type = 'car'; pre.unitId = drill.id; }
         else if (drill.kind === 'site') { pre.type = 'site'; pre.siteId = drill.id; }
         closeDrawer();
@@ -800,12 +902,14 @@
 
     /* Quiet stretches, declared: ≥2 h with no recorded event between the window's
        edges. "No recorded activity 02:00–05:00" is a fact, and saying it is what
-       makes the report credible. */
-    function gapsOf(events, w) {
+       makes the report credible — which is exactly why a TRUNCATED list must not
+       declare a gap before its first retained event: the events were there, the cap
+       dropped them, and a false accusation is worse than none. */
+    function gapsOf(events, w, truncated) {
         var end = Math.min(Date.now(), w.toUtc.getTime());
-        var marks = [w.fromUtc.getTime()].concat(
-            events.map(function (e) { return utcDate(e.utc).getTime(); }).sort(function (a, b) { return a - b; }),
-            [end]);
+        var times = events.map(function (e) { return utcDate(e.utc).getTime(); })
+            .sort(function (a, b) { return a - b; });
+        var marks = (truncated ? [] : [w.fromUtc.getTime()]).concat(times, [end]);
         var gaps = [];
         for (var i = 1; i < marks.length; i++)
             if (marks[i] - marks[i - 1] >= 2 * 3600 * 1000) gaps.push({ from: marks[i - 1], to: marks[i] });
@@ -825,14 +929,15 @@
         var html = drillHead(t) + drillChips(events);
         if (drill.kind === 'site' && !multiDay) {
             html += ribbonSvg(events, w);
-            var gaps = gapsOf(events, w);
+            var gaps = gapsOf(events, w, data.truncated);
             if (gaps.length)
                 html += '<div class="ana-gaps">' + gaps.slice(0, 4).map(function (g) {
                     return '<div>' + esc(gapLine(g)) + '</div>';
                 }).join('') + '</div>';
         }
-        if (drill.kind === 'wand') html += wandDayBars(events);
+        if (drill.kind === 'wand') html += wandDayBars(events, data.truncated);
         html += '<div class="ana-sec-cap" style="margin-top:12px">TIMELINE' +
+            (drill.kind === 'wand' && events.length > 40 ? ' · most recent 40' : '') +
             (data.truncated ? ' · oldest not shown (capped at 400)' : '') + '</div>';
         html += evRows(drill.kind === 'wand' ? events.slice(-40) : events, drill.kind === 'wand' ? true : multiDay);
         html += replayBtn();
@@ -847,7 +952,10 @@
 
     function openPrint(title, bodyHtml) {
         var win = window.open('', '_blank');
-        if (!win) return;
+        if (!win) {
+            window.alert('The browser blocked the report window. Allow pop-ups for this site and try again.');
+            return;
+        }
         win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
             '<style>' +
             'body{font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#111;margin:28px;}' +
@@ -877,7 +985,7 @@
         var period = w.fromUtc.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) +
             ' ' + hm(w.fromUtc) + ' → ' + (multiDay
                 ? w.toUtc.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' : '') + hm(w.toUtc);
-        var gaps = multiDay ? [] : gapsOf(events, w);
+        var gaps = multiDay ? [] : gapsOf(events, w, drillLast.data.truncated);
         var rows = events.map(function (e) {
             var m = EV[e.type] || { f: function () { return e.type; } };
             return '<tr><td>' + esc(multiDay ? dayHm(e.utc) : hm(e.utc)) + '</td><td>' + esc(e.who || '') +
@@ -934,13 +1042,15 @@
         var el = drawerEl();
         isOpen = true;
         el.classList.add('open');
+        var btn = document.getElementById('anaBtn');
+        if (btn) btn.classList.add('on');
         el.focus({ preventScroll: true });
         winStamp++;                     // windows are relative to "now" — reopen means refresh
         load();
         reloadOpenSections();
         if (drill) loadDrill();
         clearInterval(timer);
-        timer = setInterval(function () { if (isOpen) load(); }, REFRESH_MS);
+        timer = setInterval(function () { if (isOpen) load(true); }, REFRESH_MS);
     }
 
     function closeDrawer() {
@@ -949,6 +1059,8 @@
         timer = null;
         var el = document.getElementById('anaDrawer');
         if (el) el.classList.remove('open');
+        var btn = document.getElementById('anaBtn');
+        if (btn) btn.classList.remove('on');
         tipEl().style.display = 'none';
     }
 

@@ -200,8 +200,11 @@ namespace CityWatch.Tracking.Tests
         }
 
         [TestMethod]
-        public async Task Summary_WritesOneFleetWideAuditRow()
+        public async Task Summary_WritesOneFleetWideAuditRow_DedupedAcrossTheRefreshLoop()
         {
+            await SummaryAsync(Midnight, Now);
+            /* The drawer refreshes every minute; the audit trail records the operator's
+               look, not every tick — repeat reads inside ten minutes add no row. */
             await SummaryAsync(Midnight, Now);
 
             var audit = _db.TrackingAccessAudits.Single();
