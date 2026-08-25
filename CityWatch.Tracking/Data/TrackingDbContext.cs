@@ -30,6 +30,7 @@ namespace CityWatch.Tracking.Data
         public DbSet<PlatformSiteKpi> PlatformSiteKpis { get; set; } = null!;
         public DbSet<PlatformDailyWandFq> PlatformDailyWandFqs { get; set; } = null!;
         public DbSet<PlatformWandRound> PlatformWandRounds { get; set; } = null!;
+        public DbSet<PlatformPosition> PlatformPositions { get; set; } = null!;
         public DbSet<PlatformClientSiteDuress> PlatformClientSiteDuress { get; set; } = null!;
         public DbSet<TrackSegment> TrackSegments { get; set; } = null!;
         public DbSet<TrackingSession> TrackingSessions { get; set; } = null!;

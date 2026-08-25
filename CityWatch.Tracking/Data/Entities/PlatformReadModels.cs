@@ -112,6 +112,22 @@ namespace CityWatch.Tracking.Data.Entities
         public System.DateTime HitUtcDateTime { get; set; }
     }
 
+    /// <summary>IncidentReportPositions, read-only. THE CAR catalogue: a patrol-car
+    /// Position is a tracked unit's identity (unit key = Id + 2,000,000). Read at
+    /// session/start so the CALLSIGN can name the car authoritatively — phones
+    /// auto-restore a stale saved Position, and six Romeo cars all keyed to the one
+    /// old shared position collapsed to a single map marker (25 Aug 2026).</summary>
+    [Table("IncidentReportPositions")]
+    public class PlatformPosition
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public string? Name { get; set; }
+
+        public bool IsPatrolCar { get; set; }
+    }
+
     /// <summary>ClientSiteKpiSettings, read-only (analytics A4). MinPatrolFreq is the
     /// AGREED patrol frequency — the number the weekly grid holds each day against.
     /// The same field the map's FQ badge reads.</summary>
