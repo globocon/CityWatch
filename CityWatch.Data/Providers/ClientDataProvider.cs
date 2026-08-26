@@ -75,6 +75,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLogBook> GetClientSiteLogBooksForDailyLogBookGeneration(DateTime LogDate);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
+        List<ClientSiteLogBook> GetClientSiteLogBooksWithClientType(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, LogBookType type, DateTime date);
         int SaveClientSiteLogBook(ClientSiteLogBook logBook);
         void MarkClientSiteLogBookAsUploaded(int logBookId, string fileName);
@@ -1016,6 +1017,25 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteLogBooks
                 .Where(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date >= fromDate && z.Date <= toDate)
+                .ToList();
+        }
+
+        /* Same rows as the overload above, with ClientSite and ClientType loaded.
+
+           The overload above has no Include, so ClientSite and ClientType come back null
+           unless something else in the same DbContext happened to load them first. The
+           Fusion report relied on that accident: ClientSite was fixed up by an earlier
+           query in the request, ClientType never was, and reading ClientType.Id threw a
+           NullReferenceException that left the Download Zip empty with no error.
+
+           Kept as a separate method on purpose - the un-Included overload has 30 callers
+           and none of them should start paying for two extra joins. */
+        public List<ClientSiteLogBook> GetClientSiteLogBooksWithClientType(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date >= fromDate && z.Date <= toDate)
+                .Include(z => z.ClientSite)
+                .Include(z => z.ClientSite.ClientType)
                 .ToList();
         }
 

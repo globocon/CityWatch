@@ -353,22 +353,29 @@ namespace CityWatch.Data.Providers
             toDate = toDate.AddDays(1); // Include the entire 'toDate' day
 
             // Step 1: Get UTC offsets per client site
-            var utcOffsets = _dbContext.ClientSiteKpiSettings
+            /* Looked up per site rather than used as the loop itself. While this drove the
+               foreach, a site with no ClientSiteKpiSettings row produced no iteration at all,
+               so its hit logs were never queried and the Wand Strikes report came back empty
+               with no error - VISY-Yatala [VB] had 975 strikes hidden this way.
+               Sites that do have a settings row behave exactly as before: the "+10:00"
+               fallback below is what the old "?? +10:00" already yielded for a null UTC. */
+            var siteUtcById = _dbContext.ClientSiteKpiSettings
                 .Where(x => clientSiteIds.Contains(x.ClientSiteId))
-                .Select(x => new
-                {
-                    x.ClientSiteId,
-                    _siteUTC = x.UTC.Replace("+", "") ?? "+10:00" // Default to +10:00 if null
-                })
-                .ToList();
+                .Select(x => new { x.ClientSiteId, x.UTC })
+                .ToList()
+                .GroupBy(x => x.ClientSiteId)                  // GroupBy rather than ToDictionary:
+                .ToDictionary(g => g.Key, g => g.First().UTC); // a duplicated site must not throw
 
             // Prepare a list to accumulate matching logs
             var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
 
-            foreach (var site in utcOffsets)
+            foreach (var clientSiteId in clientSiteIds.Distinct())
             {
                 // Step 2: Parse UTC offset like "+05:30" or "-04:00"
-                if (!TimeSpan.TryParse(site._siteUTC.Replace("+", ""), out TimeSpan offset))
+                var siteUtc = siteUtcById.TryGetValue(clientSiteId, out var utc) && !string.IsNullOrWhiteSpace(utc)
+                    ? utc
+                    : "+10:00"; // no settings row for this site, or the row has no UTC set
+                if (!TimeSpan.TryParse(siteUtc.Replace("+", ""), out TimeSpan offset))
                 {
                     // Default offset if parsing fails (you can customize this)
                     offset = TimeSpan.Zero;
@@ -381,8 +388,8 @@ namespace CityWatch.Data.Providers
                 // Step 4: Get logs for this client site in the adjusted range
                 var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
                     .Where(x =>
-                        (x.LoggedInClientSiteId == site.ClientSiteId ||
-                         (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == site.ClientSiteId)) &&
+                        (x.LoggedInClientSiteId == clientSiteId ||
+                         (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == clientSiteId)) &&
                         x.HitUtcDateTime >= fromUtc &&
                         x.HitUtcDateTime <= toUtc)
                     .AsNoTracking()
