@@ -7196,7 +7196,16 @@ namespace CityWatch.Data.Providers
                             var tmplog = GuardLogs.Where(x => x.Id == item.LBId).FirstOrDefault();
                             item.IrEntryType = tmplog?.IrEntryType ?? null;
                             item.gpsCoordinates = tmplog?.GpsCoordinates ?? string.Empty;
-                            if (tmplog.IsOfflineRecord && item.EventDateTimeLocal.HasValue)
+                            /* tmplog can be null, as the two lines above already allow for.
+                               GuardLogs is filtered on the logbook's Date while these rows are
+                               filtered on EventDateTime, so a scan just after midnight belongs
+                               to the previous day's logbook and is not in GuardLogs at all -
+                               3 rows on site 140 at 00:47 on 01-Aug did exactly that and threw
+                               a NullReferenceException here. IsOfflineRecord is a non-nullable
+                               bool, so "?. == true" is identical whenever tmplog exists; when it
+                               does not, the else branch below reads only item fields and the row
+                               still renders. */
+                            if (tmplog?.IsOfflineRecord == true && item.EventDateTimeLocal.HasValue)
                             {
                                 item.EventDateTime = item.EventDateTimeLocal.Value;
                             }
