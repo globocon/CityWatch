@@ -150,8 +150,11 @@ namespace CityWatch.Web.Services
             var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}_{logFromDate:yyyyMMdd}_{logToDate:yyyyMMdd}_{new Random().Next(100, 999)}.zip";
             ZipFile.CreateFromDirectory(zipFolderPath, Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
 
-            if (!Directory.Exists(zipFolderPath))
-                Directory.Delete(zipFolderPath);
+            /* Was "if (!Directory.Exists(...))", which only ever deleted a folder that was
+               already gone - so every download since has left its staging folder behind in
+               Pdf/FromDropbox. The zip is written above, so the source is safe to remove. */
+            if (Directory.Exists(zipFolderPath))
+                Directory.Delete(zipFolderPath, true);
 
             return zipFileName;
         }
@@ -287,18 +290,41 @@ namespace CityWatch.Web.Services
             //notificationCreatedTime
 
             logBooksToCreate = logBooksToCreate.OrderBy(z => z.EventDateTime).ToList();
-            var distinctDatetoCreate = logBooksToCreate.Select(m => m.EventDateTime.Date).Distinct();
+            var distinctDatetoCreate = logBooksToCreate.Select(m => m.EventDateTime.Date).Distinct().ToList();
+
+            var reportsAdded = 0;
+            Exception firstFailure = null;
+
             foreach (var eachdate in distinctDatetoCreate)
             {
                 var fusionLogToCreate= logBooksToCreate.Where(x=>x.EventDateTime.Date== eachdate).ToList();
 
-                var fileName = GetFusionLogFileName(fusionLogToCreate);
-                if (!string.IsNullOrEmpty(fileName))
+                try
                 {
-                    var reportFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
-                    File.Copy(reportFilePath, Path.Combine(zipFolderPath, fileName));
-                    File.Delete(reportFilePath);
+                    var fileName = GetFusionLogFileName(fusionLogToCreate);
+                    if (!string.IsNullOrEmpty(fileName))
+                    {
+                        var reportFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+                        File.Copy(reportFilePath, Path.Combine(zipFolderPath, fileName));
+                        File.Delete(reportFilePath);
+                        reportsAdded++;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    /* One unreportable day must not cost the whole range. */
+                    firstFailure ??= ex;
+                }
+            }
+
+            /* Every day failed. Without this the caller zips an empty folder and hands the
+               user a 22 byte file with success = true, which reads as "no data for this
+               range" - the exact symptom the ClientType fix above addressed. */
+            if (reportsAdded == 0 && distinctDatetoCreate.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"No Fusion report could be generated for any of the {distinctDatetoCreate.Count} day(s) in this range.",
+                    firstFailure);
             }
         }
 

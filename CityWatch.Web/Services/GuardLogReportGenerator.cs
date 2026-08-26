@@ -1049,7 +1049,9 @@ namespace CityWatch.Web.Services
                 }
 
                 int? clientSiteId = firstLog.ClientSiteId;
-                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteId.Value, LogBookType.DailyGuardLog, firstLog.EventDateTime.Date, firstLog.EventDateTime.Date);
+                /* WithClientType: this method reads ClientSite.ClientType.Id below, and the
+                   plain overload does not Include either navigation. */
+                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooksWithClientType(clientSiteId.Value, LogBookType.DailyGuardLog, firstLog.EventDateTime.Date, firstLog.EventDateTime.Date);
 
                 if (clientSiteLogBooks == null || !clientSiteLogBooks.Any())
                 {
@@ -1108,14 +1110,25 @@ namespace CityWatch.Web.Services
 
                 return IO.Path.GetFileName(reportPdfPath);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Log exception details (ex.Message) as needed
                 if (pdfDoc != null && !pdfDoc.IsClosed())
                 {
                     pdfDoc.Close();
                 }
-                return string.Empty;
+
+                /* The half-written PDF is already on disk. The caller only deletes files it
+                   was handed a name for, so without this it stays in Pdf/Output forever. */
+                if (!string.IsNullOrEmpty(reportPdfPath) && IO.File.Exists(reportPdfPath))
+                {
+                    try { IO.File.Delete(reportPdfPath); } catch { /* best effort - never mask the real error */ }
+                }
+
+                /* Rethrow instead of returning string.Empty. Swallowing here is what turned a
+                   NullReferenceException into a 22 byte zip reported to the user as success.
+                   CreateLogBookReportsFusion catches per day, so one bad day still cannot
+                   cost the rest of the range. */
+                throw;
             }
         }
 
