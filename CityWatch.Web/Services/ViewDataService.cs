@@ -1341,8 +1341,15 @@ namespace CityWatch.Web.Services
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
 
-            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
-            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
+            /* Was: collect every CreatedLogId here and pass the array to GetKeyVehicleLogByIds.
+               With no rego filter that is 56,069 ids, which EF inlines as constants and SQL
+               Server refuses to plan (error 8623). The provider now resolves the same set with
+               a subquery, so nothing depends on the size of the id list. */
+            var kvls = _guardLogDataProvider.GetKeyVehicleLogsForVisitorProfiles(truckRego);
+            /* Id is the primary key, so there is at most one log per id - this returns exactly
+               what the SingleOrDefault below it used to, without rescanning kvls per profile
+               (57,539 profiles over 33,884 logs is ~2 billion comparisons). */
+            var kvlsById = kvls.ToDictionary(z => z.Id);
             foreach (var profile in profiles)
             {
                 //if LOGID=0-START
@@ -1355,7 +1362,7 @@ namespace CityWatch.Web.Services
                 //    //}
                 //}
                 //if LOGID=0-end
-                profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
+                profile.KeyVehicleLogProfile.KeyVehicleLog = kvlsById.TryGetValue(profile.KeyVehicleLogProfile.CreatedLogId, out var kvl) ? kvl : null;
 
                 //for checking whether the entry is  either POI,BDM OR SUPPLIER-start
                 if (profile.PersonOfInterest != null)

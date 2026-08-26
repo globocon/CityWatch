@@ -64,6 +64,7 @@ namespace CityWatch.Data.Providers
         KeyVehicleLog GetKeyVehicleLogById(int id);
         KeyVehcileLogField GetIndividualType(int PersonType);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
+        List<KeyVehicleLog> GetKeyVehicleLogsForVisitorProfiles(string truckRego);
         List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
         void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog);
@@ -1108,6 +1109,30 @@ namespace CityWatch.Data.Providers
         public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
         {
             return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive == true)
+                .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+                .ToList();
+        }
+
+        /* Same result as GetKeyVehicleLogByIds, but the CreatedLogId set is left as an
+           IQueryable so it translates to a WHERE EXISTS subquery instead of being pulled
+           into memory and re-sent as an IN list.
+
+           The Fusion tab on Admin/AuditSiteLog loads with no rego filter, which matched
+           every visitor profile row - 56,069 ids. EF Core 7 inlines Contains() over an
+           in-memory array as literal constants, producing a single 438,721 character
+           statement, and SQL Server answered with error 8623 (cannot produce a query
+           plan). Measured limit for this query shape is between 25,000 and 40,000 ids,
+           so the unfiltered load had no way to succeed and got worse as data grew.
+           As a subquery the statement is ~3,000 characters whatever the row count. */
+        public List<KeyVehicleLog> GetKeyVehicleLogsForVisitorProfiles(string truckRego)
+        {
+            var createdLogIds = _context.KeyVehicleLogVisitorPersonalDetails
+                .Where(z => string.IsNullOrEmpty(truckRego) || string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego))
+                .Select(z => z.KeyVehicleLogProfile.CreatedLogId)
+                .Where(z => z > 0);
+
+            return _context.KeyVehicleLogs.Where(z => createdLogIds.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive == true)
                 .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
                 .ToList();
