@@ -30,6 +30,7 @@ namespace CityWatch.Tracking.Tests
             nameof(PlatformClientSiteDuress), nameof(PlatformGuardAppVersion),
             nameof(PlatformWandScan),   // analytics A1: the NFC hit log, read-only
             nameof(PlatformSiteKpi), nameof(PlatformDailyWandFq), nameof(PlatformWandRound),   // analytics A4
+            nameof(PlatformWandTag),   // #153 FQ summary: the site's checkpoint-tag catalogue
             nameof(PlatformPosition)   // the car catalogue: callsign→car re-key at session/start
         };
 
@@ -94,6 +95,8 @@ namespace CityWatch.Tracking.Tests
                 context.Model.FindEntityType(typeof(PlatformWandRound))!.GetTableName());
             Assert.AreEqual("IncidentReportPositions",
                 context.Model.FindEntityType(typeof(PlatformPosition))!.GetTableName());
+            Assert.AreEqual("ClientSiteSmartWandTags",
+                context.Model.FindEntityType(typeof(PlatformWandTag))!.GetTableName());
         }
 
         [TestMethod]

@@ -1146,7 +1146,11 @@
     }
 
     function playSession(unitId, session, truncated) {
-        const label = units[unitId] ? unitLabel(units[unitId].data) : ('Unit ' + unitId);
+        /* Name the journey from the SESSION, not only the live table: a signed-off unit
+           has no units[unitId] entry, and "Unit 1000418" is no name for Michael Sposato. */
+        const label = units[unitId]
+            ? unitLabel(units[unitId].data)
+            : (session.callsign || session.guardName || session.patrolCar || ('Unit ' + unitId));
         /* #153 P7: the line is drawn through TRUSTED fixes only — the same rule as the
            live map, so replay and live never tell different stories about one journey.
            Untrusted fixes stay in the audit record; the bar says how many were held
@@ -1240,14 +1244,21 @@
 
         /* The ghost wears the unit's own shape: a car replays as a car, a guard as their
            avatar — never a purple car walking through a house. Purple = "this is the
-           recording", and the live marker underneath stays untouched. */
+           recording", and the live marker underneath stays untouched.
+           The shape is read from the SESSION, not from units[unitId]: a guard who has
+           signed off has no live entry, so keying off the live table alone drew every
+           past guard journey as a car (#153 field report, 28 Aug — a foot guard at Mercy
+           Werribee replayed as a car driving through the hospital). A car names a callsign
+           or a patrol car; anyone else we can name is a guard. */
         const liveEntry = units[unitId];
-        const isGuardGhost = liveEntry && liveEntry.data.kind === 'guard';
-        const ghostHtml = isGuardGhost
-            ? `<div class="trk-unit trk-replay-ghost"><div class="trk-avatar" style="background:#7c3aed">${esc(initialsOf(liveEntry.data.guardName))}</div></div>`
+        const ghostGuardName = session.guardName || (liveEntry ? liveEntry.data.guardName : '') || '';
+        const isCarGhost = !!(session.callsign || session.patrolCar)
+            || (!!liveEntry && liveEntry.data.kind !== 'guard');
+        const ghostHtml = !isCarGhost
+            ? `<div class="trk-unit trk-replay-ghost"><div class="trk-avatar" style="background:#7c3aed">${esc(initialsOf(ghostGuardName))}</div></div>`
             : `<div class="trk-unit trk-kind-car trk-replay-ghost"><div class="trk-sprite">${carSvg('#7c3aed')}</div></div>`;
         replay.ghost = L.marker(latlngs[0], {
-            icon: L.divIcon({ className: '', html: ghostHtml, iconSize: [56, 68], iconAnchor: [28, isGuardGhost ? 26 : 14] }),
+            icon: L.divIcon({ className: '', html: ghostHtml, iconSize: [56, 68], iconAnchor: [28, !isCarGhost ? 26 : 14] }),
             zIndexOffset: 2000
         }).addTo(layer);
         map.fitBounds(replay.baseLine.getBounds().pad(0.2));
@@ -1567,7 +1578,13 @@
         const el = document.createElement('div');
         el.id = 'trkSessionPick';
         el.className = 'trk-session-pick';
+        /* Two levels of answer: the FQ target — were the required tags scanned, whoever
+           scanned them — sits above, and the journeys that can be replayed sit below.
+           The FQ block loads async and removes itself on any failure, so the journeys
+           picker below is never blocked or changed. */
         el.innerHTML = `<div class="head"><b>${sorted.length} sessions in this window</b><span>Each journey replays separately</span></div>` +
+            `<div class="trk-fq" id="trkFqSummary" hidden></div>` +
+            `<div class="trk-sess-cap">JOURNEYS</div>` +
             sorted.map((r, i) => `
                 <div class="row" data-trk-isession="${i}">
                   <b>${hm(r.startedUtc)}–${r.endedUtc ? hm(r.endedUtc) : 'now'}</b>
@@ -1583,12 +1600,66 @@
             el.remove();
             fetchReplay(r.unitId, win.fromUtc, win.toUtc, r.sessionId);
         });
+        loadFqSummary(rows, win, el);
+    }
+
+    /* FQ TARGET scan summary (#153) — guard-independent: a required tag counts as scanned
+       no matter which officer's wand touched it. Only meaningful for a single site (the
+       whole site's day); for a multi-site selection, or on any error, the block removes
+       itself and the journeys picker is exactly as before. */
+    async function loadFqSummary(rows, win, el) {
+        const box = el.querySelector('#trkFqSummary');
+        if (!box) return;
+        const siteIds = [...new Set(rows.map(r => r.clientSiteId).filter(Boolean))];
+        if (siteIds.length !== 1) { box.remove(); return; }
+        const siteId = siteIds[0];
+        box.hidden = false;
+        box.innerHTML = `<div class="trk-fq-load">Checking FQ tags…</div>`;
+        let data;
+        try {
+            const res = await fetch(`/api/analytics/fq-tags?siteId=${siteId}` +
+                `&fromUtc=${win.fromUtc.toISOString()}&toUtc=${win.toUtc.toISOString()}`,
+                { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            data = await res.json();
+        } catch { box.remove(); return; }
+        if (!document.body.contains(box)) return;          // popup dismissed while loading
+        const tags = (data && data.tags) || [];
+        if (!tags.length) { box.remove(); return; }        // nothing configured — imply no target
+        const required = data.required != null ? data.required : tags.length;
+        const scanned = data.scanned != null ? data.scanned : tags.filter(t => t.scanned).length;
+        const missed = Math.max(0, required - scanned);
+        const pct = data.completePct != null ? data.completePct
+            : Math.round(scanned / Math.max(1, required) * 100);
+        const state = scanned >= required ? 'ok' : (scanned === 0 ? 'bad' : 'warn');
+        box.innerHTML =
+            `<div class="trk-fq-sum trk-fq-${state}">
+               <div class="trk-fq-top"><b>FQ TARGET</b><span class="trk-fq-cnt">${scanned} / ${required} <em>scanned</em></span></div>
+               <div class="trk-fq-bar"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>
+               <div class="trk-fq-sub"><span class="ok">${scanned} Scanned</span> · <span class="bad">${missed} Not Scanned</span> · ${pct}% Complete</div>
+             </div>
+             <div class="trk-fq-tags">` +
+            tags.map(t => `
+                <div class="trk-fq-tag${t.scanned ? '' : ' miss'}">
+                  <span class="tg">${esc(t.tagName || ('Tag ' + t.tagId))}</span>
+                  <span class="st">${t.scanned ? '✅ ' + hm(t.lastScanUtc) : '❌ Not Scanned'}</span>
+                  <span class="wd">${t.scanned && t.wandName ? esc(t.wandName) : ''}</span>
+                </div>`).join('') +
+            `</div>`;
     }
 
     /* The Insights drawer's "Open Replay" (analytics A3) enters here — the drawer's ONE
        touch into this layer, invoking the selector exactly the way a user's click would:
        { type, unitId | siteId, fromUtc, toUtc } all optional, all just pre-selection. */
     window.CRM.openReplay = openReplayMenu;
+
+    /* The legacy map (controlRoomMap.js) draws its own green patrol-car markers. Now that
+       the pack renders every car as a live tracked unit (R1–R6), that old marker doubled
+       each car — one green "old-method" car beside its R-unit (v2.76 field report: Gurditt
+       as a green car AND R5). This flag tells the legacy map to leave patrol cars to the
+       pack. Set only when the pack is on, so a tracking-off page keeps its green cars —
+       there they are the only patrol-car view. */
+    window.CRM.tracksPatrolCars = true;
 
     /* A phone's first fix after login can be a cold-start ghost from a stale A-GPS
        cache, thousands of km from the shift — every 17 Aug replay "started in India"

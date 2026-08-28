@@ -27,6 +27,7 @@ namespace CityWatch.Tracking.Data
         public DbSet<PlatformGuardAppVersion> PlatformGuardAppVersions { get; set; } = null!;
         public DbSet<PlatformClientSite> PlatformClientSites { get; set; } = null!;
         public DbSet<PlatformWandScan> PlatformWandScans { get; set; } = null!;
+        public DbSet<PlatformWandTag> PlatformWandTags { get; set; } = null!;
         public DbSet<PlatformSiteKpi> PlatformSiteKpis { get; set; } = null!;
         public DbSet<PlatformDailyWandFq> PlatformDailyWandFqs { get; set; } = null!;
         public DbSet<PlatformWandRound> PlatformWandRounds { get; set; } = null!;

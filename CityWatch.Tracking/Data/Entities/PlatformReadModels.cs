@@ -102,6 +102,10 @@ namespace CityWatch.Tracking.Data.Entities
         /// <summary>Nullable in the wild — PCAR logins routinely select no wand.</summary>
         public int? SmartWandId { get; set; }
 
+        /// <summary>The physical tag scanned — the join key to <c>ClientSiteSmartWandTags.UId</c>.
+        /// How a hit is matched to a specific required FQ tag (#153 FQ scan summary).</summary>
+        public string? TagUId { get; set; }
+
         public int LoggedInGuardId { get; set; }
 
         public int LoggedInClientSiteId { get; set; }
@@ -110,6 +114,32 @@ namespace CityWatch.Tracking.Data.Entities
         public int? TagLinkedClientSiteId { get; set; }
 
         public System.DateTime HitUtcDateTime { get; set; }
+    }
+
+    /// <summary>ClientSiteSmartWandTags, read-only (#153 FQ scan summary). The site's checkpoint
+    /// catalogue — one row per installed tag. The REQUIRED FQ set for a site is
+    /// <c>IsDeleted = 0 AND FqBypass = 0</c>: FqBypass marks a tag deliberately excluded from the
+    /// round (decommissioned or optional), so it is neither required nor counted. A hit joins to
+    /// a tag by <see cref="UId"/>, which is what makes the summary guard-independent — the tag is
+    /// scanned on the strength of any hit on its UId, whoever's wand made it.</summary>
+    [Table("ClientSiteSmartWandTags")]
+    public class PlatformWandTag
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int ClientSiteId { get; set; }
+
+        /// <summary>The physical NFC/BLE tag id — the join key to a hit log's TagUId.</summary>
+        public string? UId { get; set; }
+
+        /// <summary>The checkpoint's human name ("Point 1 - Front ADMIN Door").</summary>
+        public string? LabelDescription { get; set; }
+
+        /// <summary>True = excluded from the required FQ round — not required, not counted.</summary>
+        public bool FqBypass { get; set; }
+
+        public bool IsDeleted { get; set; }
     }
 
     /// <summary>IncidentReportPositions, read-only. THE CAR catalogue: a patrol-car
