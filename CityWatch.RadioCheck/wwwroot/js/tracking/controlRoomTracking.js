@@ -1653,6 +1653,14 @@
        { type, unitId | siteId, fromUtc, toUtc } all optional, all just pre-selection. */
     window.CRM.openReplay = openReplayMenu;
 
+    /* The legacy map (controlRoomMap.js) draws its own green patrol-car markers. Now that
+       the pack renders every car as a live tracked unit (R1–R6), that old marker doubled
+       each car — one green "old-method" car beside its R-unit (v2.76 field report: Gurditt
+       as a green car AND R5). This flag tells the legacy map to leave patrol cars to the
+       pack. Set only when the pack is on, so a tracking-off page keeps its green cars —
+       there they are the only patrol-car view. */
+    window.CRM.tracksPatrolCars = true;
+
     /* A phone's first fix after login can be a cold-start ghost from a stale A-GPS
        cache, thousands of km from the shift — every 17 Aug replay "started in India"
        and drew a line across the ocean to the real route. A SHORT leading run that

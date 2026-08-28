@@ -377,23 +377,32 @@
             }
 
             /* PCAR guards glide on their own layer (not clustered).
-               Position = site of the most recent wand scan (live route), else feed GPS. */
+               Position = site of the most recent wand scan (live route), else feed GPS.
+               BUT when the tracking pack is on this page it already renders every patrol
+               car as a live unit (R1–R6); drawing them here too put a second, green
+               "old-method" car beside each one (v2.76 field report: Gurditt as a green car
+               AND R5). So leave the cars to the pack when it is active — the cleanup below
+               drops any we had drawn. A tracking-off page still renders them: its only
+               patrol-car view. */
             const seenCars = {};
-            s.guards.filter(g => g.tourMode === 'PCAR' && guardPasses(g)).forEach(g => {
-                const pos = pcarCurrentPos(g);
-                if (!pos) return;
-                seenCars[g.guardId] = true;
-                let car = entry.cars[g.guardId];
-                const csig = carIconSig(g);
-                if (!car) {
-                    const m = L.marker(pos, { icon: carIcon(g) }).on('click', () => openGuard(g));
-                    carLayer.addLayer(m);
-                    entry.cars[g.guardId] = { m: m, iconSig: csig };
-                } else {
-                    if (car.iconSig !== csig) { car.m.setIcon(carIcon(g)); car.iconSig = csig; }
-                    car.m.setLatLng(pos);             /* CSS transition = smooth glide */
-                }
-            });
+            const trackingOwnsCars = !!(window.CRM && window.CRM.tracksPatrolCars);
+            if (!trackingOwnsCars) {
+                s.guards.filter(g => g.tourMode === 'PCAR' && guardPasses(g)).forEach(g => {
+                    const pos = pcarCurrentPos(g);
+                    if (!pos) return;
+                    seenCars[g.guardId] = true;
+                    let car = entry.cars[g.guardId];
+                    const csig = carIconSig(g);
+                    if (!car) {
+                        const m = L.marker(pos, { icon: carIcon(g) }).on('click', () => openGuard(g));
+                        carLayer.addLayer(m);
+                        entry.cars[g.guardId] = { m: m, iconSig: csig };
+                    } else {
+                        if (car.iconSig !== csig) { car.m.setIcon(carIcon(g)); car.iconSig = csig; }
+                        car.m.setLatLng(pos);             /* CSS transition = smooth glide */
+                    }
+                });
+            }
             Object.keys(entry.cars).forEach(gid => {
                 if (!seenCars[gid]) { carLayer.removeLayer(entry.cars[gid].m); delete entry.cars[gid]; }
             });
