@@ -7,7 +7,7 @@
 
 .ana-drawer {
     position: fixed; top: 0; right: 0; bottom: 0; z-index: 1550;
-    width: min(360px, 100vw);
+    width: min(var(--ana-w, 360px), 100vw);
     display: flex; flex-direction: column;
     background: linear-gradient(180deg, #14151c 0%, #101218 100%);
     color: #e8eaf0;
@@ -385,4 +385,27 @@
 
 @media (max-width: 760px) {
     .ana-drawer { width: 100vw; border-left: none; }
+}
+
+/* ================= wide layout — half the screen on control-room monitors =========
+   The slim rail is right on a laptop; on a wide wall monitor the panel earns more room.
+   Half the screen (change 50vw to 75vw below for three-quarters), the six KPI tiles in
+   one band of three, and the section cards flowing into two balanced columns so the
+   whole picture reads at once, with far less scrolling. Everything below 1100px keeps
+   the original slim rail untouched. */
+@media (min-width: 1100px) {
+    .ana-drawer { --ana-w: 50vw; min-width: 600px; }
+
+    /* the five-second read stays one glance: 6 tiles → a single row of three */
+    .ana-grid { grid-template-columns: repeat(3, 1fr); }
+
+    /* the five section cards flow into two height-balanced columns; the KPI band and
+       the pulse stay full width across the top. Cards are never split down the middle. */
+    #anaMain { columns: 2; column-gap: 20px; }
+    #anaMain > .ana-body,
+    #anaMain > .ana-pulse { column-span: all; }
+    #anaMain > .ana-sec {
+        break-inside: avoid; -webkit-column-break-inside: avoid;
+        margin-top: 0; padding-top: 6px;
+    }
 }
