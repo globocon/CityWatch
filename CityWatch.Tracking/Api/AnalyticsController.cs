@@ -502,6 +502,108 @@ namespace CityWatch.Tracking.Api
             return Ok(new { wands = rows.Take(100), truncated });
         }
 
+        /* ==================== FQ target: were the required tags scanned? ==================== */
+
+        private sealed record FqHit(string TagUId, DateTime HitUtcDateTime, int WandId);
+
+        /// <summary>
+        /// For one site and one window, each required FQ checkpoint tag and whether it was
+        /// scanned — the answer the control room needs before replaying a site's day: were all
+        /// the tags hit, whoever hit them. GUARD-INDEPENDENT by construction: a tag counts as
+        /// scanned on the strength of any hit on its physical UId in the window, no matter which
+        /// officer's wand made it. The required set is the site's own tag catalogue minus the
+        /// bypassed tags (FqBypass), so the denominator is the real round, not every installed tag.
+        /// </summary>
+        [Authorize]
+        [HttpGet("fq-tags")]
+        public async Task<IActionResult> FqTags([FromQuery] int siteId,
+            [FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc, CancellationToken ct)
+        {
+            if (await GateAsync(fromUtc, toUtc, ct) is { } refused)
+                return refused;
+            if (siteId <= 0)
+                return BadRequest("A siteId is required.");
+
+            /* The required FQ set: installed, not deleted, not bypassed. FqBypass marks a tag
+               deliberately left out of the round, so it is neither required nor counted. */
+            var catalogue = await _db.PlatformWandTags
+                .Where(t => t.ClientSiteId == siteId && !t.IsDeleted && !t.FqBypass
+                    && t.UId != null && t.UId != "")
+                .Select(t => new { t.Id, t.UId, t.LabelDescription })
+                .ToListAsync(ct);
+
+            /* One required entry per physical tag: UIds can repeat in the catalogue, and a
+               doubled row would inflate the denominator the manager reads. */
+            var required = catalogue
+                .GroupBy(t => t.UId!)
+                .Select(g => g.First())
+                .ToList();
+            var uids = required.Select(t => t.UId!).ToList();
+
+            /* Every hit on one of those tags inside the window — no guard filter, that is the
+               whole point. Wand id 0 is "no wand selected" (the write path stores 0, not NULL). */
+            var hits = uids.Count == 0
+                ? new List<FqHit>()
+                : (await _db.PlatformWandScans
+                    .Where(h => h.TagUId != null && uids.Contains(h.TagUId)
+                        && h.HitUtcDateTime >= fromUtc && h.HitUtcDateTime < toUtc)
+                    .Select(h => new { h.TagUId, h.HitUtcDateTime, h.SmartWandId })
+                    .ToListAsync(ct))
+                    .Select(h => new FqHit(h.TagUId!, h.HitUtcDateTime, h.SmartWandId ?? 0))
+                    .ToList();
+
+            /* Latest hit per tag decides the shown time and the wand credited with it. */
+            var latestByUid = hits
+                .GroupBy(h => h.TagUId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(h => h.HitUtcDateTime).First());
+
+            var wandIds = latestByUid.Values.Select(h => h.WandId).Where(id => id > 0).Distinct().ToList();
+            var wandById = (await _db.PlatformSmartWands
+                .Where(w => wandIds.Contains(w.Id))
+                .Select(w => new { w.Id, w.WandName })
+                .ToListAsync(ct))
+                .ToDictionary(w => w.Id, w => w.WandName);
+
+            var rows = required.Select((t, i) =>
+            {
+                latestByUid.TryGetValue(t.UId!, out var hit);
+                var scanned = hit is not null;
+                string? wandName = null;
+                if (hit is { WandId: > 0 })
+                    wandName = wandById.TryGetValue(hit.WandId, out var wn) && wn is { Length: > 0 }
+                        ? wn : ("Wand " + hit.WandId);
+                return new
+                {
+                    tagId = t.Id,
+                    tagName = t.LabelDescription is { Length: > 0 } l ? l : ("Tag " + (i + 1)),
+                    scanned,
+                    lastScanUtc = hit?.HitUtcDateTime,
+                    wandId = hit is { WandId: > 0 } ? hit.WandId : (int?)null,
+                    wandName
+                };
+            })
+            /* Not-scanned first: the gap is what the manager must see; then by name. */
+            .OrderBy(r => r.scanned)
+            .ThenBy(r => r.tagName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+            var scannedCount = rows.Count(r => r.scanned);
+            var requiredCount = rows.Count;
+            var completePct = requiredCount == 0 ? 0
+                : (int)Math.Round(scannedCount * 100.0 / requiredCount);
+
+            return Ok(new
+            {
+                fromUtc,
+                toUtc,
+                siteId,
+                required = requiredCount,
+                scanned = scannedCount,
+                completePct,
+                tags = rows
+            });
+        }
+
         /* ==================== A3: the entity timeline ==================== */
 
         /// <summary>One event on somebody's day. A uniform shape so every drill-down

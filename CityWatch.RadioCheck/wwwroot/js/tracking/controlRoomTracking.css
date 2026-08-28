@@ -364,6 +364,42 @@ body.trk-dark .trk-win-custom input { background: #16223a; border-color: #24344f
 .trk-session-pick .row .n { flex: none; font-size: 11px; }
 .trk-session-pick .cancel { margin: 10px 16px 14px; background: #64748b; border-color: #64748b; }
 
+/* FQ TARGET scan summary atop the picker (#153): did the required tags get scanned,
+   whoever scanned them. Compact by design; the tag list scrolls on its own so the
+   journeys below are never pushed off. */
+.trk-sess-cap {
+    padding: 10px 16px 2px; font-size: 10px; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: #94a3b8;
+}
+.trk-fq { border-top: 1px solid #ede9fe; }
+.trk-fq-load { padding: 10px 16px; color: #7c3aed; font-size: 11.5px; }
+.trk-fq-sum { padding: 11px 16px 9px; }
+.trk-fq-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.trk-fq-top b { font-size: 10.5px; letter-spacing: .09em; color: #6d28d9; }
+.trk-fq-cnt { font-size: 15px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; }
+.trk-fq-cnt em { font-size: 10px; font-weight: 600; font-style: normal; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
+.trk-fq-bar { height: 6px; background: #ede9fe; border-radius: 4px; overflow: hidden; margin: 7px 0 6px; }
+.trk-fq-bar i { display: block; height: 100%; border-radius: 4px; background: #7c3aed; transition: width .3s ease; }
+.trk-fq-ok .trk-fq-bar i { background: #16a34a; }
+.trk-fq-warn .trk-fq-bar i { background: #f59e0b; }
+.trk-fq-bad .trk-fq-bar i { background: #dc2626; }
+.trk-fq-sub { font-size: 11px; font-weight: 600; color: #64748b; }
+.trk-fq-sub .ok { color: #16a34a; }
+.trk-fq-sub .bad { color: #dc2626; }
+.trk-fq-tags {
+    max-height: 168px; overflow-y: auto; padding: 0 16px 4px;
+    scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;
+}
+.trk-fq-tag {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px;
+    padding: 5px 0; font-size: 12px; border-top: 1px solid #f1f5f9;
+}
+.trk-fq-tag:first-child { border-top: none; }
+.trk-fq-tag .tg { font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trk-fq-tag .st { font-weight: 600; color: #16a34a; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.trk-fq-tag.miss .st { color: #dc2626; }
+.trk-fq-tag .wd { font-size: 10.5px; font-weight: 700; color: #7c3aed; white-space: nowrap; }
+
 /* replay selection popup (#153 Part 11): type → who → window → start */
 .trk-replay-menu { width: min(400px, calc(100vw - 28px)); }
 .trk-rm-head { flex-direction: row !important; align-items: center; gap: 10px; }
@@ -531,6 +567,14 @@ body.trk-dark .trk-search-row:hover, body.trk-dark .trk-session-pick .row:hover 
 body.trk-dark .trk-search-row .m span, body.trk-dark .trk-search-empty,
 body.trk-dark .trk-session-pick .row span { color: #8ca3c3; }
 body.trk-dark .trk-session-pick .row { border-top-color: #1c2b45; }
+body.trk-dark .trk-sess-cap { color: #64748b; }
+body.trk-dark .trk-fq { border-top-color: #24344f; }
+body.trk-dark .trk-fq-top b { color: #a78bfa; }
+body.trk-dark .trk-fq-cnt { color: #e2e8f0; }
+body.trk-dark .trk-fq-bar { background: #24344f; }
+body.trk-dark .trk-fq-tag { border-top-color: #1c2b45; }
+body.trk-dark .trk-fq-tag .tg { color: #e2e8f0; }
+body.trk-dark .trk-fq-tag .wd { color: #a78bfa; }
 body.trk-dark .trk-controls button {
     background: #101a2ef5; border-color: #24344f; color: #e2e8f0;
 }
