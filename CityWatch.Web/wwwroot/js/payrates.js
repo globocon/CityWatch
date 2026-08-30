@@ -78,8 +78,8 @@ $(document).ready(function () {
         var guardPayRate = $('#txtGuardPayRate').val();
         var currency = $('#pay_rates_currency').val();
 
-        if (description == '' || sellRate == '' || comms1 == '' || comms2 == '' || guardPayRate == '') {
-            alert('All fields are required.');
+        if (description == '' || sellRate == '' || comms1 == '' || comms2 == '' || guardPayRate == '' || !groupId || groupId <= 0) {
+            alert('All fields are required, including Pay Rate Group.');
             return;
         }
 
@@ -236,7 +236,7 @@ function loadPayRateGroupsDropdown(selectedId) {
         type: 'GET',
         success: function (data) {
             console.log("Groups loaded:", data);
-            var items = '<option value="">No Group</option>';
+            var items = '<option value="">-- Select Group --</option>';
             $.each(data, function (i, item) {
                 items += "<option value='" + item.id + "'>" + item.name + "</option>";
             });
@@ -324,8 +324,14 @@ $(document).on('click', '#btnSavePrgSiteAssignment', function () {
     const groupId = $('#payrate-group-assignment-for-id').val();
     if (prgSiteTree) {
         let selectedSites = prgSiteTree.getCheckedNodes().filter(function (item) {
-            return item && item !== 'undefined';
+            // Only include numeric IDs (Site IDs), filter out parent node labels like "Security" or "Uncategorized"
+            return item && !isNaN(parseInt(item));
         });
+
+        if (!groupId || groupId <= 0) {
+            alert('Error: No valid group selected for assignment.');
+            return;
+        }
 
         $.ajax({
             url: '/Admin/Settings?handler=SavePayRateGroupAssignments',
@@ -342,8 +348,14 @@ $(document).on('click', '#btnSavePrgSiteAssignment', function () {
             } else {
                 alert('Error: ' + res.message);
             }
-        }).fail(function () {
-            alert('Failed to save assignments.');
+        }).fail(function (xhr) {
+            let errorMessage = 'Failed to save assignments.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                errorMessage = xhr.responseText;
+            }
+            alert('Error: ' + errorMessage);
         });
     }
 });
@@ -387,7 +399,7 @@ function loadGroupFilterDropdown() {
         url: '/Admin/Settings?handler=PayRateGroupsList',
         type: 'GET',
         success: function (data) {
-            var items = '<option value="">All Groups</option>';
+            var items = '<option value="">All Groups (Filter)</option>';
             $.each(data, function (i, item) {
                 items += "<option value='" + item.id + "'>" + item.name + "</option>";
             });

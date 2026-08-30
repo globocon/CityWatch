@@ -4151,6 +4151,11 @@ namespace CityWatch.Web.Pages.Admin
         {
             try
             {
+                if (groupId <= 0)
+                {
+                    return new JsonResult(new { success = false, message = "Invalid Group ID selected." });
+                }
+
                 _configDataProvider.SavePayRateGroupSites(groupId, selectedSites);
                 return new JsonResult(new { success = true });
             }
@@ -4162,18 +4167,15 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostSavePayRateGroup(PayRateGroup group)
         {
-            var success = false;
-            var message = "Saved successfully";
             try
             {
                 _configDataProvider.SavePayRateGroup(group);
-                success = true;
+                return new JsonResult(new { success = true, id = group.Id });
             }
             catch (Exception ex)
             {
-                message = ex.Message;
+                return new JsonResult(new { success = false, message = ex.Message });
             }
-            return new JsonResult(new { success, message });
         }
 
         public JsonResult OnPostDeletePayRateGroup(int id)

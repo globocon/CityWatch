@@ -372,20 +372,47 @@ namespace CityWatch.Data.Providers
 
         public void SavePayRateGroupSites(int groupId, List<int> siteIds)
         {
-            var existingAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).ToList();
-            _context.PayRateGroupSites.RemoveRange(existingAssignments);
-
-            if (siteIds != null && siteIds.Any())
+            // Use AsNoTracking for the existence check to ensure we're checking the actual DB state
+            if (groupId <= 0 || !_context.PayRateGroups.AsNoTracking().Any(x => x.Id == groupId))
             {
-                var newAssignments = siteIds.Select(siteId => new PayRateGroupSite
-                {
-                    PayRateGroupId = groupId,
-                    ClientSiteId = siteId
-                });
-                _context.PayRateGroupSites.AddRange(newAssignments);
+                throw new Exception("Invalid Pay Rate Group ID or Group does not exist. Group ID: " + groupId);
             }
 
-            _context.SaveChanges();
+            var strategy = _context.Database.CreateExecutionStrategy();
+            strategy.Execute(() =>
+            {
+                using (var transaction = _context.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Remove all existing assignments for this group
+                        var existingAssignments = _context.PayRateGroupSites.Where(x => x.PayRateGroupId == groupId).ToList();
+                        _context.PayRateGroupSites.RemoveRange(existingAssignments);
+                        _context.SaveChanges(); // Commit removals first
+
+                        // 2. Add new assignments
+                        if (siteIds != null && siteIds.Any())
+                        {
+                            var newAssignments = siteIds.Distinct().Select(siteId => new PayRateGroupSite
+                            {
+                                PayRateGroupId = groupId,
+                                ClientSiteId = siteId
+                            }).ToList();
+
+                            _context.PayRateGroupSites.AddRange(newAssignments);
+                            _context.SaveChanges();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        var siteList = siteIds != null ? string.Join(",", siteIds) : "null";
+                        throw new Exception($"Error saving site assignments for Group ID: {groupId}. Sites: [{siteList}]. Original Error: {ex.Message}", ex);
+                    }
+                }
+            });
         }
 
         public List<Allowance> GetAllowances()

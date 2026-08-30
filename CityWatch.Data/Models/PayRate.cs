@@ -10,7 +10,8 @@ namespace CityWatch.Data.Models
         public int Id { get; set; }
         [Required]
         public string Description { get; set; }
-        public int? PayRateGroupId { get; set; }
+        [Required(ErrorMessage = "Pay Rate Group is required")]
+        public int PayRateGroupId { get; set; }
         public decimal SellRateToClient { get; set; }
         public decimal Comms1 { get; set; }
         public decimal Comms2 { get; set; }
