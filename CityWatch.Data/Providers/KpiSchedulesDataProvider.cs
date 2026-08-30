@@ -125,21 +125,15 @@ namespace CityWatch.Data.Providers
 
             foreach (var item in list)
             {
-                foreach (var item2 in item.KpiSendScheduleClientSites)
+                var validSites = item.KpiSendScheduleClientSites
+                    .Where(site => distinctClientSiteIds.Contains(site.ClientSiteId))
+                    .ToList();
+
+                if (validSites.Any())
                 {
-
-                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
-                    {
-
-                        selectedSiteSchedule.Add(item);
-                    }
-                    else
-                    {
-                        item.KpiSendScheduleClientSites.Remove(item2);
-                    }
+                    item.KpiSendScheduleClientSites = validSites;
+                    selectedSiteSchedule.Add(item);
                 }
-
-
             }
 
             return selectedSiteSchedule;
@@ -162,21 +156,15 @@ namespace CityWatch.Data.Providers
 
             foreach (var item in list)
             {
-                foreach (var item2 in item.KpiSendTimesheetClientSites)
+                var validSites = item.KpiSendTimesheetClientSites
+                    .Where(site => distinctClientSiteIds.Contains(site.ClientSiteId))
+                    .ToList();
+
+                if (validSites.Any())
                 {
-
-                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
-                    {
-
-                        selectedSiteSchedule.Add(item);
-                    }
-                    else
-                    {
-                        item.KpiSendTimesheetClientSites.Remove(item2);
-                    }
+                    item.KpiSendTimesheetClientSites = validSites;
+                    selectedSiteSchedule.Add(item);
                 }
-
-
             }
 
             return selectedSiteSchedule;
@@ -199,21 +187,15 @@ namespace CityWatch.Data.Providers
 
             foreach (var item in list)
             {
-                foreach (var item2 in item.KpiSendCustomWandClientSites)
+                var validSites = item.KpiSendCustomWandClientSites
+                    .Where(site => distinctClientSiteIds.Contains(site.ClientSiteId))
+                    .ToList();
+
+                if (validSites.Any())
                 {
-
-                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
-                    {
-
-                        selectedSiteSchedule.Add(item);
-                    }
-                    else
-                    {
-                        item.KpiSendCustomWandClientSites.Remove(item2);
-                    }
+                    item.KpiSendCustomWandClientSites = validSites;
+                    selectedSiteSchedule.Add(item);
                 }
-
-
             }
 
             return selectedSiteSchedule;
