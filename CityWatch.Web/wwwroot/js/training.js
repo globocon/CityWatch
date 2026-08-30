@@ -3081,9 +3081,11 @@ function RunCourses() {
         $('#couseVideo').hide();
         if (('.ppt'.indexOf(fileExtn.toLowerCase()) > 0) || ('.pptx'.indexOf(fileExtn.toLowerCase()) > 0)) {
 
-            var pptURL = 'https://docs.google.com/gview?url=https://cws-ir.com' + pdfUrl + '&embedded=true';
-            //var pptURL = 'https://docs.google.com/gview?url=http://test.c4i-system.com/' + pdfUrl + '&embedded=true';
-            $('#coursePresentation').attr('src', pptURL);
+
+            //var pptURL = 'https://view.officeapps.live.com/op/embed.aspx?src=' + window.location.origin + pdfUrl + '&embedded=true';
+
+            //$('#coursePresentation').attr('src', pptURL);
+            $('#coursePresentation').show();
 
 
         }
