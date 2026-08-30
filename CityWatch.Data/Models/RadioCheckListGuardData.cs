@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -38,6 +39,7 @@ namespace CityWatch.Data.Models
         public int haswandtags { get; set; }
         public string TourMode { get; set; }
         public string PatrolFqForDayOrHour { get; set; }
+        public List<PcarRoutesForClients> pcarRoutesForClients { get; set; }
 
     }
 
