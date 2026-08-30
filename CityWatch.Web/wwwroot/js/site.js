@@ -9398,38 +9398,7 @@ $('#btnAIButton').on('click', function () {
         var obj = {
             Text: userInput
         }
-        //$.ajax({
-        //    url: "https://api.languagetool.org/v2/check",
-        //    method: "POST",
-        //    data: {
-        //        text: userInput,
-        //        language: "en-US"
-        //    },
-        //    success: function (data) {
-        //        //console.log(data.matches);
-        //        if (data.matches.length > 0) { 
-        //            let originalText = userInput;
-        //            $.each(data.matches, function (index, item) {
-
-
-
-        //            let correctedText = originalText;
-        //            // Apply the first correction from LanguageTool
-        //            let match = item;
-        //            let start = match.offset;
-        //            let length = match.length;
-        //            let replacement = match.replacements[0].value;
-        //            // Replace the incorrect part with the suggested correction
-        //            correctedText =
-        //                correctedText.substring(0, start) +
-        //                replacement +
-        //                    correctedText.substring(start + length);
-        //                originalText = correctedText;
-        //            });
-        //            $("#Report_Feedback").val(originalText);
-        //            }
-        //    }
-        //});
+       
         $.ajax({
             url: "/Incident/Register?handler=AiButton", // Your C# endpoint
             method: "GET",
@@ -9441,6 +9410,7 @@ $('#btnAIButton').on('click', function () {
             success: function (response) {
                 const correctedText = response.truckConfigText.result;
                 $("#Report_Feedback").val(correctedText);
+                translateText(correctedText, 'en');
 
             },
             error: function (xhr, status, error) {
@@ -9451,6 +9421,31 @@ $('#btnAIButton').on('click', function () {
     } else {
         alert("Please Enter The Feedback")
     }
+});
+function translateText(text, targetLang) {
+    $.ajax({
+        url: '/api/translate', // You set up a backend route to call Google/OpenAI API
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            text: text,
+            target: targetLang // e.g., 'en' for English, 'hi' for Hindi
+        }),
+        success: function (response) {
+            $("#translatedOutput").val(response.translatedText);
+        },
+        error: function () {
+            alert("Translation failed.");
+        }
+    });
+}
+$('#Report_Feedback').on('cut copy paste', function (e) {
+    e.preventDefault();
+    alert("Copy, cut and  paste is not allowed in this field.");
+})
+$('#Report_Feedback').on('contextmenu', function (e) {
+    e.preventDefault();
+    alert("Right-click is disabled to prevent copy/paste.");
 });
 
 
