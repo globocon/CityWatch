@@ -23,6 +23,8 @@ using Microsoft.Extensions.Configuration;
 using System.Linq.Expressions;
 using static System.Net.WebRequestMethods;
 using System.Linq;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 
 namespace CityWatch.Web.Pages
 {
@@ -36,7 +38,7 @@ namespace CityWatch.Web.Pages
         private readonly IConfiguration _configuration;
         public RecordModel(
             IClientDataProvider clientDataProvider,
-            IWebHostEnvironment webHostEnvironment, 
+            IWebHostEnvironment webHostEnvironment,
             IGuardDataProvider guardDataProvider,
             IOptions<Settings> settings,
             IDropboxService dropboxUploadService,
@@ -69,30 +71,192 @@ namespace CityWatch.Web.Pages
             // Ensure the directory exists
             Directory.CreateDirectory(folderPath);
 
-            // Save the file to the server
-            var filePath = Path.Combine(folderPath, uniqueFileName);
-            await SaveFileAsync(audioFile, filePath);
+            string pcmFile1 = Path.Combine(_WebHostEnvironment.WebRootPath, "AudioRecordings", "recording_1.wav");
+            string pcmFile2 = Path.Combine(_WebHostEnvironment.WebRootPath, "AudioRecordings", "recording_2.wav");
+            string outputFilePath = Path.Combine(_WebHostEnvironment.WebRootPath, "AudioRecordings", "mergedAudio.wav");
 
-            
-            // Upload the file to Dropbox and Azure bob
-            var blobUrl= blobilpaod(filePath);
-          
-
-            var clientSite = _clientDataProvider.GetClientSiteForRcLogBook();
-            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSite.FirstOrDefault().Id);
-            var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
-
-            var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
-            var dbxFilePath = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Now.Year}/{DateTime.Now.Date:yyyyMM} - {DateTime.Now.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Now.Date.ToString(dayPathFormat).ToUpper()}/" + Path.GetFileName(filePath);
+            MergePCMFiles(pcmFile1, pcmFile2, outputFilePath);
 
 
-            var isUploaded = await UploadFileToDropboxAsync(filePath, dbxFilePath);
-            if (isUploaded)
-            {
-                _guardDataProvider.SaveRecordingFileDetails(new AudioRecordingLog { BlobUrl = blobUrl, FileName = uniqueFileName, DropboxPath= dbxFilePath });
-            }
+            string pcmFilePath = pcmFile1;
+            string wavFilePath = outputFilePath;
+
+            // Define WAV format parameters
+            int sampleRate = 35100; // Sample rate in Hz
+            int bitsPerSample = 64; // Bits per sample (e.g., 16-bit PCM)
+            int channels = 1; // Number of audio channels (e.g., 2 for stereo)
+
+            //CreateWavFileFromPcm(pcmFilePath, wavFilePath, sampleRate, bitsPerSample, channels);
+
+            ////Save the file to the server
+            //var filePath = Path.Combine(folderPath, uniqueFileName);
+            //await SaveFileAsync(audioFile, filePath);
+
+
+            //// Upload the file to Dropbox and Azure bob
+            //var blobUrl = blobilpaod(filePath);
+
+
+            //var clientSite = _clientDataProvider.GetClientSiteForRcLogBook();
+            //var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSite.FirstOrDefault().Id);
+            //var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
+
+            //var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
+            //var dbxFilePath = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Now.Year}/{DateTime.Now.Date:yyyyMM} - {DateTime.Now.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Now.Date.ToString(dayPathFormat).ToUpper()}/" + Path.GetFileName(filePath);
+
+
+            //var isUploaded = await UploadFileToDropboxAsync(filePath, dbxFilePath);
+            //if (isUploaded)
+            //{
+            //    _guardDataProvider.SaveRecordingFileDetails(new AudioRecordingLog { BlobUrl = blobUrl, FileName = uniqueFileName, DropboxPath = dbxFilePath });
+            //}
             // Return the result with the unique file name
-            return new JsonResult(new { success = isUploaded, fileName = uniqueFileName });
+            return new JsonResult(new { success = true, fileName = uniqueFileName });
+        }
+
+
+        //public static void MergePCMFiles(string file1Path, string file2Path, string outputFilePath)
+        //{
+        //    try
+        //    {
+        //        // Read both PCM files as byte arrays
+        //        byte[] pcmData1 = System.IO.File.ReadAllBytes(file1Path);
+        //        byte[] pcmData2 = System.IO.File.ReadAllBytes(file2Path);
+
+        //        // Concatenate the two byte arrays
+        //        byte[] mergedPCMData = new byte[pcmData1.Length + pcmData2.Length];
+        //        Buffer.BlockCopy(pcmData1, 0, mergedPCMData, 0, pcmData1.Length);
+        //        Buffer.BlockCopy(pcmData2, 0, mergedPCMData, pcmData1.Length, pcmData2.Length);
+
+        //        // Write the merged PCM data to a new file
+        //        System.IO.File.WriteAllBytes(outputFilePath, mergedPCMData);
+
+        //        Console.WriteLine($"PCM files merged successfully. Merged file saved at: {outputFilePath}");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error merging PCM files: {ex.Message}");
+        //    }
+        //}
+
+
+
+        public static void MergePCMFiles(string file1Path, string file2Path, string outputFilePath)
+        {
+            try
+            {
+
+                using (var reader1 = new WaveFileReader(file1Path))
+                using (var reader2 = new WaveFileReader(file2Path))
+                {
+                    // Ensure both WAV files have the same format
+                    if (!reader1.WaveFormat.Equals(reader2.WaveFormat))
+                    {
+                        throw new InvalidOperationException("WAV files have different formats.");
+                    }
+
+                    var waveFormat = reader1.WaveFormat;
+
+                    using (var writer = new WaveFileWriter(outputFilePath, waveFormat))
+                    {
+                        // Copy data from the first WAV file
+                        CopyWaveStream(reader1, writer);
+
+                        // Copy data from the second WAV file
+                        CopyWaveStream(reader2, writer);
+
+                        Console.WriteLine($"WAV files concatenated successfully. Output file saved at: {outputFilePath}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error merging PCM files: {ex.Message}");
+            }
+        }
+
+        //working
+        //public static void CreateWavFileFromPcm(string pcmFilePath, string wavFilePath, int sampleRate, int bitsPerSample, int channels)
+        //{
+        //    try
+        //    {
+        //        // Read the PCM data from the file
+        //        byte[] pcmData = System.IO.File.ReadAllBytes(pcmFilePath);
+
+        //        // Define the WAV format
+        //        var waveFormat = new WaveFormat(sampleRate, bitsPerSample, channels);
+
+        //        // Create and save the WAV file
+        //        using (var waveFileWriter = new WaveFileWriter(wavFilePath, waveFormat))
+        //        {
+        //            // Write the PCM data to the WAV file
+        //            waveFileWriter.Write(pcmData, 0, pcmData.Length);
+
+        //            Console.WriteLine($"PCM file converted to WAV successfully. WAV file saved at: {wavFilePath}");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error creating WAV file from PCM: {ex.Message}");
+        //    }
+        //}
+
+
+        public static void CreateWavFileFromPcm(string pcmFilePath, string wavFilePath, int sampleRate, int bitsPerSample, int channels)
+        {
+            try
+            {
+                // Read PCM data from the file
+                byte[] pcmData = System.IO.File.ReadAllBytes(pcmFilePath);
+
+                // Create a WAV header and append PCM data
+                using (var waveFileWriter = new FileStream(wavFilePath, FileMode.Create))
+                {
+                    using (var writer = new BinaryWriter(waveFileWriter))
+                    {
+                        // Calculate sizes
+                        int dataChunkSize = pcmData.Length;
+                        int fileSize = 36 + dataChunkSize;
+
+                        // Write the WAV header
+                        writer.Write(new[] { 'R', 'I', 'F', 'F' }); // ChunkID
+                        writer.Write(fileSize); // ChunkSize
+                        writer.Write(new[] { 'W', 'A', 'V', 'E' }); // Format
+
+                        writer.Write(new[] { 'f', 'm', 't', ' ' }); // Subchunk1ID
+                        writer.Write(16); // Subchunk1Size (16 for PCM)
+                        writer.Write((short)1); // AudioFormat (1 for PCM)
+                        writer.Write((short)channels); // NumChannels
+                        writer.Write(sampleRate); // SampleRate
+                        writer.Write(sampleRate * channels * bitsPerSample / 8); // ByteRate
+                        writer.Write((short)(channels * bitsPerSample / 8)); // BlockAlign
+                        writer.Write((short)bitsPerSample); // BitsPerSample
+
+                        writer.Write(new[] { 'd', 'a', 't', 'a' }); // Subchunk2ID
+                        writer.Write(dataChunkSize); // Subchunk2Size
+
+                        // Write PCM data
+                        writer.Write(pcmData);
+                    }
+                }
+
+                Console.WriteLine($"PCM file converted to WAV successfully. WAV file saved at: {wavFilePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating WAV file from PCM: {ex.Message}");
+            }
+        }
+
+        private static void CopyWaveStream(Stream input, Stream output)
+        {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
         }
 
         private string GenerateUniqueFileName(string originalFileName)
@@ -109,7 +273,7 @@ namespace CityWatch.Web.Pages
             await audioFile.CopyToAsync(stream);
         }
 
-        private async Task<bool> UploadFileToDropboxAsync(string localFilePath,string dropBoxPath)
+        private async Task<bool> UploadFileToDropboxAsync(string localFilePath, string dropBoxPath)
         {
             try
             {
@@ -117,7 +281,7 @@ namespace CityWatch.Web.Pages
                 //var fileName = Path.GetFileName(localFilePath);
                 //var dropboxDir = _guardDataProvider.GetDrobox();
 
-                
+
                 //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{dropboxDir.DropboxDir}/RCAudioRecordings/{formattedDate}/{fileName}");
 
                 return await UploadDocumentToDropboxAsync(localFilePath, dropBoxPath);
@@ -191,7 +355,7 @@ namespace CityWatch.Web.Pages
                 }
                 return blobUrl;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return string.Empty;
 
