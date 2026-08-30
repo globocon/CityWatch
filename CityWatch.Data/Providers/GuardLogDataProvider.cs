@@ -107,6 +107,7 @@ namespace CityWatch.Data.Providers
         List<CompanyDetails> GetCompanyDetails();
         //logBookId entry for radio checklist-start
         void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
+        bool EnsurePcarBaseSiteLoginAnchor(int guardId, int clientSiteId, GuardLog loginEntry);
         List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityDetails();
         void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus);
         List<RadioCheckListGuardData> GetActiveGuardDetails();
@@ -2123,6 +2124,77 @@ namespace CityWatch.Data.Providers
             catch (Exception ex)
             {
 
+            }
+        }
+
+        /* ---------------------------------------------------------------------------
+           Added 19-Aug-2026 - permanent Radio Check login anchor for patrol car crews.
+
+           WHY
+           A patrol car crew logs in at its base site and then works at client sites for
+           the rest of the shift. Radio Check needs one lasting record saying "this crew
+           is logged in at the base site", so they stay accounted for while they are out.
+           The website login already writes one (Pages/Guard/Login.cshtml.cs); the mobile
+           app never did, so crews who logged in on the phone had no anchor at all and
+           disappeared from BOTH the active and inactive lists once their activity moved
+           to a client site.
+
+           IDEMPOTENCY
+           Keyed on guard + base site, deliberately NOT on mobile-vs-web: one active
+           shift is one anchor whichever client the crew logged in from. A mobile
+           reconnect, a web login after a mobile one, or the reverse, all reuse the
+           existing anchor rather than creating a second.
+
+           OFFDUTY IS LEFT NULL ON PURPOSE
+           The app invents OffDuty = login + 1 hour. RadioChecksActivityStatusService
+           signs a guard off 90 minutes after their OffDuty, so copying that value would
+           drop every patrol car about 2.5 hours into the shift. With OffDuty null the
+           existing 12-hour rule applies instead, which is what that rule was written for.
+
+           SCOPE
+           PatrolTourMode = PCAR only, so standard client sites are completely untouched.
+           Sites are matched by mode, never by a hardcoded site id.
+           --------------------------------------------------------------------------- */
+        public bool EnsurePcarBaseSiteLoginAnchor(int guardId, int clientSiteId, GuardLog loginEntry)
+        {
+            try
+            {
+                if (guardId <= 0 || clientSiteId <= 0)
+                    return false;
+
+                var isPcarBaseSite = _context.ClientSites
+                    .Any(x => x.Id == clientSiteId && x.PatrolTourMode == PatrolTouringMode.PCAR);
+                if (!isPcarBaseSite)
+                    return false;
+
+                /* One active shift = one anchor. */
+                var anchorAlreadyExists = _context.ClientSiteRadioChecksActivityStatus
+                    .Any(x => x.ClientSiteId == clientSiteId
+                              && x.GuardId == guardId
+                              && x.GuardLoginTime != null);
+                if (anchorAlreadyExists)
+                    return false;
+
+                _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
+                {
+                    ClientSiteId = clientSiteId,
+                    GuardId = guardId,
+                    GuardLoginTime = DateTime.Now,
+                    OnDuty = DateTime.Now,
+                    OffDuty = null,
+                    GuardLoginTimeLocal = loginEntry?.EventDateTimeLocal,
+                    GuardLoginTimeLocalWithOffset = loginEntry?.EventDateTimeLocalWithOffset,
+                    GuardLoginTimeZone = loginEntry?.EventDateTimeZone,
+                    GuardLoginTimeZoneShort = loginEntry?.EventDateTimeZoneShort,
+                    GuardLoginTimeUtcOffsetMinute = loginEntry?.EventDateTimeUtcOffsetMinute
+                });
+                _context.SaveChanges();
+                return true;
+            }
+            catch (Exception)
+            {
+                /* Logging in must never fail because Radio Check bookkeeping failed. */
+                return false;
             }
         }
 

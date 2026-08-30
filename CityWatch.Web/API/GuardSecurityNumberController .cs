@@ -675,6 +675,12 @@ namespace CityWatch.Web.API
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
 
+                /* 19-Aug-2026: a patrol car crew logging in at its base site gets a permanent
+                   Radio Check login anchor, exactly as the website login already creates one.
+                   Without it, app-only crews vanish from BOTH RC lists once their activity
+                   moves to a client site. No-op for standard sites and for repeat logins. */
+                _guardLogDataProvider.EnsurePcarBaseSiteLoginAnchor(request.guardId, request.clientsiteId, signInEntry);
+
                 //Predefined Activity for client site refer GetActivities in this page if this is modified
                 // ################### Start ################
                 List<ActivityModel>? activity = new();
@@ -874,6 +880,12 @@ namespace CityWatch.Web.API
                 };
 
                 _guardLogDataProvider.SaveGuardLog(signInEntry);
+
+                /* 19-Aug-2026: a patrol car crew logging in at its base site gets a permanent
+                   Radio Check login anchor, exactly as the website login already creates one.
+                   Without it, app-only crews vanish from BOTH RC lists once their activity
+                   moves to a client site. No-op for standard sites and for repeat logins. */
+                _guardLogDataProvider.EnsurePcarBaseSiteLoginAnchor(request.guardId, request.clientsiteId, signInEntry);
 
                 //Predefined Activity for client site refer GetActivities in this page if this is modified
                 // ################### Start ################
