@@ -954,9 +954,38 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                     last2 = group;
                 }
             });
+        smartFitText();
+
     },
 
 });
+function smartFitText() {
+    $('.group td').each(function () {
+        let el = $(this);
+        let maxWidth = el.width();
+
+        el.css({
+            'font-size': '20px',
+            'text-overflow': 'clip'
+        });
+
+        let minFont = 12;
+
+        // Step 1: Try shrinking
+        while (el[0].scrollWidth > maxWidth && parseFloat(el.css('font-size')) > minFont) {
+            let currentSize = parseFloat(el.css('font-size'));
+            el.css('font-size', (currentSize - 0.5) + 'px');
+        }
+
+        // Step 2: If still overflowing → apply ellipsis
+        if (el[0].scrollWidth > maxWidth) {
+            el.css('text-overflow', 'ellipsis');
+        }
+
+        // Step 3: Tooltip for full text
+        el.attr('title', el.text());
+    });
+}
 
 //hide fq column based on the user role 
 clientSiteActiveGuards.column("completedRoundsCol:name").visible(userRole === "1");
