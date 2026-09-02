@@ -906,11 +906,18 @@ $(function () {
     });
     /*for deselecting the common checkbox-end*/
     let loadVariationId = null;
-    let isKeyAllocatedModal;
     let isVehicleOnsiteModal
     let isVehicleInAnotherSiteModal;
-    let isKeyAllocatedModalDesc;
     let isPOIOnsiteModal;
+
+    /* An already-allocated key is a hard stop, not a confirmation. It used to be a
+       ConfirmationModal whose "Yes" called selectKey()/selectKey2() and issued the key anyway,
+       which let a second guard take out a key the first guard had never signed back in. The
+       override is gone: this is shown through MessageModal.showWarning(), an OK-only dialog, so
+       the only way forward is to sign the key back in on the KV first.
+       Applies to the key selection paths only - the vehicle/truck onsite warnings above keep
+       their existing confirm-and-continue behaviour. */
+    const KEY_ALREADY_OUT_MESSAGE = 'Key is already out, check the KV, you need to SIGN THAT KEY back in FIRST, and turn it from GREEN to RED, and only then re-issue.';
     let isLoadVariationModal;
     let clearTrailerRegoModal;
     if ($('#vehicle_key_daily_log').length === 1) {
@@ -923,15 +930,6 @@ $(function () {
             onYes: function () { saveKeyVehicleLogEntry(); }
         });
 
-        isKeyAllocatedModal = new ConfirmationModal('key-alloc', {
-            message: 'This key was already allocated and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already allocated?',
-            onYes: function () { selectKey(); }
-        });
-
-        isKeyAllocatedModalDesc = new ConfirmationModal('key-alloc', {
-            message: 'This key was already allocated and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already allocated?',
-            onYes: function () { selectKey2() }
-        });
         isPOIOnsiteModal = new ConfirmationModal('poi-onsite', {
             message: 'You are about to add a new POI entry to database with no name.This is ok, as C4i System will assign a system generated name. Please confirm you want to continue',
             onYes: function () { GetPOINumber(); }
@@ -3017,8 +3015,9 @@ $(function () {
                         keyNo: response,
                     }
                 }).done(function (keyIsAllocated) {
+                    // Key already out: warn and stop. No override - selectKey2() is not reachable here.
                     if (!keyIsAllocated) selectKey2();
-                    else isKeyAllocatedModalDesc.showConfirmation();
+                    else new MessageModal({ message: KEY_ALREADY_OUT_MESSAGE }).showWarning();
                 });
             });
         });
@@ -3296,8 +3295,9 @@ $(function () {
                     keyNo: option.text(),
                 }
             }).done(function (keyIsAllocated) {
+                // Key already out: warn and stop. No override - selectKey() is not reachable here.
                 if (!keyIsAllocated) selectKey();
-                else isKeyAllocatedModal.showConfirmation();
+                else new MessageModal({ message: KEY_ALREADY_OUT_MESSAGE }).showWarning();
             });
         });
 
@@ -6530,8 +6530,9 @@ $(function () {
                         keyNo: response,
                     }
                 }).done(function (keyIsAllocated) {
+                    // Key already out: warn and stop. No override - selectKey2() is not reachable here.
                     if (!keyIsAllocated) selectKey2();
-                    else isKeyAllocatedModalDesc.showConfirmation();
+                    else new MessageModal({ message: KEY_ALREADY_OUT_MESSAGE }).showWarning();
                 });
             });
         });
@@ -6745,8 +6746,9 @@ $(function () {
                     keyNo: option.text(),
                 }
             }).done(function (keyIsAllocated) {
+                // Key already out: warn and stop. No override - selectKey() is not reachable here.
                 if (!keyIsAllocated) selectKey();
-                else isKeyAllocatedModal.showConfirmation();
+                else new MessageModal({ message: KEY_ALREADY_OUT_MESSAGE }).showWarning();
             });
         });
 
