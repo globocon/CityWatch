@@ -1006,12 +1006,46 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetIsKeyAllocated(int logbookId, string keyNo)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Where(z => !string.IsNullOrEmpty(z.Detail.KeyNo)).Select(z => z.Detail.KeyNo).Any(x => x.Contains(keyNo)));
+            return new JsonResult(IsKeyCurrentlyAllocated(logbookId, keyNo));
         }
 
         public JsonResult OnGetIsKeyDescAllocated(int logbookId, string keyNo)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Where(z => !string.IsNullOrEmpty(z.Detail.KeyNo)).Select(z => z.Detail.KeyNo).Any(x => x.Contains(keyNo)));
+            return new JsonResult(IsKeyCurrentlyAllocated(logbookId, keyNo));
+        }
+
+        /// <summary>
+        /// True when <paramref name="keyNo"/> is held by an open (no exit time) key vehicle log entry
+        /// for this logbook, i.e. the key is still signed out.
+        /// </summary>
+        /// <remarks>
+        /// KeyNo stores several keys as a "; " joined list, so it is split and compared whole here,
+        /// the same way the docket and report builders read it (KeyNo.Split(';').Select(z => z.Trim())
+        /// in ViewDataService.GetKeyVehicleLogKeys and KeyVehicleLogDocketGenerator).
+        ///
+        /// Both callers previously did a raw x.Contains(keyNo) substring test against that joined
+        /// string, so any key whose number was a substring of an allocated one reported itself as
+        /// allocated: with key "12" signed out, key "1" and key "2" both matched. That was a
+        /// tolerable annoyance while the UI still offered an override, but the allocated-key warning
+        /// is now a hard stop, so a false positive blocks a guard from issuing a key that is
+        /// genuinely available.
+        ///
+        /// Comparison is case-insensitive: both sides originate from ClientSiteKeys.KeyNo, and for a
+        /// control that exists to stop the same key being issued twice a missed match is worse than
+        /// treating "a1" and "A1" as one key.
+        /// </remarks>
+        private bool IsKeyCurrentlyAllocated(int logbookId, string keyNo)
+        {
+            if (string.IsNullOrWhiteSpace(keyNo))
+                return false;
+
+            var requestedKeyNo = keyNo.Trim();
+
+            return _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open)
+                .Where(z => !string.IsNullOrEmpty(z.Detail.KeyNo))
+                .SelectMany(z => z.Detail.KeyNo.Split(';'))
+                .Select(allocatedKeyNo => allocatedKeyNo.Trim())
+                .Any(allocatedKeyNo => allocatedKeyNo.Equals(requestedKeyNo, StringComparison.OrdinalIgnoreCase));
         }
 
         public JsonResult OnGetClientSiteKeys(int clientSiteId, string searchKeyNo, string searchKeyDesc)

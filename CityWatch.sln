@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityWatch.Tracking", "CityW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityWatch.Tracking.Tests", "CityWatch.Tracking.Tests\CityWatch.Tracking.Tests.csproj", "{9D6B4A2B-DE91-42C5-85A4-1DECAE9F409A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityWatch.Web.Tests", "CityWatch.Web.Tests\CityWatch.Web.Tests.csproj", "{7CB46428-7DF0-902E-ABD1-0FB47FC11155}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -167,6 +169,18 @@ Global
 		{9D6B4A2B-DE91-42C5-85A4-1DECAE9F409A}.Release|x64.Build.0 = Release|Any CPU
 		{9D6B4A2B-DE91-42C5-85A4-1DECAE9F409A}.Release|x86.ActiveCfg = Release|Any CPU
 		{9D6B4A2B-DE91-42C5-85A4-1DECAE9F409A}.Release|x86.Build.0 = Release|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Debug|x64.Build.0 = Debug|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Debug|x86.Build.0 = Debug|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Release|x64.ActiveCfg = Release|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Release|x64.Build.0 = Release|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Release|x86.ActiveCfg = Release|Any CPU
+		{7CB46428-7DF0-902E-ABD1-0FB47FC11155}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
