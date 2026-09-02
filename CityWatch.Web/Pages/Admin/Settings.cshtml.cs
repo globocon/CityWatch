@@ -76,6 +76,9 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IDropboxService _dropboxUploadService;
         private readonly Helpers.Settings _settings;
         private readonly ICertificateGenerator _certificateGenerator;
+        // Bulk Certificate Release reuses the single-guard issuing logic that already lives here.
+        private readonly IRPLCertificateGeneratorService _rplCertificateGeneratorService;
+        private readonly ILogger<SettingsModel> _logger;
         private readonly EmailOptions _EmailOptions;
         private readonly CityWatchDbContext _context;
 
@@ -90,8 +93,12 @@ namespace CityWatch.Web.Pages.Admin
             IGuardLogDataProvider guardLogDataProvider,
              ITimesheetReportGenerator TimesheetReportGenerator, IGuardDataProvider guardDataProvider, IOptions<Helpers.Settings> settings,
              IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
-             IOptions<EmailOptions> emailOptions, CityWatchDbContext context)
+             IOptions<EmailOptions> emailOptions, CityWatchDbContext context,
+             IRPLCertificateGeneratorService rplCertificateGeneratorService,
+             ILogger<SettingsModel> logger)
         {
+            _rplCertificateGeneratorService = rplCertificateGeneratorService;
+            _logger = logger;
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -3565,6 +3572,106 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(result);
         }
+        /* ---------------- Bulk Certificate Release (HR Groups - Course Library Only) ---------------- */
+
+        /// <summary>
+        /// Guards offered in the Bulk Certificate Release picker. Uses the existing active-guard source
+        /// (GetActiveGuards, already ordered by name) rather than introducing another one.
+        /// </summary>
+        public JsonResult OnGetBulkCertReleaseGuards()
+        {
+            // Initial is sent so the picker can label a guard "Name [Initial] - SecurityNo".
+            var guards = _guardDataProvider.GetActiveGuards()
+                .Select(z => new { z.Id, z.Name, z.Initial, z.SecurityNo })
+                .ToList();
+
+            return new JsonResult(guards);
+        }
+
+        /// <summary>
+        /// Issues one course certificate to many guards. Each guard goes through
+        /// IRPLCertificateGeneratorService.IssueCertificateForGuard - the same logic the existing
+        /// single-guard release runs - so every eligibility, expiry and duplicate rule is preserved.
+        /// </summary>
+        /// <remarks>
+        /// Guards are processed independently: one guard failing must not stop the rest, matching how
+        /// the existing RPL run treats its own loop. Failures are collected and reported back per guard
+        /// rather than surfaced as a single error.
+        /// Ids are re-validated here against the active guard list and the course library; the browser's
+        /// values are never trusted. Authorization comes from the existing AuthorizeFolder("/Admin")
+        /// convention, so no new unprotected endpoint is introduced.
+        /// </remarks>
+        public JsonResult OnPostBulkReleaseCertificates(int[] guardIds, int[] hrSettingsIds)
+        {
+            var results = new List<object>();
+            var issued = 0;
+            var failed = 0;
+
+            try
+            {
+                if (guardIds == null || guardIds.Length == 0)
+                    return new JsonResult(new { success = false, message = "Please select at least one guard." });
+
+                if (hrSettingsIds == null || hrSettingsIds.Length == 0)
+                    return new JsonResult(new { success = false, message = "Please select a course certificate." });
+
+                /* Server-side validation of the posted courses: each must be a real course-library
+                   entry. Distinct() so selecting the same course twice cannot issue it twice. */
+                var hrSettings = _configDataProvider.GetHRSettings();
+                var selectedCourses = hrSettingsIds.Distinct()
+                    .Select(id => hrSettings.FirstOrDefault(x => x.Id == id))
+                    .Where(x => x != null)
+                    .ToList();
+
+                if (selectedCourses.Count == 0)
+                    return new JsonResult(new { success = false, message = "The selected course certificates no longer exist." });
+
+                // Server-side validation of the posted guards, de-duplicated so a repeated id cannot
+                // produce two certificate records for the same guard.
+                var activeGuards = _guardDataProvider.GetActiveGuards();
+                var selectedGuards = guardIds.Distinct()
+                    .Select(id => activeGuards.FirstOrDefault(g => g.Id == id))
+                    .Where(g => g != null)
+                    .ToList();
+
+                if (selectedGuards.Count == 0)
+                    return new JsonResult(new { success = false, message = "None of the selected guards are active." });
+
+                /* Every selected guard gets every selected course. Each pairing is issued through the
+                   same single-guard service call, and each is isolated so one failure cannot stop the
+                   remaining pairings. */
+                foreach (var guard in selectedGuards)
+                {
+                    var guardLabel = string.IsNullOrWhiteSpace(guard.Initial)
+                        ? guard.Name
+                        : $"{guard.Name} [{guard.Initial}]";
+
+                    foreach (var course in selectedCourses)
+                    {
+                        try
+                        {
+                            _rplCertificateGeneratorService.IssueCertificateForGuard(guard.Id, course.Id);
+                            issued++;
+                            results.Add(new { guardId = guard.Id, guard = guardLabel, course = course.Description, status = "Certificate issued successfully", success = true });
+                        }
+                        catch (Exception ex)
+                        {
+                            failed++;
+                            _logger.LogError(ex, $"Bulk certificate release failed. GuardId: {guard.Id}, HrSettingsId: {course.Id}");
+                            results.Add(new { guardId = guard.Id, guard = guardLabel, course = course.Description, status = $"Failed - {ex.Message}", success = false });
+                        }
+                    }
+                }
+
+                return new JsonResult(new { success = true, issued, failed, results });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bulk certificate release aborted.");
+                return new JsonResult(new { success = false, message = "Error " + ex.Message, issued, failed, results });
+            }
+        }
+
         public JsonResult OnPostDeleteGuardCourseByAdmin(int Id)
         {
             var success = false;
