@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -41,6 +42,7 @@ namespace CityWatch.Web.Pages.Guard
     public class GuardStartTestModel : PageModel
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<GuardStartTestModel> _logger;
         private readonly IViewDataService _viewDataService;
         private readonly IPatrolDataReportService _irChartDataService;
         private readonly IIncidentReportGenerator _incidentReportGenerator;
@@ -69,7 +71,8 @@ namespace CityWatch.Web.Pages.Guard
             IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider, IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider, ICertificateGenerator certificateGenerator,
              IOptions<EmailOptions> emailOptions,
-             IDropboxService dropboxUploadService)
+             IDropboxService dropboxUploadService,
+             ILogger<GuardStartTestModel> logger)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -83,6 +86,7 @@ namespace CityWatch.Web.Pages.Guard
             _certificateGenerator = certificateGenerator;
             _EmailOptions = emailOptions.Value;
             _dropboxUploadService = dropboxUploadService;
+            _logger = logger;
         }
         public void OnGet()
         {
@@ -775,11 +779,21 @@ namespace CityWatch.Web.Pages.Guard
             //string feedbackPath = filename.Substring(filename.IndexOf("Feedback"));
             var securitylicense = _guardDataProvider.GetActiveGuards().Where(x => x.Id == guardId).FirstOrDefault().SecurityNo;
 
+            /* GenerateGuardFeedbackPdf writes the file to
+               <WebRootPath>\TA\Feedback\<SecurityNo>\ but returns only Path.GetFileName of it.
+               Passing that bare name to the upload made Dropbox resolve it against the process
+               working directory instead, so the file was never found and no feedback form ever
+               reached Dropbox. Rebuild the same full path the generator used - this matches the
+               other callers of UpoadDocumentToDropbox, which all pass a complete path. */
+            var fileToUpload = Path.Combine(_webHostEnvironment.WebRootPath, "TA", "Feedback", securitylicense, filename);
+
             //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/TA/Feedback/{securitylicense}/{filename}");
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{DropboxDir.DropboxDir}/Feedback/{securitylicense}/{filename}");
             var dbxUploaded = true;
-            dbxUploaded = UpoadDocumentToDropbox(filename, dbxFilePath);
+            dbxUploaded = UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
 
+            if (!dbxUploaded)
+                _logger.LogError($"Guard feedback upload to Dropbox failed. GuardId: {guardId}, HrSettingsId: {hrSettingsId}, Source: {fileToUpload}, Destination: {dbxFilePath}");
 
             return new JsonResult(new { filename });
         }
@@ -796,8 +810,13 @@ namespace CityWatch.Web.Pages.Guard
                 //if (uploaded && System.IO.File.Exists(fileToUpload))
                 //    System.IO.File.Delete(fileToUpload);
             }
-            catch
+            /* This catch used to be empty. A wrong source path threw FileNotFoundException here on
+               every guard feedback submission and the exception was discarded, so the upload failed
+               silently and the guard still saw the Thank You page. Log it so the next failure is
+               visible; behaviour is otherwise unchanged - still swallowed, still returns false. */
+            catch (Exception ex)
             {
+                _logger.LogError(ex, $"Dropbox upload failed. Source: {fileToUpload}, Destination: {dbxFilePath}");
             }
 
             return uploaded;
