@@ -1551,7 +1551,33 @@ namespace CityWatch.Web.Services
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var reportPdf = GetReportPdfFilePathFusion(clientsiteLogBook, version);
-            int[] clientSiteId = { clientsiteLogBook.ClientSite.Id };
+
+            /* Fusion report only: a site can belong to a linked duress group (RCLinkedDuressMaster +
+               RCLinkedDuressClientSites), and a duress raised on one member is actioned across the whole
+               group, so the group's activity has to be readable in one place. Its logs are therefore
+               merged into this site's Fusion PDF instead of being spread over one PDF per member site.
+               getallClientSitesLinkedDuress() is the existing helper used by the duress flows in
+               GuardLogDataProvider - it resolves the site's group and returns every member of it - so the
+               grouping rule is defined in exactly one place. It returns an empty list when the site is in
+               no group, in which case the array below stays exactly as before and the PDF is unchanged.
+               Called once per PDF, outside the fusion loop in SiteLogUploadService, so it adds a single
+               small lookup and no N+1. */
+            var linkedDuressSiteIds = _guardLogDataProvider.getallClientSitesLinkedDuress(clientsiteLogBook.ClientSite.Id)
+                                        ?.Select(z => z.ClientSiteId) ?? Enumerable.Empty<int>();
+
+            /* Distinct() guards against the same site being listed more than once in the relationship
+               table, and against the primary site coming back as a member of its own group. The primary
+               id is prepended so it is always present even if the group lookup returns nothing. Duplicate
+               ids could not duplicate log rows anyway (the provider filters with a single Contains(), so
+               each history row matches once), but a clean list keeps the generated IN clause minimal. */
+            int[] clientSiteId = new[] { clientsiteLogBook.ClientSite.Id }.Concat(linkedDuressSiteIds).Distinct().ToArray();
+
+            /* Same-date restriction is unchanged and now covers the linked sites too: the existing
+               clientsiteLogBook.Date is passed as both from and to, and the provider filters the history
+               rows on EventDateTime.Date between them, so linked-site logs from any other date can never
+               be pulled in. The provider returns one combined list ordered by EventDateTime, so the
+               primary site's logs keep their existing chronological order with the linked entries
+               interleaved by time. */
             var _guardLogs = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, clientsiteLogBook.Date, clientsiteLogBook.Date, false);
             //var _guardLogs = _guardLogDataProvider.ClientSiteRadioChecksActivityStatus_History(clientsiteLogBook.ClientSite.Id, clientsiteLogBook.Date);
 
