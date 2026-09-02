@@ -5,6 +5,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
@@ -20,6 +21,14 @@ namespace CityWatch.Web.Services
     public interface IRPLCertificateGeneratorService
     {
         void GenerateRPLCertificate();
+
+        /// <summary>
+        /// Issues the certificate for one guard on one course, exactly as the RPL run does for each
+        /// guard it processes: marks the training/assessment records complete, generates the
+        /// certificate PDF, stores the GuardComplianceAndLicense record and sends the notification.
+        /// Exposed so the Bulk Certificate Release can reuse this logic instead of re-implementing it.
+        /// </summary>
+        void IssueCertificateForGuard(int guardId, int hrSettingsId);
     }
 
     public class RPLCertificateGeneratorService : IRPLCertificateGeneratorService
@@ -29,12 +38,15 @@ namespace CityWatch.Web.Services
         private readonly IConfigDataProvider _configDataProvider;
         private readonly ICertificateGenerator _certificateGenerator;
         private readonly IClientDataProvider _clientDataProvider;
+        private readonly ILogger<RPLCertificateGeneratorService> _logger;
         private readonly EmailOptions _EmailOptions;
 
 
         public RPLCertificateGeneratorService(IGuardLogDataProvider guardLogDataProvider, IGuardDataProvider guardDataProvider
-            , IConfigDataProvider configDataProvider, ICertificateGenerator certificateGenerator, IOptions<EmailOptions> emailOptions, IClientDataProvider clientDataProvider)
+            , IConfigDataProvider configDataProvider, ICertificateGenerator certificateGenerator, IOptions<EmailOptions> emailOptions, IClientDataProvider clientDataProvider
+            , ILogger<RPLCertificateGeneratorService> logger)
         {
+            _logger = logger;
             _guardLogDataProvider = guardLogDataProvider;
             _guardDataProvider = guardDataProvider;
             _configDataProvider = configDataProvider;
@@ -49,10 +61,52 @@ namespace CityWatch.Web.Services
 
             foreach(var item in rplCertificateDetails)
             {
-                int hrsettingsid = _configDataProvider.GetCourseCertificateDocuments().Where(x => x.Id == item.TrainingCourseCertificateId).FirstOrDefault().HRSettingsId;
-                GuardCertificateAndfeedBackStatus(item.GuardId, hrsettingsid);
-                GuardCertificate(item.GuardId, hrsettingsid);
+                /* Each guard is isolated: this scheduled run had no error handling, so a single
+                   unconfigured course (missing TrainingTestQuestionSettings, or a missing certificate
+                   document row on the line below) aborted the whole run and every remaining guard was
+                   silently skipped. Log and carry on instead. */
+                try
+                {
+                    var certificateDocument = _configDataProvider.GetCourseCertificateDocuments()
+                        .FirstOrDefault(x => x.Id == item.TrainingCourseCertificateId);
+
+                    if (certificateDocument == null)
+                    {
+                        _logger.LogError($"RPL certificate run skipped GuardId {item.GuardId}: no course certificate document for TrainingCourseCertificateId {item.TrainingCourseCertificateId}.");
+                        continue;
+                    }
+
+                    /* Was the two calls inlined here. Moved into IssueCertificateForGuard verbatim and
+                       in the same order so the Bulk Certificate Release runs identical logic. */
+                    IssueCertificateForGuard(item.GuardId, certificateDocument.HRSettingsId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"RPL certificate run failed for GuardId {item.GuardId}, TrainingCourseCertificateId {item.TrainingCourseCertificateId}.");
+                }
             }
+        }
+
+        /// <inheritdoc />
+        public void IssueCertificateForGuard(int guardId, int hrSettingsId)
+        {
+            /* A course with no TrainingTestQuestionSettings row cannot be certified: both methods below
+               read that row for IsCertificateHoldUntilPracticalTaken / IsCertificateWithQAndADump /
+               IsCertificateExpiry and dereference it unguarded, which threw a bare
+               NullReferenceException that told the operator nothing (e.g. "Martha Cove - Alarm Faults"
+               has no settings row). Fail fast here, before any training record is touched, with a
+               message the Bulk Certificate Release can show against the guard and course. Both private
+               methods are only reachable through here, so this one check covers them. */
+            var certificateSettings = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
+            if (certificateSettings == null)
+            {
+                var course = _configDataProvider.GetHRSettings().FirstOrDefault(x => x.Id == hrSettingsId);
+                throw new InvalidOperationException(
+                    $"No Training/Test Question settings configured for course '{course?.Description ?? hrSettingsId.ToString()}', so a certificate cannot be issued.");
+            }
+
+            GuardCertificateAndfeedBackStatus(guardId, hrSettingsId);
+            GuardCertificate(guardId, hrSettingsId);
         }
         private void GuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId)
         {

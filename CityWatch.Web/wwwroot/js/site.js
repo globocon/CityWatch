@@ -8002,6 +8002,10 @@ if (gridLanguage) {
 $('#hr_settings_fields_types').on('change', function () {
     $('#PayRatesDiv').hide();
     $('#AllowancesDiv').hide();
+    /* Bulk Certificate Release is hidden for every field type; only the
+       "HR Groups - Course Library Only" branch below turns it back on. Hiding once here rather
+       than in each branch keeps the other branches untouched. */
+    $('.btn-bulk-cert-release').hide();
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
     if ($('#hr_settings_fields_types').val() == 1) {
         //gridHrSettings.show();
@@ -8203,6 +8207,8 @@ $('#hr_settings_fields_types').on('change', function () {
     }
     else if ($('#hr_settings_fields_types').val() == 8) {
 
+        // Bulk Certificate Release belongs to the course library only.
+        $('.btn-bulk-cert-release').show();
         //gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
@@ -9977,3 +9983,224 @@ function closeVideoPlayer() {
     video.src = "";
     $('#videoPlayerModal').modal('hide');
 }
+
+/* ---------------- Bulk Certificate Release (HR Settings > HR Groups - Course Library Only) ----------------
+   Issues the selected course certificates to the selected guards. The server pairs every guard with
+   every course and runs each pairing through the same single-guard issuing service the existing
+   release uses, so all eligibility rules still apply here.
+   Guard list, course list and modal handling follow the selectCoursesForGuardByAdmin conventions. */
+$(document).on('click', '.btn-bulk-cert-release', function (e) {
+    e.preventDefault();
+
+    $('#bulkCertGuardSearch').val('');
+    $('#bulkCertValidation').hide().html('');
+    $('#bulkCertResult').hide().html('');
+    $('#bulkCertGuardCount').text('0');
+    $('#bulkCertCourseCount').text('0');
+    $('#bulkCertSelectedGuardList').empty();
+
+    loadBulkCertGuards();
+    loadBulkCertCourses();
+
+    $('#bulkCertificateRelease').modal('show');
+});
+
+// "Name [Initial] - SecurityNo", e.g. Nihar Guptha [N.G] - 123-xcf-396.
+function bulkCertGuardLabel(guard) {
+    var label = guard.name || '';
+    if (guard.initial) {
+        label += ' [' + guard.initial + ']';
+    }
+    if (guard.securityNo) {
+        label += ' - ' + guard.securityNo;
+    }
+    return label;
+}
+
+function loadBulkCertGuards() {
+    var list = $('#bulkCertGuardList');
+    list.html('<li class="list-group-item">Loading...</li>');
+
+    $.ajax({
+        url: '/Admin/Settings?handler=BulkCertReleaseGuards',
+        type: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        list.empty();
+        if (!data || data.length === 0) {
+            list.append('<li class="list-group-item">No active guards found.</li>');
+            return;
+        }
+        data.forEach(function (guard) {
+            var label = bulkCertGuardLabel(guard);
+            list.append(
+                '<li class="list-group-item" style="border-left:0;border-right:0;font-size:12px;padding:3px">' +
+                '<div class="custom-control custom-checkbox">' +
+                '<input type="checkbox" class="custom-control-input bulk-cert-guard" id="bulkCertGuard_' + guard.id + '" value="' + guard.id + '" data-label="' + label + '">' +
+                '<label class="custom-control-label" for="bulkCertGuard_' + guard.id + '">' + label + '</label>' +
+                '</div></li>');
+        });
+        refreshBulkCertSelectedGuards();
+    }).fail(function () {
+        list.html('<li class="list-group-item text-danger">Failed to load guards.</li>');
+    });
+}
+
+/* Reuses the existing course library endpoint that selectCoursesForGuardByAdmin uses, so the list and
+   its HR grouping stay identical. course.id is the HRSettingsId the certificate logic expects. */
+function loadBulkCertCourses() {
+    var list = $('#bulkCertCourseList');
+    list.html('<li class="list-group-item">Loading...</li>');
+
+    $.ajax({
+        url: '/Admin/Settings?handler=TrainingCourses',
+        type: 'GET',
+        data: { isOnboardingUser: false }
+    }).done(function (data) {
+        list.empty();
+        if (!data || data.length === 0) {
+            list.append('<li class="list-group-item">No course certificates found.</li>');
+            return;
+        }
+        data.forEach(function (group) {
+            list.append('<li class="list-group-item list-group-item-success" style="border-left:0;border-right:0;font-size:12px;padding:3px"></li>');
+            group.courses.forEach(function (course) {
+                list.append(
+                    '<li class="list-group-item bulk-cert-course" data-index="' + course.id + '" ' +
+                    'style="border-left:0;border-right:0;font-size:12px;padding:3px;cursor:pointer">' +
+                    course.description +
+                    '<i class="fa fa-check ml-2 text-success" style="float:right;visibility:hidden"></i>' +
+                    '</li>');
+            });
+        });
+        refreshBulkCertCourseCount();
+    }).fail(function () {
+        list.html('<li class="list-group-item text-danger">Failed to load course certificates.</li>');
+    });
+}
+
+// Courses are multi-select: clicking toggles, so a second click unselects.
+$(document).on('click', '.bulk-cert-course', function () {
+    var course = $(this);
+    /* Selection is tracked with bulk-cert-selected, not Bootstrap's "active": active turns the
+       whole list-group row blue, and the tick alone is the wanted indicator. */
+    var nowSelected = !course.hasClass('bulk-cert-selected');
+    course.toggleClass('bulk-cert-selected', nowSelected);
+    course.find('i.fa-check').css('visibility', nowSelected ? 'visible' : 'hidden');
+    refreshBulkCertCourseCount();
+});
+
+function refreshBulkCertCourseCount() {
+    $('#bulkCertCourseCount').text($('#bulkCertCourseList .bulk-cert-course.bulk-cert-selected').length);
+}
+
+$(document).on('click', '#bulkCertSelectAllCourses', function () {
+    $('#bulkCertCourseList .bulk-cert-course').addClass('bulk-cert-selected').find('i.fa-check').css('visibility', 'visible');
+    refreshBulkCertCourseCount();
+});
+
+$(document).on('click', '#bulkCertClearCourses', function () {
+    $('#bulkCertCourseList .bulk-cert-course').removeClass('bulk-cert-selected').find('i.fa-check').css('visibility', 'hidden');
+    refreshBulkCertCourseCount();
+});
+
+// Mirrors the ticked guards into the "Selected Guards" list below the picker.
+function refreshBulkCertSelectedGuards() {
+    var selected = $('.bulk-cert-guard:checked');
+    var list = $('#bulkCertSelectedGuardList');
+
+    $('#bulkCertGuardCount').text(selected.length);
+    list.empty();
+
+    if (selected.length === 0) {
+        list.append('<li class="list-group-item text-muted" style="font-size:12px;padding:3px">No guards selected.</li>');
+        return;
+    }
+
+    selected.each(function () {
+        var id = $(this).val();
+        list.append(
+            '<li class="list-group-item" style="border-left:0;border-right:0;font-size:12px;padding:3px">' +
+            $(this).data('label') +
+            '<i class="fa fa-trash-o ml-2 text-danger bulk-cert-remove-guard" data-guard-id="' + id + '" title="Remove" style="cursor:pointer;float:right"></i>' +
+            '</li>');
+    });
+}
+
+$(document).on('change', '.bulk-cert-guard', refreshBulkCertSelectedGuards);
+
+// Removing from the selected list unticks the guard in the picker above.
+$(document).on('click', '.bulk-cert-remove-guard', function () {
+    $('#bulkCertGuard_' + $(this).data('guard-id')).prop('checked', false);
+    refreshBulkCertSelectedGuards();
+});
+
+$(document).on('click', '#bulkCertSelectAllGuards', function () {
+    $('#bulkCertGuardList li:visible').find('.bulk-cert-guard').prop('checked', true);
+    refreshBulkCertSelectedGuards();
+});
+
+$(document).on('click', '#bulkCertClearGuards', function () {
+    $('.bulk-cert-guard').prop('checked', false);
+    refreshBulkCertSelectedGuards();
+});
+
+$(document).on('keyup', '#bulkCertGuardSearch', function () {
+    var term = $(this).val().toLowerCase();
+    $('#bulkCertGuardList li').each(function () {
+        $(this).toggle($(this).text().toLowerCase().indexOf(term) > -1);
+    });
+});
+
+$(document).on('click', '#bulkCertProduce', function () {
+    var button = $(this);
+    var guardIds = $('.bulk-cert-guard:checked').map(function () { return parseInt(this.value, 10); }).get();
+    var hrSettingsIds = $('#bulkCertCourseList .bulk-cert-course.bulk-cert-selected').map(function () { return parseInt($(this).data('index'), 10); }).get();
+
+    $('#bulkCertValidation').hide().html('');
+    $('#bulkCertResult').hide().html('');
+
+    if (guardIds.length === 0) {
+        $('#bulkCertValidation').html('Please select at least one guard.').show();
+        return;
+    }
+    if (hrSettingsIds.length === 0) {
+        $('#bulkCertValidation').html('Please select a course certificate.').show();
+        return;
+    }
+
+    // Guard against a double click issuing two sets of certificates.
+    button.prop('disabled', true).text('Producing...');
+
+    $.ajax({
+        url: '/Admin/Settings?handler=BulkReleaseCertificates',
+        type: 'POST',
+        traditional: true,
+        data: { guardIds: guardIds, hrSettingsIds: hrSettingsIds },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (response) {
+        if (!response.success) {
+            $('#bulkCertValidation').html(response.message).show();
+            return;
+        }
+
+        var html = '<div class="alert alert-info"><strong>Bulk Certificate Release Completed</strong><br/>' +
+                   'Successfully issued: ' + response.issued + '<br/>' +
+                   'Failed/Skipped: ' + response.failed + '</div>';
+
+        if (response.results && response.results.length > 0) {
+            html += '<ul class="list-group" style="max-height:200px;overflow-y:auto">';
+            response.results.forEach(function (item) {
+                html += '<li class="list-group-item ' + (item.success ? 'list-group-item-success' : 'list-group-item-danger') +
+                        '" style="font-size:12px;padding:3px">' + item.guard + ' - ' + item.course + ' &rarr; ' + item.status + '</li>';
+            });
+            html += '</ul>';
+        }
+
+        $('#bulkCertResult').html(html).show();
+    }).fail(function () {
+        $('#bulkCertValidation').html('Bulk certificate release failed. Please try again.').show();
+    }).always(function () {
+        button.prop('disabled', false).text('Produce');
+    });
+});
