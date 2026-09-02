@@ -1237,13 +1237,24 @@ namespace CityWatch.Web.Services
                             }
                             if (guardLogImage.IsTwentyfivePercentfile == true)
                             {
-                                var logimage = new Image(ImageDataFactory.Create(guardLogImage.ImagePath))
-                               .SetWidth(UnitValue.CreatePercentValue(27));
-                                logimage.SetTextAlignment(TextAlignment.RIGHT);
-                                logimage.SetMarginTop(10);
-                                logimage.SetMarginLeft(10);
-                                notesParagraphImage.Add(logimage);
-
+                                /* ImagePath is normally a remote URL, so this load can fail on any network or
+                                   storage hiccup. It runs after the Time cell but before the rest of the row's
+                                   cells, so an escaping exception used to abandon the row one cell in and shift
+                                   every subsequent cell into the wrong column. Contained here so a missing
+                                   attachment costs only its thumbnail, not the table alignment. */
+                                try
+                                {
+                                    var logimage = new Image(ImageDataFactory.Create(guardLogImage.ImagePath))
+                                   .SetWidth(UnitValue.CreatePercentValue(27));
+                                    logimage.SetTextAlignment(TextAlignment.RIGHT);
+                                    logimage.SetMarginTop(10);
+                                    logimage.SetMarginLeft(10);
+                                    notesParagraphImage.Add(logimage);
+                                }
+                                catch (Exception exImg)
+                                {
+                                    Console.WriteLine($"Error adding note image: {exImg.Message}");
+                                }
                             }
                         }
                     }
@@ -1288,18 +1299,36 @@ namespace CityWatch.Web.Services
                         //var imagePath = "wwwroot/images/GPSImage.png";
                         //var siteImage = new Image(ImageDataFactory.Create(imagePath))
                         //    .SetWidth(UnitValue.CreatePercentValue(25)); // Adjust percentage width for the image
-                        var imagePath = "wwwroot/images/GPSImage.png";
-                        var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                            .SetWidth(UnitValue.CreatePercentValue(50)) // Adjusted width to 40% for enlargement
-                            .SetHeight(UnitValue.CreatePercentValue(50)) // Adjusted height to 40% for proportional scaling
-                            .SetTextAlignment(TextAlignment.RIGHT);
-
-                        var urlWithTargetBlank = $"https://www.google.com/maps?q={entry.gpsCoordinates}";
-                        siteImage.SetAction(PdfAction.CreateURI(urlWithTargetBlank));
+                        /* Was the relative literal "wwwroot/images/GPSImage.png", which only resolves when the
+                           process working directory happens to be the web project folder. Anywhere else the
+                           load threw an I/O exception, the per-row catch below swallowed it mid-row, and the
+                           row was left short of cells - every following cell then shifted one column left,
+                           which is why the data stopped lining up with the headers (most visibly in the last
+                           column, GPS). _imageRootDir is the WebRootPath-based folder the rest of this class
+                           already uses for its images. */
+                        var imagePath = IO.Path.Combine(_imageRootDir, "GPSImage.png");
 
                         var paragraphGPS = new Paragraph()
-                            .Add(siteImage)
                             .SetTextAlignment(TextAlignment.RIGHT); // Align content properly
+
+                        /* A missing or unreadable icon must never cost the row its GPS cell: the table is
+                           filled cell by cell, so every row has to contribute the same number of cells. */
+                        try
+                        {
+                            var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                                .SetWidth(UnitValue.CreatePercentValue(50)) // Adjusted width to 40% for enlargement
+                                .SetHeight(UnitValue.CreatePercentValue(50)) // Adjusted height to 40% for proportional scaling
+                                .SetTextAlignment(TextAlignment.RIGHT);
+
+                            var urlWithTargetBlank = $"https://www.google.com/maps?q={entry.gpsCoordinates}";
+                            siteImage.SetAction(PdfAction.CreateURI(urlWithTargetBlank));
+
+                            paragraphGPS.Add(siteImage);
+                        }
+                        catch (Exception exGps)
+                        {
+                            Console.WriteLine($"Error adding GPS icon: {exGps.Message}");
+                        }
 
                         reportDataTable.AddCell(new Cell()
                             .SetKeepTogether(true)
@@ -1469,18 +1498,36 @@ namespace CityWatch.Web.Services
                         //var imagePath = "wwwroot/images/GPSImage.png";
                         //var siteImage = new Image(ImageDataFactory.Create(imagePath))
                         //    .SetWidth(UnitValue.CreatePercentValue(25)); // Adjust percentage width for the image
-                        var imagePath = "wwwroot/images/GPSImage.png";
-                        var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                            .SetWidth(UnitValue.CreatePercentValue(50)) // Adjusted width to 40% for enlargement
-                            .SetHeight(UnitValue.CreatePercentValue(50)) // Adjusted height to 40% for proportional scaling
-                            .SetTextAlignment(TextAlignment.RIGHT);
-
-                        var urlWithTargetBlank = $"https://www.google.com/maps?q={entry.gpsCoordinates}";
-                        siteImage.SetAction(PdfAction.CreateURI(urlWithTargetBlank));
+                        /* Was the relative literal "wwwroot/images/GPSImage.png", which only resolves when the
+                           process working directory happens to be the web project folder. Anywhere else the
+                           load threw an I/O exception, the per-row catch below swallowed it mid-row, and the
+                           row was left short of cells - every following cell then shifted one column left,
+                           which is why the data stopped lining up with the headers (most visibly in the last
+                           column, GPS). _imageRootDir is the WebRootPath-based folder the rest of this class
+                           already uses for its images. */
+                        var imagePath = IO.Path.Combine(_imageRootDir, "GPSImage.png");
 
                         var paragraphGPS = new Paragraph()
-                            .Add(siteImage)
                             .SetTextAlignment(TextAlignment.RIGHT); // Align content properly
+
+                        /* A missing or unreadable icon must never cost the row its GPS cell: the table is
+                           filled cell by cell, so every row has to contribute the same number of cells. */
+                        try
+                        {
+                            var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                                .SetWidth(UnitValue.CreatePercentValue(50)) // Adjusted width to 40% for enlargement
+                                .SetHeight(UnitValue.CreatePercentValue(50)) // Adjusted height to 40% for proportional scaling
+                                .SetTextAlignment(TextAlignment.RIGHT);
+
+                            var urlWithTargetBlank = $"https://www.google.com/maps?q={entry.gpsCoordinates}";
+                            siteImage.SetAction(PdfAction.CreateURI(urlWithTargetBlank));
+
+                            paragraphGPS.Add(siteImage);
+                        }
+                        catch (Exception exGps)
+                        {
+                            Console.WriteLine($"Error adding GPS icon: {exGps.Message}");
+                        }
 
                         reportDataTable.AddCell(new Cell()
                             .SetKeepTogether(true)
@@ -1581,6 +1628,23 @@ namespace CityWatch.Web.Services
             var _guardLogs = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, clientsiteLogBook.Date, clientsiteLogBook.Date, false);
             //var _guardLogs = _guardLogDataProvider.ClientSiteRadioChecksActivityStatus_History(clientsiteLogBook.ClientSite.Id, clientsiteLogBook.Date);
 
+            /* The Fusion table renders a "Client Site" column so each row can be attributed to the site
+               it came from - necessary now that a linked duress group contributes rows from several sites,
+               and still correct for an ungrouped site (every row simply shows that one site).
+               GetGuardFusionLogs() reads ClientSiteRadioChecksActivityStatus_History without joining
+               ClientSites, so SiteName arrives null and the renderer would print "N/A" on every row.
+               Names are resolved here in one batched lookup keyed by the same site ids gathered above -
+               one query per PDF, not one per row, so no N+1. */
+            var siteNamesById = _clientDataProvider.GetClientSiteDetails(clientSiteId)
+                                    .GroupBy(z => z.Id)
+                                    .ToDictionary(z => z.Key, z => z.First().Name);
+
+            foreach (var log in _guardLogs)
+            {
+                if (log.ClientSiteId.HasValue && siteNamesById.TryGetValue(log.ClientSiteId.Value, out var siteName))
+                    log.SiteName = siteName;
+            }
+
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4);
             var doc = new Document(pdfDoc);
@@ -1612,7 +1676,12 @@ namespace CityWatch.Web.Services
                 doc.Add(addlFieldLogs);
             }
 
-            var tableData = CreateReportDataForFusionWithoutSiteName(_guardLogs);
+            /* CreateReportDataForFusion is the existing renderer that already carries the "Client Site"
+               column; CreateReportDataForFusionWithoutSiteName is the same table with that one column
+               commented out. Switching to the former adds the column without duplicating layout code.
+               Only this Fusion report is switched - GeneratePdfReportSmartWand keeps using the
+               WithoutSiteName variant, so the Smart Wand PDF is unchanged. */
+            var tableData = CreateReportDataForFusion(_guardLogs);
             doc.Add(tableData);
 
             var logNotes = CreateNotes(clientsiteLogBook.ClientSite.Id);
