@@ -30,6 +30,23 @@ namespace CityWatch.Data.Models
         public string SerialNo { get; set; }
         public bool DbxUploaded { get; set; }
         public int? ColourCode { get; set; }
+        public bool IsPlateLoaded { get; set; }
+        public int? PlateId { get; set; }
+        public string HASH { get; set; }
+        public string VehicleRego { get; set; }
+        public int? LogId { get; set; }
         public ICollection<IncidentReportEventType> IncidentReportEventTypes { get; set; }
+        public int? PSPFId { get; set; }
+        public int? GuardId { get; set; }
+        [ForeignKey("GuardId")]
+        public Guard Guard { get; set; }
+        public DateTime? CreatedOnDateTimeLocal { get; set; }
+        public DateTimeOffset? CreatedOnDateTimeLocalWithOffset { get; set; }
+        public string CreatedOnDateTimeZone { get; set; }
+        public string CreatedOnDateTimeZoneShort { get; set; }
+        public int? CreatedOnDateTimeUtcOffsetMinute { get; set; }
+        [NotMapped]
+        public int? ClientSitePositionId { get; set; }
+
     }
 }

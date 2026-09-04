@@ -1,0 +1,1 @@
+Alter table CompanyDetails add HomePageMessage2 nvarchar(max)

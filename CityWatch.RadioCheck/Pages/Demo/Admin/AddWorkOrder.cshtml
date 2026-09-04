@@ -1,0 +1,131 @@
+﻿@page
+@model FortescueWebApp.Pages.Admin.AddWorkOrderModel
+@{
+    ViewData["Title"] = "Add Work Order";
+    Layout = "/Pages/Shared/_LayoutDemo.cshtml";
+}
+
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+        <strong>Error:</strong> @Model.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+
+
+
+<div class="container mt-5">
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white border-0 rounded-0">
+            Upload Work Order Details
+        </div>
+        <div class="card-body p-4">
+            <form enctype="multipart/form-data" method="post">
+                <div class="form-group mb-3">
+                    <label for="ExcelFile" class="form-label">Upload Excel File</label>
+                    <input type="file" class="form-control" id="ExcelFile" name="ExcelFile" accept=".xlsx,.xls" required>
+                    <div class="invalid-feedback">Please select a file to upload.</div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3" name="action" value="upload">Upload Excel</button>
+            </form>
+        </div>
+    </div>
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white border-0 rounded-0">
+            Work Order Form
+        </div>
+        <div class="card-body p-4">
+            <form class="row g-3 needs-validation" method="POST" novalidate>
+                <div class="col-md-6">
+                    <label for="WorkOrderNumber" class="form-label required">Work Order</label>
+                    <input type="text" class="form-control" id="WorkOrderNumber" asp-for="WorkOrder.WorkOrderNumber" required>
+                    <div class="invalid-feedback">Work Order is required.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="EngLine" class="form-label required">Eng Line</label>
+                    <input type="text" class="form-control" id="EngLine" asp-for="WorkOrder.EngLine" required>
+                    <div class="invalid-feedback">Eng Line is required.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="EngLeg" class="form-label required">Eng Leg</label>
+                    <input type="text" class="form-control" id="EngLeg" asp-for="WorkOrder.EngLeg" required>
+                    <div class="invalid-feedback">Eng Leg is required.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="EngStart" class="form-label required">Eng Start</label>
+                    <input type="number" step="0.001" class="form-control" id="EngStart" asp-for="WorkOrder.EngStart" required>
+                    <div class="invalid-feedback">Eng Start value is required.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="EngEnd" class="form-label required">Eng End</label>
+                    <input type="number" step="0.001" class="form-control" id="EngEnd" asp-for="WorkOrder.EngEnd" required>
+                    <div class="invalid-feedback">Eng End value is required.</div>
+                </div>
+                <div class="col-md-12">
+                    <label for="EngDescription" class="form-label required">Eng Description</label>
+                    <textarea class="form-control" id="EngDescription" asp-for="WorkOrder.EngDescription" rows="3" required></textarea>
+                    <div class="invalid-feedback">Eng Description is required.</div>
+                </div>
+
+                <div class="mt-3 text-center col-12">
+                    <button type="submit" class="btn btn-primary" name="action" value="submit">Submit Work Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Display Work Orders in Grid -->
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white border-0 rounded-0">
+            Work Order Entries
+        </div>
+        <div class="card-body p-4">
+            <table class="table table-bordered">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Work Order</th>
+                        <th>Eng Line</th>
+                        <th>Eng Leg</th>
+                        <th>Eng Start</th>
+                        <th>Eng End</th>
+                        <th>Eng Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.WorkOrders != null && Model.WorkOrders.Any())
+                    {
+                        @foreach (var order in Model.WorkOrders)
+                        {
+                            <tr>
+                                <td>@order.WorkOrderNumber</td>
+                                <td>@order.EngLine</td>
+                                <td>@order.EngLeg</td>
+                                <td>@order.EngStart</td>
+                                <td>@order.EngEnd</td>
+                                <td>@order.EngDescription</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center">No work orders found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

@@ -20,5 +20,7 @@
         
         public string DropboxAppSecret { get; set; }
 
+        public bool GuardListOn { get; set; }
+
     }
 }

@@ -20,5 +20,6 @@
         public string DropboxAppKey { get; set; }
 
         public string DropboxAppSecret { get; set; }
+        public string WebActionListKpiImageFolder { get; set; }
     }
 }

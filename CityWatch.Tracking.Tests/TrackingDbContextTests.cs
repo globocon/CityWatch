@@ -1,0 +1,145 @@
+using System.Linq;
+using CityWatch.Tracking.Data;
+using CityWatch.Tracking.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace CityWatch.Tracking.Tests
+{
+    /// <summary>
+    /// The schema's source of truth is DbScript/360; this context merely reads it. These tests
+    /// pin the mapping to the script so a drift between the two is a test failure, not a
+    /// production surprise. No database connection is needed — building the model is enough.
+    /// </summary>
+    [TestClass]
+    public class TrackingDbContextTests
+    {
+        private static TrackingDbContext Build()
+        {
+            var options = new DbContextOptionsBuilder<TrackingDbContext>()
+                .UseSqlServer("Server=unused;Database=unused;")   // provider only; never connects
+                .Options;
+            return new TrackingDbContext(options);
+        }
+
+        /// <summary>Read-only projections of platform tables (§13.3 boundary) — excluded from
+        /// the pack-owns-its-tables assertions below.</summary>
+        private static readonly string[] PlatformProjections =
+        {
+            nameof(PlatformSmartWand), nameof(PlatformGuard), nameof(PlatformClientSite),
+            nameof(PlatformClientSiteDuress), nameof(PlatformGuardAppVersion),
+            nameof(PlatformWandScan),   // analytics A1: the NFC hit log, read-only
+            nameof(PlatformSiteKpi), nameof(PlatformDailyWandFq), nameof(PlatformWandRound),   // analytics A4
+            nameof(PlatformWandTag),   // #153 FQ summary: the site's checkpoint-tag catalogue
+            nameof(PlatformPosition)   // the car catalogue: callsign→car re-key at session/start
+        };
+
+        [TestMethod]
+        public void Model_Builds_WithAllSixPackEntities_PlusPlatformProjections()
+        {
+            using var context = Build();
+            var entityNames = context.Model.GetEntityTypes()
+                .Select(e => e.ClrType.Name)
+                .Where(n => !PlatformProjections.Contains(n))
+                .OrderBy(n => n).ToList();
+
+            CollectionAssert.AreEqual(new[]
+            {
+                nameof(GeocodeCache),          // Phase 2.1: the reverse-geocode spatial cache
+                nameof(TrackingAccessAudit),
+                nameof(TrackingDeviceToken),   // §Push: FCM nudge addresses (DbScript 369)
+                nameof(TrackingModeCommand),
+                nameof(TrackingSession),
+                nameof(TrackingSiteVisit),     // §5.1: GPS/NFC site arrivals (DbScript 370)
+                nameof(TrackingUnitEnrolment),
+                nameof(TrackPoint),
+                nameof(TrackSegment)
+            }, entityNames);
+        }
+
+        [TestMethod]
+        public void TableNames_MatchDbScript360()
+        {
+            using var context = Build();
+
+            foreach (var entity in context.Model.GetEntityTypes()
+                         .Where(e => !PlatformProjections.Contains(e.ClrType.Name)))
+            {
+                Assert.AreEqual(entity.ClrType.Name, entity.GetTableName(),
+                    $"Entity {entity.ClrType.Name} must map to the singular table name used in DbScript/360.");
+            }
+        }
+
+        [TestMethod]
+        public void PlatformProjections_MapToTheExistingPlatformTables()
+        {
+            using var context = Build();
+
+            Assert.AreEqual("ClientSiteSmartWands",
+                context.Model.FindEntityType(typeof(PlatformSmartWand))!.GetTableName());
+            Assert.AreEqual("Guards",
+                context.Model.FindEntityType(typeof(PlatformGuard))!.GetTableName());
+            Assert.AreEqual("ClientSites",
+                context.Model.FindEntityType(typeof(PlatformClientSite))!.GetTableName());
+            Assert.AreEqual("ClientSiteDuress",
+                context.Model.FindEntityType(typeof(PlatformClientSiteDuress))!.GetTableName());
+            Assert.AreEqual("GuardMobileAppVersions",
+                context.Model.FindEntityType(typeof(PlatformGuardAppVersion))!.GetTableName());
+            Assert.AreEqual("ClientSiteSmartWandTagsHitLogs",
+                context.Model.FindEntityType(typeof(PlatformWandScan))!.GetTableName());
+            Assert.AreEqual("ClientSiteKpiSettings",
+                context.Model.FindEntityType(typeof(PlatformSiteKpi))!.GetTableName());
+            Assert.AreEqual("DailyWandFq",
+                context.Model.FindEntityType(typeof(PlatformDailyWandFq))!.GetTableName());
+            Assert.AreEqual("SmartWandScanGuardHistory",
+                context.Model.FindEntityType(typeof(PlatformWandRound))!.GetTableName());
+            Assert.AreEqual("IncidentReportPositions",
+                context.Model.FindEntityType(typeof(PlatformPosition))!.GetTableName());
+            Assert.AreEqual("ClientSiteSmartWandTags",
+                context.Model.FindEntityType(typeof(PlatformWandTag))!.GetTableName());
+        }
+
+        [TestMethod]
+        public void TrackPoint_HasNoForeignKeys_ByDesign()
+        {
+            using var context = Build();
+            var trackPoint = context.Model.FindEntityType(typeof(TrackPoint))!;
+
+            Assert.AreEqual(0, trackPoint.GetForeignKeys().Count(),
+                "D7: no FKs on TrackPoint — required for insert rate and clean Level-4 rollback.");
+        }
+
+        [TestMethod]
+        public void TrackPoint_DedupeIndex_IsUnique()
+        {
+            using var context = Build();
+            var trackPoint = context.Model.FindEntityType(typeof(TrackPoint))!;
+            var dedupe = trackPoint.GetIndexes().Single(i => i.GetDatabaseName() == "UX_TrackPoint_Dedupe");
+
+            Assert.IsTrue(dedupe.IsUnique);
+            CollectionAssert.AreEqual(new[] { "UnitId", "SessionId", "Seq" },
+                dedupe.Properties.Select(p => p.Name).ToArray());
+        }
+
+        [TestMethod]
+        public void Coordinates_AreDecimal9_6()
+        {
+            using var context = Build();
+            var trackPoint = context.Model.FindEntityType(typeof(TrackPoint))!;
+
+            Assert.AreEqual("decimal(9,6)", trackPoint.FindProperty(nameof(TrackPoint.Latitude))!.GetColumnType());
+            Assert.AreEqual("decimal(9,6)", trackPoint.FindProperty(nameof(TrackPoint.Longitude))!.GetColumnType());
+        }
+
+        [TestMethod]
+        public void Enrolment_UnitId_IsNeverDatabaseGenerated()
+        {
+            // UnitId IS ClientSiteSmartWand.Id — the store must never invent one.
+            using var context = Build();
+            var enrolment = context.Model.FindEntityType(typeof(TrackingUnitEnrolment))!;
+
+            Assert.AreEqual(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never,
+                enrolment.FindProperty(nameof(TrackingUnitEnrolment.UnitId))!.ValueGenerated);
+        }
+    }
+}

@@ -1,23 +1,108 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Metadata;
+using System.Threading;
+using System.Threading.Tasks;
+using static iText.IO.Util.IntHashtable;
 
 namespace CityWatch.Data
 {
     public class CityWatchDbContext : DbContext
     {
-        public CityWatchDbContext(DbContextOptions<CityWatchDbContext> options) : base(options)
+        private readonly IHubContext<MobileAppSignalRHub> _hubContext;
+        public CityWatchDbContext(DbContextOptions<CityWatchDbContext> options,
+                        IHubContext<MobileAppSignalRHub> hubContext) : base(options)
         {
-
+            Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+            _hubContext = hubContext;
         }
+        
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var clientSiteIds = GetGuardLogChangedClientSiteIds();
+
+            int result = await base.SaveChangesAsync(cancellationToken);
+
+            if (clientSiteIds.Count > 0)
+            {
+                // Notify all clients in the affected ClientSite groups
+                foreach (var siteId in clientSiteIds.Distinct())
+                {                    
+                    await _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged");
+                }
+            }
+
+            return result;
+        }
+
+        public override int SaveChanges()
+        {
+            var clientSiteIds = GetGuardLogChangedClientSiteIds();
+
+            int result = base.SaveChanges();
+
+            if (clientSiteIds.Count > 0)
+            {
+                // Notify all clients in the affected ClientSite groups
+                foreach (var siteId in clientSiteIds.Distinct())
+                {
+                    _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged");
+                }
+            }
+
+            return result;
+        }
+
+        private List<int> GetGuardLogChangedClientSiteIds()
+        {
+            var clientSiteIds = new List<int>();
+
+            // Get any GuardLog entities being added, updated, or deleted
+            var guardLogEntries = ChangeTracker.Entries()
+                .Where(e => e.Entity is GuardLog &&
+                            e.State != EntityState.Unchanged &&
+                            e.State != EntityState.Detached)
+                .Select(e => e.Entity as GuardLog)
+                .ToList();
+
+            foreach (var log in guardLogEntries)
+            {
+                // If ClientSiteLogBook not loaded, fetch it quickly from the DbSet
+                var siteId = log.ClientSiteLogBook?.ClientSiteId ??
+                             ClientSiteLogBooks
+                                .Where(x => x.Id == log.ClientSiteLogBookId)
+                                .Select(x => x.ClientSiteId)
+                                .FirstOrDefault();
+
+                if (siteId > 0)
+                    clientSiteIds.Add(siteId);
+            }
+
+            return clientSiteIds;
+        }
+
 
         public DbSet<User> Users { get; set; }
         public DbSet<ClientType> ClientTypes { get; set; }
+        public DbSet<GuardAccess> GuardAccess { get; set; }
         public DbSet<ClientSite> ClientSites { get; set; }
         public DbSet<ClientSiteKpiSetting> ClientSiteKpiSettings { get; set; }
         public DbSet<ClientSiteDayKpiSetting> ClientSiteDayKpiSettings { get; set; }
         public DbSet<FeedbackTemplate> FeedbackTemplates { get; set; }
+        public DbSet<FeedbackType> FeedbackType { get; set; }
         public DbSet<ReportTemplate> ReportTemplates { get; set; }
         public DbSet<StaffDocument> StaffDocuments { get; set; }
+        public DbSet<StaffDocumentCategory> StaffDocumentCategories { get; set; }
         public DbSet<IncidentReport> IncidentReports { get; set; }
         public DbSet<UserClientSiteAccess> UserClientSiteAccess { get; set; }
         public DbSet<DailyClientSiteKpi> DailyClientSiteKpis { get; set; }
@@ -26,14 +111,20 @@ namespace CityWatch.Data
         public DbSet<KpiSendSchedule> KpiSendSchedules { get; set; }
         public DbSet<KpiSendScheduleClientSite> KpiSendScheduleClientSites { get; set; }
         public DbSet<KpiSendScheduleJob> KpiSendScheduleJobs { get; set; }
+        public DbSet<KpiSendScheduleJobsTimeSheet> KpiSendScheduleJobsTimeSheet { get; set; }
+        public DbSet<KpiSendScheduleJobsCustomWand> KpiSendScheduleJobsCustomWand { get; set; }
         public DbSet<AppConfiguration> Appconfigurations { get; set; }
         public DbSet<ClientSiteLogBook> ClientSiteLogBooks { get; set; }
         public DbSet<GuardLog> GuardLogs { get; set; }
         public DbSet<Guard> Guards { get; set; }
+        public DbSet<GuardUnavailability> GuardUnavailabilities { get; set; }
         public DbSet<ClientSiteKpiNote> ClientSiteKpiNotes { get; set; }
+        public DbSet<RCActionList> RCActionList { get; set; }
         public DbSet<ClientSiteSmartWand> ClientSiteSmartWands { get; set; }
         public DbSet<GuardLogin> GuardLogins { get; set; }
+        public DbSet<GuardMobileAppVersion> GuardMobileAppVersions { get; set; }
         public DbSet<IncidentReportPosition> IncidentReportPositions { get; set; }
+        public DbSet<IncidentReportPSPF> IncidentReportPSPF { get; set; }
         public DbSet<KpiSendScheduleSummaryNote> KpiSendScheduleSummaryNotes { get; set; }
         public DbSet<IncidentReportEventType> IncidentReportEventTypes { get; set; }
         public DbSet<KeyVehicleLog> KeyVehicleLogs { get; set; }
@@ -44,10 +135,329 @@ namespace CityWatch.Data
         public DbSet<CustomFieldLog> CustomFieldLogs { get; set; }
         public DbSet<ClientSitePoc> ClientSitePocs { get; set; }
         public DbSet<ClientSiteLocation> ClientSiteLocations { get; set; }
-        public DbSet<KeyVehicleLogProfile> KeyVehicleLogProfiles { get; set; }
         public DbSet<KeyVehcileLogField> KeyVehcileLogFields { get; set; }
         public DbSet<ClientSiteKey> ClientSiteKeys { get; set; }
         public DbSet<KeyVehicleLogAuditHistory> KeyVehicleLogAuditHistory { get; set; }
         public DbSet<ClientSiteRadioStatus> ClientSiteRadioStatus { get; set; }
+        public DbSet<KeyVehicleLogProfile> KeyVehicleLogVisitorProfiles { get; set; }
+        public DbSet<KeyVehicleLogVisitorPersonalDetail> KeyVehicleLogVisitorPersonalDetails { get; set; }
+        public DbSet<GuardLicense> GuardLicenses { get; set; }
+        public DbSet<GuardComplianceAndLicense> GuardComplianceLicense { get; set; }
+        public DbSet<GuardCompliance> GuardCompliances { get; set; }
+        public DbSet<ClientSiteActivityStatus> ClientSiteActivityStatus { get; set; }
+        public DbSet<ClientSiteRadioCheck> ClientSiteRadioChecks { get; set; }
+        public DbSet<CompanyDetails> CompanyDetails { get; set; }
+        public DbSet<ClientSiteManningKpiSetting> ClientSiteManningKpiSettings { get; set; }
+        public DbSet<ClientSiteManningKpiSettingADHOC> ClientSiteManningKpiSettingsADHOC { get; set; }
+        public DbSet<IncidentReportsPlatesLoaded> IncidentReportsPlatesLoaded { get; set; }
+        public DbSet<ClientSiteDuress> ClientSiteDuress { get; set; }
+        public DbSet<Allowance> Allowances { get; set; }
+        public DbSet<ClientSiteLinksPageType> ClientSiteLinksPageType { get; set; }
+        public DbSet<ClientSiteLinksDetails> ClientSiteLinksDetails { get; set; }
+        public DbSet<ClientSiteRadioChecksActivityStatus> ClientSiteRadioChecksActivityStatus { get; set; }
+        public DbSet<RadioCheckListGuardData> RadioCheckListGuardData { get; set; }
+        public DbSet<RadioCheckListInActiveGuardData> RadioCheckListInActiveGuardData { get; set; }
+        public DbSet<RadioCheckListGuardLoginData> RadioCheckListGuardLoginData { get; set; }
+        public DbSet<RadioCheckListNotAvailableGuardData> RadioCheckListNotAvailableGuardData { get; set; }
+        public DbSet<RadioCheckListGuardKeyVehicleData> RadioCheckListGuardKeyVehicleData { get; set; }
+        public DbSet<RadioCheckListGuardIncidentReportData> RadioCheckListGuardIncidentReportData { get; set; }
+        public DbSet<RadioCheckDuress> RadioCheckDuress { get; set; }
+        public DbSet<RadioCheckStatusColor> RadioCheckStatusColor { get; set; }
+        public DbSet<RadioCheckStatus> RadioCheckStatus { get; set; }
+        public DbSet<BroadcastBannerLiveEvents> BroadcastBannerLiveEvents { get; set; }
+        public DbSet<BroadcastBannerCalendarEvents> BroadcastBannerCalendarEvents { get; set; }
+        public DbSet<GuardReminderEmailLog> GuardReminderEmailLogs { get; set; }
+
+        public DbSet<RadioCheckLogbookSiteDetails> RadioCheckLogbookSiteDetails { get; set; }
+        public DbSet<DosAndDontsField> DosAndDontsField { get; set; }
+
+        public DbSet<ActionListNotification> ActionListNotification { get; set; }
+
+
+        public DbSet<RadioCheckPushMessages> RadioCheckPushMessages { get; set; }
+
+        public DbSet<RadioChecksSmartWandScanResults> RadioChecksSmartWandScanResults { get; set; }
+
+        public DbSet<RadioCheckListSWReadData> RadioCheckListSWReadData { get; set; }
+        public DbSet<GlobalDuressEmail> GlobalDuressEmail { get; set; }
+
+        public DbSet<SiteEventLog> SiteEventLog { get; set; }
+
+        public DbSet<HRGroups> HRGroups { get; set; }
+        public DbSet<ReferenceNoNumbers> ReferenceNoNumbers { get; set; }
+        public DbSet<ReferenceNoAlphabets> ReferenceNoAlphabets { get; set; }
+        public DbSet<HrSettings> HrSettings { get; set; }
+        public DbSet<LicenseTypes> LicenseTypes { get; set; }
+
+
+        public DbSet<TrailerDeatilsViewModel> TrailerDeatilsViewModel { get; set; }
+
+        public DbSet<SmartWandScanGuardHistory> SmartWandScanGuardHistory { get; set; }
+
+        public DbSet<GlobalComplianceAlertEmail> GlobalComplianceAlertEmail { get; set; }
+
+        public DbSet<KPIScheduleDeafultMailbox> KPIScheduleDeafultMailbox { get; set; }
+        public DbSet<CriticalDocuments> CriticalDocuments { get; set; }
+        public DbSet<CriticalDocumentsClientSites> CriticalDocumentsClientSites { get; set; }
+
+        public DbSet<ClientSiteKpiSettingsCustomDropboxFolder> ClientSiteKpiSettingsCustomDropboxFolder { get; set; }
+        public DbSet<CriticalDocumentDescriptions> CriticalDocumentDescriptions { get; set; }
+        public DbSet<DropboxDirectory> DropboxDirectory { get; set; }
+
+        public DbSet<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History { get; set; }
+        public DbSet<TimeSheet> TimeSheet { get; set; }
+
+        public DbSet<AudioRecordingLog> AudioRecordingLog { get; set; }
+
+        public DbSet<SiteLogUploadHistory> SiteLogUploadHistory { get; set; }
+
+
+        public DbSet<KpiSendTimesheetSchedules> KpiSendTimesheetSchedules { get; set; }
+        public DbSet<KpiSendTimesheetClientSites> KpiSendTimesheetClientSites { get; set; }
+        public DbSet<KpiSendCustomWandSchedules> KpiSendCustomWandSchedules { get; set; }
+        public DbSet<KpiSendCustomWandClientSites> KpiSendCustomWandClientSites { get; set; }
+
+        public DbSet<LoginUserHistory> LoginUserHistory { get; set; }
+        public DbSet<ANPR> ANPR { get; set; }
+
+        public DbSet<SubDomain> SubDomain { get; set; }
+        public DbSet<HrSettingsLockedClientSites> HrSettingsLockedClientSites { get; set; }
+        public DbSet<LanguageMaster> LanguageMaster { get; set; }
+        public DbSet<LanguageDetails> LanguageDetails { get; set; }
+        public DbSet<GuardTrainingAndAssessment> GuardTrainingAndAssessment { get; set; }
+
+
+        public DbSet<GuardHoursByQuarterViewModel> GuardHoursByQuarterViewModel { get; set; }
+
+        public DbSet<GuardTwoHourNoActivityNotificationLog> GuardTwoHourNoActivityNotificationLog { get; set; }
+
+        public DbSet<KPITelematicsField> KPITelematicsField { get; set; }
+        public DbSet<HyperLinks> HyperLinks { get; set; }
+        public DbSet<DuressAppField> DuressAppField { get; set; }
+
+        public DbSet<DuressSetting> DuressSettings { get; set; }
+        public DbSet<HandoverNotes> HandoverNotes { get; set; }
+        public DbSet<MobileLogActivityProfile> MobileLogActivityProfile { get; set; }
+
+        //  PCAR Route Master and Detail
+        public DbSet<PcarRoute> PcarRoute { get; set; }
+        public DbSet<PcarRouteDetails> PcarRouteDetails { get; set; }
+        public DbSet<DailyWandFq> DailyWandFq { get; set; }
+
+        public DbSet<PcarRouteDailyVisits> PcarRouteDailyVisits { get; set; }
+        public DbSet<Models.PcarVisitHistory> PcarVisitHistory { get; set; }
+        
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<GuardLog>()
+                .ToTable(tb => tb.HasTrigger("Insert_GuardLogs"));
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<SiteTagStatus>().HasNoKey();
+            modelBuilder.Entity<SiteTagStatusPending>().HasNoKey();
+            modelBuilder.Entity<SiteTagStatusPendingNew>().HasNoKey();
+            modelBuilder.Entity<GuardLogDto>().HasNoKey();
+            modelBuilder.Entity<GuardLogRawProjection>().HasNoKey();
+            modelBuilder.Entity<PcarRoute>()
+          .HasMany(r => r.RouteDetails)
+          .WithOne(d => d.PcarRoute)
+          .HasForeignKey(d => d.PcarRouteId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RosterGroupSite>()
+                .HasOne(rgs => rgs.RosterGroup)
+                .WithMany(rg => rg.RosterGroupSites)
+                .HasForeignKey(rgs => rgs.RosterGroupId);
+
+            modelBuilder.Entity<RosterGroupSite>()
+                .HasOne(rgs => rgs.ClientSite)
+                .WithMany()
+                .HasForeignKey(rgs => rgs.ClientSiteId);
+
+            modelBuilder.Entity<RosterSchedule>()
+                .HasOne(rs => rs.RosterGroup)
+                .WithMany(rg => rg.RosterSchedules)
+                .HasForeignKey(rs => rs.RosterGroupId);
+
+            modelBuilder.Entity<RosterSchedule>()
+                .HasOne(rs => rs.ClientSite)
+                .WithMany()
+                .HasForeignKey(rs => rs.ClientSiteId);
+
+            modelBuilder.Entity<RosterSchedule>()
+                .HasOne(rs => rs.Guard)
+                .WithMany()
+                .HasForeignKey(rs => rs.GuardId);
+
+            modelBuilder.Entity<RosterBinderProject>()
+                .HasOne(rbp => rbp.RosterBinder)
+                .WithMany(rb => rb.RosterBinderProjects)
+                .HasForeignKey(rbp => rbp.RosterBinderId);
+
+            modelBuilder.Entity<RosterBinderProject>()
+                .HasOne(rbp => rbp.RosterGroup)
+                .WithMany()
+                .HasForeignKey(rbp => rbp.RosterGroupId);
+        }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            configurationBuilder.Conventions.Add(_ => new BlankTriggerAddingConvention());
+        }
+        //SW Channels-start
+        public DbSet<SWChannels> SWChannel { get; set; }
+        //SW Channels-end
+        //General Feeds-start
+        public DbSet<GeneralFeeds> GeneralFeeds { get; set; }
+        //General Feeds-end
+        public DbSet<SmsChannel> SmsChannel { get; set; }
+        public DbSet<GlobalDuressSms> GlobalDuressSms { get; set; }
+
+
+        //public DbSet<SiteEventLog> SiteEventLog { get; set; }
+        //for toggle areas - start 
+        public DbSet<ClientSiteToggle> ClientSiteToggle { get; set; }
+        //for toggle areas - end 
+        public DbSet<RCLinkedDuressMaster> RCLinkedDuressMaster { get; set; }
+        public DbSet<RCLinkedDuressClientSites> RCLinkedDuressClientSites { get; set; }
+        public DbSet<HrSettingsClientSites> HrSettingsClientSites { get; set; }
+
+        public DbSet<HrSettingsClientStates> HrSettingsClientStates { get; set; }
+        public DbSet<FileDownloadAuditLogs> FileDownloadAuditLogs { get; set; }
+        public DbSet<GuardLogsDocumentImages> GuardLogsDocumentImages { get; set; }
+        public DbSet<TrainingTQNumbers> TrainingTQNumbers { get; set; }
+        public DbSet<TrainingTestQuestionNumbers> TrainingTestQuestionNumbers { get; set; }
+        public DbSet<TrainingCourses> TrainingCourses { get; set; }
+        public DbSet<TrainingCourseDuration> TrainingCourseDuration { get; set; }
+        public DbSet<TrainingTestDuration> TrainingTestDuration { get; set; }
+        public DbSet<TrainingTestPassMark> TrainingTestPassMark { get; set; }
+        public DbSet<TrainingTestAttempts> TrainingTestAttempts { get; set; }
+        public DbSet<TrainingCertificateExpiryYears> TrainingCertificateExpiryYears { get; set; }
+
+        public DbSet<TrainingTestQuestionSettings> TrainingTestQuestionSettings { get; set; }
+        public DbSet<TrainingTestQuestions> TrainingTestQuestions { get; set; }
+        public DbSet<TrainingTestQuestionsAnswers> TrainingTestQuestionsAnswers { get; set; }
+        public DbSet<TrainingTestFeedbackQuestions> TrainingTestFeedbackQuestions { get; set; }
+        public DbSet<TrainingTestFeedbackQuestionsAnswers> TrainingTestFeedbackQuestionsAnswers { get; set; }
+
+        public DbSet<TrainingInstructor> TrainingInstructor { get; set; }
+
+        public DbSet<TrainingCourseInstructor> TrainingCourseInstructor { get; set; }
+        public DbSet<TrainingCourseCertificate> TrainingCourseCertificate { get; set; }
+
+        public DbSet<TrainingCourseStatusColor> TrainingCourseStatusColor { get; set; }
+        public DbSet<TrainingCourseStatus> TrainingCourseStatus { get; set; }
+        public DbSet<TrainingLocation> TrainingLocation { get; set; }
+        public DbSet<TrainingCourseCertificateRPL> TrainingCourseCertificateRPL { get; set; }
+
+        public DbSet<GuardTrainingAttendedQuestionsAndAnswers> GuardTrainingAttendedQuestionsAndAnswers { get; set; }
+        public DbSet<GuardTrainingAndAssessmentScore> GuardTrainingAndAssessmentScore { get; set; }
+
+
+        public DbSet<UserInput> UserInput { get; set; }
+        public DbSet<GuardTrainingStartTest> GuardTrainingStartTest { get; set; }
+        public DbSet<GuardTrainingAttendedFeedbackQuestionsAndAnswers> GuardTrainingAttendedFeedbackQuestionsAndAnswers { get; set; }
+        public DbSet<GuardTrainingAndAssessmentPractical> GuardTrainingAndAssessmentPractical { get; set; }
+
+        public DbSet<UserDemo> UsersDemo{ get; set; }
+        public DbSet<WorkOrder> WorkOrders { get; set; }
+        public DbSet <LoginUserRCHistory> LoginUserRCHistory { get; set; }
+
+        public DbSet<RCActionListMessages> RCActionListMessages { get; set; }
+        public DbSet<RCActionListMessagesGuardLogs> RCActionListMessagesGuardLogs { get; set; }
+        public DbSet<RCActionListMessagesClientsites> RCActionListMessagesClientsites { get; set; }
+
+
+        public DbSet<ClientSiteMobileAppSettings> ClientSiteMobileAppSettings { get; set; }
+        public DbSet<ClientSiteMobileCrowdControl> ClientSiteMobileCrowdControl { get; set; }
+        public DbSet<ClientSiteMobileCrowdControlGuards> ClientSiteMobileCrowdControlGuards { get; set; }
+        public DbSet<ClientSiteMobileCrowdControlHistory> ClientSiteMobileCrowdControlHistory { get; set; }
+        public DbSet<ClientSiteMobileCrowdControlGuardsHistory> ClientSiteMobileCrowdControlGuardsHistory { get; set; }
+        public DbSet<ClientSiteMobileCrowdControlAuditLog> ClientSiteMobileCrowdControlAuditLog { get; set; }
+        public DbSet<ClientSiteSmartWandTags> ClientSiteSmartWandTags { get; set; }
+        public DbSet<SmartWandTagsType> SmartWandTagsType { get; set; }
+
+        public DbSet<KpiSendKVSchedules> KpiSendKVSchedules { get; set; }
+        public DbSet<KpiSendKVClientSites> KpiSendKVClientSites { get; set; }
+
+
+
+        public DbSet<GuardRcClientSiteAccess> GuardRcClientSiteAccess { get; set; }
+
+        public DbSet<RCActionListMessagesDailyLog> RCActionListMessagesDailyLog { get; set; }
+
+        public DbSet<KpiSendScheduleJobsKV> KpiSendScheduleJobsKV { get; set; }
+        public DbSet<ClientSiteSmartWandTagsHitLog> ClientSiteSmartWandTagsHitLogs { get; set; }
+
+        public DbSet<SiteTagStatus> SiteTagStatuses { get; set; }
+        public DbSet<SiteTagStatusPending> SiteTagStatusPendings { get; set; }
+        public DbSet<GuardLogDto> GuardLogDtos { get; set; }
+
+        public DbSet<GuardLogRawProjection> GuardLogRawProjection { get; set; }
+        
+        public DbSet<KeyVehicleLogDocketHistory> KeyVehicleLogDocketHistory { get; set; }
+        public DbSet<InActiveGuardsDetails> InActiveGuardsDetails { get; set; }
+        public DbSet<MobileAppUpgrade> MobileAppUpgrade { get; set; }
+        public DbSet <PublicHolidayStates> PublicHolidayStates { get; set; }
+        public DbSet<SiteEquipmentsDetails> SiteEquipmentsDetails { get; set; }
+        public DbSet<RosterGroup> RosterGroups { get; set; }
+        public DbSet<RosterGroupSite> RosterGroupSites { get; set; }
+        public DbSet<RosterSchedule> RosterSchedules { get; set; }
+        public DbSet<PayRate> PayRates { get; set; }
+        public DbSet<PayRateGroup> PayRateGroups { get; set; }
+        public DbSet<RosterBinder> RosterBinders { get; set; }
+        public DbSet<RosterBinderProject> RosterBinderProjects { get; set; }
+
+        public DbSet<OfflineFilesRecordsNotSynced> OfflineFilesRecordsNotSynced { get; set; }
+        public DbSet<ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced> ClientSiteSmartWandTagsHitLogCacheOfflineNotSynced { get; set; }
+        public DbSet<PostActivityRequestLocalCacheOfflineNotSynced> PostActivityRequestLocalCacheOfflineNotSynced { get; set; }
+        public DbSet<PatrolCarLogRequestLocalCacheOfflineNotSynced> PatrolCarLogRequestLocalCacheOfflineNotSynced { get; set; }
+        public DbSet<CustomFieldLogRequestHeadLocalCacheOfflineNotSynced> CustomFieldLogRequestHeadLocalCacheOfflineNotSynced { get; set; }
+        public DbSet<GuardLoginSmartWandUse> GuardLoginSmartWandUse { get; set; }
+        public DbSet<irOfflineFilesAttachmentsCacheNotSynced> irOfflineFilesAttachmentsCacheNotSynced { get; set; }
+        public DbSet<irOfflineCacheNotSynced> irOfflineCacheNotSynced { get; set; }
+        public DbSet<KeyVehicleLogPax> KeyVehicleLogsPax { get; set; }
+        public DbSet<RosterSiteWeekStatus> RosterSiteWeekStatuses { get; set; }
+        public DbSet<PayRateGroupSite> PayRateGroupSites { get; set; }
+        public DbSet<RosterRemunerationSummary> RosterRemunerationSummaries { get; set; }
+        public DbSet<RosterScheduleAuditLog> RosterScheduleAuditLogs { get; set; }
+        public DbSet<OnBoardUsersTrainingAndAssessment> OnBoardUsersTrainingAndAssessment { get; set; }
+        public DbSet<ShiftCancellationEmailQueue> ShiftCancellationEmailQueues { get; set; }
+        public DbSet<GuardLogsLinked> GuardLogsLinked { get; set; }
     }
+
+
+    /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
+     issue save changes because the target table has database triggers
+     */
+    public class BlankTriggerAddingConvention : IModelFinalizingConvention
+    {
+        public virtual void ProcessModelFinalizing(
+            IConventionModelBuilder modelBuilder,
+            IConventionContext<IConventionModelBuilder> context)
+        {
+            foreach (var entityType in modelBuilder.Metadata.GetEntityTypes())
+            {
+                var table = StoreObjectIdentifier.Create(entityType, StoreObjectType.Table);
+                if (table != null
+                    && entityType.GetDeclaredTriggers().All(t => t.GetDatabaseName(table.Value) == null)
+                    && (entityType.BaseType == null
+                        || entityType.GetMappingStrategy() != RelationalAnnotationNames.TphMappingStrategy))
+                {
+                    entityType.Builder.HasTrigger(table.Value.Name + "_Trigger");
+                }
+
+                foreach (var fragment in entityType.GetMappingFragments(StoreObjectType.Table))
+                {
+                    if (entityType.GetDeclaredTriggers().All(t => t.GetDatabaseName(fragment.StoreObject) == null))
+                    {
+                        entityType.Builder.HasTrigger(fragment.StoreObject.Name + "_Trigger");
+                    }
+                }
+            }
+        }
+    }
+
+
 }

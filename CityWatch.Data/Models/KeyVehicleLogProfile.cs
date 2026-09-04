@@ -6,7 +6,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
-    public class KeyVehicleLogProfile : IEquatable<KeyVehicleLogProfile>, IValidatableObject
+    [Table("KeyVehicleLogVisitorProfiles")]
+    public class KeyVehicleLogProfile
     {
         public KeyVehicleLogProfile()
         { }
@@ -18,10 +19,11 @@ namespace CityWatch.Data.Models
             Trailer2Rego = keyVehicleLog.Trailer2Rego;
             Trailer3Rego = keyVehicleLog.Trailer3Rego;
             Trailer4Rego = keyVehicleLog.Trailer4Rego;
-            PlateId = keyVehicleLog.PlateId;
-            CompanyName = keyVehicleLog.CompanyName;
-            PersonName = keyVehicleLog.PersonName;
-            PersonType = keyVehicleLog.PersonType;
+            Trailer5Rego = keyVehicleLog.Trailer5Rego;
+            Trailer6Rego = keyVehicleLog.Trailer6Rego;
+            Trailer7Rego = keyVehicleLog.Trailer7Rego;
+            Trailer8Rego = keyVehicleLog.Trailer8Rego;
+            PlateId = keyVehicleLog.PlateId;            
             MobileNumber = keyVehicleLog.MobileNumber;
             Product = keyVehicleLog.Product;
             TruckConfig = keyVehicleLog.TruckConfig;
@@ -30,6 +32,14 @@ namespace CityWatch.Data.Models
             EntryReason = keyVehicleLog.EntryReason;
             IsSender = keyVehicleLog.IsSender;
             Sender = keyVehicleLog.Sender;
+            Trailer1PlateId = keyVehicleLog.Trailer1PlateId;
+            Trailer2PlateId = keyVehicleLog.Trailer2PlateId;
+            Trailer3PlateId = keyVehicleLog.Trailer3PlateId;
+            Trailer4PlateId = keyVehicleLog.Trailer4PlateId;
+            Trailer5PlateId = keyVehicleLog.Trailer5PlateId;
+            Trailer6PlateId = keyVehicleLog.Trailer6PlateId;
+            Trailer7PlateId = keyVehicleLog.Trailer7PlateId;
+            Trailer8PlateId = keyVehicleLog.Trailer8PlateId;
         }
 
         [Key]
@@ -45,6 +55,14 @@ namespace CityWatch.Data.Models
 
         public string Trailer4Rego { get; set; }
 
+        public string Trailer5Rego { get; set; }
+
+        public string Trailer6Rego { get; set; }
+
+        public string Trailer7Rego { get; set; }
+
+        public string Trailer8Rego { get; set; }
+
         public int? PlateId { get; set; }
 
         public int? TruckConfig { get; set; }
@@ -52,12 +70,6 @@ namespace CityWatch.Data.Models
         public int? TrailerType { get; set; }
 
         public decimal? MaxWeight { get; set; }
-
-        public string CompanyName { get; set; }
-
-        public string PersonName { get; set; }
-
-        public int? PersonType { get; set; }
 
         public string MobileNumber { get; set; }
 
@@ -75,27 +87,22 @@ namespace CityWatch.Data.Models
         [ForeignKey("CreatedLogId")]
         public KeyVehicleLog KeyVehicleLog { get; set; }
 
-        public bool Equals(KeyVehicleLogProfile other)
-        {
-            return (string.Compare(PersonName, other.PersonName, true) == 0) &&
-                    (string.Compare(CompanyName, other.CompanyName, true) == 0) &&
-                    (PersonType == other.PersonType);
-        }
+        public string Notes { get; set; }
 
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            var errors = new List<ValidationResult>();
+        public int? Trailer1PlateId { get; set; }
 
-            if (string.IsNullOrEmpty(VehicleRego))
-                errors.Add(new ValidationResult("ID No or Vehicle Registration is required"));
+        public int? Trailer2PlateId { get; set; }
 
-            if (!PlateId.HasValue)
-                errors.Add(new ValidationResult("State of ID / Plate is required"));
+        public int? Trailer3PlateId { get; set; }
 
-            if (!PersonType.HasValue)
-                errors.Add(new ValidationResult("Type of Individual is required"));
+        public int? Trailer4PlateId { get; set; }
 
-            return errors;
-        }
+        public int? Trailer5PlateId { get; set; }
+
+        public int? Trailer6PlateId { get; set; }
+
+        public int? Trailer7PlateId { get; set; }
+
+        public int? Trailer8PlateId { get; set; }
     }
 }
