@@ -1,4 +1,4 @@
-using CityWatch.Common.Models;
+﻿using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Tracking.Configuration;
 using CityWatch.Data;
@@ -74,6 +74,10 @@ builder.Services.AddScoped<IGuardRosterReportGenerator, GuardRosterReportGenerat
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddScoped<ICertificateGenerator, CertificateGenerator>();
 builder.Services.AddScoped<IRPLCertificateGeneratorService, RPLCertificateGeneratorService>();
+// Bulk Certificate Release progress: the job outlives the request that starts it, so the
+// store and the service that owns the background task are both singletons.
+builder.Services.AddSingleton<IBulkCertificateJobStore, BulkCertificateJobStore>();
+builder.Services.AddSingleton<IBulkCertificateReleaseService, BulkCertificateReleaseService>();
 builder.Services.AddScoped<IMobileAppDataServices, MobileAppDataServices>();
 
 builder.Services.AddHttpClient<AiService>();

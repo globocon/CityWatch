@@ -1,4 +1,4 @@
-/* p7-141 StaffDocuments.DocumentType values shared by the settings and downloads screens */
+﻿/* p7-141 StaffDocuments.DocumentType values shared by the settings and downloads screens */
 const STAFF_DOC_TYPE_COMPANY_SOP = 1;
 const STAFF_DOC_TYPE_TRAINING = 2;
 const STAFF_DOC_TYPE_TEMPLATES_AND_FORMS = 3;
@@ -9995,6 +9995,10 @@ $(document).on('click', '.btn-bulk-cert-release', function (e) {
     $('#bulkCertGuardSearch').val('');
     $('#bulkCertValidation').hide().html('');
     $('#bulkCertResult').hide().html('');
+    $('#bulkCertProgress').hide();
+    bulkCertStopPolling();
+    bulkCertJob.id = null;
+    bulkCertSetRunning(false);
     $('#bulkCertGuardCount').text('0');
     $('#bulkCertCourseCount').text('0');
     $('#bulkCertSelectedGuardList').empty();
@@ -10152,13 +10156,174 @@ $(document).on('keyup', '#bulkCertGuardSearch', function () {
     });
 });
 
+/* ---------------- Bulk Certificate Release: run with live progress ----------------
+   Issuing a certificate is slow - a PDF build, a Dropbox upload and an email each time - so a
+   release of a dozen guards across several courses runs for minutes. The server therefore queues
+   the run and reports progress per certificate, and this polls it, the same shape as the KPI
+   schedule's "Run Now". Everything is rendered inside this modal rather than in an overlay. */
+var bulkCertJob = {
+    id: null,
+    polling: false,
+    timer: null,
+    lastPercent: 0,
+    renderedRows: 0
+};
+
+var BULK_CERT_POLL_MS = 900;
+
+function bulkCertFormatSeconds(seconds) {
+    if (seconds === null || typeof seconds === 'undefined') return '--';
+    var total = Math.max(0, Math.round(seconds));
+    if (total < 60) return total + 's';
+    return Math.floor(total / 60) + 'm ' + (total % 60) + 's';
+}
+
+function bulkCertEscape(text) {
+    return $('<div/>').text(text === null || typeof text === 'undefined' ? '' : text).html();
+}
+
+function bulkCertSetBar(percent) {
+    // Never let the bar move backwards - it reads as a bug even when it is not one.
+    var value = Math.max(bulkCertJob.lastPercent, Math.min(100, percent || 0));
+    bulkCertJob.lastPercent = value;
+    $('#bulkCertBar').css('width', value + '%').attr('aria-valuenow', value).text(value + '%');
+}
+
+/* The job's guard and course list is fixed on the server the moment it starts, so the pickers
+   stay visible - showing what was chosen - but cannot be changed while it runs. */
+function bulkCertSetRunning(running) {
+    $('#bulkCertProduce').prop('disabled', running).text(running ? 'Producing...' : 'Produce');
+    $('#bulkCertCancel').toggle(running).prop('disabled', false).text('Stop');
+    $('#bulkCertClose').prop('disabled', running);
+    $('#bulkCertGuardSearch, #bulkCertSelectAllGuards, #bulkCertClearGuards, #bulkCertSelectAllCourses, #bulkCertClearCourses')
+        .prop('disabled', running);
+    $('.bulk-cert-guard').prop('disabled', running);
+    $('#bulkCertCourseList').css('pointer-events', running ? 'none' : '');
+    $('#bulkCertSelectedGuardList').css('pointer-events', running ? 'none' : '');
+}
+
+function bulkCertResetProgress(total) {
+    bulkCertJob.lastPercent = 0;
+    bulkCertJob.renderedRows = 0;
+    $('#bulkCertLiveResults').empty();
+    $('#bulkCertStage').text('Preparing');
+    $('#bulkCertStep').text('Starting...');
+    $('#bulkCertElapsed').text('0s');
+    $('#bulkCertEta').text('calculating...');
+    $('#bulkCertCounter').text('0 of ' + total);
+    $('#bulkCertBar').css('width', '0%').attr('aria-valuenow', 0).text('0%')
+        .removeClass('bg-danger bg-warning').addClass('bg-success progress-bar-animated');
+    $('#bulkCertProgress').show();
+}
+
+function bulkCertRenderProgress(progress) {
+    bulkCertSetBar(progress.percentComplete);
+    $('#bulkCertStage').text(progress.stageLabel || progress.status);
+    $('#bulkCertStep').text(progress.currentStep || '');
+    $('#bulkCertElapsed').text(bulkCertFormatSeconds(progress.elapsedSeconds));
+    $('#bulkCertEta').text(progress.estimatedRemainingSeconds === null || typeof progress.estimatedRemainingSeconds === 'undefined'
+        ? 'calculating...'
+        : bulkCertFormatSeconds(progress.estimatedRemainingSeconds));
+    $('#bulkCertCounter').text(progress.completed + ' of ' + progress.total +
+        '  (' + progress.issued + ' issued, ' + progress.failed + ' failed)');
+
+    // Only the rows that arrived since the last poll, so the list does not flicker or lose scroll.
+    var results = progress.results || [];
+    for (var i = bulkCertJob.renderedRows; i < results.length; i++) {
+        var item = results[i];
+        $('#bulkCertLiveResults').append(
+            '<li class="list-group-item ' + (item.success ? 'list-group-item-success' : 'list-group-item-danger') +
+            '" style="font-size:12px;padding:3px">' +
+            bulkCertEscape(item.guard) + ' - ' + bulkCertEscape(item.course) + ' &rarr; ' + bulkCertEscape(item.status) +
+            '</li>');
+    }
+    if (results.length > bulkCertJob.renderedRows) {
+        bulkCertJob.renderedRows = results.length;
+        var list = $('#bulkCertLiveResults')[0];
+        list.scrollTop = list.scrollHeight;
+    }
+}
+
+function bulkCertStopPolling() {
+    bulkCertJob.polling = false;
+    if (bulkCertJob.timer) {
+        clearTimeout(bulkCertJob.timer);
+        bulkCertJob.timer = null;
+    }
+}
+
+function bulkCertPoll() {
+    if (!bulkCertJob.polling || !bulkCertJob.id) return;
+
+    $.ajax({
+        url: '/Admin/Settings?handler=BulkReleaseCertificatesProgress',
+        type: 'GET',
+        cache: false,
+        data: { jobId: bulkCertJob.id }
+    }).done(function (response) {
+        if (!response.success) {
+            bulkCertStopPolling();
+            bulkCertFail(response.message || 'Lost contact with the bulk release.');
+            return;
+        }
+
+        bulkCertRenderProgress(response.progress);
+
+        if (response.progress.isTerminal) {
+            bulkCertStopPolling();
+            bulkCertFinish(response.progress);
+        } else {
+            bulkCertJob.timer = setTimeout(bulkCertPoll, BULK_CERT_POLL_MS);
+        }
+    }).fail(function () {
+        bulkCertStopPolling();
+        bulkCertFail('Lost contact with the bulk release.');
+    });
+}
+
+function bulkCertFinish(progress) {
+    bulkCertSetRunning(false);
+    $('#bulkCertBar').removeClass('progress-bar-animated');
+
+    var cancelled = progress.status === 'Cancelled';
+    var heading = cancelled ? 'Bulk Certificate Release Stopped'
+                : progress.status === 'Failed' ? 'Bulk Certificate Release Failed'
+                : 'Bulk Certificate Release Completed';
+
+    if (progress.failed > 0 || cancelled) {
+        $('#bulkCertBar').removeClass('bg-success').addClass(progress.issued > 0 ? 'bg-warning' : 'bg-danger');
+    }
+
+    var html = '<div class="alert ' + (progress.failed > 0 || cancelled ? 'alert-warning' : 'alert-info') + '">' +
+               '<strong>' + heading + '</strong><br/>' +
+               'Successfully issued: ' + progress.issued + '<br/>' +
+               'Failed/Skipped: ' + progress.failed;
+
+    if (cancelled) {
+        html += '<br/>' + (progress.total - progress.completed) + ' not attempted. ' +
+                'Certificates already issued have been kept.';
+    }
+    if (progress.errorMessage) {
+        html += '<br/>' + bulkCertEscape(progress.errorMessage);
+    }
+    html += '</div>';
+
+    $('#bulkCertResult').html(html).show();
+}
+
+function bulkCertFail(message) {
+    bulkCertSetRunning(false);
+    $('#bulkCertBar').removeClass('progress-bar-animated bg-success').addClass('bg-danger');
+    $('#bulkCertValidation').html(bulkCertEscape(message)).show();
+}
+
 $(document).on('click', '#bulkCertProduce', function () {
-    var button = $(this);
     var guardIds = $('.bulk-cert-guard:checked').map(function () { return parseInt(this.value, 10); }).get();
     var hrSettingsIds = $('#bulkCertCourseList .bulk-cert-course.bulk-cert-selected').map(function () { return parseInt($(this).data('index'), 10); }).get();
 
     $('#bulkCertValidation').hide().html('');
     $('#bulkCertResult').hide().html('');
+    $('#bulkCertProgress').hide();
 
     if (guardIds.length === 0) {
         $('#bulkCertValidation').html('Please select at least one guard.').show();
@@ -10169,38 +10334,47 @@ $(document).on('click', '#bulkCertProduce', function () {
         return;
     }
 
-    // Guard against a double click issuing two sets of certificates.
-    button.prop('disabled', true).text('Producing...');
+    // Locked before the request goes out, so a double click cannot queue two runs.
+    bulkCertSetRunning(true);
+    bulkCertResetProgress(guardIds.length * hrSettingsIds.length);
 
     $.ajax({
-        url: '/Admin/Settings?handler=BulkReleaseCertificates',
+        url: '/Admin/Settings?handler=StartBulkReleaseCertificates',
         type: 'POST',
         traditional: true,
         data: { guardIds: guardIds, hrSettingsIds: hrSettingsIds },
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
     }).done(function (response) {
         if (!response.success) {
+            bulkCertSetRunning(false);
+            $('#bulkCertProgress').hide();
             $('#bulkCertValidation').html(response.message).show();
             return;
         }
 
-        var html = '<div class="alert alert-info"><strong>Bulk Certificate Release Completed</strong><br/>' +
-                   'Successfully issued: ' + response.issued + '<br/>' +
-                   'Failed/Skipped: ' + response.failed + '</div>';
-
-        if (response.results && response.results.length > 0) {
-            html += '<ul class="list-group" style="max-height:200px;overflow-y:auto">';
-            response.results.forEach(function (item) {
-                html += '<li class="list-group-item ' + (item.success ? 'list-group-item-success' : 'list-group-item-danger') +
-                        '" style="font-size:12px;padding:3px">' + item.guard + ' - ' + item.course + ' &rarr; ' + item.status + '</li>';
-            });
-            html += '</ul>';
-        }
-
-        $('#bulkCertResult').html(html).show();
+        bulkCertJob.id = response.jobId;
+        $('#bulkCertCounter').text('0 of ' + response.total);
+        bulkCertJob.polling = true;
+        bulkCertPoll();
     }).fail(function () {
-        $('#bulkCertValidation').html('Bulk certificate release failed. Please try again.').show();
+        bulkCertFail('Bulk certificate release could not be started. Please try again.');
+    });
+});
+
+/* Stops after the certificate currently being built - the server cannot recall one that has
+   already been generated, uploaded and emailed. */
+$(document).on('click', '#bulkCertCancel', function () {
+    if (!bulkCertJob.id) return;
+
+    $('#bulkCertCancel').prop('disabled', true).text('Stopping...');
+    $('#bulkCertStep').text('Stopping after the certificate in progress...');
+
+    $.ajax({
+        url: '/Admin/Settings?handler=CancelBulkReleaseCertificates',
+        type: 'POST',
+        data: { jobId: bulkCertJob.id },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
     }).always(function () {
-        button.prop('disabled', false).text('Produce');
+        $('#bulkCertCancel').text('Stop');
     });
 });

@@ -142,19 +142,39 @@ namespace CityWatch.Web.Services
         public string GeneratePdf(int guardId, int hrSettingsId,string hashCode, bool isCertificateHold, bool isCertificatewithQADump, bool isCertificateExpiry)
 
         {
+            /* Every lookup below was dereferenced straight off FirstOrDefault(). Any gap in the course
+               setup therefore surfaced as a bare "Object reference not set to an instance of an object",
+               which tells the operator nothing about which piece is missing - and the Bulk Certificate
+               Release shows that message verbatim against the guard. Same lookups in the same order,
+               but each one now says what is not configured. */
             var guards = _guardDataProvider.GetGuards().Where(z => z.Id == guardId).FirstOrDefault();
-            var licenseno= _guardDataProvider.GetGuards().Where(z => z.Id == guardId).FirstOrDefault().SecurityNo;
+            if (guards == null)
+                throw new InvalidOperationException($"Guard {guardId} was not found, so a certificate cannot be generated.");
+            var licenseno = guards.SecurityNo;
+
             var jresult = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId);
-            int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, 1).FirstOrDefault().Id;
-            var hrreferenceNumber = "HR" + jresult.FirstOrDefault().ReferenceNoNumbers.Name + jresult.FirstOrDefault().ReferenceNoAlphabets.Name;
-            var certificateName = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().FileName;
+            var hrSettings = jresult.FirstOrDefault();
+            if (hrSettings == null)
+                throw new InvalidOperationException($"Course {hrSettingsId} was not found, so a certificate cannot be generated.");
+
+            var firstTrainingCourse = _configDataProvider.GetTrainingCourses(hrSettingsId, 1).FirstOrDefault();
+            if (firstTrainingCourse == null)
+                throw new InvalidOperationException($"No training course is set up for '{hrSettings.Description}', so a certificate cannot be generated.");
+            int trainingCourseId = firstTrainingCourse.Id;
+
+            var hrreferenceNumber = "HR" + hrSettings.ReferenceNoNumbers?.Name + hrSettings.ReferenceNoAlphabets?.Name;
+
+            var certificateDocument = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault();
+            if (certificateDocument == null)
+                throw new InvalidOperationException($"No certificate document is uploaded for '{hrSettings.Description}', so a certificate cannot be generated.");
+            var certificateName = certificateDocument.FileName;
             var extension = ".pdf";
             
             
             
             string CertificateTemplatePath = IO.Path.Combine(_TemplatePdf, hrreferenceNumber, "Certificate", certificateName);
             var guardsstarttest = _configDataProvider.GetGuardTrainingStartTest(guardId, trainingCourseId).FirstOrDefault();
-            int certificateId = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault().Id;
+            int certificateId = certificateDocument.Id;
             var certificateRPL=_configDataProvider.GetCourseCertificateRPLUsingId( certificateId).Where(x=>x.GuardId==guardId);
             //_IncidentReport = incidentReport;
             //_clientSite = clientSite;
@@ -440,20 +460,24 @@ namespace CityWatch.Web.Services
 
             foreach (var item in result)
             {
-                int TotalQuestions = _configDataProvider.GetQuestionCount(hrSettingsId, item.TQNumberId);
-                int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().Id;
-                string CourseName= _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().FileName;
-                var existingGuardScrore = _configDataProvider.GetGuardScores(guardId, trainingCourseId);
+                var trainingCourse = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault();
+                if (trainingCourse == null)
+                    continue;
 
+                int trainingCourseId = trainingCourse.Id;
+                string CourseName = trainingCourse.FileName;
 
-                int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
+                /* A guard can be issued a certificate without ever sitting the online test - that is
+                   what the admin release and the Bulk Certificate Release do - and then there is no
+                   GuardTrainingAndAssessmentScore row at all. FirstOrDefault() was dereferenced three
+                   times unguarded, so the whole certificate blew up here with a NullReferenceException
+                   (the failure reported for Bruno Timpano and John Remington on "Thermal Camera (FLIR Ti)").
+                   The score card still lists the course; the score is simply left blank.
+                   guardCorrectQuestionsCount and IsPass were read but never used - dropped. */
+                var existingGuardScrore = _configDataProvider.GetGuardScores(guardId, trainingCourseId).FirstOrDefault();
+                string guardScore = existingGuardScrore?.guardScore ?? string.Empty;
 
-                string guardScore = existingGuardScrore.FirstOrDefault().guardScore;
-
-                bool IsPass = existingGuardScrore.FirstOrDefault().IsPass;
-                doc.Add(CreateCertificateHeaderTable(CourseName, guardScore));
-
-
+                doc.Add(CreateCertificateHeaderTable(CourseName ?? string.Empty, guardScore));
             }
             doc.Close();
 
@@ -491,10 +515,13 @@ namespace CityWatch.Web.Services
             foreach (var item in result)
             {
                 int questionno = 1;
-                int trainingCourseId = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().Id;
+                var trainingCourse = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault();
+                if (trainingCourse == null)
+                    continue;
+                int trainingCourseId = trainingCourse.Id;
                 if (result.Count() > 1)
                 {
-                    string courseName = _configDataProvider.GetTrainingCourses(hrSettingsId, item.TQNumberId).FirstOrDefault().FileName;
+                    string courseName = trainingCourse.FileName;
                     doc.Add(new Paragraph(courseName)
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetFontSize(19)
