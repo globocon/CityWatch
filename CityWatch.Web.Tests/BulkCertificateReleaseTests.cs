@@ -1,4 +1,4 @@
-using CityWatch.Data;
+﻿using CityWatch.Data;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -71,6 +71,9 @@ namespace CityWatch.Web.Tests
                 Options.Create(new EmailOptions()),
                 dbContext,
                 _certificateService.Object,
+                // The progress-tracked path is covered separately; the synchronous handler under
+                // test here runs the release inline through the mock above.
+                Mock.Of<IBulkCertificateReleaseService>(),
                 Mock.Of<ILogger<SettingsModel>>());
         }
 

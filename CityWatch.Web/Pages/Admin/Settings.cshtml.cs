@@ -1,4 +1,4 @@
-using CityWatch.Common.Helpers;
+﻿using CityWatch.Common.Helpers;
 using CityWatch.Common.Models;
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
@@ -78,6 +78,8 @@ namespace CityWatch.Web.Pages.Admin
         private readonly ICertificateGenerator _certificateGenerator;
         // Bulk Certificate Release reuses the single-guard issuing logic that already lives here.
         private readonly IRPLCertificateGeneratorService _rplCertificateGeneratorService;
+        // Runs a bulk release on a background task so the modal can poll real progress.
+        private readonly IBulkCertificateReleaseService _bulkCertificateReleaseService;
         private readonly ILogger<SettingsModel> _logger;
         private readonly EmailOptions _EmailOptions;
         private readonly CityWatchDbContext _context;
@@ -95,9 +97,11 @@ namespace CityWatch.Web.Pages.Admin
              IDropboxService dropboxUploadService, ICertificateGenerator certificateGenerator,
              IOptions<EmailOptions> emailOptions, CityWatchDbContext context,
              IRPLCertificateGeneratorService rplCertificateGeneratorService,
+             IBulkCertificateReleaseService bulkCertificateReleaseService,
              ILogger<SettingsModel> logger)
         {
             _rplCertificateGeneratorService = rplCertificateGeneratorService;
+            _bulkCertificateReleaseService = bulkCertificateReleaseService;
             _logger = logger;
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -3589,87 +3593,86 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         /// <summary>
-        /// Issues one course certificate to many guards. Each guard goes through
-        /// IRPLCertificateGeneratorService.IssueCertificateForGuard - the same logic the existing
-        /// single-guard release runs - so every eligibility, expiry and duplicate rule is preserved.
+        /// Issues the selected course certificates to the selected guards and waits for the lot.
+        /// Kept for callers that want a single blocking call; the modal itself uses the job handlers
+        /// below so it can show progress. Both run the same BulkCertificateRelease code.
         /// </summary>
         /// <remarks>
-        /// Guards are processed independently: one guard failing must not stop the rest, matching how
-        /// the existing RPL run treats its own loop. Failures are collected and reported back per guard
-        /// rather than surfaced as a single error.
-        /// Ids are re-validated here against the active guard list and the course library; the browser's
+        /// Ids are re-validated against the active guard list and the course library; the browser's
         /// values are never trusted. Authorization comes from the existing AuthorizeFolder("/Admin")
-        /// convention, so no new unprotected endpoint is introduced.
+        /// convention, so no new unprotected endpoint is introduced - that applies to the job handlers
+        /// below as well, which is why they are page handlers rather than an API controller.
         /// </remarks>
         public JsonResult OnPostBulkReleaseCertificates(int[] guardIds, int[] hrSettingsIds)
         {
-            var results = new List<object>();
-            var issued = 0;
-            var failed = 0;
-
             try
             {
-                if (guardIds == null || guardIds.Length == 0)
-                    return new JsonResult(new { success = false, message = "Please select at least one guard." });
+                var plan = BulkCertificateRelease.BuildPlan(
+                    _guardDataProvider.GetActiveGuards(), _configDataProvider.GetHRSettings(), guardIds, hrSettingsIds);
 
-                if (hrSettingsIds == null || hrSettingsIds.Length == 0)
-                    return new JsonResult(new { success = false, message = "Please select a course certificate." });
+                if (!plan.IsValid)
+                    return new JsonResult(new { success = false, message = plan.Message });
 
-                /* Server-side validation of the posted courses: each must be a real course-library
-                   entry. Distinct() so selecting the same course twice cannot issue it twice. */
-                var hrSettings = _configDataProvider.GetHRSettings();
-                var selectedCourses = hrSettingsIds.Distinct()
-                    .Select(id => hrSettings.FirstOrDefault(x => x.Id == id))
-                    .Where(x => x != null)
-                    .ToList();
+                var job = new BulkCertificateJob { Pairings = plan.Pairings };
+                BulkCertificateRelease.Run(job, _rplCertificateGeneratorService, _logger);
 
-                if (selectedCourses.Count == 0)
-                    return new JsonResult(new { success = false, message = "The selected course certificates no longer exist." });
-
-                // Server-side validation of the posted guards, de-duplicated so a repeated id cannot
-                // produce two certificate records for the same guard.
-                var activeGuards = _guardDataProvider.GetActiveGuards();
-                var selectedGuards = guardIds.Distinct()
-                    .Select(id => activeGuards.FirstOrDefault(g => g.Id == id))
-                    .Where(g => g != null)
-                    .ToList();
-
-                if (selectedGuards.Count == 0)
-                    return new JsonResult(new { success = false, message = "None of the selected guards are active." });
-
-                /* Every selected guard gets every selected course. Each pairing is issued through the
-                   same single-guard service call, and each is isolated so one failure cannot stop the
-                   remaining pairings. */
-                foreach (var guard in selectedGuards)
-                {
-                    var guardLabel = string.IsNullOrWhiteSpace(guard.Initial)
-                        ? guard.Name
-                        : $"{guard.Name} [{guard.Initial}]";
-
-                    foreach (var course in selectedCourses)
-                    {
-                        try
-                        {
-                            _rplCertificateGeneratorService.IssueCertificateForGuard(guard.Id, course.Id);
-                            issued++;
-                            results.Add(new { guardId = guard.Id, guard = guardLabel, course = course.Description, status = "Certificate issued successfully", success = true });
-                        }
-                        catch (Exception ex)
-                        {
-                            failed++;
-                            _logger.LogError(ex, $"Bulk certificate release failed. GuardId: {guard.Id}, HrSettingsId: {course.Id}");
-                            results.Add(new { guardId = guard.Id, guard = guardLabel, course = course.Description, status = $"Failed - {ex.Message}", success = false });
-                        }
-                    }
-                }
-
-                return new JsonResult(new { success = true, issued, failed, results });
+                return new JsonResult(new { success = true, issued = job.Issued, failed = job.Failed, results = ToResultPayload(job) });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Bulk certificate release aborted.");
-                return new JsonResult(new { success = false, message = "Error " + ex.Message, issued, failed, results });
+                return new JsonResult(new { success = false, message = "Error " + ex.Message, issued = 0, failed = 0, results = new List<object>() });
             }
+        }
+
+        /// <summary>
+        /// Queues a bulk release and returns straight away with a job id. The modal polls
+        /// <see cref="OnGetBulkReleaseCertificatesProgress"/> for real progress while it runs.
+        /// </summary>
+        public JsonResult OnPostStartBulkReleaseCertificates(int[] guardIds, int[] hrSettingsIds)
+        {
+            try
+            {
+                var start = _bulkCertificateReleaseService.Start(guardIds, hrSettingsIds);
+                return new JsonResult(new { success = start.Success, message = start.Message, jobId = start.JobId, total = start.Total });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bulk certificate release could not be queued.");
+                return new JsonResult(new { success = false, message = "Error " + ex.Message });
+            }
+        }
+
+        /// <summary>Progress snapshot for a queued release. Polled roughly once a second.</summary>
+        public JsonResult OnGetBulkReleaseCertificatesProgress(string jobId)
+        {
+            var progress = _bulkCertificateReleaseService.GetProgress(jobId);
+
+            if (progress == null)
+                return new JsonResult(new { success = false, message = "This bulk release has expired. Please start it again." });
+
+            return new JsonResult(new { success = true, progress });
+        }
+
+        /// <summary>
+        /// Stops a release after the certificate currently being built. Certificates already
+        /// issued stand - they exist on disk, in Dropbox and in the guard's compliance records.
+        /// </summary>
+        public JsonResult OnPostCancelBulkReleaseCertificates(string jobId)
+        {
+            _bulkCertificateReleaseService.Cancel(jobId);
+            return new JsonResult(new { success = true });
+        }
+
+        /// <summary>
+        /// Result rows in the shape the modal renders: lower-cased names, and without the
+        /// internal course id.
+        /// </summary>
+        private static List<object> ToResultPayload(BulkCertificateJob job)
+        {
+            return job.Results
+                .Select(r => (object)new { guardId = r.GuardId, guard = r.Guard, course = r.Course, status = r.Status, success = r.Success })
+                .ToList();
         }
 
         public JsonResult OnPostDeleteGuardCourseByAdmin(int Id)

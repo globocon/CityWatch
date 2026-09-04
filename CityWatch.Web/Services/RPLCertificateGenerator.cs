@@ -179,8 +179,11 @@ namespace CityWatch.Web.Services
                 expirydate = DateTime.Now;
                 IsExpiry = true;
             }
-            var hrdesription = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().Description;
-            var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
+            var hrSettings = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
+            if (hrSettings == null)
+                throw new InvalidOperationException($"Course {hrSettingsId} was not found, so a certificate cannot be issued.");
+            var hrdesription = hrSettings.Description;
+            var hrgroupid = hrSettings.HRGroupId;
             _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
             {
                 Id = 0,
@@ -194,26 +197,45 @@ namespace CityWatch.Web.Services
                 Reminder1 = 45,
                 Reminder2 = 7
             });
-            var IsRPL = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault(); ;
-            if (IsRPL.isRPLEnabled == true)
+            /* Marking the RPL assessment as consumed only applies to a guard who was actually on the RPL
+               list for this course. An admin or Bulk Certificate Release issues the certificate to guards
+               who have no TrainingCourseCertificateRPL row, and both IsRPL and rpldetails were
+               dereferenced unguarded - a NullReferenceException after the certificate had already been
+               generated and saved. Nothing to mark in that case, so skip it. */
+            var IsRPL = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault();
+            if (IsRPL != null && IsRPL.isRPLEnabled == true)
             {
                 var rpldetails = _guardDataProvider.GetCourseCertificateRPL().Where(x => x.TrainingCourseCertificateId == IsRPL.Id && x.GuardId == guardId).FirstOrDefault();
-                _guardLogDataProvider.SaveTrainingCourseCertificateRPL(new TrainingCourseCertificateRPL()
+                if (rpldetails != null)
                 {
-                    Id = rpldetails.Id,
-                    GuardId = rpldetails.GuardId,
-                    TrainingCourseCertificateId = rpldetails.TrainingCourseCertificateId,
-                    AssessmentStartDate = rpldetails.AssessmentStartDate,
-                    AssessmentEndDate = rpldetails.AssessmentEndDate,
-                    TrainingPracticalLocationId = rpldetails.TrainingPracticalLocationId,
-                    TrainingTheoryLocationId=rpldetails.TrainingTheoryLocationId,
-                    TrainingInstructorId = rpldetails.TrainingInstructorId,
-                    isDeleted = true
-                });
+                    _guardLogDataProvider.SaveTrainingCourseCertificateRPL(new TrainingCourseCertificateRPL()
+                    {
+                        Id = rpldetails.Id,
+                        GuardId = rpldetails.GuardId,
+                        TrainingCourseCertificateId = rpldetails.TrainingCourseCertificateId,
+                        AssessmentStartDate = rpldetails.AssessmentStartDate,
+                        AssessmentEndDate = rpldetails.AssessmentEndDate,
+                        TrainingPracticalLocationId = rpldetails.TrainingPracticalLocationId,
+                        TrainingTheoryLocationId = rpldetails.TrainingTheoryLocationId,
+                        TrainingInstructorId = rpldetails.TrainingInstructorId,
+                        isDeleted = true
+                    });
+                }
             }
 
-            var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
-            SendEmailNew(emailBody);
+            /* The certificate has been generated and the compliance record saved by this point, so the
+               release has succeeded. A mail server problem must not be reported back as a failed
+               certificate - the Bulk Certificate Release would show the guard as failed for a
+               certificate that actually exists. Log it and move on. */
+            try
+            {
+                var emailBody = GiveGuardCourseCompletedNotification(guardId, hrdesription);
+                SendEmailNew(emailBody);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Certificate issued for GuardId {guardId}, course '{hrdesription}', but the course-completed notification could not be sent.");
+            }
 
             //int guardCorrectQuestionsCount = existingGuardScrore.FirstOrDefault().guardCorrectQuestionsCount;
 
@@ -276,6 +298,8 @@ namespace CityWatch.Web.Services
         public string GiveGuardCourseCompletedNotification(int guardId, string hrdesription)
         {
             var guardDetails = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+            if (guardDetails == null)
+                throw new InvalidOperationException($"Guard {guardId} was not found, so the course-completed notification cannot be built.");
             var sb = new StringBuilder();
 
             var messageBody = string.Empty;
