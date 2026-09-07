@@ -77,8 +77,9 @@ namespace CityWatch.Web.Services
                     }
 
                     /* Was the two calls inlined here. Moved into IssueCertificateForGuard verbatim and
-                       in the same order so the Bulk Certificate Release runs identical logic. */
-                    IssueCertificateForGuard(item.GuardId, certificateDocument.HRSettingsId);
+                       in the same order so the Bulk Certificate Release runs identical logic.
+                       The row itself is handed down so it - and only it - is marked as consumed. */
+                    IssueCertificateForGuard(item.GuardId, certificateDocument.HRSettingsId, item);
                 }
                 catch (Exception ex)
                 {
@@ -89,6 +90,17 @@ namespace CityWatch.Web.Services
 
         /// <inheritdoc />
         public void IssueCertificateForGuard(int guardId, int hrSettingsId)
+        {
+            // No queue row: the Bulk Certificate Release and the admin release issue on demand and
+            // have nothing to mark as consumed.
+            IssueCertificateForGuard(guardId, hrSettingsId, null);
+        }
+
+        /// <param name="rplAssessment">
+        /// The TrainingCourseCertificateRPL row this issue is draining, or null when the certificate
+        /// is being released on demand rather than off the RPL queue.
+        /// </param>
+        private void IssueCertificateForGuard(int guardId, int hrSettingsId, TrainingCourseCertificateRPL rplAssessment)
         {
             /* A course with no TrainingTestQuestionSettings row cannot be certified: both methods below
                read that row for IsCertificateHoldUntilPracticalTaken / IsCertificateWithQAndADump /
@@ -106,7 +118,7 @@ namespace CityWatch.Web.Services
             }
 
             GuardCertificateAndfeedBackStatus(guardId, hrSettingsId);
-            GuardCertificate(guardId, hrSettingsId);
+            GuardCertificate(guardId, hrSettingsId, rplAssessment);
         }
         private void GuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId)
         {
@@ -152,7 +164,7 @@ namespace CityWatch.Web.Services
 
             //return new JsonResult(new { getcertificateSatus });
         }
-        private void GuardCertificate(int guardId, int hrSettingsId)
+        private void GuardCertificate(int guardId, int hrSettingsId, TrainingCourseCertificateRPL rplAssessment)
         {
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
@@ -197,30 +209,36 @@ namespace CityWatch.Web.Services
                 Reminder1 = 45,
                 Reminder2 = 7
             });
-            /* Marking the RPL assessment as consumed only applies to a guard who was actually on the RPL
-               list for this course. An admin or Bulk Certificate Release issues the certificate to guards
-               who have no TrainingCourseCertificateRPL row, and both IsRPL and rpldetails were
-               dereferenced unguarded - a NullReferenceException after the certificate had already been
-               generated and saved. Nothing to mark in that case, so skip it. */
-            var IsRPL = _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault();
-            if (IsRPL != null && IsRPL.isRPLEnabled == true)
+            /* Drain the queue row this run is actually processing, and nothing else.
+
+               GenerateRPLCertificate selects TrainingCourseCertificateRPL rows with isDeleted = 0 and
+               marks them done here, so this line is what stops a row coming back tomorrow. It used to
+               throw the row away and re-derive a certificate document from the course
+               (GetCourseCertificateDocsUsingSettingsId(...).FirstOrDefault()), then only mark anything
+               if THAT document had isRPLEnabled set. Two ways it missed, both seen in live data:
+               a course whose first document has the flag turned off ("Thermal Camera (FLIR Ti)"), and
+               rows pointing at a different document of the same course ("DashCAM - Martha Cove"). Either
+               way isDeleted stayed 0 and the daily scheduler re-issued the same certificate every day -
+               regenerating the PDF, re-uploading it to Dropbox, inserting another compliance record and
+               emailing "New Certificate Issued" again, indefinitely.
+
+               A null row means this is an on-demand release (Bulk Certificate Release or admin), which
+               has no queue entry to consume. */
+            if (rplAssessment != null)
             {
-                var rpldetails = _guardDataProvider.GetCourseCertificateRPL().Where(x => x.TrainingCourseCertificateId == IsRPL.Id && x.GuardId == guardId).FirstOrDefault();
-                if (rpldetails != null)
+                _guardLogDataProvider.SaveTrainingCourseCertificateRPL(new TrainingCourseCertificateRPL()
                 {
-                    _guardLogDataProvider.SaveTrainingCourseCertificateRPL(new TrainingCourseCertificateRPL()
-                    {
-                        Id = rpldetails.Id,
-                        GuardId = rpldetails.GuardId,
-                        TrainingCourseCertificateId = rpldetails.TrainingCourseCertificateId,
-                        AssessmentStartDate = rpldetails.AssessmentStartDate,
-                        AssessmentEndDate = rpldetails.AssessmentEndDate,
-                        TrainingPracticalLocationId = rpldetails.TrainingPracticalLocationId,
-                        TrainingTheoryLocationId = rpldetails.TrainingTheoryLocationId,
-                        TrainingInstructorId = rpldetails.TrainingInstructorId,
-                        isDeleted = true
-                    });
-                }
+                    Id = rplAssessment.Id,
+                    GuardId = rplAssessment.GuardId,
+                    TrainingCourseCertificateId = rplAssessment.TrainingCourseCertificateId,
+                    AssessmentStartDate = rplAssessment.AssessmentStartDate,
+                    AssessmentEndDate = rplAssessment.AssessmentEndDate,
+                    TrainingPracticalLocationId = rplAssessment.TrainingPracticalLocationId,
+                    TrainingTheoryLocationId = rplAssessment.TrainingTheoryLocationId,
+                    TrainingInstructorId = rplAssessment.TrainingInstructorId,
+                    FileName = rplAssessment.FileName,
+                    isDeleted = true
+                });
             }
 
             /* The certificate has been generated and the compliance record saved by this point, so the

@@ -1,4 +1,4 @@
-using CityWatch.Common.Models;
+﻿using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -131,16 +131,24 @@ namespace CityWatch.Web.Tests
                 It.IsAny<TrainingCourseCertificateRPL>()), Times.Never);
         }
 
-        /// <summary>A guard who is on the RPL list still has that assessment marked as consumed.</summary>
+        /// <summary>
+        /// A guard with a pending RPL assessment for this course keeps it. This test used to assert
+        /// the opposite - that an on-demand release marked the assessment consumed - which was the
+        /// bug behind the daily emails: consumption looked the row up by guard and certificate
+        /// document instead of being told which queue row was being drained, so a Bulk Certificate
+        /// Release silently cancelled a guard's pending RPL assessment, while the daily run failed to
+        /// cancel the one it had actually just issued. Draining the queue belongs to
+        /// GenerateRPLCertificate alone; see RplCertificateQueueTests.
+        /// </summary>
         [TestMethod]
-        public void IssueCertificateForGuard_GuardOnRplList_MarksTheRplAssessmentConsumed()
+        public void IssueCertificateForGuard_GuardOnRplList_LeavesThatAssessmentPending()
         {
             var service = CreateRplService(BrunoTimpanoGuardId, guardHasRplRow: true);
 
             service.IssueCertificateForGuard(BrunoTimpanoGuardId, ThermalCameraHrSettingsId);
 
             _guardLogDataProvider.Verify(z => z.SaveTrainingCourseCertificateRPL(
-                It.Is<TrainingCourseCertificateRPL>(r => r.GuardId == BrunoTimpanoGuardId && r.isDeleted)), Times.Once);
+                It.IsAny<TrainingCourseCertificateRPL>()), Times.Never);
         }
 
         /// <summary>

@@ -36,7 +36,9 @@ namespace CityWatch.Web.API
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.StackTrace);
+                // Was ex.StackTrace, which logged a trace with no message. The daily scheduler cannot
+                // see the failure either way - this always returns true - so the log is all there is.
+                _logger.LogError(ex, "The daily RPL certificate run failed.");
             }
 
             return true;
