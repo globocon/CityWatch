@@ -1,8 +1,91 @@
-﻿@page
+@page
 @model PrivacyModel
 @{
     ViewData["Title"] = "Privacy Policy";
+    // Google Play requires a publicly reachable privacy policy URL for the mobile app.
+    // This page is deliberately self-contained (no portal layout): it must render for
+    // anonymous visitors and app-store reviewers without any signed-in context.
+    Layout = null;
 }
-<h1>@ViewData["Title"]</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — C4i System / CityWatch</title>
+    <style>
+        body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #212529; background: #fff; margin: 0; }
+        main { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; line-height: 1.6; }
+        h1 { font-size: 1.7rem; margin-bottom: 0.2rem; }
+        h2 { font-size: 1.15rem; margin-top: 2rem; }
+        .updated { color: #6c757d; font-size: 0.9rem; }
+        ul { padding-left: 1.2rem; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Privacy Policy</h1>
+    <p class="updated">C4i System mobile application and CityWatch portal &middot; Last updated: 8 September 2026</p>
 
-<p>Use this page to detail your site's privacy policy.</p>
+    <p>
+        The C4i System mobile application ("the App") and the CityWatch web portal are operated by
+        CityWatch Security ("we", "us") to manage security guarding operations: guard logbooks,
+        key and vehicle logs, incident reporting, radio checks and patrol verification. The App is a
+        workforce tool used by our licensed security personnel and authorised staff; it is not a
+        consumer product. We handle personal information in accordance with the Australian Privacy
+        Act 1988 (Cth) and the Australian Privacy Principles.
+    </p>
+
+    <h2>Information we collect</h2>
+    <ul>
+        <li><strong>Account and identity details</strong> — name, initials, security licence number, email address, mobile number, and gender/state details supplied during guard registration.</li>
+        <li><strong>Operational records</strong> — logbook entries, key and vehicle log entries, incident reports, and any photos, video or audio a guard attaches to those records.</li>
+        <li><strong>Location information</strong> — GPS position, including in the background while an enrolled patrol session is active. Location is used to timestamp and verify patrol activity ("proof of patrol"), site entry and exit, and incident report positions. Background collection runs only for guards enrolled in patrol tracking and only during their active session.</li>
+        <li><strong>Scan events</strong> — NFC tag, iBeacon and QR checkpoint scans, with the time and site they belong to.</li>
+        <li><strong>Device information</strong> — device model, operating system version, app version and a push-notification token, used to deliver control-room messages and keep the App working correctly.</li>
+    </ul>
+
+    <h2>How we use it</h2>
+    <ul>
+        <li>Recording and verifying security services delivered at client sites (logbooks, dockets, incident reports, patrol verification).</li>
+        <li>Live operational awareness for our control room (radio checks, duress alerts, patrol positions).</li>
+        <li>Producing reports for the clients whose sites the records relate to.</li>
+        <li>Workforce administration, rostering and compliance with security-industry licensing obligations.</li>
+    </ul>
+
+    <h2>What we do not do</h2>
+    <ul>
+        <li>We do not sell personal information.</li>
+        <li>We do not use the App for advertising and it contains no advertising SDKs.</li>
+        <li>We do not track guards outside an active, enrolled patrol session.</li>
+    </ul>
+
+    <h2>Sharing</h2>
+    <p>
+        Operational records are shared with the client whose site they relate to (for example, a
+        site's incident reports and patrol logs), with our control room and management, and with
+        regulators where the law requires it. Records and report archives are stored on our servers
+        and our contracted cloud storage providers.
+    </p>
+
+    <h2>Retention and security</h2>
+    <p>
+        Records are retained for as long as our contracts and security-industry regulations require,
+        then deleted or de-identified. Data in transit is protected with HTTPS; access to records is
+        restricted to authorised personnel through role-based accounts.
+    </p>
+
+    <h2>Your choices and rights</h2>
+    <p>
+        Location permissions can be managed in your device settings; patrol tracking requires
+        enrolment and consent and can be raised with your manager. You may request access to, or
+        correction of, your personal information at any time.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+        CityWatch Security — <a href="mailto:cws-ir@citywatchsecurity.com.au">cws-ir@citywatchsecurity.com.au</a>
+    </p>
+</main>
+</body>
+</html>
