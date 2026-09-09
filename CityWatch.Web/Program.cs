@@ -80,7 +80,31 @@ builder.Services.AddSingleton<IBulkCertificateJobStore, BulkCertificateJobStore>
 builder.Services.AddSingleton<IBulkCertificateReleaseService, BulkCertificateReleaseService>();
 builder.Services.AddScoped<IMobileAppDataServices, MobileAppDataServices>();
 
-builder.Services.AddHttpClient<AiService>();
+/* AI Assistance on /Incident/Register.
+
+   The model provider is Claude, configured from the "Ai" section - the same provider, section name
+   and settings shape SmartRosterAI uses. Both providers sit behind typed HttpClients so base
+   address, timeout and handler lifetime are configured in one place. */
+builder.Services.Configure<CityWatch.Web.Models.AiOptions>(
+    builder.Configuration.GetSection(CityWatch.Web.Models.AiOptions.SectionName));
+builder.Services.Configure<CityWatch.Web.Models.AiAssistanceSettings>(
+    builder.Configuration.GetSection(CityWatch.Web.Models.AiAssistanceSettings.Name));
+
+builder.Services.AddHttpClient<IAiService, AiService>((provider, client) =>
+{
+    var aiOptions = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<CityWatch.Web.Models.AiOptions>>().Value;
+    client.BaseAddress = new Uri(aiOptions.BaseAddress);
+    client.Timeout = TimeSpan.FromSeconds(aiOptions.RequestTimeoutSeconds);
+});
+
+builder.Services.AddHttpClient<ILanguageToolService, LanguageToolService>((provider, client) =>
+{
+    var aiSettings = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<CityWatch.Web.Models.AiAssistanceSettings>>().Value;
+    client.BaseAddress = new Uri(aiSettings.LanguageToolBaseAddress);
+    client.Timeout = TimeSpan.FromSeconds(aiSettings.TimeoutSeconds);
+});
+
+builder.Services.AddScoped<IMobileAppDataServices, MobileAppDataServices>();
 
 builder.Services.AddScoped<IAlertEmailServices, AlertEmailServices>();
 builder.Services.AddScoped<ISmartWandReportZipGenarator, SmartWandReportZipGenarator>();
