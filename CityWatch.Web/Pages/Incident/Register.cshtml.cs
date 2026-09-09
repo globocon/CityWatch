@@ -1,4 +1,4 @@
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
@@ -50,7 +50,11 @@ namespace CityWatch.Web.Pages.Incident
         private readonly IConfiguration _configuration;
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly IUserDataProvider _userDataProvider;
-        private readonly AiService _ai;
+        // AI Assistance on this page: grammar checking and the LLM rewrite/translation. Both are
+        // interfaces so the provider behind them can change without touching the page.
+        private readonly IAiService _ai;
+        private readonly ILanguageToolService _languageTool;
+        private readonly AiAssistanceSettings _aiSettings;
         [BindProperty]
         public IncidentRequest Report { get; set; }
         public List<SelectListItem> ClientSites { get; set; }
@@ -74,7 +78,9 @@ namespace CityWatch.Web.Pages.Incident
             IConfiguration configuration,
             ISiteEventLogDataProvider siteEventLogDataProvider,
              IUserDataProvider userDataProvider,
-             AiService ai
+             IAiService ai,
+             ILanguageToolService languageTool,
+             IOptions<AiAssistanceSettings> aiSettings
             )
         {
             _WebHostEnvironment = webHostEnvironment;
@@ -91,6 +97,8 @@ namespace CityWatch.Web.Pages.Incident
             _SiteEventLogDataProvider = siteEventLogDataProvider;
             _userDataProvider = userDataProvider;
             _ai = ai;
+            _languageTool = languageTool;
+            _aiSettings = aiSettings.Value;
         }
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public IActionResult OnGet()
@@ -1856,113 +1864,146 @@ namespace CityWatch.Web.Pages.Incident
             return defaultValue;
         }
 
-  public JsonResult OnGetAiButton(string textToCheck)
+        /* ---------------- AI Assistance ----------------
+           One entry point per operation, all Razor Page handlers rather than API controllers: this
+           folder is covered by AuthorizeFolder("/Incident") in Program.cs, whereas everything under
+           CityWatch.Web/API is deliberately anonymous for external schedulers. Putting the AI
+           endpoints there would have let anyone spend the provider budget.
+
+           The browser never calls LanguageTool or the LLM directly, so no provider credential
+           reaches the page and validation, logging and rate limiting stay server-side. */
+
+        /// <summary>Target languages for the Language Converter. Served so the list is not hard-coded in JavaScript.</summary>
+        public JsonResult OnGetAiLanguages()
         {
-
-
-            var TruckConfigText = CorrectGrammar(textToCheck);
-
-            return new JsonResult(new { TruckConfigText });
-        }
-
-
-        public async Task<JsonResult> OnGetAiButtonOpenAIApi(string textToCheck)
-        {
-            if (string.IsNullOrWhiteSpace(textToCheck))
-            {
-                return new JsonResult(new { success = false, message = "Text is empty" });
-            }
-
-            var resultText = await _ai.TestAsync(textToCheck);
-
             return new JsonResult(new
             {
                 success = true,
-                correctedText = resultText
+                languages = _aiSettings.TargetLanguages
+                    .Select(z => new { code = z.Code, name = z.Name })
+                    .ToList(),
+                maxTextLength = _aiSettings.MaxTextLength
             });
         }
-        public async Task<string> CorrectGrammar(string textToCheck)
+
+        /// <summary>Grammar, spelling and style check. Returns suggestions; changes nothing.</summary>
+        public async Task<JsonResult> OnPostAiGrammarCheck([FromForm] AiTextRequest request)
         {
-            var companydetail = _userDataProvider.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
-            var apiKey = companydetail.ApiSecretkeyIR;  // Replace with your key
-            var apiUrl = "https://api.languagetool.org/v2/check";
+            var text = request?.Text;
+            var validationError = ValidateAiText(text);
+            if (validationError != null)
+                return new JsonResult(new { success = false, message = validationError });
 
-            using var client = new HttpClient();
+            _logger.LogInformation("AI operation started: grammar check ({Length} characters).", text.Trim().Length);
 
-            // If your provider requires Authorization header (check your docs)
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", apiKey);
-
-            // Prepare form content
-            var content = new FormUrlEncodedContent(new[]
+            try
             {
-                new KeyValuePair<string, string>("text", textToCheck),
-                new KeyValuePair<string, string>("language", "en-US"),
-                new KeyValuePair<string, string>("enabledOnly", "false")
-                // Add other parameters if needed like "enabledOnly", "level", etc.
-            });
-
-            var response = await client.PostAsync(apiUrl, content);
-            var json = await response.Content.ReadAsStringAsync();
-
-            var result = System.Text.Json.JsonSerializer.Deserialize<LanguageToolResponse>(json);
-
-            string correctedText = ApplyCorrections(textToCheck, result.Matches);
-
-            return correctedText;
-        }
-        static string ApplyCorrections(string originalText, List<Match> matches)
-        {
-            var corrected = originalText;
-            int offsetAdjustment = 0;
-
-            // Sort by offset to avoid overlapping replacements
-            matches.Sort((a, b) => a.Offset.CompareTo(b.Offset));
-
-            foreach (var match in matches)
-            {
-                if (match.Replacements.Count == 0) continue;
-
-                int start = match.Offset + offsetAdjustment;
-                int length = match.Length;
-                string replacement = match.Replacements[0].Value;
-
-                corrected = corrected.Substring(0, start) +
-                            replacement +
-                            corrected.Substring(start + length);
-
-                offsetAdjustment += replacement.Length - length;
+                var result = await _languageTool.CheckAsync(text.Trim(), HttpContext.RequestAborted);
+                _logger.LogInformation("AI operation completed: grammar check found {Count} suggestion(s).", result.Matches.Count);
+                return new JsonResult(new { success = true, result });
             }
-
-            return corrected;
+            catch (LanguageToolUnavailableException)
+            {
+                // Already logged with the provider detail by the service; the guard gets plain words.
+                return new JsonResult(new { success = false, message = GrammarUnavailableMessage });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI operation failed: grammar check.");
+                return new JsonResult(new { success = false, message = GrammarUnavailableMessage });
+            }
         }
-    }
-    public class GrammarRequest
-    {
-        public string Text { get; set; }
-    }
-    public class LanguageToolResponse
-    {
-        [JsonPropertyName("matches")]
-        public List<Match> Matches { get; set; }
-    }
 
-    public class Match
-    {
-        [JsonPropertyName("offset")]
-        public int Offset { get; set; }
+        /// <summary>Professional rewrite of the incident text. Returns a result for the guard to review.</summary>
+        public async Task<JsonResult> OnPostAiImproveIncident([FromForm] AiTextRequest request)
+        {
+            var text = request?.Text;
+            var validationError = ValidateAiText(text);
+            if (validationError != null)
+                return new JsonResult(new { success = false, message = validationError });
 
-        [JsonPropertyName("length")]
-        public int Length { get; set; }
+            _logger.LogInformation("AI operation started: incident rewrite ({Length} characters).", text.Trim().Length);
 
-        [JsonPropertyName("replacements")]
-        public List<Replacement> Replacements { get; set; }
-    }
+            try
+            {
+                var resultText = await _ai.ImproveIncidentReportAsync(text.Trim(), HttpContext.RequestAborted);
+                _logger.LogInformation("AI operation completed: incident rewrite.");
 
-    public class Replacement
-    {
-        [JsonPropertyName("value")]
-        public string Value { get; set; }
+                return new JsonResult(new
+                {
+                    success = true,
+                    result = new AiTextResult { OriginalText = text.Trim(), ResultText = resultText }
+                });
+            }
+            catch (AiServiceUnavailableException)
+            {
+                return new JsonResult(new { success = false, message = AiUnavailableMessage });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI operation failed: incident rewrite.");
+                return new JsonResult(new { success = false, message = AiUnavailableMessage });
+            }
+        }
 
+        /// <summary>Converts the incident text to another language or regional English variant.</summary>
+        public async Task<JsonResult> OnPostAiTranslate([FromForm] AiTranslationRequest request)
+        {
+            var text = request?.Text;
+            var validationError = ValidateAiText(text);
+            if (validationError != null)
+                return new JsonResult(new { success = false, message = validationError });
+
+            // The target must be one this server offers - the posted value is never trusted.
+            var target = _aiSettings.TargetLanguages
+                .FirstOrDefault(z => string.Equals(z.Code, request.TargetLanguage, StringComparison.OrdinalIgnoreCase));
+
+            if (target == null)
+                return new JsonResult(new { success = false, message = "The selected language is not supported." });
+
+            _logger.LogInformation("AI operation started: translation to {Target} ({Length} characters).",
+                target.Code, text.Trim().Length);
+
+            try
+            {
+                var resultText = await _ai.TranslateAsync(text.Trim(), target.Name, HttpContext.RequestAborted);
+                _logger.LogInformation("AI operation completed: translation to {Target}.", target.Code);
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    result = new AiTextResult { OriginalText = text.Trim(), ResultText = resultText }
+                });
+            }
+            catch (AiServiceUnavailableException)
+            {
+                return new JsonResult(new { success = false, message = AiUnavailableMessage });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI operation failed: translation request to {Target}.", target.Code);
+                return new JsonResult(new { success = false, message = AiUnavailableMessage });
+            }
+        }
+
+        // Wording fixed here so every failure path says the same thing to the guard.
+        private const string GrammarUnavailableMessage = "Grammar checking is temporarily unavailable. Please try again.";
+        private const string AiUnavailableMessage = "AI assistance is temporarily unavailable. Please try again.";
+        internal const string EmptyTextMessage = "Text field requires content for AI to scan";
+
+        /// <summary>
+        /// Server-side validation, not a mirror of the JavaScript check: the handlers are reachable
+        /// without the page. Returns null when the text is acceptable.
+        /// </summary>
+        private string ValidateAiText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return EmptyTextMessage;
+
+            if (text.Trim().Length > _aiSettings.MaxTextLength)
+                return $"The text is too long for AI assistance. Please keep it under {_aiSettings.MaxTextLength:N0} characters.";
+
+            return null;
+        }
     }
 }

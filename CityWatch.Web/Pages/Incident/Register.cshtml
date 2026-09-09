@@ -602,10 +602,13 @@
                                             <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.FeedBackTemplates" asp-for="@Model.Report.FeedbackTemplates"></select>
                                         </div>
 
+                                        @* One AI entry point. The two previous buttons ("Ai" and an arrows
+                                           icon) each rewrote this field in place with no review, and neither
+                                           name told the guard what it would do. *@
                                         <div class="col-md-1 d-flex align-items-start">
-                                            <button type="button" class="btn btn-primary mr-1" id="btnAIButton">Ai</button>
-                                            <button type="button" class="btn btn-primary" id="btnAIButtonOpenAIApi">
-                                                <i class="fa fa-arrows-alt" aria-hidden="true"></i>
+                                            <button type="button" class="btn btn-primary text-nowrap" id="btnAiAssistance"
+                                                    title="AI Assistance">
+                                                <i class="fa fa-magic mr-1" aria-hidden="true"></i>AI
                                             </button>
                                         </div>
                                     </div>
@@ -1531,7 +1534,6 @@
     document.getElementById("Report_VehicleRego").addEventListener('blur', vehicleRegoDisableKeyListPlates);
 
     document.getElementById("kvl_list_plates").addEventListener('change', kvlListPlatesChange);
-    //document.getElementById("btnAIButton").addEventListener('click', onbtnAIButtonClick);
     //document.getElementById("btn_delete_plate").addEventListener('click', deletePlates);
 
     function kvlListPlatesChange() {
@@ -1833,9 +1835,130 @@
 </script>
 <partial name="_MessagePopup" />
 
+@* ---------------- AI Assistance ----------------
+   One modal covering both options. Deliberately says nothing about Claude, Anthropic, LanguageTool,
+   models or tokens - a guard picks what they want done, not which provider does it.
+   Driven by ai-assistance.js.
+
+   The text panels set their own colour rather than relying on .bg-light: the site theme renders
+   <pre> in a near-white colour, which made both the original text and the AI result unreadable. *@
+<div class="modal fade" id="aiAssistanceModal" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="aiAssistanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiAssistanceModalLabel">
+                    <i class="fa fa-magic mr-2" aria-hidden="true"></i>AI Assistance
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div id="aiAssistanceAlert" class="alert alert-warning" style="display:none"></div>
+
+                @* Step 1 - pick what to do. Kept compact so the two options fit without the modal scrolling. *@
+                <div id="aiAssistanceChoices">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-block text-left py-2" id="aiChoiceGrammar">
+                                <i class="fa fa-check-square-o mr-2" aria-hidden="true"></i><strong>Grammar &amp; Scenario Check</strong>
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-block text-left py-2" id="aiChoiceTranslate">
+                                <i class="fa fa-language mr-2" aria-hidden="true"></i><strong>Language Converter</strong>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                @* Step 2a - language picker *@
+                <div id="aiAssistanceLanguageStep" style="display:none">
+                    <p class="mb-1"><strong>Detected:</strong> <span id="aiDetectedLanguage">detecting...</span></p>
+                    <label for="aiTargetLanguage" class="form-label font-weight-bold">Convert to:</label>
+                    <select id="aiTargetLanguage" class="form-control"></select>
+                </div>
+
+                @* Step 2b - grammar suggestions, shown beside the text they change. This is the only
+                   step for a grammar run: applying the ticked corrections closes the modal, with no
+                   second review screen to click through. *@
+                <div id="aiAssistanceGrammarStep" style="display:none">
+                    <p class="mb-1"><strong>Detected:</strong> <span id="aiGrammarLanguage">-</span></p>
+
+                    <label class="form-label font-weight-bold mt-1 mb-1">Original Text</label>
+                    <pre id="aiGrammarOriginal" class="border rounded p-2 ai-text-panel"></pre>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
+                        <label class="form-label font-weight-bold mb-0">Grammar Suggestions</label>
+                        <small class="text-muted">Tick to apply, click again to ignore</small>
+                    </div>
+                    <ul id="aiGrammarSuggestions" class="list-group" style="max-height:180px;overflow-y:auto"></ul>
+
+                    <label class="form-label font-weight-bold mt-2 mb-1">Corrected Text</label>
+                    <pre id="aiGrammarCorrected" class="border rounded p-2 ai-text-panel"></pre>
+                </div>
+
+                @* Step 3 - review, for the rewrite and the language conversion. Those replace the
+                   whole text rather than named words, so they are always shown side by side first. *@
+                <div id="aiAssistanceResultStep" style="display:none">
+                    <label class="form-label font-weight-bold mb-1">Original</label>
+                    <pre id="aiResultOriginal" class="border rounded p-2 ai-text-panel"></pre>
+
+                    <label class="form-label font-weight-bold mt-2 mb-1">AI Result</label>
+                    <pre id="aiResultText" class="border rounded p-2 ai-text-panel"></pre>
+                </div>
+
+                @* Shown during a request; every action button is disabled while it is up. *@
+                <div id="aiAssistanceBusy" class="text-center py-3" style="display:none">
+                    <i class="fa fa-spinner fa-spin fa-2x text-primary" aria-hidden="true"></i>
+                    <div class="mt-2" id="aiAssistanceBusyText">Processing with AI...</div>
+                </div>
+            </div>
+
+            @* Every action lives in the footer so the modal has one place to act from. *@
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link mr-auto" id="aiBack" style="display:none">Back</button>
+                <button type="button" class="btn btn-success" id="aiUseGrammarResult" style="display:none">Use Corrected Text</button>
+                <button type="button" class="btn btn-primary" id="aiRunImprove" style="display:none">Improve &amp; Expand</button>
+                <button type="button" class="btn btn-primary" id="aiRunTranslate" style="display:none">Convert</button>
+                <button type="button" class="btn btn-success" id="aiUseResult" style="display:none">Use Result</button>
+                <button type="button" class="btn btn-outline-primary" id="aiAssistanceCancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Explicit colours: inherited theme styling rendered these panels near-white on white.
+       pre-wrap keeps the guard's own line breaks visible instead of collapsing them. */
+    .ai-text-panel {
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 160px;
+        overflow-y: auto;
+        font-family: inherit;
+        font-size: 13px;
+        background-color: #f8f9fa;
+        color: #212529;
+        margin-bottom: 0;
+    }
+
+    /* The tick shows a suggestion is applied. Ignored suggestions keep the row - the guard can see
+       what was found and change their mind - but drop the tick and dim the text. */
+    .ai-suggestion { cursor: pointer; }
+    .ai-suggestion .ai-suggestion-tick { visibility: hidden; }
+    .ai-suggestion.ai-suggestion-applied .ai-suggestion-tick { visibility: visible; }
+    .ai-suggestion.ai-suggestion-ignored { opacity: .55; }
+    .ai-suggestion.ai-suggestion-ignored .ai-suggestion-replacement { text-decoration: line-through; }
+</style>
+
 @* ####### Refer site.js for further js scripts ###### *@
 
 @section scripts {
     <partial name="_ValidationScriptsPartial" />
+    @* Page-scoped: AI Assistance is only on this page, so it is not loaded site-wide from _Layout. *@
+    <script src="~/js/ai-assistance.js" asp-append-version="true"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
 }
