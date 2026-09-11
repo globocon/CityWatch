@@ -281,6 +281,51 @@ i.client-status-circle {
         }
 }
 
+/* p1-337 Footer links hidden behind the tablet navigation bar in landscape.
+
+   body is d-flex flex-column with min-height:100vh and a flex-fill content area, so the footer is
+   pinned to the 100vh line. On a Samsung tablet in landscape the system taskbar is drawn over the
+   bottom of that box and swallows the footer links (and the copyright row below them).
+
+   Padding the body rather than the footer is deliberate. Bootstrap sets box-sizing:border-box on
+   everything, so the padding sits inside the min-height: the page keeps its exact 100vh/100dvh
+   height with no new scrollbar, and the footer simply lands that much higher. Padding the footer
+   instead would grow the document past the viewport and push the links below the fold - worse than
+   the bug. It also covers the case where the disclaimer already makes the page scroll, because the
+   padding is at the end of the document either way.
+
+   Scoped to coarse-pointer landscape screens 1024px and wider, i.e. tablets. Desktop reports a fine
+   pointer and phones in portrait fail the orientation test, so neither is touched. 1024px rather
+   than the usual 768px breakpoint specifically to keep phones out: a phone in landscape is 667-932px
+   wide, so 768px would have caught them, while tablets in landscape start at 1024px (iPad) and the
+   reported Galaxy Tab is 1280px. Lower it if a small tablet turns out to be affected - phones in
+   landscape have the same latent problem and the same rule fixes them.
+
+   env(safe-area-inset-bottom) is added on top for browsers that report an inset, and resolves to
+   0px on those that do not. The 56px covers a Samsung/Android taskbar, which reports no inset.
+
+   On a viewport where the page nearly fills the height already this reserves more room than the
+   slack available, so the page gains a small scroll (about 10px at 1280x800). That is the intended
+   trade-off: the links are reachable either way, and scrolling is the correct answer when the
+   content genuinely does not fit above the taskbar. */
+@media (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    body {
+        box-sizing: border-box;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 56px);
+    }
+}
+
+/* The dynamic viewport already excludes browser chrome, so where it is supported the footer lands
+   on the visible bottom edge rather than the layout one. Kept inside the same tablet query so the
+   existing desktop and phone rendering is untouched; 100vh remains the fallback everywhere else. */
+@supports (min-height: 100dvh) {
+    @media (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+        body {
+            min-height: 100dvh;
+        }
+    }
+}
+
 @media (min-width: 768px) {
     html {
         font-size: 14px !important;
