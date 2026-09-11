@@ -29,6 +29,45 @@ namespace CityWatch.Web.Services
         /// Exposed so the Bulk Certificate Release can reuse this logic instead of re-implementing it.
         /// </summary>
         void IssueCertificateForGuard(int guardId, int hrSettingsId);
+
+        /// <summary>
+        /// As above, but for a course that is set up for RPL: records the assessment against this
+        /// guard first - the same TrainingCourseCertificateRPL row the rplDetailsModal writes for a
+        /// single guard - and then issues. The row has to exist before the PDF is built, because
+        /// CertificateGenerator reads it to decide whether the certificate carries a score card or
+        /// the RPL compliance document, and to date the file from the assessment end date.
+        /// </summary>
+        /// <param name="rplDetails">
+        /// The assessment captured once for the whole run. Null issues exactly as the overload above.
+        /// </param>
+        void IssueCertificateForGuard(int guardId, int hrSettingsId, RplAssessmentDetails rplDetails);
+
+        /// <summary>
+        /// The certificate document that decides whether a course is RPL, or null when the course
+        /// has none uploaded. Deliberately the same
+        /// GetCourseCertificateDocsUsingSettingsId(...).FirstOrDefault() row that the guard's
+        /// Training and Assessment grid reads for its RPL button and that CertificateGenerator
+        /// reads back when it looks for the guard's assessment - a different row here would record
+        /// an RPL assessment the certificate never sees.
+        /// </summary>
+        TrainingCourseCertificate GetCertificateDocumentForCourse(int hrSettingsId);
+    }
+
+    /// <summary>
+    /// One RPL assessment, as captured by rplDetailsModal. Carries no guard and no course: the
+    /// Bulk Certificate Release collects it once and applies it to every guard in the run, and the
+    /// guard/certificate pairing is resolved per guard when the row is written.
+    /// </summary>
+    public class RplAssessmentDetails
+    {
+        public int TrainingTheoryLocationId { get; set; }
+        public int TrainingPracticalLocationId { get; set; }
+        public int TrainingInstructorId { get; set; }
+        public DateTime AssessmentStartDate { get; set; }
+        public DateTime AssessmentEndDate { get; set; }
+
+        /// <summary>Compliance document, already uploaded into each guard's folder. Optional, as in the single-guard modal.</summary>
+        public string FileName { get; set; }
     }
 
     public class RPLCertificateGeneratorService : IRPLCertificateGeneratorService
@@ -93,7 +132,76 @@ namespace CityWatch.Web.Services
         {
             // No queue row: the Bulk Certificate Release and the admin release issue on demand and
             // have nothing to mark as consumed.
-            IssueCertificateForGuard(guardId, hrSettingsId, null);
+            IssueCertificateForGuard(guardId, hrSettingsId, (TrainingCourseCertificateRPL)null);
+        }
+
+        /// <inheritdoc />
+        public TrainingCourseCertificate GetCertificateDocumentForCourse(int hrSettingsId) =>
+            _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault();
+
+        /// <inheritdoc />
+        public void IssueCertificateForGuard(int guardId, int hrSettingsId, RplAssessmentDetails rplDetails)
+        {
+            if (rplDetails == null)
+            {
+                IssueCertificateForGuard(guardId, hrSettingsId);
+                return;
+            }
+
+            /* Written before the certificate is built, exactly as OnPostSaveRPLDetails does for a
+               single guard: CertificateGenerator.GeneratePdf looks this row up and, when it finds
+               one, attaches the RPL compliance document instead of a score card and dates the file
+               from AssessmentEndDate. Issuing first and recording afterwards would produce a
+               score-card certificate dated today for a guard who never sat the test. */
+            var assessment = SaveRplAssessment(guardId, hrSettingsId, rplDetails);
+
+            /* Handed to the private overload as the row being drained, so it is marked consumed
+               once the certificate exists. The release IS the issuing event, so leaving the row
+               pending would hand the same assessment to the nightly api/RPLCertificate run
+               tomorrow - a second certificate, a second compliance record and a second
+               "New Certificate Issued" email for every guard in the release. */
+            IssueCertificateForGuard(guardId, hrSettingsId, assessment);
+        }
+
+        /// <summary>
+        /// Records the assessment against one guard, updating that guard's existing row for this
+        /// certificate rather than adding a second one - the same lookup fetchURPLDeatils performs
+        /// before the modal opens, so re-running a release cannot leave a guard with duplicate RPL
+        /// records (and cannot confuse GeneratePdf, which takes the last row it finds).
+        /// </summary>
+        private TrainingCourseCertificateRPL SaveRplAssessment(int guardId, int hrSettingsId, RplAssessmentDetails details)
+        {
+            var certificateDocument = GetCertificateDocumentForCourse(hrSettingsId);
+            if (certificateDocument == null)
+            {
+                var course = _configDataProvider.GetHRSettings().FirstOrDefault(x => x.Id == hrSettingsId);
+                throw new InvalidOperationException(
+                    $"No certificate document is uploaded for course '{course?.Description ?? hrSettingsId.ToString()}', so an RPL assessment cannot be recorded.");
+            }
+
+            var existing = _configDataProvider.GetCourseCertificateRPLUsingId(certificateDocument.Id)
+                .Where(x => x.GuardId == guardId)
+                .OrderByDescending(x => x.Id)
+                .FirstOrDefault();
+
+            var record = new TrainingCourseCertificateRPL()
+            {
+                // -1, not 0, is this provider's "insert" sentinel.
+                Id = existing?.Id ?? -1,
+                GuardId = guardId,
+                TrainingCourseCertificateId = certificateDocument.Id,
+                TrainingTheoryLocationId = details.TrainingTheoryLocationId,
+                TrainingPracticalLocationId = details.TrainingPracticalLocationId,
+                TrainingInstructorId = details.TrainingInstructorId,
+                AssessmentStartDate = details.AssessmentStartDate,
+                AssessmentEndDate = details.AssessmentEndDate,
+                FileName = details.FileName,
+                isDeleted = false
+            };
+
+            _guardLogDataProvider.SaveTrainingCourseCertificateRPL(record);
+
+            return record;
         }
 
         /// <param name="rplAssessment">
@@ -194,7 +302,13 @@ namespace CityWatch.Web.Services
             var hrSettings = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
             if (hrSettings == null)
                 throw new InvalidOperationException($"Course {hrSettingsId} was not found, so a certificate cannot be issued.");
-            var hrdesription = hrSettings.Description;
+            /* Was hrSettings.Description alone, which recorded "Thermal Camera (FLIR Ti)" against
+               the guard while every single-guard flow recorded "03e Thermal Camera (FLIR Ti)" - the
+               reference number was simply missing from this copy of the expression. The generated
+               file was always named correctly (GeneratePdf builds its name from the same three
+               parts), so only the GuardComplianceAndLicense record was short. One shared definition
+               now; see HrSettings.CertificateRecordName. */
+            var hrdesription = hrSettings.CertificateRecordName;
             var hrgroupid = hrSettings.HRGroupId;
             _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
             {

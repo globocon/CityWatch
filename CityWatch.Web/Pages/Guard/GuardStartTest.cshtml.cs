@@ -362,7 +362,8 @@ namespace CityWatch.Web.Pages.Guard
                 IsExpiry = true;
             }
             var hrSettingsList = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
-            var hrdesription = hrSettingsList.ReferenceNoNumbers.Name + hrSettingsList.ReferenceNoAlphabets.Name +" " + hrSettingsList.Description;
+            // Same string as before, from the one definition the RPL/bulk path now shares.
+            var hrdesription = hrSettingsList.CertificateRecordName;
             var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
             var compliance = _guardDataProvider.GetGuardCompliancesAndLicense(guardId).Where(x => x.FileName == filename).FirstOrDefault();
             int id = 0;

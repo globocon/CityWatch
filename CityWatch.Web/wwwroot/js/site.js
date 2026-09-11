@@ -10251,13 +10251,56 @@ $(document).on('click', '#bulkCertProduce', function () {
 
     // Locked before the request goes out, so a double click cannot queue two runs.
     bulkCertSetRunning(true);
+
+    /* Does anything selected need an RPL assessment? Asked once for the whole selection, not once
+       per guard, which is what keeps rplDetailsModal to a single appearance per release. */
+    $.ajax({
+        url: '/Admin/Settings?handler=BulkCertReleaseRplCourses',
+        type: 'GET',
+        traditional: true,
+        cache: false,
+        data: { hrSettingsIds: hrSettingsIds }
+    }).done(function (response) {
+        var rplCourses = (response && response.success && response.courses) || [];
+
+        if (rplCourses.length === 0) {
+            // Nothing selected is an RPL course: unchanged behaviour, no prompt.
+            bulkCertStartRelease(guardIds, hrSettingsIds, null);
+            return;
+        }
+
+        bulkCertRpl.courses = rplCourses;
+        bulkCertRpl.guardIds = guardIds;
+        bulkCertRpl.hrSettingsIds = hrSettingsIds;
+        bulkCertOpenRplModal();
+    }).fail(function () {
+        bulkCertFail('Bulk certificate release could not be started. Please try again.');
+    });
+});
+
+/* Queues the release and switches the modal over to the progress bar. Split out of the Produce
+   handler so the RPL path lands here too, after the assessment has been captured. */
+function bulkCertStartRelease(guardIds, hrSettingsIds, rplDetails) {
+    bulkCertSetRunning(true);
     bulkCertResetProgress(guardIds.length * hrSettingsIds.length);
+
+    var payload = { guardIds: guardIds, hrSettingsIds: hrSettingsIds };
+
+    if (rplDetails) {
+        // Bound server-side as BulkRplDetailsRequest.
+        payload['rpl.TrainingTheoryLocationId'] = rplDetails.trainingTheoryLocationId;
+        payload['rpl.TrainingPracticalLocationId'] = rplDetails.trainingPracticalLocationId;
+        payload['rpl.TrainingInstructorId'] = rplDetails.trainingInstructorId;
+        payload['rpl.AssessmentStartDate'] = rplDetails.assessmentStartDate;
+        payload['rpl.AssessmentEndDate'] = rplDetails.assessmentEndDate;
+        payload['rpl.FileName'] = rplDetails.fileName || '';
+    }
 
     $.ajax({
         url: '/Admin/Settings?handler=StartBulkReleaseCertificates',
         type: 'POST',
         traditional: true,
-        data: { guardIds: guardIds, hrSettingsIds: hrSettingsIds },
+        data: payload,
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
     }).done(function (response) {
         if (!response.success) {
@@ -10274,6 +10317,208 @@ $(document).on('click', '#bulkCertProduce', function () {
     }).fail(function () {
         bulkCertFail('Bulk certificate release could not be started. Please try again.');
     });
+}
+
+/* ---------------- RPL details for a bulk release ----------------
+   The release borrows the existing rplDetailsModal rather than adding a second RPL form, so the
+   fields, the dropdown sources and the compliance upload are the ones the single-guard flow uses
+   and a change to that form reaches both. It is shown ONCE per release: the assessment captured
+   here is applied to every selected guard on every selected RPL course.
+
+   While it is borrowed, window.bulkCertRplActive tells the two handlers in training.js - Save, and
+   the compliance-document upload - to stand aside, because both of them work on the single guard
+   in #rplGuardId and a bulk run has no such guard. */
+var bulkCertRpl = {
+    courses: [],
+    guardIds: [],
+    hrSettingsIds: [],
+    fileName: '',
+
+    /* Set by Save, read by the modal's hidden handler below. The release cannot be started from the
+       Save click itself - the release modal has to be back on screen first - so the assessment is
+       parked here for the moment the RPL modal has finished closing. */
+    pendingDetails: null
+};
+
+function bulkCertRplCourseIds() {
+    return bulkCertRpl.courses.map(function (course) { return course.hrSettingsId; });
+}
+
+function bulkCertOpenRplModal() {
+    window.bulkCertRplActive = true;
+    bulkCertRpl.fileName = '';
+
+    // No single guard or certificate in a bulk run - both are resolved per guard on the server.
+    $('#rplId').val(-1);
+    $('#rplGuardId').val('');
+    $('#rplCertificateId').val('');
+    $('#RPL_DateAssessment_started').val('');
+    $('#RPL_DateAssessment_ended').val('');
+    $('#GuardRPLCertificate_FileName1').val('');
+    $('#guardRPLCertificate_fileName1').text('None');
+    clearGuardValidationSummary('rplValidationSummary');
+
+    // The same three loaders the single-guard flow calls, with nothing preselected.
+    getPracticalLocation('');
+    getTheoryLocation('');
+    getRPLInstructorSignOff('');
+
+    // Says plainly that one set of details is about to cover the whole run.
+    var courseNames = bulkCertRpl.courses.map(function (course) { return bulkCertEscape(course.description); });
+    $('#bulkCertRplScope').remove();
+    $('#rplDetailsModal .modal-body').prepend(
+        '<div id="bulkCertRplScope" class="alert alert-info p-2 mb-2" style="font-size:12px">' +
+        'These RPL details will be applied to <strong>' + bulkCertRpl.guardIds.length + '</strong> selected guard(s) for: ' +
+        '<strong>' + courseNames.join(', ') + '</strong>.</div>');
+
+    bulkCertSwapToRplModal();
+}
+
+/* Swapped rather than stacked: Bootstrap 4 does not support one modal on top of another, and the
+   release modal is data-backdrop="static", so showing the RPL form over it leaves a backdrop behind
+   that never clears.
+
+   The retry is not belt and braces. Bootstrap ignores hide() outright while a modal is still
+   playing its opening transition, and Produce is reachable in that window - the release modal fades
+   in over 300ms and a click that lands inside it is silently dropped, leaving the operator looking
+   at the release modal with nothing having happened. So: ask it to hide, and if it was still
+   opening, hide it again the moment it finishes. */
+function bulkCertSwapToRplModal() {
+    var releaseModal = $('#bulkCertificateRelease');
+
+    function hideAgain() {
+        releaseModal.modal('hide');
+    }
+
+    releaseModal.one('hidden.bs.modal', function () {
+        releaseModal.off('shown.bs.modal', hideAgain);
+        $('#rplDetailsModal').modal('show');
+    });
+
+    releaseModal.on('shown.bs.modal', hideAgain);
+    releaseModal.modal('hide');
+}
+
+function bulkCertCloseRplModal() {
+    window.bulkCertRplActive = false;
+    $('#bulkCertRplScope').remove();
+}
+
+/* Delegated, so it runs after the direct #btnSaveRPLDetails binding in training.js - which returns
+   immediately while the release owns the modal. */
+$(document).on('click', '#btnSaveRPLDetails', function () {
+    if (!window.bulkCertRplActive) return;
+
+    clearGuardValidationSummary('rplValidationSummary');
+
+    var details = {
+        trainingTheoryLocationId: parseInt($('#ddlTheoryAssessmentLocation').val(), 10) || 0,
+        trainingPracticalLocationId: parseInt($('#ddlPracticalAssessmentLocation').val(), 10) || 0,
+        trainingInstructorId: parseInt($('#ddlRPLInstructorsignOff').val(), 10) || 0,
+        assessmentStartDate: $('#RPL_DateAssessment_started').val(),
+        assessmentEndDate: $('#RPL_DateAssessment_ended').val(),
+        fileName: $('#GuardRPLCertificate_FileName1').val()
+    };
+
+    /* Checked here only so the operator is told in the form they are looking at; the server
+       re-checks the same rules in BulkCertificateRelease.ValidateRplDetails and is the authority. */
+    var error = null;
+    if (!details.trainingTheoryLocationId) error = 'Please select the location of the theory assessment.';
+    else if (!details.assessmentStartDate) error = 'Please enter the date the theory started.';
+    else if (!details.trainingPracticalLocationId) error = 'Please select the location of the practical assessment.';
+    else if (!details.assessmentEndDate) error = 'Please enter the date the practical ended.';
+    else if (details.assessmentEndDate < details.assessmentStartDate) error = 'The practical end date cannot be earlier than the theory start date.';
+    else if (!details.trainingInstructorId) error = 'Please select the instructor signing off the assessment.';
+
+    if (error) {
+        displayGuardValidationSummary('rplValidationSummary', error);
+        return;
+    }
+
+    // Parked rather than acted on here; the handler below takes over once the modal has closed.
+    bulkCertRpl.pendingDetails = details;
+    bulkCertCloseRplModal();
+    $('#rplDetailsModal').modal('hide');
+});
+
+/* Both ways out of the RPL modal: saved (pendingDetails set) or dismissed by the X, the backdrop or
+   Escape.
+
+   Bound directly and at load time, deliberately, rather than delegated like the Save handler above
+   or registered per-open with .one(). training.js binds its own hidden.bs.modal on this element to
+   reload a grid, and jQuery runs direct handlers in registration order before bubbling to document -
+   so registering here, from site.js, which loads before training.js and after the markup, is what
+   guarantees this runs first. Anything registered later would be skipped entirely if that handler
+   threw, stranding the operator with both modals closed and no release started. Save is the
+   opposite case: it has to run AFTER training.js's, which is why it is delegated. */
+$('#rplDetailsModal').on('hidden.bs.modal', function () {
+    var details = bulkCertRpl.pendingDetails;
+    bulkCertRpl.pendingDetails = null;
+
+    if (details) {
+        // Back to the release modal, then straight into the run.
+        $('#bulkCertificateRelease').one('shown.bs.modal', function () {
+            bulkCertStartRelease(bulkCertRpl.guardIds, bulkCertRpl.hrSettingsIds, details);
+        }).modal('show');
+        return;
+    }
+
+    if (!window.bulkCertRplActive) return;
+
+    // Dismissed: nothing is issued, and the selection is still there to try again.
+    bulkCertCloseRplModal();
+    $('#bulkCertificateRelease').modal('show');
+    bulkCertSetRunning(false);
+    $('#bulkCertValidation').html('RPL details are needed before these certificates can be issued.').show();
+});
+
+/* One upload, stored into every selected guard's folder for every selected RPL course - that is
+   where CertificateGenerator looks for it when it builds each guard's certificate. Called from
+   FileuploadFileChangedForRPLCertificateFile in training.js while the release owns the modal. */
+function bulkCertRplUploadFile(allfile) {
+    var file = allfile.item(0);
+
+    var formData = new FormData();
+    formData.append('file', file);
+    bulkCertRpl.guardIds.forEach(function (id) { formData.append('guardIds', id); });
+    bulkCertRplCourseIds().forEach(function (id) { formData.append('hrSettingsIds', id); });
+
+    fileprocess(allfile);
+
+    $.ajax({
+        type: 'POST',
+        url: '/Admin/GuardSettings?handler=UploadGuardAttachmentForBulkRPLCertificates',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (data) {
+        if (!data || !data.success) {
+            displayGuardValidationSummary('rplValidationSummary',
+                (data && data.message) || 'The compliance document could not be uploaded.');
+            return;
+        }
+        bulkCertRpl.fileName = data.fileName;
+        $('#GuardRPLCertificate_FileName1').val(data.fileName);
+        $('#guardRPLCertificate_fileName1').text(data.fileName ? data.fileName : 'None');
+    }).fail(function () {
+        displayGuardValidationSummary('rplValidationSummary', 'The compliance document could not be uploaded.');
+    }).always(function () {
+        $('#upload_rplcertificate_file').val('');
+    });
+}
+
+/* The modal's Delete button checks #rplGuardId, which is empty in a bulk run, so it would refuse to
+   clear the selection. Same clearing, without that check. */
+$(document).on('click', '#delete_certificatehold_file', function () {
+    if (!window.bulkCertRplActive) return;
+
+    if (confirm('Are you sure want to remove the attachment')) {
+        bulkCertRpl.fileName = '';
+        $('#GuardRPLCertificate_FileName1').val('');
+        $('#guardRPLCertificate_fileName1').text('None');
+    }
 });
 
 /* Stops after the certificate currently being built - the server cannot recall one that has

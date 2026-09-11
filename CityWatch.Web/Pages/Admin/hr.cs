@@ -2981,36 +2981,9 @@ namespace CityWatch.Web.Pages.Admin
                     var file = files[0];
                     fileName = file.FileName;
 
-
-                    string extension = ""; string newFileName = ""; var formattedDate = "";
-
-                    extension = Path.GetExtension(fileName).ToLower();
-
-
-
-                    //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                    //var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate + extension;
-
-
-
-
-                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo, "RPLCertificateDocuments", coursename);
-
-                    if (!Directory.Exists(guardUploadDir))
-                        Directory.CreateDirectory(guardUploadDir);
-
-                    string filePath = Path.Combine(guardUploadDir, fileName);
-                    if (System.IO.File.Exists(filePath))
-                    {
-
-                        System.IO.File.Delete(filePath);
-
-                    }
-                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
-                    file.CopyTo(stream);
-
-
-
+                    // Body moved into StoreRplComplianceDocument verbatim so the bulk upload below
+                    // writes to exactly the same place; CertificateGenerator reads this path back.
+                    StoreRplComplianceDocument(file, LicenseNo, coursename);
                 }
 
             }
@@ -3020,6 +2993,107 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { success, fileName });
+        }
+
+        /// <summary>
+        /// The RPL compliance document for a Bulk Certificate Release: one upload, written into
+        /// every selected guard's folder for every selected RPL course.
+        ///
+        /// The document is stored per guard - CertificateGenerator looks for it under that guard's
+        /// own licence folder - so a release cannot simply reuse the single-guard handler above and
+        /// upload once. Fanning the bytes out here keeps it to a single browser upload while the
+        /// files land exactly where the certificate build expects them, under the same names.
+        /// </summary>
+        public JsonResult OnPostUploadGuardAttachmentForBulkRPLCertificates()
+        {
+            var success = true;
+            var message = string.Empty;
+            var fileName = string.Empty;
+            var storedFor = 0;
+
+            try
+            {
+                var files = Request.Form.Files;
+                if (files.Count != 1)
+                    return new JsonResult(new { success = false, message = "Please select one file.", fileName });
+
+                var guardIds = Request.Form["guardIds"]
+                    .SelectMany(value => (value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    .Select(value => int.TryParse(value.Trim(), out var id) ? id : 0)
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToList();
+
+                var hrSettingsIds = Request.Form["hrSettingsIds"]
+                    .SelectMany(value => (value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    .Select(value => int.TryParse(value.Trim(), out var id) ? id : 0)
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToList();
+
+                if (guardIds.Count == 0 || hrSettingsIds.Count == 0)
+                    return new JsonResult(new { success = false, message = "Select the guards and the course certificates first.", fileName });
+
+                var file = files[0];
+                fileName = file.FileName;
+
+                // Ids are re-read from the database rather than trusted, as the release itself does.
+                var activeGuards = _guardDataProvider.GetActiveGuards();
+                var licenceNumbers = guardIds
+                    .Select(id => activeGuards.FirstOrDefault(g => g.Id == id)?.SecurityNo)
+                    .Where(licence => !string.IsNullOrWhiteSpace(licence))
+                    .Distinct()
+                    .ToList();
+
+                var courseNames = hrSettingsIds
+                    .Select(id => _configDataProvider.GetHrSettingById(id)?.Description)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Distinct()
+                    .ToList();
+
+                foreach (var licence in licenceNumbers)
+                {
+                    foreach (var courseName in courseNames)
+                    {
+                        StoreRplComplianceDocument(file, licence, courseName);
+                        storedFor++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message, fileName, storedFor });
+        }
+
+        /// <summary>
+        /// Writes an uploaded RPL compliance document into one guard's folder for one course,
+        /// replacing any file already there under that name.
+        /// </summary>
+        private void StoreRplComplianceDocument(IFormFile file, string licenceNumber, string courseName)
+        {
+            var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License",
+                licenceNumber, "RPLCertificateDocuments", courseName);
+
+            if (!Directory.Exists(guardUploadDir))
+                Directory.CreateDirectory(guardUploadDir);
+
+            var filePath = Path.Combine(guardUploadDir, file.FileName);
+            if (System.IO.File.Exists(filePath))
+                System.IO.File.Delete(filePath);
+
+            using var stream = System.IO.File.Create(filePath);
+
+            /* A fresh stream per call, and rewound when it can be: the same IFormFile is written
+               once per guard/course pairing, and a second read that started where the first
+               finished would store an empty file. */
+            using var source = file.OpenReadStream();
+            if (source.CanSeek)
+                source.Position = 0;
+            source.CopyTo(stream);
         }
         public JsonResult OnPostSaveEquipments(KPITelematicsField record)
         {

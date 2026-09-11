@@ -3307,7 +3307,8 @@ namespace CityWatch.Web.Pages.Admin
                     id = compliance.Id;
                 }
                 var hrSettingsList = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault();
-                var hrdesription = hrSettingsList.ReferenceNoNumbers.Name + hrSettingsList.ReferenceNoAlphabets.Name + " " + hrSettingsList.Description;
+                // Same string as before, from the one definition the RPL/bulk path now shares.
+                var hrdesription = hrSettingsList.CertificateRecordName;
                 var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrSettingsId).FirstOrDefault().HRGroupId;
 
                 _guardDataProvider.SaveGuardComplianceandlicanse(new GuardComplianceAndLicense()
@@ -3442,7 +3443,8 @@ namespace CityWatch.Web.Pages.Admin
                     IsExpiry = true;
                 }
                 var hrSettingsList = _configDataProvider.GetHRSettings().Where(x => x.Id == hrsettingsId).FirstOrDefault();
-                var hrdesription = hrSettingsList.ReferenceNoNumbers.Name + hrSettingsList.ReferenceNoAlphabets.Name + " " + hrSettingsList.Description;
+                // Same string as before, from the one definition the RPL/bulk path now shares.
+                var hrdesription = hrSettingsList.CertificateRecordName;
                 var hrgroupid = _configDataProvider.GetHRSettings().Where(x => x.Id == hrsettingsId).FirstOrDefault().HRGroupId;
                 var compliance = _guardDataProvider.GetGuardCompliancesAndLicense(guardId).Where(x => x.FileName == filename).FirstOrDefault();
                 int id = 0;
@@ -3603,17 +3605,24 @@ namespace CityWatch.Web.Pages.Admin
         /// convention, so no new unprotected endpoint is introduced - that applies to the job handlers
         /// below as well, which is why they are page handlers rather than an API controller.
         /// </remarks>
-        public JsonResult OnPostBulkReleaseCertificates(int[] guardIds, int[] hrSettingsIds)
+        public JsonResult OnPostBulkReleaseCertificates(int[] guardIds, int[] hrSettingsIds,
+            [FromForm(Name = "rpl")] BulkRplDetailsRequest rpl = null)
         {
             try
             {
+                // Null-tolerant: a stubbed release service returns nothing here, and a selection
+                // with no RPL course in it is the normal case rather than an error.
+                var rplCourseIds = (_bulkCertificateReleaseService.GetRplCourses(hrSettingsIds) ?? new List<BulkCertificateRplCourse>())
+                    .Select(c => c.HrSettingsId).ToHashSet();
+
                 var plan = BulkCertificateRelease.BuildPlan(
-                    _guardDataProvider.GetActiveGuards(), _configDataProvider.GetHRSettings(), guardIds, hrSettingsIds);
+                    _guardDataProvider.GetActiveGuards(), _configDataProvider.GetHRSettings(), guardIds, hrSettingsIds,
+                    rplCourseIds, rpl?.ToAssessmentDetails());
 
                 if (!plan.IsValid)
                     return new JsonResult(new { success = false, message = plan.Message });
 
-                var job = new BulkCertificateJob { Pairings = plan.Pairings };
+                var job = new BulkCertificateJob { Pairings = plan.Pairings, RplDetails = plan.RplDetails };
                 BulkCertificateRelease.Run(job, _rplCertificateGeneratorService, _logger);
 
                 return new JsonResult(new { success = true, issued = job.Issued, failed = job.Failed, results = ToResultPayload(job) });
@@ -3629,11 +3638,12 @@ namespace CityWatch.Web.Pages.Admin
         /// Queues a bulk release and returns straight away with a job id. The modal polls
         /// <see cref="OnGetBulkReleaseCertificatesProgress"/> for real progress while it runs.
         /// </summary>
-        public JsonResult OnPostStartBulkReleaseCertificates(int[] guardIds, int[] hrSettingsIds)
+        public JsonResult OnPostStartBulkReleaseCertificates(int[] guardIds, int[] hrSettingsIds,
+            [FromForm(Name = "rpl")] BulkRplDetailsRequest rpl = null)
         {
             try
             {
-                var start = _bulkCertificateReleaseService.Start(guardIds, hrSettingsIds);
+                var start = _bulkCertificateReleaseService.Start(guardIds, hrSettingsIds, rpl?.ToAssessmentDetails());
                 return new JsonResult(new { success = start.Success, message = start.Message, jobId = start.JobId, total = start.Total });
             }
             catch (Exception ex)
@@ -3641,6 +3651,24 @@ namespace CityWatch.Web.Pages.Admin
                 _logger.LogError(ex, "Bulk certificate release could not be queued.");
                 return new JsonResult(new { success = false, message = "Error " + ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Which of the selected courses need an RPL assessment. The modal asks this before it
+        /// produces, so it can prompt once for the whole release instead of once per guard - and so
+        /// it does not prompt at all when nothing selected is set up for RPL.
+        /// </summary>
+        /// <remarks>
+        /// Advisory only: the release re-resolves this for itself rather than trusting what comes
+        /// back here, so a tampered answer cannot skip an assessment.
+        /// </remarks>
+        public JsonResult OnGetBulkCertReleaseRplCourses(int[] hrSettingsIds)
+        {
+            var courses = (_bulkCertificateReleaseService.GetRplCourses(hrSettingsIds) ?? new List<BulkCertificateRplCourse>())
+                .Select(c => new { hrSettingsId = c.HrSettingsId, description = c.Description, certificateId = c.CertificateId })
+                .ToList();
+
+            return new JsonResult(new { success = true, courses });
         }
 
         /// <summary>Progress snapshot for a queued release. Polled roughly once a second.</summary>
@@ -3662,6 +3690,41 @@ namespace CityWatch.Web.Pages.Admin
         {
             _bulkCertificateReleaseService.Cancel(jobId);
             return new JsonResult(new { success = true });
+        }
+
+        /// <summary>
+        /// The rplDetailsModal fields as the browser posts them, kept separate from
+        /// <see cref="RplAssessmentDetails"/> so that a blank date or an unselected dropdown binds
+        /// rather than failing the whole request - BuildPlan then rejects it with a message the
+        /// operator can act on.
+        /// </summary>
+        public class BulkRplDetailsRequest
+        {
+            public int TrainingTheoryLocationId { get; set; }
+            public int TrainingPracticalLocationId { get; set; }
+            public int TrainingInstructorId { get; set; }
+            public DateTime? AssessmentStartDate { get; set; }
+            public DateTime? AssessmentEndDate { get; set; }
+            public string FileName { get; set; }
+
+            /// <summary>
+            /// Nothing was posted for RPL. Complex-type binding hands back an instance whether or
+            /// not the form carried any rpl.* keys, so "no assessment supplied" has to be read off
+            /// the values rather than off the reference being null.
+            /// </summary>
+            public bool IsEmpty =>
+                TrainingTheoryLocationId <= 0 && TrainingPracticalLocationId <= 0 && TrainingInstructorId <= 0 &&
+                !AssessmentStartDate.HasValue && !AssessmentEndDate.HasValue && string.IsNullOrWhiteSpace(FileName);
+
+            public RplAssessmentDetails ToAssessmentDetails() => IsEmpty ? null : new RplAssessmentDetails
+            {
+                TrainingTheoryLocationId = TrainingTheoryLocationId,
+                TrainingPracticalLocationId = TrainingPracticalLocationId,
+                TrainingInstructorId = TrainingInstructorId,
+                AssessmentStartDate = AssessmentStartDate ?? default,
+                AssessmentEndDate = AssessmentEndDate ?? default,
+                FileName = FileName
+            };
         }
 
         /// <summary>

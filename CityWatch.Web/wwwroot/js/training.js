@@ -2900,6 +2900,12 @@ function getRPLInstructorSignOff(seletedInstructor) {
 }
 $('#btnSaveRPLDetails').on('click', function () {
 
+    /* rplDetailsModal is shared with the Bulk Certificate Release, which borrows it to collect one
+       assessment for a whole run of guards. While it is borrowed the release owns the Save button -
+       this handler saves and issues for the single guard in #rplGuardId, which in a bulk run is
+       nobody. The release handles Save itself, in site.js. */
+    if (window.bulkCertRplActive) return;
+
     clearGuardValidationSummary('rplValidationSummary');
     var Id = $('#rplId').val();
     if (Id == 0) {
@@ -4854,6 +4860,13 @@ FileuploadFileChangedForRPLCertificateFile = function (allfile) {
     }
 
 
+
+    /* Same reason as the Save button above: in a bulk run there is no single #rplGuardId to store
+       the document against, and it has to reach every selected guard's folder instead. */
+    if (window.bulkCertRplActive) {
+        bulkCertRplUploadFile(allfile);
+        return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);

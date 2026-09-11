@@ -40,6 +40,13 @@ namespace CityWatch.Web.Services
         public string GuardLabel { get; init; }
         public int HrSettingsId { get; init; }
         public string CourseDescription { get; init; }
+
+        /// <summary>
+        /// The course is set up for RPL, so this pairing records the run's assessment against the
+        /// guard before issuing. Decided on the server from the course's certificate document, not
+        /// from anything the browser sent.
+        /// </summary>
+        public bool RequiresRpl { get; init; }
     }
 
     /// <summary>The outcome of one pairing, as shown in the modal's result list.</summary>
@@ -62,6 +69,9 @@ namespace CityWatch.Web.Services
         public bool IsValid => Message == null;
         public string Message { get; init; }
         public IReadOnlyList<BulkCertificatePairing> Pairings { get; init; } = Array.Empty<BulkCertificatePairing>();
+
+        /// <summary>The validated assessment to apply to every RPL pairing, or null when there are none.</summary>
+        public RplAssessmentDetails RplDetails { get; init; }
     }
 
     /// <summary>Immutable snapshot serialised straight to the polling client.</summary>
@@ -99,6 +109,13 @@ namespace CityWatch.Web.Services
         public object SyncRoot { get; } = new();
 
         public IReadOnlyList<BulkCertificatePairing> Pairings { get; init; } = Array.Empty<BulkCertificatePairing>();
+
+        /// <summary>
+        /// The RPL assessment captured once for the whole run, or null when no selected course is
+        /// set up for RPL. One instance shared by every RPL pairing - that is what makes
+        /// rplDetailsModal a once-per-release prompt rather than a once-per-guard one.
+        /// </summary>
+        public RplAssessmentDetails RplDetails { get; init; }
 
         public BulkCertificateStatus Status { get; set; } = BulkCertificateStatus.Queued;
         public string CurrentStep { get; set; } = "Queued";
@@ -193,8 +210,17 @@ namespace CityWatch.Web.Services
         /// library - nothing from the client is trusted - and expands them into one pairing per
         /// guard per course. Distinct() on both sides so a repeated id cannot issue twice.
         /// </summary>
+        /// <param name="rplCourseIds">
+        /// Courses that are set up for RPL, resolved on the server. Pairings on these courses are
+        /// flagged so the run records <paramref name="rplDetails"/> against the guard first.
+        /// </param>
+        /// <param name="rplDetails">
+        /// The assessment captured once by rplDetailsModal. Required when the selection contains an
+        /// RPL course: without it those guards would receive a score-card certificate for a test
+        /// they never sat, which is the behaviour this replaces.
+        /// </param>
         public static BulkCertificatePlan BuildPlan(IEnumerable<Guard> activeGuards, IEnumerable<HrSettings> courses,
-            int[] guardIds, int[] hrSettingsIds)
+            int[] guardIds, int[] hrSettingsIds, ISet<int> rplCourseIds = null, RplAssessmentDetails rplDetails = null)
         {
             if (guardIds == null || guardIds.Length == 0)
                 return new BulkCertificatePlan { Message = "Please select at least one guard." };
@@ -220,6 +246,15 @@ namespace CityWatch.Web.Services
             if (selectedGuards.Count == 0)
                 return new BulkCertificatePlan { Message = "None of the selected guards are active." };
 
+            var rplCourses = selectedCourses.Where(c => rplCourseIds != null && rplCourseIds.Contains(c.Id)).ToList();
+
+            if (rplCourses.Count > 0)
+            {
+                var rejection = ValidateRplDetails(rplDetails, rplCourses);
+                if (rejection != null)
+                    return new BulkCertificatePlan { Message = rejection };
+            }
+
             var pairings = new List<BulkCertificatePairing>();
             foreach (var guard in selectedGuards)
             {
@@ -234,12 +269,48 @@ namespace CityWatch.Web.Services
                         GuardId = guard.Id,
                         GuardLabel = guardLabel,
                         HrSettingsId = course.Id,
-                        CourseDescription = course.Description
+                        CourseDescription = course.Description,
+                        RequiresRpl = rplCourseIds != null && rplCourseIds.Contains(course.Id)
                     });
                 }
             }
 
-            return new BulkCertificatePlan { Pairings = pairings };
+            return new BulkCertificatePlan { Pairings = pairings, RplDetails = rplDetails };
+        }
+
+        /// <summary>
+        /// The one place a bulk RPL assessment is checked, or null when it is usable.
+        ///
+        /// The single-guard modal saves whatever it is given, so these checks are new rather than
+        /// copied. They exist because the blast radius differs: one bad assessment there affects
+        /// one guard and an admin sees it immediately, whereas here the same values are written
+        /// against every guard in the release. Only the fields the certificate actually depends on
+        /// are checked - the end date dates the file, and the instructor and locations are what the
+        /// assessment attests to. The compliance document stays optional, as it is in the modal.
+        /// </summary>
+        internal static string ValidateRplDetails(RplAssessmentDetails details, IEnumerable<HrSettings> rplCourses)
+        {
+            var courseNames = string.Join(", ", rplCourses.Select(c => c.Description));
+
+            if (details == null)
+                return $"RPL details are required for {courseNames}.";
+
+            if (details.AssessmentStartDate == default || details.AssessmentEndDate == default)
+                return "Please enter both the theory start date and the practical end date.";
+
+            if (details.AssessmentEndDate.Date < details.AssessmentStartDate.Date)
+                return "The practical end date cannot be earlier than the theory start date.";
+
+            if (details.TrainingTheoryLocationId <= 0)
+                return "Please select the location of the theory assessment.";
+
+            if (details.TrainingPracticalLocationId <= 0)
+                return "Please select the location of the practical assessment.";
+
+            if (details.TrainingInstructorId <= 0)
+                return "Please select the instructor signing off the assessment.";
+
+            return null;
         }
 
         /// <summary>
@@ -280,14 +351,22 @@ namespace CityWatch.Web.Services
                     BulkCertificateResultRow row;
                     try
                     {
-                        certificateService.IssueCertificateForGuard(pairing.GuardId, pairing.HrSettingsId);
+                        /* The same run's assessment for every RPL pairing, so all of them are
+                           issued from the details the operator entered once. Non-RPL pairings take
+                           the original two-argument call unchanged - a release with no RPL course
+                           in it behaves exactly as it did before. */
+                        if (pairing.RequiresRpl && job.RplDetails != null)
+                            certificateService.IssueCertificateForGuard(pairing.GuardId, pairing.HrSettingsId, job.RplDetails);
+                        else
+                            certificateService.IssueCertificateForGuard(pairing.GuardId, pairing.HrSettingsId);
+
                         row = new BulkCertificateResultRow
                         {
                             GuardId = pairing.GuardId,
                             Guard = pairing.GuardLabel,
                             CourseId = pairing.HrSettingsId,
                             Course = pairing.CourseDescription,
-                            Status = "Certificate issued successfully",
+                            Status = pairing.RequiresRpl ? "RPL certificate issued successfully" : "Certificate issued successfully",
                             Success = true
                         };
                     }
@@ -389,6 +468,16 @@ namespace CityWatch.Web.Services
         }
     }
 
+    /// <summary>A selected course that needs an RPL assessment before its certificates can be issued.</summary>
+    public class BulkCertificateRplCourse
+    {
+        public int HrSettingsId { get; init; }
+        public string Description { get; init; }
+
+        /// <summary>The TrainingCourseCertificate the assessment is recorded against.</summary>
+        public int CertificateId { get; init; }
+    }
+
     public class BulkCertificateStartResult
     {
         public bool Success { get; init; }
@@ -400,7 +489,14 @@ namespace CityWatch.Web.Services
     public interface IBulkCertificateReleaseService
     {
         /// <summary>Validates and queues the release. Returns in milliseconds with a job id to poll.</summary>
-        BulkCertificateStartResult Start(int[] guardIds, int[] hrSettingsIds);
+        BulkCertificateStartResult Start(int[] guardIds, int[] hrSettingsIds, RplAssessmentDetails rplDetails = null);
+
+        /// <summary>
+        /// Which of the selected courses are set up for RPL, so the modal knows whether to prompt
+        /// for an assessment before producing. The same question the release itself asks, answered
+        /// from the same source.
+        /// </summary>
+        IReadOnlyList<BulkCertificateRplCourse> GetRplCourses(int[] hrSettingsIds);
 
         /// <summary>Progress snapshot, or null when the job id is unknown or has been swept.</summary>
         BulkCertificateProgress GetProgress(string jobId);
@@ -427,9 +523,40 @@ namespace CityWatch.Web.Services
             _logger = logger;
         }
 
-        public BulkCertificateStartResult Start(int[] guardIds, int[] hrSettingsIds)
+        /// <inheritdoc />
+        public IReadOnlyList<BulkCertificateRplCourse> GetRplCourses(int[] hrSettingsIds)
+        {
+            if (hrSettingsIds == null || hrSettingsIds.Length == 0)
+                return Array.Empty<BulkCertificateRplCourse>();
+
+            using var scope = _scopeFactory.CreateScope();
+            var configDataProvider = scope.ServiceProvider.GetRequiredService<IConfigDataProvider>();
+            var certificateService = scope.ServiceProvider.GetRequiredService<IRPLCertificateGeneratorService>();
+
+            var courses = configDataProvider.GetHRSettings();
+
+            return hrSettingsIds.Distinct()
+                .Select(id => courses.FirstOrDefault(c => c.Id == id))
+                .Where(c => c != null)
+                .Select(c => new { Course = c, Document = certificateService.GetCertificateDocumentForCourse(c.Id) })
+                .Where(x => x.Document != null && x.Document.isRPLEnabled)
+                .Select(x => new BulkCertificateRplCourse
+                {
+                    HrSettingsId = x.Course.Id,
+                    Description = x.Course.Description,
+                    CertificateId = x.Document.Id
+                })
+                .ToList();
+        }
+
+        public BulkCertificateStartResult Start(int[] guardIds, int[] hrSettingsIds, RplAssessmentDetails rplDetails = null)
         {
             BulkCertificatePlan plan;
+
+            /* Resolved here rather than taken from the browser: the modal asks GetRplCourses which
+               courses need an assessment, but the release must not trust the answer it gets back -
+               a post that simply omitted the RPL ids would otherwise skip the assessment entirely. */
+            var rplCourseIds = GetRplCourses(hrSettingsIds).Select(c => c.HrSettingsId).ToHashSet();
 
             // The plan is built inside the caller's request so a bad selection is rejected
             // straight away, before a job exists and before the modal switches to progress.
@@ -439,13 +566,14 @@ namespace CityWatch.Web.Services
                 var configDataProvider = scope.ServiceProvider.GetRequiredService<IConfigDataProvider>();
 
                 plan = BulkCertificateRelease.BuildPlan(
-                    guardDataProvider.GetActiveGuards(), configDataProvider.GetHRSettings(), guardIds, hrSettingsIds);
+                    guardDataProvider.GetActiveGuards(), configDataProvider.GetHRSettings(), guardIds, hrSettingsIds,
+                    rplCourseIds, rplDetails);
             }
 
             if (!plan.IsValid)
                 return new BulkCertificateStartResult { Success = false, Message = plan.Message };
 
-            var job = new BulkCertificateJob { Pairings = plan.Pairings };
+            var job = new BulkCertificateJob { Pairings = plan.Pairings, RplDetails = plan.RplDetails };
             _jobStore.Add(job);
 
             _logger.LogInformation("Bulk certificate release: queued job {JobId} with {Total} certificate(s).",
