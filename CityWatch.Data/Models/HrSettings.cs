@@ -84,6 +84,31 @@ namespace CityWatch.Data.Models
         public string Description { get; set; }
         [NotMapped]
         public string ReferenceNo { get { return ReferenceNoNumbers.Name + ReferenceNoAlphabets.Name  ; } }
+
+        /// <summary>
+        /// The course name as it is recorded against a guard when a certificate is issued, e.g.
+        /// "03e Thermal Camera (FLIR Ti)" - the reference number and letter followed by the
+        /// description. Certificate file names are built from the same three parts.
+        ///
+        /// This existed as the literal expression
+        /// ReferenceNoNumbers.Name + ReferenceNoAlphabets.Name + " " + Description
+        /// copied into every place that issues a certificate. The RPL path did not have that copy
+        /// and stored the bare Description instead, so the same course was recorded as
+        /// "Thermal Camera (FLIR Ti)" there and "03e Thermal Camera (FLIR Ti)" everywhere else.
+        /// One definition now, so the two cannot drift apart again.
+        ///
+        /// Null-safe, unlike ReferenceNo above: a course with no reference number configured falls
+        /// back to the description rather than throwing.
+        /// </summary>
+        [NotMapped]
+        public string CertificateRecordName
+        {
+            get
+            {
+                var reference = (ReferenceNoNumbers?.Name + ReferenceNoAlphabets?.Name)?.Trim();
+                return string.IsNullOrEmpty(reference) ? Description : reference + " " + Description;
+            }
+        }
         [NotMapped]
         public string GroupName { get { return HRGroups.Name ; } }
 

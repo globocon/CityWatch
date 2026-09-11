@@ -45,6 +45,11 @@ namespace CityWatch.Web.Tests
         // The real ids and data shape, taken from the dev database for the reported failure.
         private const int ThermalCameraHrSettingsId = 13;
         private const string ThermalCameraDescription = "Thermal Camera (FLIR Ti)";
+
+        /* How the course is recorded against a guard: the reference number and letter from the
+           fixture below, then the description. This assertion used to expect the bare description,
+           which is what the RPL/bulk path wrote while every single-guard flow wrote this. */
+        private const string ThermalCameraRecordName = "03e Thermal Camera (FLIR Ti)";
         private const string CertificateFileName = "Thermal Camera (FLIR Ti)_Certificate.pdf";
         private const int CertificateDocumentId = 3;
         private const int BrunoTimpanoGuardId = 4;
@@ -124,7 +129,7 @@ namespace CityWatch.Web.Tests
             // The compliance record is what the release exists to produce.
             _guardDataProvider.Verify(z => z.SaveGuardComplianceandlicanse(
                 It.Is<GuardComplianceAndLicense>(c => c.GuardId == BrunoTimpanoGuardId
-                                                      && c.Description == ThermalCameraDescription)), Times.Once);
+                                                      && c.Description == ThermalCameraRecordName)), Times.Once);
 
             // Nothing to mark consumed, so the RPL row must not be touched.
             _guardLogDataProvider.Verify(z => z.SaveTrainingCourseCertificateRPL(
