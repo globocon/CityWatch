@@ -1,0 +1,80 @@
+﻿@page
+@model CityWatch.Web.Pages.RecordModel
+@{
+}
+<!DOCTYPE html>
+@using CityWatch.Data.Helpers
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
+@using CityWatch.Web.Helpers
+@using CityWatch.Web.Services;
+@using Microsoft.AspNetCore.Html;
+@using System.Security.Claims;
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recorder with jQuery</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Record Your Voice</h1>
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+    <audio id="audioPlayback" controls></audio>
+   
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        $(document).ready(function () {
+            $('#startBtn').click(async function () {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = function (event) {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = function () {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    $('#audioPlayback').attr('src', audioUrl);
+                    uploadAudio(audioBlob);
+                };
+
+                mediaRecorder.start();
+                $(this).prop('disabled', true);
+                $('#stopBtn').prop('disabled', false);
+            });
+
+            $('#stopBtn').click(function () {
+                mediaRecorder.stop();
+                $(this).prop('disabled', true);
+                $('#startBtn').prop('disabled', false);
+            });
+        });
+
+        function uploadAudio(blob) {
+            
+            let formData = new FormData();
+            formData.append('audioFile', blob, 'recording.wav');
+            $.ajax({
+                url: '/Record?handler=SaveAudio',
+                type: 'POST',
+                data: formData,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                console.log('Upload success:', data);
+            }).always(function () {
+                $('#loader').hide();
+            });
+           
+
+            
+        }
+    </script>
+
+    @Html.AntiForgeryToken()
+</body>
+</html>

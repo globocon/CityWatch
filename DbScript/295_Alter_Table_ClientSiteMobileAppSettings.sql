@@ -1,0 +1,1 @@
+ALTER TABLE [ClientSiteMobileAppSettings] DROP CONSTRAINT [FK_ClientSiteMobileAppSettings_ClientSites]

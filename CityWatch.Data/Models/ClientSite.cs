@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CityWatch.Data.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -37,10 +38,36 @@ namespace CityWatch.Data.Models
 
         public string LandLine { get; set; }
 
+        public string DuressEmail { get; set; }
+
+        public string DuressSms { get; set; }
+
         public bool UploadGuardLog { get; set; }
+        public bool UploadKVLog { get; set; }
+        public bool UploadSWLog { get; set; }
+        public bool UploadFusionLog { get; set; }
 
         public string GuardLogEmailTo { get; set; }
 
         public bool DataCollectionEnabled { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsDosDontList { get; set; }
+        [NotMapped]
+        public string AccountManager { get; set; }
+        public PatrolTouringMode PatrolTourMode { get; set; }
+
+        public bool MobAppShowClientTypeandSite { get; set; }
+
+        public bool UploadGuardWeeklyLog { get; set; }
+        public bool UploadFusionWeeklyLog { get; set; }
+        public bool UploadKVWeeklyLog { get; set; }
+        public bool UploadSWWeeklyLog { get; set; }
+        public string GuardLogEmailWeeklyLogTo { get; set; }
+
+        public bool UploadGuardMonthlyLog { get; set; }
+        public bool UploadFusionMonthlyLog { get; set; }
+        public bool UploadKVMonthlyLog { get; set; }
+        public bool UploadSWMonthlyLog { get; set; }
+        public string GuardLogEmailMonthlyLogTo { get; set; }
     }
 }

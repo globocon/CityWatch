@@ -1,0 +1,106 @@
+﻿@page
+@model FortescueWebApp.Pages.Forms.EngineeringDataModel
+@{
+   
+    ViewData["Title"] = "Engineering Data";
+    Layout = "/Pages/Shared/_LayoutDemo.cshtml";
+}
+
+
+    <form class="row g-3 needs-validation" novalidate>
+        <!-- Personal Information Card -->
+        <div class="container mt-4">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white border-0 rounded-0">
+                    Personal Information
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label required">Name <i class="bi bi-info-circle text-primary fs-6" data-bs-toggle="tooltip" title="Select Name"></i></label>
+                            <select class="form-select" id="name" required>
+                                <option value="" disabled selected>Select Name</option>
+                                <option value="John Doe">John Doe</option>
+                                <option value="Jane Smith">Jane Smith</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a name.</div>
+                        </div>
+
+                        <div class="col-md-6"></div>
+
+                        <div class="col-md-6">
+                            <label for="date" class="form-label required">Date</label>
+                            <input type="date" class="form-control" id="date" required>
+                            <div class="invalid-feedback">Please select a valid date.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="email" class="form-label required">Email</label>
+                            <input type="email" class="form-control" id="email" required readonly>
+                            <div class="invalid-feedback">Please provide a valid email.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container mt-4">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white border-0 rounded-0">
+                    Engineering Details
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="workOrder" class="form-label required">Work Order</label>
+                            <select class="form-select" id="workOrder" required>
+                                <option value="" disabled selected>Select Work Order</option>
+                                <option value="WO12345">WO12345</option>
+                                <option value="WO67890">WO67890</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a work order.</div>
+                        </div>
+
+                        <div class="col-md-6"></div>
+
+                        <div class="col-12">
+                            <label for="description" class="form-label required">Description</label>
+                            <input type="text" class="form-control" id="description" placeholder="Description" required readonly>
+                            <div class="invalid-feedback">Description is required.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="engStart" class="form-label required">Eng Start</label>
+                            <input type="time" class="form-control" id="engStart" required readonly>
+                            <div class="invalid-feedback">Please provide a valid start time.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="engEnd" class="form-label required">Eng End</label>
+                            <input type="time" class="form-control" id="engEnd" required readonly>
+                            <div class="invalid-feedback">Please provide a valid end time.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="engLine" class="form-label required">Eng Line</label>
+                            <input type="text" class="form-control" id="engLine" required readonly>
+                            <div class="invalid-feedback">Engineering line is required.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="engLeg" class="form-label required">Eng Leg</label>
+                            <input type="text" class="form-control" id="engLeg" required readonly>
+                            <div class="invalid-feedback">Engineering leg is required.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+             
+        <!-- Submit Button -->
+        <div class="mt-3 text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+

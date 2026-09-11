@@ -1,12 +1,11 @@
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
-using CityWatch.Web.Extensions;
 using CityWatch.Web.Helpers;
-using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace CityWatch.Web.Pages.Radio
@@ -14,72 +13,83 @@ namespace CityWatch.Web.Pages.Radio
     public class CheckModel : PageModel
     {
         public readonly IClientSiteRadioStatusDataProvider _radioStatusDataProvider;
-        private readonly IClientDataProvider _clientDataProvider;
-        private readonly IViewDataService _viewDataService;
+        private readonly IClientSiteActivityStatusDataProvider _clientSiteActivityStatusDataProvider;
+        private readonly IRadioCheckViewDataService _radioCheckViewDataService;
+        private readonly IClientSiteViewDataService _clientViewDataService;
 
         public CheckModel(IClientSiteRadioStatusDataProvider radioStatusDataProvider,
-            IClientDataProvider clientDataProvider, IViewDataService viewDataService)
+            IClientSiteActivityStatusDataProvider clientSiteActivityStatusDataProvider,
+            IRadioCheckViewDataService radioCheckViewDataService,
+            IClientSiteViewDataService clientViewDataService)
         {
             _radioStatusDataProvider = radioStatusDataProvider;
-            _clientDataProvider = clientDataProvider;
-            _viewDataService = viewDataService;
+            _clientSiteActivityStatusDataProvider = clientSiteActivityStatusDataProvider;
+            _radioCheckViewDataService = radioCheckViewDataService;
+            _clientViewDataService = clientViewDataService;
         }
 
         public ActionResult OnGet()
         {
-            if (!AuthUserHelper.IsAdminUserLoggedIn)
-                return Redirect(Url.Page("/Account/Unauthorized"));
 
-            return Page();
-        }
 
-        public JsonResult OnGetRadioStatus(string clientSiteIds, DateTime? weekStart)
-        {
-            var results = new List<WeekRadioStatus>();
-            if (!string.IsNullOrEmpty(clientSiteIds))
+            if (AuthUserHelper.IsAdminUserLoggedIn)
             {
-                var arClientSiteIds = clientSiteIds.Split(',').Select(z => int.Parse(z)).ToArray();
-                weekStart ??= DateTime.Today.StartOfWeek();
+                _radioCheckViewDataService.ResetClientSiteActivityStatus();
 
-                var csRadioStatusThisWeek = _radioStatusDataProvider.GetClientSiteRadioStatus(arClientSiteIds, weekStart.Value);
-                var clientSites = _clientDataProvider.GetClientSites(null);
-                foreach (var clientSiteId in arClientSiteIds)
-                {
-                    var csRadioStatuses = csRadioStatusThisWeek.Where(z => z.ClientSiteId ==  clientSiteId);
-                    if (!csRadioStatuses.Any())
-                    {
-                        var clientSite = clientSites.SingleOrDefault(z => z.Id == clientSiteId);
-                        csRadioStatuses = RadioCheckHelper.GetEmptyClientSiteRadioStatus(clientSite, weekStart.Value);
-                        _radioStatusDataProvider.SaveClientSiteRadioStatus(csRadioStatuses);
-                    }
-                    results.Add(new WeekRadioStatus(csRadioStatuses.ToList()));
-                }
+                return Page();
             }
+            else if (AuthUserHelper.LoggedInUserId == null)
+            {
+                return Redirect(Url.Page("/Account/Unauthorized"));
+            }
+            else
+            {
+                _radioCheckViewDataService.ResetClientSiteActivityStatus();
 
-            return new JsonResult(results);
+                return Page();
+            }
         }
 
-        public JsonResult OnPostSaveDayRadioStatus(int clientSiteId, DateTime? weekStart, int dateOffset, int checkNumber, string newValue)
+        public IActionResult OnGetClientSites(string type)
+        {
+            return new JsonResult(_clientViewDataService.GetUserClientSitesWithId(type).OrderBy(z => z.Text));
+        }
+
+        public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
+        {
+            var arClientSiteIds = !string.IsNullOrEmpty(clientSiteIds) ?
+                                    clientSiteIds.Split(',').Select(z => int.Parse(z)).ToArray() :
+                                    Array.Empty<int>();
+            return new JsonResult(_radioCheckViewDataService.GetClientSiteActivityStatuses(arClientSiteIds));
+        }
+
+        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus)
         {
             var success = true;
             var message = "success";
             try
             {
-                var statusDate = (weekStart ??= DateTime.Today.StartOfWeek()).AddDays(dateOffset);
-                _radioStatusDataProvider.SaveClientSiteRadioCheck(clientSiteId, statusDate, checkNumber, newValue);
+                _clientSiteActivityStatusDataProvider.SaveClientSiteRadioCheck(new ClientSiteRadioCheck()
+                {
+                    ClientSiteId = clientSiteId,
+                    GuardId = guardId,
+                    Status = checkedStatus,
+                    CheckedAt = DateTime.Now
+                });
             }
             catch (Exception ex)
             {
                 success = false;
                 message = ex.Message;
             }
-
             return new JsonResult(new { success, message });
         }
-        
-        public IActionResult OnGetClientSites(string type)
+
+        public IActionResult OnPostUpdateLatestActivityStatus()
         {
-            return new JsonResult(_viewDataService.GetUserClientSites(type, string.Empty));
+            _radioCheckViewDataService.UpdateLastActivityStatus();
+
+            return new JsonResult(true);
         }
     }
 }

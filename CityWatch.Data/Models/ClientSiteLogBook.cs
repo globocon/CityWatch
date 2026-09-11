@@ -11,6 +11,12 @@ namespace CityWatch.Data.Models
 
         [Display(Name = "Key & Vehicle Log")]
         VehicleAndKeyLog = 2,
+
+        [Display(Name = "Fusion Log")]
+        FusionLog = 3,
+
+        [Display(Name = "Smart Wand Log")]
+        SmartWandLog = 4,
     }
 
     public class ClientSiteLogBook

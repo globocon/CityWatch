@@ -1,0 +1,130 @@
+﻿@page
+@model CityWatch.RadioCheck.Pages.QuarantinedIFrame
+@{
+    Layout = "_Plain";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quarantined Strings</title>
+
+    <!-- Bootstrap 5 -->
+   @*  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" /> *@
+
+    <!-- DataTables Bootstrap 5 Styling -->
+    @* <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet" /> *@
+
+    <!-- Font Awesome -->
+  @*   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" /> *@
+</head>
+<body style="background-color: #bad5f5; padding: 10px;">
+
+    <button type="button" class="btn btn-success mb-3" onclick="location.reload();">
+        <i class="fa fa-refresh"></i> Refresh Page
+    </button>
+
+    @if (Model.TableData != null)
+    {
+        <p>
+            <strong>Total number of strings:</strong>
+            <span class="text-primary fw-bold fs-5">
+                @(Model.TableData.Count - 1)
+            </span>
+        </p>
+
+        <div class="table-responsive">
+            <table id="quarantinedTable" class="table table-bordered table-striped table-hover table-sm nowrap" style="width:100%; font-size: 8px;">
+                <thead class="table-light">
+                    <tr>
+                        @foreach (var header in Model.TableData[0])
+                        {
+                            <th>@header</th>
+                        }
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 1; i < Model.TableData.Count; i++)
+                    {
+                        <tr>
+                            @foreach (var cell in Model.TableData[i])
+                            {
+                                <td>@cell</td>
+                            }
+                            <td class="text-center">
+                                <input type="hidden" name="rowIndex" value="@i" />
+                                <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="deleteRow(@i)">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p>No data found or file missing.</p>
+    }
+
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Delete Row + DataTable Init -->
+    <script>
+      
+        function deleteRow(rowIndex) {
+            if (!confirm("Are you sure you want to remove this row?")) return;
+
+            $.ajax({
+                url: 'QuarantinedIFrame?handler=DeleteRow',
+                type: 'POST',
+                dataType: 'json',
+                data: { rowIndex: rowIndex },
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            }).done(function (response) {
+                if (response) {
+                    $("button[onclick='deleteRow(" + rowIndex + ")']").closest("tr").remove();
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            $('#quarantinedTable').DataTable({
+                dom: 'Bfrtip',
+                paging: false,
+                info: false,
+                scrollX: false,
+                responsive: true,
+                order: [[0, 'asc']],
+                columnDefs: [{
+                    targets: -1,
+                    orderable: false
+                }],
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        className: 'btn btn-success btn-sm me-1'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: 'Export to PDF',
+                        className: 'btn btn-danger btn-sm me-1'
+                    },
+                    {
+                        extend: 'print',
+                        text: 'Print',
+                        className: 'btn btn-info btn-sm'
+                    }
+                ]
+            });
+        });
+    </script>
+</body>
+</html>

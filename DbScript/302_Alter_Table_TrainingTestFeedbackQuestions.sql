@@ -1,0 +1,6 @@
+
+
+ALTER TABLE TrainingTestFeedbackQuestions
+DROP CONSTRAINT FK__TrainingT__HRSet__03275C9C;
+
+alter table TrainingTestFeedbackQuestions drop column HRSettingsId

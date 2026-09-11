@@ -1,0 +1,2 @@
+ALTER TABLE KeyVehicleLogAuditHistory
+ADD ProfileId INT NOT NULL DEFAULT 0

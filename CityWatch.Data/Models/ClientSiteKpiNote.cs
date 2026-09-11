@@ -15,6 +15,7 @@ namespace CityWatch.Data.Models
         public DateTime ForMonth { get; set; }
 
         public string Notes { get; set; }
+        public string HRRecords { get; set; }
 
         [ForeignKey("SettingsId")]
         [JsonIgnore]
