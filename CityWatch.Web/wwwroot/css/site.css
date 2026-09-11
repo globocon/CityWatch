@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 a.navbar-brand {
     white-space: normal;
@@ -323,48 +323,6 @@ i.client-status-circle {
         body {
             min-height: 100dvh;
         }
-    }
-}
-
-/* p1-337 Login page overflowing the window at 100% browser zoom.
-
-   Measured on the login page at 1536x730 - a 1080p laptop at 125% Windows scaling, which is what
-   100% zoom actually gives you - the document is 754px against a 730px viewport, so the footer
-   falls below the fold and a scrollbar appears. At 80% zoom the viewport gains enough CSS pixels
-   to absorb it, which is why it looks fine there.
-
-   Almost all of the excess is fixed spacing that only switches on at the md/lg breakpoints:
-   42px of card padding top and bottom, a 42px margin above the disclaimer and 21px of wrapper
-   padding. Trimming those recovers about 90px, which is more than the shortfall, and the
-   flex-fill content area simply absorbs the difference so the card stays where it looks right.
-   Nothing is made smaller - only the empty space around it.
-
-   Conditions, deliberately narrow:
-     orientation: landscape  - excludes phones and tablets held in portrait
-     min-width: 992px        - excludes phones in landscape (667-932px wide)
-     max-height: 820px       - only viewports short enough to actually have the problem; a tall
-                               desktop window keeps the roomier original spacing
-   Everything is under .login-page, so no other page's cards or spacing are touched.
-
-   This also removes the small scroll the tablet-landscape rule above introduces at 1280x800:
-   the trimmed page plus that 56px reservation now fits inside the viewport. */
-@media (orientation: landscape) and (min-width: 992px) and (max-height: 820px) {
-    .login-page.p-md-4 {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-    }
-
-    .login-page .card.box-shadow.p-lg-5 {
-        padding-top: 1.75rem !important;
-        padding-bottom: 1.75rem !important;
-    }
-
-    .login-page .login-disclaimer.mt-md-5 {
-        margin-top: 0.75rem !important;
-    }
-
-    .login-page .login-disclaimer p {
-        margin-bottom: 0.5rem;
     }
 }
 

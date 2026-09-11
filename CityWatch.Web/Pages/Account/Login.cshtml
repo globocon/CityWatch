@@ -1,13 +1,11 @@
-﻿@page
+@page
 @model CityWatch.Web.Pages.LoginModel
 @{
     ViewData["Title"] = Model.ClientNameTitle + " | Login";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Login;
 }
 
-@* login-page scopes the short-viewport trimming in site.css to this page, so the card padding
-   and disclaimer spacing can be tightened without touching any other page. *@
-<div class="m-auto p-2 p-md-4 login-page">
+<div class="m-auto p-2 p-md-4">
     <div class="m-auto card box-shadow p-3 p-md-4 p-lg-5 col-sm-10 col-md-7 col-lg-5">
         <form method="post">
             <div class="form-group">
