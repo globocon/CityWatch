@@ -40,5 +40,41 @@ namespace CityWatch.Web.API
 
             return new JsonResult(true);
         }
+
+        /// <summary>
+        /// The weekly log dump, for the Windows scheduler to call at 2am on Mondays - the time the
+        /// site settings screen promises. It always covers the last week that fully ended, so a run
+        /// that fires late, or is triggered by hand, still sends a whole Monday-to-Sunday week.
+        /// </summary>
+        /// <remarks>
+        /// Anonymous, like the daily actions above and for the same reason: the caller is an
+        /// external scheduler, not a signed-in user.
+        /// </remarks>
+        [Route("[action]", Name = "UploadWeeklyLogsNew")]
+        public JsonResult UploadWeekly()
+        {
+            if (_webHostEnvironment.IsDevelopment())
+                throw new NotSupportedException("Dropbox upload not supported in development environment");
+
+            _siteLogUploadService.ProcessWeeklyGuardLogs();
+
+            return new JsonResult(true);
+        }
+
+        /// <summary>
+        /// The monthly log dump, for the Windows scheduler to call at 6am on the 1st - the time the
+        /// site settings screen promises. Covers the previous calendar month, and like the weekly
+        /// action it records what it has produced, so calling it twice does not send twice.
+        /// </summary>
+        [Route("[action]", Name = "UploadMonthlyLogsNew")]
+        public JsonResult UploadMonthly()
+        {
+            if (_webHostEnvironment.IsDevelopment())
+                throw new NotSupportedException("Dropbox upload not supported in development environment");
+
+            _siteLogUploadService.ProcessMonthlyGuardLogs();
+
+            return new JsonResult(true);
+        }
     }
 }

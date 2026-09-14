@@ -73,6 +73,24 @@ namespace CityWatch.Data.Providers
         int SaveRCList(RCActionList RC);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
         List<ClientSiteLogBook> GetClientSiteLogBooksForDailyLogBookGeneration(DateTime LogDate);
+        List<ClientSiteLogBook> GetClientSiteLogBooksForPeriodicLogBookGeneration(LogDumpPeriodType periodType, DateTime fromDate, DateTime toDate);
+
+        /// <summary>Every periodic dump already produced for a period, so a re-run can skip them.</summary>
+        List<ClientSitePeriodicLogUpload> GetPeriodicLogUploads(LogDumpPeriodType periodType, DateTime periodStartDate);
+
+        void SavePeriodicLogUpload(ClientSitePeriodicLogUpload record);
+
+        void SaveSchedulerTaskError(SchedulerTaskError error);
+
+        List<SchedulerTaskError> GetSchedulerTaskErrors(DateTime fromDate, string taskName = null);
+
+        /// <summary>The run of this task still in progress, or null. Stale rows are cleared first.</summary>
+        PeriodicLogDumpJob GetInProgressPeriodicLogDumpJob(string taskName);
+
+        /// <summary>Inserts a new run, or completes the one whose Id is set.</summary>
+        int SavePeriodicLogDumpJob(PeriodicLogDumpJob job);
+
+        List<PeriodicLogDumpJob> GetPeriodicLogDumpJobs(string taskName, int take = 20);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         List<ClientSiteLogBook> GetClientSiteLogBooksWithClientType(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
@@ -1003,6 +1021,151 @@ namespace CityWatch.Data.Providers
                 x.Date == LogDate && !x.DbxUploaded)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Every log book in a week or a month, for the sites that asked for a dump of that period.
+        ///
+        /// Deliberately different from the daily query above in two ways. It matches on the four
+        /// flags for the period asked for, not the daily ones - a site can have the weekly dump on
+        /// and the daily one off - and it ignores DbxUploaded, because that column tracks the daily
+        /// upload. Filtering on it here would silently drop from a periodic dump exactly those days
+        /// the daily run had already handled, which for a site with both enabled is every day.
+        /// Periodic runs record what they have done in ClientSitePeriodicLogUploads instead.
+        /// </summary>
+        public List<ClientSiteLogBook> GetClientSiteLogBooksForPeriodicLogBookGeneration(LogDumpPeriodType periodType,
+            DateTime fromDate, DateTime toDate)
+        {
+            var query = _context.ClientSiteLogBooks
+                .Where(x => x.ClientSite.IsActive == true && x.Date >= fromDate && x.Date <= toDate);
+
+            // Split rather than combined with a ternary inside the predicate, so each stays a
+            // translatable SQL expression over indexed columns.
+            query = periodType == LogDumpPeriodType.Weekly
+                ? query.Where(x => x.ClientSite.UploadGuardWeeklyLog || x.ClientSite.UploadFusionWeeklyLog ||
+                                   x.ClientSite.UploadSWWeeklyLog || x.ClientSite.UploadKVWeeklyLog)
+                : query.Where(x => x.ClientSite.UploadGuardMonthlyLog || x.ClientSite.UploadFusionMonthlyLog ||
+                                   x.ClientSite.UploadSWMonthlyLog || x.ClientSite.UploadKVMonthlyLog);
+
+            return query
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }
+
+        /// <summary>
+        /// The dumps already produced for one period, read in a single query rather than one lookup
+        /// per site and log type - a weekly run touches every active site with the flag on.
+        /// </summary>
+        public List<ClientSitePeriodicLogUpload> GetPeriodicLogUploads(LogDumpPeriodType periodType, DateTime periodStartDate)
+        {
+            return _context.ClientSitePeriodicLogUploads
+                .Where(x => x.PeriodType == periodType && x.PeriodStartDate == periodStartDate.Date)
+                .ToList();
+        }
+
+        public void SavePeriodicLogUpload(ClientSitePeriodicLogUpload record)
+        {
+            if (record.UploadedOn == default)
+                record.UploadedOn = DateTime.Now;
+
+            _context.ClientSitePeriodicLogUploads.Add(record);
+            _context.SaveChanges();
+        }
+
+        /// <summary>
+        /// Records a scheduled-task failure. Swallows its own errors: this is called from the catch
+        /// blocks of a scheduled run, and a logging failure must not replace the failure being
+        /// logged or stop the remaining sites being processed.
+        /// </summary>
+        public void SaveSchedulerTaskError(SchedulerTaskError error)
+        {
+            try
+            {
+                if (error.OccurredOn == default)
+                    error.OccurredOn = DateTime.Now;
+
+                _context.SchedulerTaskErrors.Add(error);
+                _context.SaveChanges();
+            }
+            catch
+            {
+                // Nothing useful to do here - the caller is already handling a failure.
+            }
+        }
+
+        public List<SchedulerTaskError> GetSchedulerTaskErrors(DateTime fromDate, string taskName = null)
+        {
+            return _context.SchedulerTaskErrors
+                .Where(x => x.OccurredOn >= fromDate && (taskName == null || x.TaskName == taskName))
+                .OrderByDescending(x => x.OccurredOn)
+                .ToList();
+        }
+
+        /// <summary>
+        /// The run of this task still in progress, or null if the task is free to start.
+        ///
+        /// A run that crashed hard leaves its row incomplete forever and would block the task for
+        /// good, so rows created before today are cleared first and not treated as in progress -
+        /// the same staleness rule RemoveAllKpiSendScheduleJobsOldNotComplete uses. A weekly or
+        /// monthly task runs at most once a day, so a row created today with no completion is a
+        /// genuine overlap.
+        /// </summary>
+        public PeriodicLogDumpJob GetInProgressPeriodicLogDumpJob(string taskName)
+        {
+            var incomplete = _context.PeriodicLogDumpJobs
+                .Where(x => x.TaskName == taskName && !x.CompletedDate.HasValue)
+                .ToList();
+
+            var stale = incomplete.Where(x => x.CreatedDate.Date < DateTime.Now.Date).ToList();
+            if (stale.Any())
+            {
+                foreach (var job in stale)
+                {
+                    job.CompletedDate = DateTime.Now;
+                    job.Success = false;
+                    job.StatusMessage = (job.StatusMessage ?? string.Empty) +
+                        " Abandoned: no completion recorded, closed by a later run.";
+                }
+                _context.SaveChanges();
+            }
+
+            return incomplete.Except(stale).OrderBy(x => x.CreatedDate).FirstOrDefault();
+        }
+
+        public int SavePeriodicLogDumpJob(PeriodicLogDumpJob job)
+        {
+            var existing = _context.PeriodicLogDumpJobs.SingleOrDefault(x => x.Id == job.Id);
+
+            if (existing == null)
+            {
+                if (job.CreatedDate == default)
+                    job.CreatedDate = DateTime.Now;
+
+                _context.PeriodicLogDumpJobs.Add(job);
+            }
+            else
+            {
+                existing.CompletedDate = job.CompletedDate;
+                existing.Success = job.Success;
+                existing.StatusMessage = job.StatusMessage;
+                existing.DumpsProduced = job.DumpsProduced;
+                existing.DumpsSkipped = job.DumpsSkipped;
+                existing.DumpsFailed = job.DumpsFailed;
+            }
+
+            _context.SaveChanges();
+
+            return job.Id;
+        }
+
+        public List<PeriodicLogDumpJob> GetPeriodicLogDumpJobs(string taskName, int take = 20)
+        {
+            return _context.PeriodicLogDumpJobs
+                .Where(x => x.TaskName == taskName)
+                .OrderByDescending(x => x.CreatedDate)
+                .Take(take)
                 .ToList();
         }
 
