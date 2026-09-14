@@ -211,6 +211,15 @@ namespace CityWatch.Data
 
         public DbSet<SiteLogUploadHistory> SiteLogUploadHistory { get; set; }
 
+        /// <summary>Weekly and monthly log dumps already produced - the periodic DbxUploaded.</summary>
+        public DbSet<ClientSitePeriodicLogUpload> ClientSitePeriodicLogUploads { get; set; }
+
+        /// <summary>Failures from the scheduled tasks, in columns rather than free text.</summary>
+        public DbSet<SchedulerTaskError> SchedulerTaskErrors { get; set; }
+
+        /// <summary>One row per weekly/monthly log dump run - start, finish and outcome.</summary>
+        public DbSet<PeriodicLogDumpJob> PeriodicLogDumpJobs { get; set; }
+
 
         public DbSet<KpiSendTimesheetSchedules> KpiSendTimesheetSchedules { get; set; }
         public DbSet<KpiSendTimesheetClientSites> KpiSendTimesheetClientSites { get; set; }
