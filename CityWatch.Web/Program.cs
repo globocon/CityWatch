@@ -46,6 +46,7 @@ builder.Services.AddScoped<IGuardLogDataProvider, GuardLogDataProvider>();
 builder.Services.AddScoped<IGuardSettingsDataProvider, GuardSettingsDataProvider>();
 builder.Services.AddScoped<IGuardLogReportGenerator, GuardLogReportGenerator>();
 builder.Services.AddScoped<IGuardDataProvider, GuardDataProvider>();
+builder.Services.AddScoped<IGuardNotificationDataProvider, GuardNotificationDataProvider>();
 builder.Services.AddScoped<IIrUploadService, IrUploadService>();
 builder.Services.AddScoped<IClientSiteWandDataProvider, ClientSiteWandDataProvider>();
 builder.Services.AddScoped<ISiteLogUploadService, SiteLogUploadService>();
