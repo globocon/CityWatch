@@ -274,6 +274,36 @@ namespace CityWatch.Data
           .HasForeignKey(d => d.PcarRouteId)
           .OnDelete(DeleteBehavior.Cascade);
 
+            /* Notifications (DbScript/377). Configured explicitly rather than left to
+               convention because GuardNotificationRead points at Guard twice over — once
+               directly, and once through the notification it belongs to — and the read side
+               must hang off GuardNotificationId, not GuardId. Both FKs are Restrict: a
+               notification is deactivated, never deleted, so the read history it carries has
+               to outlive nothing. */
+            modelBuilder.Entity<GuardNotification>()
+                .HasMany(n => n.Reads)
+                .WithOne(r => r.GuardNotification)
+                .HasForeignKey(r => r.GuardNotificationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GuardNotificationRead>()
+                .HasOne(r => r.Guard)
+                .WithMany()
+                .HasForeignKey(r => r.GuardId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GuardNotification>()
+                .HasOne(n => n.Guard)
+                .WithMany()
+                .HasForeignKey(n => n.GuardId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GuardNotification>()
+                .HasOne(n => n.ClientSite)
+                .WithMany()
+                .HasForeignKey(n => n.ClientSiteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<RosterGroupSite>()
                 .HasOne(rgs => rgs.RosterGroup)
                 .WithMany(rg => rg.RosterGroupSites)
@@ -434,6 +464,9 @@ namespace CityWatch.Data
         public DbSet<OnBoardUsersTrainingAndAssessment> OnBoardUsersTrainingAndAssessment { get; set; }
         public DbSet<ShiftCancellationEmailQueue> ShiftCancellationEmailQueues { get; set; }
         public DbSet<GuardLogsLinked> GuardLogsLinked { get; set; }
+        public DbSet<GuardNotification> GuardNotifications { get; set; }
+        public DbSet<GuardNotificationRead> GuardNotificationReads { get; set; }
+        public DbSet<NotificationType> NotificationTypes { get; set; }
     }
 
 

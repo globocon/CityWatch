@@ -70,6 +70,7 @@ namespace CityWatch.Web.API
         private readonly IIrDataProvider _irDataProvider;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IUserDataProvider _userDataProvider;
+        private readonly IGuardNotificationDataProvider _guardNotificationDataProvider;
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly IUserAuthenticationService _userAuthentication;
@@ -95,8 +96,10 @@ namespace CityWatch.Web.API
             IMobileAppDataServices mobileAppDataServices, IAlertEmailServices alertEmailServices,
             Microsoft.Extensions.Caching.Memory.IMemoryCache memoryCache, CityWatchDbContext context,
             IHubContext<UpdateHub> webHubContext, IHubContext<MobileAppSignalRHub> mobileHubContext,
+            IGuardNotificationDataProvider guardNotificationDataProvider,
             CityWatch.Events.IDomainEventPublisher events = null)
         {
+            _guardNotificationDataProvider = guardNotificationDataProvider;
             _events = events ?? CityWatch.Events.NullDomainEventPublisher.Instance;
             _context = context;
             _memoryCache = memoryCache;
@@ -5086,6 +5089,197 @@ namespace CityWatch.Web.API
 
         #endregion "HR Records"
 
+        #region "Notifications"
+
+        /// <summary>
+        /// The mobile app's Notifications tab: what is addressed to this guard, plus what is
+        /// addressed to the site they are signed in at. Reconciles first, then returns — so a
+        /// course completed on the web since the last fetch has already dropped off the list
+        /// by the time the app renders it, without needing anything to push the change out.
+        /// </summary>
+        [HttpGet("GetGuardNotifications")]
+        public IActionResult GetGuardNotifications(int guardId, int clientSiteId = 0)
+        {
+            try
+            {
+                if (guardId <= 0)
+                {
+                    return Ok(new
+                    {
+                        issuccess = false,
+                        message = "Guard ID not found. Please log in again.",
+                        data = new List<GuardNotificationDTO>(),
+                        unreadcount = 0
+                    });
+                }
+
+                _guardNotificationDataProvider.SyncNotifications(guardId);
+
+                var notifications = _guardNotificationDataProvider.GetNotifications(guardId, clientSiteId);
+                var returnResult = notifications.Select(x => new GuardNotificationDTO
+                {
+                    Id = x.Id,
+                    GuardId = x.GuardId,
+                    ClientSiteId = x.ClientSiteId,
+                    NotificationTypeId = x.NotificationTypeId,
+                    ReferenceId = x.ReferenceId,
+                    Target = (int)x.Target,
+                    TargetName = x.TargetName,
+                    Title = x.Title,
+                    Message = x.Message,
+                    CreatedOn = x.CreatedOn,
+                    IsRead = x.IsRead,
+                    ReadOn = x.ReadOn
+                }).ToList();
+
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = "Successfully retrieved notifications.",
+                    data = returnResult,
+                    unreadcount = returnResult.Count(x => !x.IsRead)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while retrieving notifications.{ex.Message}",
+                    data = new List<GuardNotificationDTO>(),
+                    unreadcount = 0
+                });
+            }
+        }
+
+        /// <summary>
+        /// Badge-only counterpart of GetGuardNotifications, for the home screen: it does the
+        /// same reconcile so the badge cannot show a course the guard has already finished.
+        /// </summary>
+        [HttpGet("GetGuardNotificationCount")]
+        public IActionResult GetGuardNotificationCount(int guardId, int clientSiteId = 0)
+        {
+            try
+            {
+                if (guardId <= 0)
+                    return Ok(new { issuccess = false, message = "Guard ID not found. Please log in again.", data = 0 });
+
+                _guardNotificationDataProvider.SyncNotifications(guardId);
+
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = "Successfully retrieved notification count.",
+                    data = _guardNotificationDataProvider.GetUnreadCount(guardId, clientSiteId)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while retrieving the notification count.{ex.Message}",
+                    data = 0
+                });
+            }
+        }
+
+        [HttpPost("SetGuardNotificationReadStatus")]
+        public IActionResult SetGuardNotificationReadStatus([FromBody] GuardNotificationReadRequest request)
+        {
+            try
+            {
+                if (request == null || request.GuardId <= 0 || request.Id <= 0)
+                    return Ok(new { issuccess = false, message = "Invalid notification request.", data = 0 });
+
+                var updated = _guardNotificationDataProvider.SetReadStatus(request.Id, request.GuardId,
+                    request.ClientSiteId, request.IsRead);
+
+                if (!updated)
+                    return Ok(new { issuccess = false, message = "Notification not found.", data = 0 });
+
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = request.IsRead ? "Notification marked as read." : "Notification marked as unread.",
+                    data = _guardNotificationDataProvider.GetUnreadCount(request.GuardId, request.ClientSiteId)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while updating the notification.{ex.Message}",
+                    data = 0
+                });
+            }
+        }
+
+        [HttpPost("MarkAllGuardNotificationsRead")]
+        public IActionResult MarkAllGuardNotificationsRead([FromBody] GuardNotificationMarkAllRequest request)
+        {
+            try
+            {
+                if (request == null || request.GuardId <= 0)
+                    return Ok(new { issuccess = false, message = "Guard ID not found. Please log in again.", data = 0 });
+
+                var count = _guardNotificationDataProvider.MarkAllAsRead(request.GuardId, request.ClientSiteId);
+
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = count == 0 ? "No unread notifications." : $"{count} notification(s) marked as read.",
+                    data = 0
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while updating the notifications.{ex.Message}",
+                    data = 0
+                });
+            }
+        }
+
+        /// <summary>
+        /// Raises a notification that has no derived source: an operator addressing a site, or
+        /// a one-off message to a single guard. Course notifications are NOT created here —
+        /// those are reconciled from the HR record so that they can retire themselves when the
+        /// course is completed.
+        /// </summary>
+        [HttpPost("CreateGuardNotification")]
+        public IActionResult CreateGuardNotification([FromBody] CreateGuardNotificationRequest request)
+        {
+            try
+            {
+                if (request == null)
+                    return Ok(new { issuccess = false, message = "Invalid notification request.", data = 0 });
+
+                var notification = _guardNotificationDataProvider.CreateNotification(
+                    request.GuardId, request.ClientSiteId, request.Title, request.Message);
+
+                return Ok(new { issuccess = true, message = "Notification created.", data = notification.Id });
+            }
+            catch (ArgumentException ex)
+            {
+                return Ok(new { issuccess = false, message = ex.Message, data = 0 });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    issuccess = false,
+                    message = $"An error occurred while creating the notification.{ex.Message}",
+                    data = 0
+                });
+            }
+        }
+
+        #endregion "Notifications"
+
         [HttpPost("SyncOfflinePatrolCarLogData")]
         public IActionResult SyncOfflinePatrolCarLogData([FromBody] List<PatrolCarLogRequestLocalCacheOffline> offlineRecords)
         {
@@ -6390,6 +6584,59 @@ namespace CityWatch.Web.API
         public int MasterDateType { get; set; }
         public string StatusColor { get; set; }
 
+    }
+
+    public class GuardNotificationDTO
+    {
+        public int Id { get; set; }
+
+        /// <summary>Set for guard-targeted notifications; null for site-targeted ones.</summary>
+        public int? GuardId { get; set; }
+
+        /// <summary>Set for site-targeted notifications; null for guard-targeted ones.</summary>
+        public int? ClientSiteId { get; set; }
+
+        public int NotificationTypeId { get; set; }
+        public int ReferenceId { get; set; }
+
+        /// <summary>CityWatch.Data.Enums.GuardNotificationTarget: 1 = Guard, 2 = Site.</summary>
+        public int Target { get; set; }
+
+        /// <summary>Guard name or site name — what the app shows in the card header.</summary>
+        public string TargetName { get; set; }
+
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public bool IsRead { get; set; }
+        public DateTime? ReadOn { get; set; }
+    }
+
+    public class GuardNotificationReadRequest
+    {
+        public int Id { get; set; }
+        public int GuardId { get; set; }
+
+        /// <summary>The site the guard is signed in at — needed to authorise site notifications.</summary>
+        public int ClientSiteId { get; set; }
+
+        public bool IsRead { get; set; }
+    }
+
+    public class GuardNotificationMarkAllRequest
+    {
+        public int GuardId { get; set; }
+        public int ClientSiteId { get; set; }
+    }
+
+    public class CreateGuardNotificationRequest
+    {
+        /// <summary>Exactly one of GuardId / ClientSiteId must be set.</summary>
+        public int? GuardId { get; set; }
+        public int? ClientSiteId { get; set; }
+
+        public string Title { get; set; }
+        public string Message { get; set; }
     }
 
 }
