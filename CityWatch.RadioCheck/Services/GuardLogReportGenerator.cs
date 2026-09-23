@@ -184,7 +184,9 @@ namespace CityWatch.RadioCheck.Services
 
                 foreach (var fieldName in fieldNames)
                 {
-                    var fieldValue = group.SingleOrDefault(z => z.ClientSiteCustomField.Name == fieldName)?.DayValue;
+                    // First, not Single: a duplicated row predating DbScript/378 would throw
+                    // here and take the whole report PDF with it, not just this cell.
+                    var fieldValue = group.FirstOrDefault(z => z.ClientSiteCustomField.Name == fieldName)?.DayValue;
                     columns.Add(fieldName, fieldValue);
                 }
                 rows.Add(columns);

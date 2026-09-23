@@ -82,6 +82,7 @@ namespace CityWatch.Data.Providers
         List<CustomFieldLog> GetCustomFieldLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SaveCustomFieldLogs(List<CustomFieldLog> customFieldLogs);
         void SaveCustomFieldLog(CustomFieldLog customFieldLog);
+        void EnsureCustomFieldLogsExist(int clientSiteLogBookId, int clientSiteId);
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetVehicleRegosForKVL(string regoStart = null);
         List<string> GetClientSiteSearch(string clientSiteNew = null);
@@ -1569,6 +1570,62 @@ namespace CityWatch.Data.Providers
             foreach (var customFieldLog in customFieldLogs)
             {
                 SaveCustomFieldLog(customFieldLog);
+            }
+        }
+
+        /// <summary>
+        /// Makes sure a logbook day has exactly one row per custom field configured for its
+        /// site, creating only the ones that are missing.
+        ///
+        /// This replaces a check-then-act that duplicated the table. The old shape was
+        /// "read the rows; if there are none, insert the whole set", spread across a read in
+        /// ViewDataService - so two callers arriving at a logbook that had no rows yet (a
+        /// guard opening the web logbook while the mobile app fetched the same site, i.e.
+        /// shift changeover) both saw none and both inserted the full set.
+        ///
+        /// One statement instead, so the gap between deciding and inserting does not exist:
+        /// SQL Server evaluates the NOT EXISTS and does the INSERT atomically, and a
+        /// concurrent caller either sees the rows already there or is rejected by
+        /// UX_CustomFieldLogs_Field_LogBook (DbScript/379). Also one round trip rather than
+        /// one SaveChanges per field, which is what made a half-seeded logbook possible -
+        /// and a half-seeded logbook was permanent, because the old code only seeded when it
+        /// found NO rows at all.
+        ///
+        /// Idempotent by construction, so it is safe to call on every read: it covers
+        /// logbooks created before this change, and fields added to a site mid-day.
+        /// </summary>
+        public void EnsureCustomFieldLogsExist(int clientSiteLogBookId, int clientSiteId)
+        {
+            if (clientSiteLogBookId <= 0 || clientSiteId <= 0)
+                return;
+
+            const string sql = @"
+INSERT INTO dbo.CustomFieldLogs (CustomFieldId, ClientSiteLogBookId)
+SELECT f.Id, @logBookId
+FROM dbo.ClientSiteCustomFields AS f
+WHERE f.ClientSiteId = @clientSiteId
+  AND NOT EXISTS (
+        SELECT 1
+        FROM dbo.CustomFieldLogs AS l
+        WHERE l.CustomFieldId = f.Id
+          AND l.ClientSiteLogBookId = @logBookId);";
+
+            try
+            {
+                _context.Database.ExecuteSqlRaw(sql,
+                    new SqlParameter("@logBookId", clientSiteLogBookId),
+                    new SqlParameter("@clientSiteId", clientSiteId));
+            }
+            catch (DbUpdateException)
+            {
+                /* Lost a race against another caller that inserted the same rows between the
+                   NOT EXISTS and the INSERT. The rows the caller needs exist either way, so
+                   this is the success case - swallowing it keeps a logbook open from failing
+                   over a row somebody else already created. */
+            }
+            catch (SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+            {
+                // Same race, surfaced as the raw unique-key violation from DbScript/379.
             }
         }
 

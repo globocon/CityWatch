@@ -3174,18 +3174,19 @@ namespace CityWatch.Web.Services
 
         public List<Dictionary<string, string>> GetCustomFieldLogs(int logBookId, int clientSiteId)
         {
+            /* Was: read the rows, and if there were NONE, build the whole set in memory and
+               insert them one SaveChanges at a time. That check-then-act is what duplicated
+               dbo.CustomFieldLogs - two callers reaching a logbook with no rows yet (a guard
+               opening the web logbook while the mobile app fetched the same site) both saw
+               none and both inserted the full set.
+
+               EnsureCustomFieldLogsExist does it in one atomic statement that creates only
+               what is missing, so there is no window to race in, and it fills gaps the old
+               all-or-nothing test could not: a logbook that was half-seeded by an earlier
+               failure, and fields added to the site after the logbook was created. */
+            _guardLogDataProvider.EnsureCustomFieldLogsExist(logBookId, clientSiteId);
+
             var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
-            if (!customFieldLogs.Any())
-            {
-                var clientSiteCustomFields = _guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId)
-                                                .Select(z => new CustomFieldLog()
-                                                {
-                                                    ClientSiteLogBookId = logBookId,
-                                                    CustomFieldId = z.Id
-                                                }).ToList();
-                _guardLogDataProvider.SaveCustomFieldLogs(clientSiteCustomFields);
-                customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(logBookId);
-            }
 
             var timeSlotGroups = customFieldLogs.GroupBy(z => z.ClientSiteCustomField.TimeSlot);
             var rows = new List<Dictionary<string, string>>();
@@ -3217,7 +3218,13 @@ namespace CityWatch.Web.Services
                 {
                     if (record.Value != null)
                     {
-                        var customFieldLog = customFieldLogs.SingleOrDefault(x => x.ClientSiteCustomField.Name.Equals(record.Key) &&
+                        /* First, not Single. UX_CustomFieldLogs_LogBook_Field (DbScript/379)
+                           makes a second row for the same field and logbook impossible, but
+                           any that predate the dedupe would make SingleOrDefault throw - and
+                           the throw landed in the catch below, so the guard's entry silently
+                           did not save. Writing to one of two identical rows is a far better
+                           failure than writing to neither. */
+                        var customFieldLog = customFieldLogs.FirstOrDefault(x => x.ClientSiteCustomField.Name.Equals(record.Key) &&
                                                                 x.ClientSiteCustomField.TimeSlot.Equals(timeSlot));
                         if (customFieldLog != null)
                         {
@@ -3227,8 +3234,13 @@ namespace CityWatch.Web.Services
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                /* This was a bare `catch { success = false; }`, which is how the duplicate-row
+                   problem stayed invisible: every failed save looked identical to the caller
+                   and nothing recorded why. Still swallowed - the caller only wants a bool and
+                   a logbook grid should not 500 - but no longer silent. */
+                Console.WriteLine($"Error saving custom field log for logbook {logBookId}: {ex}");
                 success = false;
             }
 

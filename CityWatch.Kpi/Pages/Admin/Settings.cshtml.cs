@@ -1502,16 +1502,12 @@ namespace CityWatch.Kpi.Pages.Admin
                 var clientSiteLogBookId = _clientDataProvider.GetClientSiteLogBook(clientSiteCustomField.ClientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
                 if (clientSiteLogBookId.HasValue)
                 {
-                    var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId.Value).Where(x => x.CustomFieldId == id);
-                    if (!customFieldLogs.Any())
-                    {
-                        var customFieldLog = new CustomFieldLog
-                        {
-                            CustomFieldId = id,
-                            ClientSiteLogBookId = clientSiteLogBookId.Value
-                        };
-                        _guardLogDataProvider.SaveCustomFieldLog(customFieldLog);
-                    }
+                    /* Give today's logbook a row for the field just added. Was a read-then-
+                       insert of its own, which duplicated if an admin double-clicked Save or
+                       two admins added fields at once - and once UX_CustomFieldLogs_Field_LogBook
+                       exists (DbScript/379) that race would fail the save outright instead of
+                       quietly duplicating. One atomic, idempotent statement covers both. */
+                    _guardLogDataProvider.EnsureCustomFieldLogsExist(clientSiteLogBookId.Value, clientSiteCustomField.ClientSiteId);
                 }
 
             }
