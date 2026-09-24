@@ -3,6 +3,8 @@
     public enum IrEntryType
     {
         Normal = 1,
-        Alarm,
+        Alarm,     
+        Notification,
+        /* Yellow color without guard initials*/
     }
 }

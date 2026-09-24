@@ -44,9 +44,19 @@ namespace CityWatch.Web.Helpers
                 new FormField("OTR", "EventType.Other", typeof(bool)),
                 new FormField("CC-List", "SiteColourCode", typeof(string)),
 
-                new FormField("IR-YES-3a", "WandScannedYes3a", typeof(bool)),
-                new FormField("IR-YES-3b", "WandScannedYes3b", typeof(bool)),
-                new FormField("IR-NO", "WandScannedNo", typeof(bool)),
+                //new FormField("IR-YES-3a", "WandScannedYes3a", typeof(bool)),
+                //new FormField("IR-YES-3b", "WandScannedYes3b", typeof(bool)),
+                //new FormField("IR-NO", "WandScannedNo", typeof(bool)),
+                //new 29072025 start
+
+                //new FormField("IR-YES-3a", "WebVersion", typeof(bool)),
+                //new FormField("IR-YES-3b", "Android", typeof(bool)),
+                //new FormField("IR-NO", "iOS", typeof(bool)),
+                new FormField("IR-Web", "WebVersion", typeof(bool)),
+                new FormField("IR-Android", "Android", typeof(bool)),
+                new FormField("IR-iOS", "iOS", typeof(bool)),
+                //new 29072025 end
+
 
                 new FormField("IR-YES-BC", "BodyCameraYes", typeof(bool)),
                 new FormField("IR-NO-BC", "BodyCameraNo", typeof(bool)),
@@ -85,7 +95,14 @@ namespace CityWatch.Web.Helpers
                 new FormField("Supervisor Reported To", "ReportedBy", typeof(string)),
                 new FormField("SN", "SerialNumber", typeof(string)),
                 new FormField("LINKED-IR", "LinkedSerialNos", typeof(string)),
-                new FormField("GPS", "DateLocation.ClientSiteLiveGpsInDegrees", typeof(string))
+                new FormField("GPS", "DateLocation.ClientSiteLiveGpsInDegrees", typeof(string)),
+                new FormField("IR-YES-KV", "PlateLoadedYes", typeof(bool)),
+                new FormField("IR-NO-KV", "PlateLoadedNo", typeof(bool)),
+                new FormField("PSPF", "PSPFName", typeof(string)),
+                new FormField("HASH", "HASH", typeof(string)),
+                new FormField("IP", "IP", typeof(string)),
+                new FormField("AiDec", "AiDec", typeof(string))
+
             };
         }
     }

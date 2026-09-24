@@ -1,0 +1,50 @@
+@page
+@model CityWatch.Web.Pages.Incident.DownloadSelecterModel
+@{
+    ViewData["Title"] = Model.ClientNameTitle + " | Downloads";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Downloads;
+}
+
+@* p7-141 GUI update - card based main menu (navigation and business logic unchanged) *@
+<div id="dvDownloadSelecterOuter">
+    <div id="dvcompanysop" class="dwnl-card-col">
+        <a href="/Incident/Downloads?type=1" id="Ancompanysop" class="dwnl-card">
+            <span class="dwnl-card-title">Company SOP's</span>
+            <span class="dwnl-card-body">
+                <i class="fa fa-clipboard dwnl-card-icon" aria-hidden="true"></i>
+                <span class="dwnl-card-text">Standard operating procedures</span>
+            </span>
+        </a>
+    </div>
+    <div id="dvtraining" class="dwnl-card-col">
+        <a href="/Incident/Downloads?type=2" id="Antraining" class="dwnl-card">
+            <span class="dwnl-card-title">Training</span>
+            <span class="dwnl-card-body">
+                <i class="fa fa-graduation-cap dwnl-card-icon" aria-hidden="true"></i>
+                <span class="dwnl-card-text">Training &amp; fire training resources</span>
+            </span>
+        </a>
+    </div>
+    <div id="dvmultimedia" class="dwnl-card-col">
+        <a href="/Incident/Downloads?type=7" id="Anmultimedia" class="dwnl-card">
+            <span class="dwnl-card-title">Multimedia</span>
+            <span class="dwnl-card-body">
+                <i class="fa fa-play-circle dwnl-card-icon" aria-hidden="true"></i>
+                <span class="dwnl-card-text">Videos, images &amp; media files</span>
+            </span>
+        </a>
+    </div>
+    <div id="dvformsandtemplates" class="dwnl-card-col">
+        <a href="/Incident/Downloads?type=3" id="Anformsandtemplates" class="dwnl-card">
+            <span class="dwnl-card-title">Forms &amp; Templates</span>
+            <span class="dwnl-card-body">
+                <i class="fa fa-file-text-o dwnl-card-icon" aria-hidden="true"></i>
+                <span class="dwnl-card-text">Forms, checklists &amp; templates</span>
+            </span>
+        </a>
+    </div>
+</div>
+
+@section PageHeader {
+    <h3 class="text-center">Downloads</h3>
+}

@@ -1,0 +1,207 @@
+﻿@using CityWatch.Data.Models;
+@using CityWatch.Web.Helpers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+@model CityWatch.Web.Pages.Admin.AuditSiteLogModel
+
+<form id="form_wandstrike_auditlog_request" method="post" class="border-bottom">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label class="mx-1">Client Type</label>
+            @if (Model.ClientTypeId != 0)
+            {
+                <select class="form-control wandstrikemultiselect" multiple="multiple" id="wandstrikeClientType">
+                    @{
+                        var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId).Where(x => x.Id == Model.ClientTypeId);
+                        var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                        sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                        foreach (var clientType in sortedClientTypes)
+                        {
+                            var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                            <option value="@clientType.Name" selected>@clientType.Name (@countClientType)</option>
+                        }
+                    }
+                </select>
+            }
+            @if (Model.ClientTypeId == 0)
+            {
+                <select class="form-control wandstrikemultiselect" multiple="multiple" id="wandstrikeClientType">
+                    @{
+                        var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                        var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                        sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                        foreach (var clientType in sortedClientTypes)
+                        {
+                            var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                            <option value="@clientType.Name">@clientType.Name (@countClientType)</option>
+                        }
+                    }
+                </select>
+            }
+        </div>
+        <div class="form-group col-md-3">
+            <label class="mx-1">Client Site</label>
+            <select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeClientSiteId"></select>
+        </div>
+        <div class="form-group col-md-2">
+            <div class="d-flex flex-row justify-content-between align-items-center">
+                <label class="mx-1">Patrol Car </label>
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="patrolCarToggle">
+                    <label class="custom-control-label" for="patrolCarToggle"></label>
+                </div>
+            </div>
+            <select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikePatrolCarId" disabled="true">
+                @{
+                    var patrolCars = viewDataService.GetAllPatrolCars();
+                    foreach (var patrolCar in patrolCars)
+                    {
+                        <option value="@patrolCar.Value">@patrolCar.Text</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="form-group col-md-2">
+            <label class="mx-1">From Date</label>
+            <input type="date" class="form-control" id="wandstrikeAudtitFromDate" />
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1" for="wandstrikeAudtitToDate">To Date</label>
+            <input type="date" class="form-control" id="wandstrikeAudtitToDate">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-auto ml-auto">
+            <div class="d-flex justify-content-end align-items-center flex-wrap">
+
+                <button type="button" class="btn btn-primary mr-5" id="btnGenerateWandstrikeAuditReport">
+                    View Report
+                </button>
+
+                <img class="mr-2" src="../images/icons/Excel_2025.svg" height="32" />
+
+                <button type="button" class="btn btn-primary mr-2" id="btnDownloadWandstrikeAuditReportDateTime">
+                    <i class="fa fa-arrow-down mr-1"></i>Date/Time
+                </button>
+
+                <button type="button" class="btn btn-primary mr-2" id="btnDownloadWandstrikeAuditReportSite">
+                    <i class="fa fa-arrow-down mr-1"></i>Site
+                </button>
+
+                <button type="button" class="btn btn-primary" id="btnDownloadWandstrikeAuditReportMonSun">
+                    <i class="fa fa-arrow-down mr-1"></i>Mon-Sun
+                </button>
+
+            </div>
+        </div>
+    </div>
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.ClientSiteId" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.LogFromDate" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.LogToDate" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.TagId" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.TagTypeId" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.TagLabel" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.SmartWandId" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.PatrolCarId" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.IspatrolCarToggleOn" />
+    <input type="hidden" asp-for="@Model.WandStrikeAuditLogRequest.IncludeAllTagsInStrike" />
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="row">
+                <div class="col-md-12 mt-1">
+                    <label style="color:#0366d6">Tag Downselect</label>
+                    <hr class="mt-0" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label>UID</label>
+                    <select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagId"></select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label>TYPE</label>
+                    <select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagTypeId"></select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Label</label>
+                    <select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeTagLabel"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-12 mt-1">
+                    <label style="color:#0366d6">End-User Downselect</label>
+                    <hr class="mt-0" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-7">
+                    <label>Licence No (Primary)</label>
+                    <input type="text" class="form-control" asp-for="@Model.WandStrikeAuditLogRequest.GuardLicenceNoId" />
+                </div>
+                <div class="form-group col-md-5">
+                    <label>Guard Name</label>
+                    <input type="text" class="form-control" asp-for="@Model.WandStrikeAuditLogRequest.GuardName" />
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-md-12 mt-1">
+                    <label style="color:#0366d6">SmartWAND Downselect</label>
+                    <hr class="mt-0" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-12">
+                    <label>Wand ID</label>
+                    <select class="form-control mx-1 wandstrikemultiselect" multiple="multiple" id="wandstrikeSmartWandId"></select>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="full-width">
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <table class="table table-bordered table-sm" width="100%" id="tbl_wandstrike_site_log">
+                <thead>
+                    <tr>
+                        <th style="display:none"></th>
+                        @* <th>Group</th> *@
+                        <th>Strike DateTime</th>
+                        <th>SmartWand</th>
+                        <th>Tag ID</th>
+                        <th>Tag Type</th>
+                        <th>End User</th>
+                        <th>Client Site</th>
+                        <th>Scan</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="col-md-12 d-none">
+            <table class="table table-bordered table-sm" width="100%" id="tbl_wandstrike_site_log_excel" hidden="hidden">
+                <thead>
+                    <tr>
+                        <th style="display:none"></th>
+                        <th>Strike DateTime</th>
+                        <th>SmartWand</th>
+                        <th>Tag ID</th>
+                        <th>Tag Type</th>
+                        <th>End User</th>
+                        <th>Client Site</th>
+                        <th>Scan</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>

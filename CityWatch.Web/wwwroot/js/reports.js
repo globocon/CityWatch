@@ -1,4 +1,5 @@
-﻿$(function () {
+$(function () {
+    window.patrolReportMode = 'both';
 
     /** Patrol Data Report ***/
     function loadDefaultDates() {
@@ -11,6 +12,7 @@
     loadDefaultDates();
 
     var patrolReport = $('#monthly_patrol_data').DataTable({
+        dom: 'lpftrip',
         lengthMenu: [[75, 100, -1], [75, 100, "All"]],
         pageLength: 100,
         paging: true,
@@ -18,10 +20,25 @@
         ordering: false,
         info: false,
         scrollX: true,
+        fixedHeader: true,
+        scrollY: '400px', // Set the height to 300px
+        scrollCollapse: true,
         data: [],
         columns: [
             { data: 'nameOfDay' },
             { data: 'date' },
+            { data: 'serialNo' },
+            // { data: 'fileNametodownload' },
+            {
+                data: 'fileNametodownload',
+                render: function (data, type, row) {
+                    if (data) {
+                        return '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + data.substring(0, 8) + '/' + data + '"target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                    } else {
+                        return '';
+                    }
+                }
+            },
             { data: 'controlRoomJobNo' },
             { data: 'siteName' },
             { data: 'siteAddress' },
@@ -44,18 +61,676 @@
             $('td', row).eq(13).addClass('action-taken');
         }
     });
+    window.patrolReport = patrolReport;
+    let keyVehicleDocketLogReport = $('#monthly_kvl_docket_data').DataTable({
+        paging: false,
+        ordering: false,
+        order: [[1, 'asc']],
+        info: false,
+        searching: false,
+        scrollX: true,
+        data: [],
+        autoWidth: false,
+        columns: [
+            { data: 'detail.id', visible: false },
+            {
+                data: 'detail.keyVehicleLog.clientSiteLogBook.clientSite.name',
 
+                width: "5%",
+                orderable: true
+            },
+            { data: 'dateOfLog', width: "10%" },
+
+            { data: 'detail.docketSerialNo', width: "15%" },
+            { data: 'detail.keyVehicleLog.guardLogin.guard.initial', width: "5%" },
+            { data: 'intialCall', width: "20%" },
+            { data: 'entryTime', width: "45%" },
+            { data: 'sentInTime', width: "10%" },
+            { data: 'exitTime', width: "5%" },
+            { data: 'detail.keyVehicleLog.timeSlotNo', width: "15%" },
+            { data: 'detail.keyVehicleLog.vehicleRego', width: "5%" },
+            { data: 'plate', width: "15%" },
+            { data: 'truckConfigText', width: "5%" },
+            { data: 'trailerTypeText', width: "15%" },
+            { data: 'plate1', width: "5%" },
+            { data: 'plate2', width: "15%" },
+            { data: 'plate3', width: "5%" },
+            { data: 'plate4', width: "15%" },
+            { data: 'detail.keyVehicleLog.sender', width: "15%" },
+            { data: 'detail.keyVehicleLog.keyNo', width: "15%" },
+
+            { data: 'detail.keyVehicleLog.reels', width: "15%" },
+            { data: 'detail.keyVehicleLog.customerRef', width: "15%" },
+            { data: 'detail.keyVehicleLog.vwi', width: "15%" },
+
+            { data: 'detail.keyVehicleLog.companyName', width: "15%" },
+            { data: 'detail.keyVehicleLog.personName', width: "15%" },
+            { data: 'detail.keyVehicleLog.mobileNumber', width: "15%" },
+            { data: 'personTypeText', width: "15%" },
+            { data: 'clientSitePocName', width: "15%" },
+            { data: 'clientSiteLocationName', width: "15%" },
+            { data: 'purposeOfEntry', width: "15%" },
+
+            { data: 'detail.keyVehicleLog.inWeight', width: "15%" },
+            { data: 'detail.keyVehicleLog.outWeight', width: "15%" },
+            { data: 'detail.keyVehicleLog.tareWeight', width: "15%" },
+            { data: 'detail.keyVehicleLog.maxWeight', width: "15%" },
+
+            { data: 'complianceDocuments', width: "15%" },
+            { data: 'detail.docketReason', width: "15%" },
+
+            { data: 'detail.keyVehicleLog.loaderName', width: "15%" },
+            { data: 'detail.keyVehicleLog.dispatchName', width: "15%" },
+            { data: 'detail.keyVehicleLog.personName', width: "15%" },
+            { data: 'detail.keyVehicleLog.notes', width: "15%" },
+        ],
+        //drawCallback: function () {
+        //    var api = this.api();
+        //    var rows = api.rows({ page: 'current' }).nodes();
+        //    var last = null;
+
+        //    api.column(wandStrikeGroupColumn, { page: 'current' })
+        //        .data()
+        //        .each(function (group, i) {
+        //            if (last !== group) {
+        //                $(rows)
+        //                    .eq(i)
+        //                    .before('<tr class="group bg-light text-dark"><td colspan="7">' + group + '</td></tr>');
+
+        //                last = group;
+        //            }
+        //        });
+        //},
+    });
+
+    let keyVehicleDocketReport = $('#kvl_docket_data').DataTable({
+        paging: false,
+        ordering: false,
+        order: [[1, 'asc']],
+        info: false,
+        searching: false,
+        scrollX: true,
+        autoWidth: true,
+        fixedHeader: true,
+        data: [],
+        columns: [
+            { data: 'id', visible: false },
+            { data: 'kvLogId', visible: false },
+            {
+                data: 'fileNametodownload',
+                render: function (data, type, row) {
+                    if (data) {
+                        return '<a href="/Reports/PatrolData?handler=DownloadManualDocket&kvLogId=' + row.kvLogId
+                            + '&fileName=' + encodeURIComponent(data)
+                            + '" target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                    } else {
+                        return '';
+                    }
+                }
+            },
+            { data: 'dateOfLog', width: "10%" },
+            { data: 'docketSerialNo', width: "10%" },
+            { data: 'vehicleRego', width: "10%" },
+            { data: 'plate', width: "10%" },
+            { data: 'truckConfigText', width: "15%" },
+            { data: 'docketReason', width: "15%" },
+            { data: 'purposeOfEntry', width: "15%" },
+            { data: 'intialCall', width: "5%" },
+            { data: 'entryTime', width: "5%" },
+            { data: 'sentInTime', width: "5%" },
+            { data: 'exitTime', width: "5%" },
+        ],
+    });
+
+
+    $("#btnExportExcelDocket").on('click', function () {
+
+
+        $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=KeyVehicleSiteLogsWithDocket',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            $('#loader-p').hide();
+            keyVehicleDocketLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            var Key = 'Key & Vehicle Logs Dockets - ' + $('#ReportRequest_FromDate').val() + ' to ' + $('#ReportRequest_ToDate').val();
+
+            var type = 'xlsx';
+            var name = Key + '.';
+
+            var data = document.getElementById('monthly_kvl_docket_data');
+
+            //var data = keyVehicleDocketLogReport.data().toArray();
+            // Check if all columns are empty
+            var isEmptyTable = true;
+            var rows = data.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                for (var j = 1; j < cells.length; j++) {
+                    if (cells[j].textContent.trim() !== '') {
+                        isEmptyTable = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isEmptyTable) {
+                // Create a message row with the desired text
+                var messageRow = document.createElement('tr');
+                var messageCell = document.createElement('td');
+                messageCell.innerText = 'No data available in table';
+                messageRow.appendChild(messageCell);
+
+                // Create a new table with the message
+                var tableClone = document.createElement('table');
+                var tbody = document.createElement('tbody');
+                tbody.appendChild(messageRow);
+                tableClone.appendChild(tbody);
+            } else {
+                // Clone the table and remove the last column
+                var tableClone = data.cloneNode(true);
+                //var rows = tableClone.getElementsByTagName('tr');
+                //for (var i = 0; i < rows.length; i++) {
+                //    var lastCell = rows[i].lastElementChild;
+                //    if (lastCell) {
+                //        rows[i].removeChild(lastCell);
+                //    }
+                //}
+            }
+
+
+
+
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogDockets" });
+
+            // Use XLSX.writeFile to generate and download the Excel file
+            XLSX.writeFile(excelFile, name + type);
+
+
+        });
+
+    });
+
+    function GenerateDocketsReport() {
+        //$('#btnExportExcelDocket').attr('hidden', true);
+        loaderProgress.start(1, 'Generating report...');
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GetKeyVehicleSiteDockets',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+
+            keyVehicleDocketReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            //$('#btnExportExcelDocket').attr('hidden', false);
+
+        }).fail(function () {
+        }).always(function () {
+            loaderProgress.finish();
+        });
+
+    }
+
+
+    $("#convert-to-pdf-docket").on('click', function () {
+
+
+        $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GenerateManualDocketBulk',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            $('#loader-p').hide();
+            keyVehicleDocketLogReport.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            var Key = 'Key & Vehicle Logs Dockets - ' + $('#ReportRequest_FromDate').val() + ' to ' + $('#ReportRequest_ToDate').val();
+
+            var type = 'xlsx';
+            var name = Key + '.';
+
+            var data = document.getElementById('monthly_kvl_docket_data');
+
+            //var data = keyVehicleDocketLogReport.data().toArray();
+            // Check if all columns are empty
+            var isEmptyTable = true;
+            var rows = data.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                for (var j = 1; j < cells.length; j++) {
+                    if (cells[j].textContent.trim() !== '') {
+                        isEmptyTable = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isEmptyTable) {
+                // Create a message row with the desired text
+                var messageRow = document.createElement('tr');
+                var messageCell = document.createElement('td');
+                messageCell.innerText = 'No data available in table';
+                messageRow.appendChild(messageCell);
+
+                // Create a new table with the message
+                var tableClone = document.createElement('table');
+                var tbody = document.createElement('tbody');
+                tbody.appendChild(messageRow);
+                tableClone.appendChild(tbody);
+            } else {
+                // Clone the table and remove the last column
+                var tableClone = data.cloneNode(true);
+                //var rows = tableClone.getElementsByTagName('tr');
+                //for (var i = 0; i < rows.length; i++) {
+                //    var lastCell = rows[i].lastElementChild;
+                //    if (lastCell) {
+                //        rows[i].removeChild(lastCell);
+                //    }
+                //}
+            }
+
+
+
+
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogDockets" });
+
+            // Use XLSX.writeFile to generate and download the Excel file
+            XLSX.writeFile(excelFile, name + type);
+
+
+        });
+
+    });
+    var scrollHead = $(patrolReport.table().container()).find('.dataTables_scrollHead');
+    $(scrollHead).css({
+        'overflow-x': 'scroll'
+    }).on('scroll', function (e) {
+        var scrollBody = $(this).parent().find('.dataTables_scrollBody').get(0);
+        scrollBody.scrollLeft = this.scrollLeft;
+        $(scrollBody).trigger('scroll');
+    });
     $('#ReportRequest_DataFilter').on('change', function () {
         const reportType = $(this).val();
-        if (reportType === '2')
+        if (reportType === '2') {
             $('#patrol_report_controls').show();
-        else
+            $('#btnExportExcelDocket').attr('hidden', true);
+            $('#btnExportExcel').attr('hidden', false);
+            $('#convert-to-pdf').attr('hidden', false);
+            $('#convert-to-pdf-docket').attr('hidden', true);
+            $('#monthly_kvl_docket_data').attr('hidden', true);
+            $('#monthly_patrol_data').attr('hidden', false);
+            $('#kvl_docket_data').attr('hidden', true);
+            $('#kvl_docket_data_container').attr('hidden', true);
+            $('#monthly_patrol_data_wrapper').show();
+        }
+
+        else if (reportType === '3') {
+            $('#patrol_report_controls').show();
+            $('#btnExportExcelDocket').attr('hidden', false);
+            $('#btnExportExcel').attr('hidden', true);
+            $('#convert-to-pdf').attr('hidden', false);
+            $('#monthly_kvl_docket_data').attr('hidden', true);
+            $('#monthly_patrol_data').attr('hidden', true);
+            $('#kvl_docket_data').attr('hidden', false);
+            $('#kvl_docket_data_container').attr('hidden', false);
+            $('#monthly_patrol_data_wrapper').hide();
+            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+        }
+        else {
             $('#patrol_report_controls').hide();
+            $('#btnExportExcelDocket').attr('hidden', true);
+            $('#btnExportExcel').attr('hidden', false);
+            $('#convert-to-pdf').attr('hidden', false);
+            $('#convert-to-pdf-docket').attr('hidden', true);
+            $('#monthly_kvl_docket_data').attr('hidden', true);
+            $('#monthly_patrol_data').attr('hidden', false);
+            $('#kvl_docket_data').attr('hidden', true);
+            $('#kvl_docket_data_container').attr('hidden', true);
+            $('#monthly_patrol_data_wrapper').show();
+        }
         $('#ReportRequest_ClientType option:first').prop('selected', true);
         $('#ReportRequest_ClientSites option:first').prop('selected', true);
         $('#ReportRequest_Position option:first').prop('selected', true);
     });
+    /*p3-132 Contracted manning button-start*/
+    $('#ReportRequest_DataFilter').val(2);
+    $('#patrol_report_controls').show();
+    $('#btncontractedmanning').on('click', function (event) {
+        //var csnme = $('#ReportRequest_ClientTypes option:selected').text();
+        //var csid = $('#ReportRequest_ClientSites option:selected').val();
 
+        //if (csnme == '' || csid == '') {
+        //    console.log('Nothing selected...')
+        //    alert('Please select a site to edit.');
+        //    return;
+        //}
+        var clienttype = $('#ReportRequest_ClientTypes').val();
+        var clientsite = $('#ReportRequest_ClientSites').val();
+
+        if (clienttype.length == 0 || clientsite.length == 0) {
+            console.log('Nothing selected...')
+            alert('Please select a site to edit.');
+            return;
+        }
+        if (clienttype.length > 1) {
+            console.log('More than one client type selected...')
+            alert('More than one client type is selected. Please select only one client type');
+            return;
+        }
+        if (clientsite.length > 1) {
+            console.log('More than one client site selected...')
+            alert('More than one client site is selected. Please select only one client site');
+            return;
+        }
+        $('#modelchoice').val('CONTRACTEDMANNING');
+        $('#kpi-settings-modal').modal('show');
+
+    });
+    $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
+        ShowKpiModelChoice();
+    });
+    function ShowKpiModelChoice() {
+        $('#div_site_settings').html('');
+        var csnme = $('#ReportRequest_ClientSites option:selected').text();
+        var csid = $('#ReportRequest_ClientSites option:selected').val();
+        $('#client_site_name').text(csnme)
+        var choice = $('#modelchoice').val();
+
+        $('#div_site_settings').load('/Reports/PatrolData?handler=ClientSiteKpiSettings&site=' + encodeURIComponent(csid), function () {
+            // This function will be executed after the content is loaded
+            // window.sharedVariable = button.data('cs-id');
+            // console.log('Load operation completed!');
+            // You can add your additional code or actions here
+            // console.log(csnme);    
+            //if (choice == 'RCACTIONLIST')
+            //    $('#div_kpi_rc_contractedmanning').html('');
+            //else if (choice == 'CONTRACTEDMANNING')
+            //    $('#div_kpi_rc_action_list').html('');
+
+        });
+    }
+    $('#div_site_settings').on('click', '#showDivButton', function () {
+
+        $('#divPatrolCar').show();
+        $('#divbtn').show();
+    });
+    $('#div_site_settings').on('change', '#positionfilterPatrolCar', function () {
+
+        const isChecked = $(this).is(':checked');
+        const filter = isChecked ? 1 : 2;
+
+        $("#ClientSiteManningPatrolCarKpiSettings_0__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_1__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_2__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_3__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_4__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_5__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_6__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_7__Type").val(filter);
+
+
+        calculateSumOfTextBoxValues();
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=OfficerPositionsNew&filter=' + filter,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').html('');
+            data.map(function (position) {
+                $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').append('<option value="' + position.value + '">' + position.text + '</option>');
+            });
+        });
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_0__NoOfPatrols,#ClientSiteManningGuardKpiSettings_1__NoOfPatrols, #ClientSiteManningGuardKpiSettings_2__NoOfPatrols, #ClientSiteManningGuardKpiSettings_3__NoOfPatrols, #ClientSiteManningGuardKpiSettings_4__NoOfPatrols, #ClientSiteManningGuardKpiSettings_5__NoOfPatrols,#ClientSiteManningGuardKpiSettings_6__NoOfPatrols,#ClientSiteManningGuardKpiSettings_7__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues2();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_8__NoOfPatrols, #ClientSiteManningGuardKpiSettings_9__NoOfPatrols, #ClientSiteManningGuardKpiSettings_10__NoOfPatrols, #ClientSiteManningGuardKpiSettings_11__NoOfPatrols, #ClientSiteManningGuardKpiSettings_12__NoOfPatrols,#ClientSiteManningGuardKpiSettings_13__NoOfPatrols,#ClientSiteManningGuardKpiSettings_14__NoOfPatrols,#ClientSiteManningGuardKpiSettings_15__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues3();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_16__NoOfPatrols,#ClientSiteManningGuardKpiSettings_17__NoOfPatrols, #ClientSiteManningGuardKpiSettings_18__NoOfPatrols, #ClientSiteManningGuardKpiSettings_19__NoOfPatrols, #ClientSiteManningGuardKpiSettings_20__NoOfPatrols, #ClientSiteManningGuardKpiSettings_21__NoOfPatrols,#ClientSiteManningGuardKpiSettings_22__NoOfPatrols,#ClientSiteManningGuardKpiSettings_23__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues4();
+
+    });
+    function calculateSumOfTextBoxValues() {
+
+        if ($("#positionfilterPatrolCar").prop('checked') == true) {
+
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            if (sum !== 0) { $('#monthlyHrsAddNew').val(sum); }
+            $('#monthlyHrsTxtAddNew').text('Total Patrols :');
+            $('#lbl_ManningPatrolCar_3').text('No of Patrols');
+        }
+        else {
+            $('#monthlyHrsTxtAddNew').text('Monthly Hrs :');
+            $('#lbl_ManningPatrolCar_3').text('Workers');
+            $('#monthlyHrsAddNew').val('');
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues2() {
+
+        var check = $("#positionfilterGuard_0").prop('checked');
+        if ($("#positionfilterGuard_0").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_0__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_1__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_2__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_3__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_4__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_5__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_6__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_7__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_0').val(sum);
+
+
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues3() {
+
+        var check = $("#positionfilterGuard_8").prop('checked');
+        if ($("#positionfilterGuard_8").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_8__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_9__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_10__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_11__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_12__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_13__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_14__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_15__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_8').val(sum);
+
+
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues4() {
+
+        var check = $("#positionfilterGuard_16").prop('checked');
+        if ($("#positionfilterGuard_16").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_16__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_17__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_18__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_19__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_20__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_21__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_22__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_23__NoOfPatrols').val()) || 0;
+
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_16').val(sum);
+
+
+        }
+
+    }
+    $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
+
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=ClientSiteManningKpiSettings',
+            type: 'POST',
+            data: $('#frm_site_manning_settings').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == 1) {
+                alert('Saved site manning details successfully');
+                $('#kpi-settings-modal').modal('hide');
+                $('#modelchoice').val('CONTRACTEDMANNING');
+                $('#kpi-settings-modal').modal('show');
+            }
+            else if (data.success == 2) {
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+                $('#ClientSiteManningGuardKpiSettings_1__PositionId').val($('#ClientSiteManningGuardKpiSettings_1__PositionId option:first').val());
+                $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').val($('#ClientSiteManningPatrolCarKpiSettings_1__PositionId option:first').val());
+                alert('Please add the site settings from site settings tab');
+            }
+            else if (data.success == 3) {
+                alert('Please select position');
+            }
+            else if (data.success == 4) {
+                alert('Error! Please try again');
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+            }
+            else if (data.success == 5) {
+                alert('Please enter a valid time for Start and End in the format of HH:mm and in the range of 00:01 - 23:59. These are invalid times ' + data.erorrMessage + ' .');
+
+            }
+
+            else if (data.success == 6) {
+                alert('The clocks must be in the range of 00:01-23:59, and ' + data.erorrMessage + ' is an invalid input.');
+
+            }
+            else if (data.success == 7) {
+                alert('Please make sure you fill out the three boxes (start, end, and workers) for a day or make them blank. Please ensure workers have a value and cannot be blank when a clock is set.');
+
+            }
+
+        }).fail(function () { });
+    });
+    $('#crmSupplierDetailsModal').on('shown.bs.modal', function (event) {
+
+        $('#lbl_company_name').html('');
+        $('#lbl_abn').html('');
+        $('#lbl_landline').html('');
+        $('#lbl_email').html('');
+        $('#lbl_website').html('');
+
+
+        const button = $(event.relatedTarget);
+
+        const compName = button.data('id');
+
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=CrmSupplierData',
+            data: { companyName: compName },
+            type: 'GET',
+        }).done(function (result) {
+            if (result) {
+                $('#lbl_company_name').html('&nbsp;' + result.companyName);
+                $('#lbl_abn').html('&nbsp;' + result.companyABN);
+                $('#lbl_landline').html('&nbsp;' + result.companyLandline);
+                $('#lbl_email').html('&nbsp;' + result.email);
+                $('#lbl_website').html('&nbsp;' + result.website);
+            }
+        });
+    });
+    $('#div_site_settings').on('click', '#delete_worker', function () {
+        if (confirm('Are you sure want to delete worker ?')) {
+            var buttonValue = $(this).val();
+            $.ajax({
+                url: '/Reports/PatrolData?handler=DeleteWorker',
+                type: 'POST',
+                data: { settingsId: buttonValue },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    if (result.clientSiteId !== 0) {
+                        $('#kpi-settings-modal').modal('hide');
+                        $('#modelchoice').val('CONTRACTEDMANNING');
+                        $('#kpi-settings-modal').modal('show');
+                    }
+                }
+                else
+                    alert(result.message);
+            }).fail(function () { });
+        }
+    });
+
+
+    $('#div_site_settings').on('change', '#ClientSite_Status', function () {
+        // Get the selected value
+        var selectedStatus = $(this).val();
+        if (selectedStatus != 0) {
+            $('#ClientSite_StatusDate').show();
+        } else {
+            $('#ClientSite_StatusDate').hide();
+        }
+        if (selectedStatus == 2) {
+            $('#scheduleisActive').prop('checked', false);
+        }
+        else {
+            $('#scheduleisActive').prop('checked', true);
+        }
+
+
+
+    });
+
+    /*p3-132 Contracted manning button-end*/
+    $('#patrol_report_controls').show();
     $('#ReportRequest_ClientTypes').multiselect({
         maxHeight: 400,
         buttonWidth: '100%',
@@ -86,11 +761,143 @@
                     clientSiteControl.append('<option value="' + site.text + '">' + site.text + '</option>');
                 });
                 clientSiteControl.multiselect('rebuild');
+                // p3-44: sites were replaced programmatically (no change event fires), so
+                // refresh the wand strike downselect filters too or they keep the old type's tags
+                loadWandStrikeTagFilters();
             }
         });
     });
+    //p3-41-start
+    // Fills the Tag DownSelect filters (UID/Type/Label/Wand ID) for the selected client
+    // sites; when no site is ticked ("All"), every site of the chosen client type is used.
+    function loadWandStrikeTagFilters() {
+        var siteNames = $('#ReportRequest_ClientSites').val() || [];
+        if (siteNames.length === 0) {
+            siteNames = $('#ReportRequest_ClientSites option').map(function () { return this.value; }).get();
+        }
 
-    $('#btnPatrolReportSumbit').on('click', function () {
+        const clientSiteWandStrikeTagId = $('#patroldatawandstrikeTagId');
+        const clientSiteWandStrikeTagTypeId = $('#patroldatawandstrikeTagTypeId');
+        const clientSiteWandStrikeTagLabel = $('#patroldatawandstrikeTagLabel');
+        const clientSiteWandStrikeSmartWandId = $('#patroldatawandstrikeSmartWandId');
+
+        if (siteNames.length === 0) {
+            clientSiteWandStrikeTagId.html('').multiselect('rebuild');
+            clientSiteWandStrikeTagTypeId.html('').multiselect('rebuild');
+            clientSiteWandStrikeTagLabel.html('').multiselect('rebuild');
+            clientSiteWandStrikeSmartWandId.html('').multiselect('rebuild');
+            return;
+        }
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=ClientSiteWandAndTags&clientSites=' + encodeURIComponent(siteNames.join(',')),
+            type: 'GET',
+            datatype: 'json',
+        }).done(function (data) {
+            clientSiteWandStrikeTagId.html('');
+            clientSiteWandStrikeTagTypeId.html('');
+            clientSiteWandStrikeTagLabel.html('');
+            clientSiteWandStrikeSmartWandId.html('');
+            data.tagIds.map(function (result) {
+
+                clientSiteWandStrikeTagId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagTypeIds.map(function (result) {
+                clientSiteWandStrikeTagTypeId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.tagLabels.map(function (result) {
+                clientSiteWandStrikeTagLabel.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            data.smartWandIds.map(function (result) {
+                clientSiteWandStrikeSmartWandId.append('<option value="' + result.value + '">' + result.text + '</option>');
+            });
+            clientSiteWandStrikeTagId.multiselect('rebuild');
+            clientSiteWandStrikeTagTypeId.multiselect('rebuild');
+            clientSiteWandStrikeTagLabel.multiselect('rebuild');
+            clientSiteWandStrikeSmartWandId.multiselect('rebuild');
+        });
+    }
+
+    $('#ReportRequest_ClientSites').on('change', function () {
+        if ($('#ReportRequest_ClientSites').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        loadWandStrikeTagFilters();
+    });
+
+    // p3-44: if the user lands on Tag DownSelect without ever touching the site
+    // dropdown (e.g. left as "All"), the filters were never loaded — load them now
+    $('#tagdownselect-chart-tab').on('shown.bs.tab', function () {
+        if ($('#patroldatawandstrikeTagId option').length === 0) {
+            loadWandStrikeTagFilters();
+        }
+    });
+    //p4-41-end
+    window.myChart2;
+    window.myChart3;
+    window.myChart4;
+    window.myChart5;
+    window.myChart6;
+
+    $('#btnPatrolReportSumbitGraphOnly').on('click', function () {
+
+        if (window.myChart1 != undefined)
+            window.myChart1.destroy();
+        if (window.myChart2 != undefined)
+            window.myChart2.destroy();
+        if (window.myChart3 != undefined)
+            window.myChart3.destroy();
+        if (window.myChart4 != undefined)
+            window.myChart4.destroy();
+        if (window.myChart5 != undefined)
+            window.myChart5.destroy();
+        if (window.myChart6 != undefined)
+            window.myChart6.destroy();
+        if (window.myChart7 != undefined)
+            window.myChart7.destroy();
+        if (window.myChart8 != undefined)
+            window.myChart8.destroy();
+        if (window.myChart9 != undefined)
+            window.myChart9.destroy();
+        if (window.myChart10 != undefined)
+            window.myChart10.destroy();
+        if (window.myChart11 != undefined)
+            window.myChart11.destroy();
+        if (window.myChart12 != undefined)
+            window.myChart12.destroy();
+        if (window.myChart13 != undefined)
+            window.myChart13.destroy();
+        if (window.myChart14 != undefined)
+            window.myChart14.destroy();
+        if (window.myChart15 != undefined)
+            window.myChart15.destroy();
+        if (window.myChart16 != undefined)
+            window.myChart16.destroy();
+        if (window.myChart17 != undefined)
+            window.myChart17.destroy();
+        if (window.myChart18 != undefined)
+            window.myChart18.destroy();
+
+        if (window.myChart20 != undefined)
+            window.myChart20.destroy();
+        if (window.myChart21 != undefined)
+            window.myChart21.destroy();
+        if (window.myChart22 != undefined)
+            window.myChart22.destroy();
+        if (window.myChart23 != undefined)
+            window.myChart23.destroy();
+
+        if (window.myChart24 != undefined)
+            window.myChart24.destroy();
+        if (window.myChart25 != undefined)
+            window.myChart25.destroy();
+
+        if (window.myChart26 != undefined)
+            window.myChart26.destroy();
+        if (window.myChart27 != undefined)
+            window.myChart27.destroy();
+
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
         const toDate = $('#date_to').val();
@@ -98,7 +905,255 @@
             alert('From date and to date is required');
             return false;
         }
+        //calculate month difference-start
+        var date1 = new Date($('#ReportRequest_FromDate').val());
+        var date2 = new Date($('#ReportRequest_ToDate').val());
+
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 12) {
+            alert('Date Range is  greater than 12 months');
+            return false;
+        }
+        $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+        $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
+        //calculate month difference-end
         $('#loader-p').show();
+        $.ajax({
+            url: '/Reports/PatrolData?handler=GenerateReportGraph',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#frm_patrol_report_request').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            /* patrolReport.clear().rows.add(response.results).draw();*/
+
+            drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site");
+            /*drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward");*/
+            /*drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode")*/
+            drawPieChart(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity");
+            drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity");
+            /*    $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);*/
+            $('#count_by_site').html(response.chartData.sitePercentage.length);
+            $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
+
+            $('#count_color_code').html(response.chartData.colorCodePercentage.length);
+            // $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
+            /*to get the correct IR Count-start*/
+            $('#count_by_ir').html(response.recordCount);
+            $('#count_by_ir3').html(response.recordCount);
+            /*to get the correct IR Count - end*/
+
+            /* expanding grapph - start*/
+            drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
+            drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
+            $('#count_by_site3').html(response.chartData.sitePercentage.length);
+            drawPieChartLargeSizeForPdf(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward3pdf");
+            drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf", response.chartData.feedbackTemplatesColour);
+            /* drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");*/
+            /* drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");*/
+            drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
+            drawPieChartLargeSizeForPdf2(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity3");
+            drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity3");
+            $('#count_by_site1').html(response.chartData.sitePercentage.length);
+            $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
+            $('#count_by_area_ward3').html(response.chartData.areaWardPercentage.length);
+            $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
+            $('#count_color_code3').html(response.chartData.colorCodePercentage.length);
+            $('#txtDownloadfilename').val(response.fileName2);
+
+
+
+            drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
+            drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
+            /* expanding grapph - start*/
+
+
+            $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
+            if (response.rcChartTypesForWeekNewCount != 0) {
+                drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+            }
+
+
+            $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
+            if (response.rcChartTypesForMonthNewCount != 0) {
+                drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
+            }
+
+            $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
+            if (response.rcChartTypesForYearNewCount != 0) {
+                drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
+            }
+
+            $('#count_by_numberoftimesrcpushedbycro').html(response.rcChartTypesCROCountnew);
+            if (response.rcChartTypesCROCountnew != 0) {
+                drawPieChartUsingChartJsChartRCButton(response.chartData.rcChartTypesCRONew);
+            }
+
+            $('#count_by_numberofguardswnenttoprealarm').html(response.rcChartTypesGuardsPrealarmCountnew);
+            if (response.rcChartTypesGuardsPrealarmCountnew != 0) {
+                drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(response.chartData.rcChartTypesGuardsPrealarmNew);
+            }
+            $('#count_by_numberofguardswnentfromprealarmorangetored').html(response.rcChartTypesGuardsFromPrealarmCountnew);
+            if (response.rcChartTypesGuardsFromPrealarmCountnew != 0) {
+                drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
+            }
+
+            //$('#count_hr_numberofYearofOnboarding').html(response.yearOfOnBoardingcount);
+            //$('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+            //if (response.yearOfOnBoardingcount != 0) {
+            //    drawPieChartUsingChartJsChartYearOfOnBoarding(response.yearOfOnBoarding);
+            //}
+
+
+            //$('#count_hr_activeGuardVsInactiveGuard').html(response.activeAndInActiveCount);
+            //if (response.activeAndInActiveCount != 0) {
+            //    drawPieChartUsingChartJsActiveGuardVsInactiveGuard(response.activeAndInActive);
+
+            //}
+            //$('#count_hr_GenderGuard').html(response.genderReportCount);
+            //if (response.genderReportCount != 0) {
+            //    drawPieChartUsingChartJsGenderGuard(response.genderReport);
+
+            //}
+            //$('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+            //if (response.yearOfOnBoardingcount != 0) {
+            //    drawBarChartUsingChartJsGenderGuard(response.yearOfOnBoradingBarChart);
+            //}
+
+        }).fail(function () {
+        }).always(function () {
+            $('#loader-p').hide();
+        });
+    });
+
+    $('#btnPatrolReportSumbitReport').on('click', function () {
+        window.patrolReportMode = 'report_only';
+
+        $('#count_by_numberofduressperweek').html(0);
+        $('#count_by_numberofduresspermonth').html(0);
+        $('#count_by_numberofduressperyear').html(0);
+        $('#count_by_numberoftimesrcpushedbycro').html(0);
+        $('#count_by_numberofguardswnenttoprealarm').html(0);
+        $('#count_by_numberofguardswnentfromprealarmorangetored').html(0);
+        $('#count_by_site').html(0);
+        $('#count_by_area_ward').html(0);
+        $('#count_color_code').html(0);
+        $('#count_by_ir').html(0);
+        $('#count_by_ir3').html(0);
+        $('#count_by_site3').html(0);
+        $('#count_by_site1').html(0);
+        $('#count_by_area_ward1').html(0);
+        $('#count_by_area_ward3').html(0);
+        $('#count_color_code1').html(0);
+        $('#count_color_code3').html(0);
+        $('#count_hr_numberofYearofOnboarding').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+        $('#count_hr_activeGuardVsInactiveGuard').html(0);
+        $('#count_hr_GenderGuard').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+        $('#count_hr_GuardLanguages').html(0);
+        $('#count_hr_AttributionPerAnnum').html(0);
+        const reportType = $('#ReportRequest_DataFilter').val();
+
+        if (
+            reportType === '3' &&
+            ($('#ReportRequest_IRSeriaNo').val() || '').trim().length > 0
+        ) {
+            GenerateDocketsReport();
+            return false;
+        }
+
+        $('#btnExportExcel').attr('href', '#');
+        const fromDate = $('#date_from').val();
+        const toDate = $('#date_to').val();
+        if (fromDate === '' || toDate === '') {
+            alert('From date and to date is required');
+            return false;
+        }
+        //calculate month difference-start
+        var date1 = new Date($('#ReportRequest_FromDate').val());
+        var date2 = new Date($('#ReportRequest_ToDate').val());
+
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 12) {
+            alert('Date Range is  greater than 12 months');
+            return false;
+        }
+        $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+        $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
+
+        if (reportType === '3') {
+            GenerateDocketsReport();
+        }
+        else {
+            loaderProgress.start(1, 'Generating report...');
+            $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReport',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                patrolReport.clear().rows.add(response.results).draw();
+                $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
+                $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
+            }).fail(function () {
+            }).always(function () {
+                loaderProgress.finish();
+            });
+        }
+    });
+
+    $('#btnPatrolReportSumbit').on('click', function () {
+        window.patrolReportMode = 'both';
+    });
+    $('#btnPatrolReportSumbit').on('click', function () {
+
+        $('#count_by_numberofduressperweek').html(0);
+        $('#count_by_numberofduresspermonth').html(0);
+        $('#count_by_numberofduressperyear').html(0);
+        $('#count_by_numberoftimesrcpushedbycro').html(0);
+        $('#count_by_numberofguardswnenttoprealarm').html(0);
+        $('#count_by_numberofguardswnentfromprealarmorangetored').html(0);
+        $('#count_by_site').html(0);
+        $('#count_by_area_ward').html(0);
+        $('#count_color_code').html(0);
+        $('#count_by_ir').html(0);
+        $('#count_by_ir3').html(0);
+        $('#count_by_site3').html(0);
+        $('#count_by_site1').html(0);
+        $('#count_by_area_ward1').html(0);
+        $('#count_by_area_ward3').html(0);
+        $('#count_color_code1').html(0);
+        $('#count_color_code3').html(0);
+        $('#count_hr_numberofYearofOnboarding').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+        $('#count_hr_activeGuardVsInactiveGuard').html(0);
+        $('#count_hr_GenderGuard').html(0);
+        $('#count_hr_numberofYearofOnboarding2').html(0);
+        $('#count_hr_GuardLanguages').html(0);
+        $('#count_hr_AttributionPerAnnum').html(0);
+
+        $('#btnExportExcel').attr('href', '#');
+        const fromDate = $('#date_from').val();
+        const toDate = $('#date_to').val();
+        if (fromDate === '' || toDate === '') {
+            alert('From date and to date is required');
+            return false;
+        }
+        //calculate month difference-start
+        var date1 = new Date($('#ReportRequest_FromDate').val());
+        var date2 = new Date($('#ReportRequest_ToDate').val());
+
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 12) {
+            alert('Date Range is  greater than 12 months');
+            return false;
+        }
+        $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+        $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
+        //calculate month difference-end
+        loaderProgress.start(5, 'Generating report table...');
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateReport',
             type: 'POST',
@@ -107,22 +1162,773 @@
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
             patrolReport.clear().rows.add(response.results).draw();
-            drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site");
-            drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward");
-            drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode")
-            drawPieChart(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity");
-            drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity");
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
-            $('#count_by_site').html(response.chartData.sitePercentage.length);
-            $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
-            $('#count_color_code').html(response.chartData.colorCodePercentage.length);            
-            $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
+            $('#convert-to-pdf').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.pdfFileName);
+            loaderProgress.step('Loading charts...');
+            /// Show Grpah data start
+            console.log('graph started ');
+            if (window.myChart1 != undefined)
+                window.myChart1.destroy();
+            if (window.myChart2 != undefined)
+                window.myChart2.destroy();
+            if (window.myChart3 != undefined)
+                window.myChart3.destroy();
+            if (window.myChart4 != undefined)
+                window.myChart4.destroy();
+            if (window.myChart5 != undefined)
+                window.myChart5.destroy();
+            if (window.myChart6 != undefined)
+                window.myChart6.destroy();
+            if (window.myChart7 != undefined)
+                window.myChart7.destroy();
+            if (window.myChart8 != undefined)
+                window.myChart8.destroy();
+            if (window.myChart9 != undefined)
+                window.myChart9.destroy();
+            if (window.myChart10 != undefined)
+                window.myChart10.destroy();
+            if (window.myChart11 != undefined)
+                window.myChart11.destroy();
+            if (window.myChart12 != undefined)
+                window.myChart12.destroy();
+            if (window.myChart13 != undefined)
+                window.myChart13.destroy();
+            if (window.myChart14 != undefined)
+                window.myChart14.destroy();
+            if (window.myChart15 != undefined)
+                window.myChart15.destroy();
+            if (window.myChart16 != undefined)
+                window.myChart16.destroy();
+            if (window.myChart17 != undefined)
+                window.myChart17.destroy();
+            if (window.myChart18 != undefined)
+                window.myChart18.destroy();
+
+            if (window.myChart20 != undefined)
+                window.myChart20.destroy();
+            if (window.myChart21 != undefined)
+                window.myChart21.destroy();
+            if (window.myChart22 != undefined)
+                window.myChart22.destroy();
+            if (window.myChart23 != undefined)
+                window.myChart23.destroy();
+
+            if (window.myChart24 != undefined)
+                window.myChart24.destroy();
+            if (window.myChart25 != undefined)
+                window.myChart25.destroy();
+
+            if (window.myChart26 != undefined)
+                window.myChart26.destroy();
+            if (window.myChart27 != undefined)
+                window.myChart27.destroy();
+            if (window.myChart28 != undefined)
+                window.myChart28.destroy();
+            if (window.myChart29 != undefined)
+                window.myChart29.destroy();
+            if (window.myChart30 != undefined)
+                window.myChart30.destroy();
+            if (window.myChart31 != undefined)
+                window.myChart31.destroy();
+            if (window.myChart32 != undefined)
+                window.myChart32.destroy();
+            if (window.myChart33 != undefined)
+                window.myChart33.destroy();
+            if (window.myChart34 != undefined)
+                window.myChart34.destroy();
+            if (window.myChart35 != undefined)
+                window.myChart35.destroy();
+            if (window.myChart36 != undefined)
+                window.myChart36.destroy();
+            if (window.myChart37 != undefined)
+                window.myChart37.destroy();
+            if (window.myChart38 != undefined)
+                window.myChart38.destroy();
+            if (window.myChart39 != undefined)
+                window.myChart39.destroy();
+            // $('#btnExportExcel').attr('href', '#');
+            const fromDate = $('#date_from').val();
+            const toDate = $('#date_to').val();
+            if (fromDate === '' || toDate === '') {
+                alert('From date and to date is required');
+                return false;
+            }
+            //calculate month difference-start
+            var date1 = new Date($('#ReportRequest_FromDate').val());
+            var date2 = new Date($('#ReportRequest_ToDate').val());
+
+            var monthdiff = monthDiff(date1, date2);
+            if (monthdiff > 12) {
+                alert('Date Range is  greater than 12 months');
+                return false;
+            }
+            $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+            $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
+            //calculate month difference-end
+            var ajax1 = $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphFirstTab',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+
+                console.log('graph response successs Charts and HR charts ');
+                drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site");
+                drawPieChart(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity");
+                drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity");
+                $('#count_by_site').html(response.chartData.sitePercentage.length);
+                $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
+                $('#count_color_code').html(response.chartData.colorCodePercentage.length);
+                $('#count_by_ir').html(response.recordCount);
+                $('#count_by_ir3').html(response.recordCount);
+                drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
+                drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
+                $('#count_by_site3').html(response.chartData.sitePercentage.length);
+                drawPieChartLargeSizeForPdf(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward3pdf");
+                drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf", response.chartData.feedbackTemplatesColour);
+                drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
+                drawPieChartLargeSizeForPdf2(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity3");
+                drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity3");
+                $('#count_by_site1').html(response.chartData.sitePercentage.length);
+                $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
+                $('#count_by_area_ward3').html(response.chartData.areaWardPercentage.length);
+                $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
+                $('#count_color_code3').html(response.chartData.colorCodePercentage.length);
+                $('#txtDownloadfilename').val(response.fileName2);
+                drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
+                drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
+
+                $('#count_hr_numberofYearofOnboarding').html(response.yearOfOnBoardingcount);
+                $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+                $('#count_hr_GuardLanguages').html(response.languageReportCount);
+
+                $('#count_hr_activeGuardVsInactiveGuard').html(response.activeAndInActiveCount);
+                if (response.activeAndInActiveCount != 0) {
+                    drawPieChartUsingChartJsActiveGuardVsInactiveGuard(response.activeAndInActive);
+
+                }
+                $('#count_hr_GenderGuard').html(response.genderReportCount);
+                if (response.genderReportCount != 0) {
+                    drawPieChartUsingChartJsGenderGuard(response.genderReport);
+
+                }
+                $('#count_hr_numberofYearofOnboarding2').html(response.yearOfOnBoardingcount);
+                if (response.yearOfOnBoardingcount != 0) {
+                    drawBarChartUsingChartJsGenderGuard(response.yearOfOnBoradingBarChart);
+                }
+                $('#count_hr_GuardLanguages').html(response.languageReportCount);
+                if (response.languageReportCount != 0) {
+                    drawPieChartUsingChartJsGuardLanguages(response.languageReport);
+                }
+                $('#count_hr_AttributionPerAnnum').html(response.attributionReportCount);
+                if (response.attributionReportCount != 0) {
+                    drawBarChartUsingChartJsGuardAttributionPerAnnum(response.attributionReport);
+                }
+            });
+
+            var ajax2 = $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphSecondTab',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+
+                console.log('graph response2 successs rc charts ');
+                $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
+                if (response.rcChartTypesForWeekNewCount != 0) {
+                    drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+                }
+
+                $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
+                if (response.rcChartTypesForMonthNewCount != 0) {
+                    drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
+                }
+
+                $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
+                if (response.rcChartTypesForYearNewCount != 0) {
+                    drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
+                }
+
+                $('#count_by_numberoftimesrcpushedbycro').html(response.rcChartTypesCROCountnew);
+                if (response.rcChartTypesCROCountnew != 0) {
+                    drawPieChartUsingChartJsChartRCButton(response.chartData.rcChartTypesCRONew);
+                }
+
+                $('#count_by_numberofguardswnenttoprealarm').html(response.rcChartTypesGuardsPrealarmCountnew);
+                if (response.rcChartTypesGuardsPrealarmCountnew != 0) {
+                    drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(response.chartData.rcChartTypesGuardsPrealarmNew);
+                }
+                $('#count_by_numberofguardswnentfromprealarmorangetored').html(response.rcChartTypesGuardsFromPrealarmCountnew);
+                if (response.rcChartTypesGuardsFromPrealarmCountnew != 0) {
+                    drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
+                }
+            });
+
+            var ajax4 = $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphFourthTab',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#frm_patrol_report_request').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                console.log('graph response3 successs wand strikes charts ');
+                $('#btncount_daily_wandstrikes').html(response.chartData.totalWandStrikes);
+                if (response.chartData.dailySiteControllerWandStrikeData != 0) {
+
+                    drawBarChartUsingChartJsDailyWandStrikeData(response.chartData.dailySiteControllerWandStrikeData);
+                }
+                $('#btncount_individualwands').html(response.chartData.individualFQWandStrikeData.length);
+                if (response.chartData.individualFQWandStrikeData != 0) {
+
+                    drawPieChartUsingChartJsIndividualWandStrikeData(response.chartData.individualFQWandStrikeData);
+                }
+            });
+
+            $('#WandStrikeAuditLogRequest_TagId').val($('#patroldatawandstrikeTagId').val());
+            $('#WandStrikeAuditLogRequest_TagTypeId').val($('#patroldatawandstrikeTagTypeId').val());
+            $('#WandStrikeAuditLogRequest_TagLabel').val($('#patroldatawandstrikeTagLabel').val());
+            var tag = $('#patroldatawandstrikeTagId').val();
+            var selectedLabel = $('#patroldatawandstrikeTagLabel').find("option:selected");
+            var selectedLabelText = selectedLabel.text();
+
+            $('#WandStrikeAuditLogRequest_SmartWandId').val($('#wandstrikeSmartWandId').val());
+            // p3-44: keep every form field (the old reduce() collapsed repeated fields such as
+            // the 32 selected ClientSites down to one, so the downselect charts came back empty)
+            var ajax5Data = $('#frm_patrol_report_request').serializeArray();
+            var appendAll = function (name, values) {
+                if (values == null) return;
+                if (!$.isArray(values)) values = [values];
+                values.forEach(function (v) {
+                    if (v !== '' && v != null) ajax5Data.push({ name: name, value: v });
+                });
+            };
+            appendAll('TagId', tag);
+            appendAll('TagTypeId', $('#patroldatawandstrikeTagTypeId').val());
+            appendAll('TagLabel', $('#patroldatawandstrikeTagLabel').val());
+            appendAll('GuardName', $('#patroldatawandstrikeGuardName').val());
+            appendAll('LicenseNo', $('#patroldatawandstrikeLicenseNo').val());
+            appendAll('SmartWandId', $('#patroldatawandstrikeSmartWandId').val());
+
+            var ajax5 = $.ajax({
+                url: '/Reports/PatrolData?handler=GenerateReportGraphFifthTab',
+                type: 'POST',
+                dataType: 'json',
+                data: $.param(ajax5Data),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                console.log('graph response4 successs wand strikes downselect charts ');
+                $('#btncount_daily_wandstrikesbydownselect').html(response.chartData.totalWandStrikes);
+                if (response.chartData.dailySiteControllerWandStrikeDataForDownselect != 0) {
+
+                    drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(response.chartData.dailySiteControllerWandStrikeDataForDownselect);
+                }
+                $('#btncount_individualwandsbydownselect').html(response.chartData.individualFQWandStrikeDataForDownselect.length);
+                if (response.chartData.individualFQWandStrikeDataForDownselect != 0) {
+
+                    drawPieChartUsingChartJsIndividualWandStrikeDataForDownselect(response.chartData.individualFQWandStrikeDataForDownselect);
+                }
+            });
+
+            // each chart batch that finishes moves the progress bar one milestone forward
+            ajax1.always(function () { loaderProgress.step(); });
+            ajax2.always(function () { loaderProgress.step(); });
+            ajax4.always(function () { loaderProgress.step(); });
+            ajax5.always(function () { loaderProgress.step(); });
+            $.when(ajax1, ajax2, ajax4, ajax5).always(function () {
+                loaderProgress.finish();
+            });
+            ///show graph data end
         }).fail(function () {
+            loaderProgress.finish();
         }).always(function () {
-            $('#loader-p').hide();
+            //$('#loader-p').hide();
         });
     });
-    
+
+
+
+
+
+
+
+
+
+    /************Chart in popup 13/12/2024 large Size Start ***************** */
+
+    function drawPieChartLargeSize(data, recordCount, control) {
+
+        $(control).html('');
+
+        if (recordCount === 0) return;
+
+        var svg = d3.select(control),
+            width = svg.attr('width'),
+            height = svg.attr('height'),
+            radius = Math.min(width, height - 60) / 2,
+            arcX = (width / 2) - 150,
+            arcY = (height / 2),
+            legendX = (width / 2) + 205,
+            g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
+
+        // Generate the pie
+        var pie = d3.pie()
+            .sort(null)
+            .value(function (d) { return d.value; });
+
+        // Generate the arcs
+        var arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        //Generate groups
+        var arcs = g.selectAll('arc')
+            .data(pie(data))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+
+        //Draw arc paths
+        arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
+            .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
+            .attr('d', arc);
+
+        //Append values on chart
+        arcs.append('text')
+            .attr('transform', function (d) { return 'translate(' + arc.centroid(d) + ')'; })
+            .style('font-size', "11px")
+            .attr('text-anchor', 'middle')
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
+                if (data[i].value > 0)
+                    return data[i].value + '%';
+            });
+
+
+
+        // Draw labels outside the slices
+        var labels = arcs.append("text")
+            .attr("transform", function (d) {
+                var pos = arc.centroid(d);
+                var midAngle = Math.atan2(pos[1], pos[0]);
+                var x = Math.cos(midAngle) * (radius + 10);
+                var y = Math.sin(midAngle) * (radius + 10);
+                return "translate(" + x + "," + y + ")";
+            })
+            .attr("dy", "0.35em")
+            .attr("text-anchor", function (d) {
+                return (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start";
+            })
+            .text(function (d) { return d.data.label; });
+
+        // Draw leader lines
+        /*  arcs.append("line")
+              .attr("stroke", "black")
+              //.attr("x1", function (d) { return arc.centroid(d)[0]; })
+              .attr("x1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cx = Math.cos(a) * (radius - 1);
+                  return d.x = Math.cos(a) * (radius - 1);
+              })
+              // .attr("y1", function (d) { return arc.centroid(d)[1]; })
+              .attr("y1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cy = Math.sin(a) * (radius - 75);
+                  return d.y = Math.sin(a) * (radius - 1);
+  
+              })
+              .attr("x2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var x = Math.cos(midAngle) * (radius + 20);
+                  return x;
+              })
+              .attr("y2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var y = Math.sin(midAngle) * (radius + 20);
+                  return y;
+              });*/
+
+
+
+
+        arcs.select("text")
+            .attr("transform", function (d) {
+                var centroid = arc.centroid(d),
+                    x = centroid[0],
+                    y = centroid[1],
+                    h = Math.sqrt(x * x + y * y);
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return "translate(" + (x / h * (radius + 1)) + ',' + (y / h * (radius + 1)) + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
+                /*return "translate(" + (x / h * (radius + 20)) + ',' + (y / h * (radius + 20)) + ")";*/
+            })
+            .style("text-anchor", function (d) {
+                return (d.endAngle + d.startAngle) / 2 > Math.PI ? "start" : "start";
+            });
+
+
+        //Generate legend
+        var legend = svg.selectAll("legend")
+            .data(pie(data))
+            .enter()
+            .append("g")
+            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 12 + 3) + ")"; });
+
+        //Append legend box
+        legend.append("rect")
+            .attr("width", 8)
+            .attr("height", 8)
+            .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); });
+
+        //Append legend text
+        legend.append("text")
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                // 14-07-2026: 65 chars (not the 25-char default the small charts use):
+                // the enlarged modal is 1200px wide with ~395px of legend space, so the
+                // full description fits; the cap only guards against extreme labels
+                // running off the right edge.
+                return truncate(data[i].key, 65) + " (" + data[i].value + "%)";
+            })
+            .style("font-size", "10px")
+            .attr("x", 11)
+            .attr("y", 8);
+
+
+
+
+
+    }
+
+
+
+    function drawPieChartLargeSizeForPdf(data, recordCount, control, customColors) {
+
+        $(control).html('');
+
+        if (recordCount === 0) return;
+
+        var svg = d3.select(control),
+            width = svg.attr('width'),
+            height = svg.attr('height'),
+            radius = Math.min(width, height) / 2,
+            arcX = (width / 2) - 170,
+            arcY = (height / 2) - 3,
+            legendX = (width / 2) - 30,
+            g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
+
+        radius = radius - 27;
+        // Generate the pie
+        var pie = d3.pie()
+            .sort(null)
+            .value(function (d) { return d.value; });
+
+        // Generate the arcs
+        var arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        //Generate groups
+        var arcs = g.selectAll('arc')
+            .data(pie(data))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+
+        //Draw arc paths
+        arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                // hairline border like the on-screen chart, so white/light colour-code
+                // slices stay visible against the white PDF page
+                return '#9e9e9e';
+            })
+            .attr('stroke-width', 0.75)
+            .attr('fill', function (d, i) {
+                if (customColors && customColors.length > i) {
+                    return customColors[i];
+                }
+                return getFillColor(d, i, data[i].key);
+            })
+            .attr('d', arc);
+
+        //Append values on chart
+        arcs.append('text')
+            .attr('transform', function (d) { return 'translate(' + arc.centroid(d) + ')'; })
+            .style('font-size', "11px")
+            .attr('text-anchor', 'middle')
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
+                if (data[i].value > 0)
+                    return data[i].value + '%';
+            });
+
+
+
+        // Draw labels outside the slices
+        var labels = arcs.append("text")
+            .attr("transform", function (d) {
+                var pos = arc.centroid(d);
+                var midAngle = Math.atan2(pos[1], pos[0]);
+                var x = Math.cos(midAngle) * (radius + 10);
+                var y = Math.sin(midAngle) * (radius + 10);
+                return "translate(" + x + "," + y + ")";
+            })
+            .attr("dy", "0.35em")
+            .attr("text-anchor", function (d) {
+                return (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start";
+            })
+            .text(function (d) { return d.data.label; });
+
+        // Draw leader lines
+        /*  arcs.append("line")
+              .attr("stroke", "black")
+              //.attr("x1", function (d) { return arc.centroid(d)[0]; })
+              .attr("x1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cx = Math.cos(a) * (radius - 1);
+                  return d.x = Math.cos(a) * (radius - 1);
+              })
+              // .attr("y1", function (d) { return arc.centroid(d)[1]; })
+              .attr("y1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cy = Math.sin(a) * (radius - 75);
+                  return d.y = Math.sin(a) * (radius - 1);
+  
+              })
+              .attr("x2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var x = Math.cos(midAngle) * (radius + 20);
+                  return x;
+              })
+              .attr("y2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var y = Math.sin(midAngle) * (radius + 20);
+                  return y;
+              });*/
+
+
+
+
+        arcs.select("text")
+            .attr("transform", function (d) {
+                var centroid = arc.centroid(d),
+                    x = centroid[0],
+                    y = centroid[1],
+                    h = Math.sqrt(x * x + y * y);
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return "translate(" + (x / h * (radius + 1)) + ',' + (y / h * (radius + 1)) + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
+                /*return "translate(" + (x / h * (radius + 20)) + ',' + (y / h * (radius + 20)) + ")";*/
+            })
+            .style("text-anchor", function (d) {
+                return (d.endAngle + d.startAngle) / 2 > Math.PI ? "start" : "start";
+            });
+
+
+        //Generate legend
+        var legend = svg.selectAll("legend")
+            .data(pie(data))
+            .enter()
+            .append("g")
+            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 12 + 3) + ")"; });
+
+        //Append legend box
+        legend.append("rect")
+            .attr("width", 8)
+            .attr("height", 8)
+            .attr("stroke", "#9e9e9e")
+            .attr("stroke-width", 0.5)
+            .attr("fill", function (d, i) {
+                if (customColors && customColors.length > i) {
+                    return customColors[i];
+                }
+                return getFillColor(d, i, data[i].key);
+            });
+
+        //Append legend text
+        legend.append("text")
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key, 40) + " (" + data[i].value + "%)";
+            })
+            .style("font-size", "10px")
+            .attr("x", 11)
+            .attr("y", 8);
+
+
+
+
+
+    }
+
+
+
+    function drawPieChartLargeSizeForPdf2(data, recordCount, control) {
+
+        $(control).html('');
+
+        if (recordCount === 0) return;
+
+        var svg = d3.select(control),
+            width = svg.attr('width'),
+            height = svg.attr('height'),
+            radius = Math.min(width, height) / 2,
+            arcX = width / 4,
+            arcY = height / 2,
+            legendX = (width / 2) - 20,
+            g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
+
+        radius = radius - 27;
+        // Generate the pie
+        var pie = d3.pie()
+            .sort(null)
+            .value(function (d) { return d.value; });
+
+        // Generate the arcs
+        var arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        //Generate groups
+        var arcs = g.selectAll('arc')
+            .data(pie(data))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+
+        //Draw arc paths
+        arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
+            .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
+            .attr('d', arc);
+
+        //Append values on chart
+        arcs.append('text')
+            .attr('transform', function (d) { return 'translate(' + arc.centroid(d) + ')'; })
+            .style('font-size', "11px")
+            .attr('text-anchor', 'middle')
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
+                if (data[i].value > 0)
+                    return data[i].value + '%';
+            });
+
+
+
+        // Draw labels outside the slices
+        var labels = arcs.append("text")
+            .attr("transform", function (d) {
+                var pos = arc.centroid(d);
+                var midAngle = Math.atan2(pos[1], pos[0]);
+                var x = Math.cos(midAngle) * (radius + 10);
+                var y = Math.sin(midAngle) * (radius + 10);
+                return "translate(" + x + "," + y + ")";
+            })
+            .attr("dy", "0.35em")
+            .attr("text-anchor", function (d) {
+                return (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start";
+            })
+            .text(function (d) { return d.data.label; });
+
+        // Draw leader lines
+        /*  arcs.append("line")
+              .attr("stroke", "black")
+              //.attr("x1", function (d) { return arc.centroid(d)[0]; })
+              .attr("x1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cx = Math.cos(a) * (radius - 1);
+                  return d.x = Math.cos(a) * (radius - 1);
+              })
+              // .attr("y1", function (d) { return arc.centroid(d)[1]; })
+              .attr("y1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cy = Math.sin(a) * (radius - 75);
+                  return d.y = Math.sin(a) * (radius - 1);
+  
+              })
+              .attr("x2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var x = Math.cos(midAngle) * (radius + 20);
+                  return x;
+              })
+              .attr("y2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var y = Math.sin(midAngle) * (radius + 20);
+                  return y;
+              });*/
+
+
+
+
+        arcs.select("text")
+            .attr("transform", function (d) {
+                var centroid = arc.centroid(d),
+                    x = centroid[0],
+                    y = centroid[1],
+                    h = Math.sqrt(x * x + y * y);
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return "translate(" + (x / h * (radius + 1)) + ',' + (y / h * (radius + 1)) + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
+                /*return "translate(" + (x / h * (radius + 20)) + ',' + (y / h * (radius + 20)) + ")";*/
+            })
+            .style("text-anchor", function (d) {
+                return (d.endAngle + d.startAngle) / 2 > Math.PI ? "start" : "start";
+            });
+
+
+        //Generate legend
+        var legend = svg.selectAll("legend")
+            .data(pie(data))
+            .enter()
+            .append("g")
+            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 12 + 3) + ")"; });
+
+        //Append legend box
+        legend.append("rect")
+            .attr("width", 8)
+            .attr("height", 8)
+            .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); });
+
+        //Append legend text
+        legend.append("text")
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key, 40) + " (" + data[i].value + "%)";
+            })
+            .style("font-size", "10px")
+            .attr("x", 11)
+            .attr("y", 8);
+
+
+
+
+
+    }
+
+    /***************************** end  */
     /** Patrol Data Charts ***/
 
     /****************************************************************************************
@@ -136,6 +1942,7 @@
         { 'name': 'yellow', 'color': '#ffff00' },
         { 'name': 'green', 'color': '#00ff00' },
         { 'name': 'n/a', 'color': '#4682b4' },
+        { 'name': 'no/data', 'color': '#FFFFFF' },
     ];
 
     const truncate = (value = '', maxLength = 25) =>
@@ -149,7 +1956,7 @@
         });
 
         if (colorFound) return colorFound.color;
-        
+
         return d3Colors(i);
     }
 
@@ -170,6 +1977,7 @@
 
         // Generate the pie
         var pie = d3.pie()
+            .sort(null)
             .value(function (d) { return d.value; });
 
         // Generate the arcs
@@ -186,6 +1994,12 @@
 
         //Draw arc paths
         arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
             .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
             .attr('d', arc);
 
@@ -196,6 +2010,8 @@
             .style("font-family", "Arial")
             .attr('text-anchor', 'middle')
             .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
                 if (data[i].value > 0)
                     return data[i].value + '%';
             });
@@ -215,7 +2031,11 @@
 
         //Append legend text
         legend.append('text')
-            .text(function (d, i) { return truncate(data[i].key) + " (" + data[i].value + "%)"; })
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key) + " (" + data[i].value + "%)";
+            })
             .style("font-size", "11px")
             .style("font-family", "Arial")
             .attr("x", 12)
@@ -290,23 +2110,6188 @@
             .append('rect')
             .attr('x', x(0))
             .attr('y', function (d) { return y(d.key); })
-            .attr('width', function (d) { return x(d.value); })
+            .attr('width', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return x(d.value);
+            })
             .attr('height', y.bandwidth())
-            .attr('fill', '#00468b')
+            .attr('fill', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '#FFFFFF';
+                else
+                    return '#00468b';
+            })
 
         // values in bar chart
         svg.selectAll('text.bar')
             .data(data)
-            .enter().append('text')
+            .enter().append("text")
             .attr("font-size", "11px")
             .attr("font-family", "Arial")
-            .attr('x', function (d) { return x(d.value) + 8; })
-            .attr('y', function (d) { return y(d.key) + 12; })
+            .attr('x', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return x(d.value) + 8;
+            })
+            .attr('y', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return y(d.key) + 12;
+            })
             .attr('width', function (d) { return x(d.value); })
             .attr('height', y.bandwidth())
             .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
                 if (data[i].value > 0)
                     return data[i].value
             });
     }
+});
+//calculate month difference-start
+
+function monthDiff(d1, d2) {
+    var months;
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+}
+$('#btncount_by_site').on('click', function () {
+    $('#modelIRRecordsbySiteGraph').modal('show');
+});
+$('#btncount_by_area_ward').on('click', function () {
+    $('#modelIRRecordsbyAreaWardGraph').modal('show');
+});
+$('#btncount_color_code').on('click', function () {
+    $('#modelIRRecordsbyColorCodeGraph').modal('show');
+});
+
+$('#btncount_event_type_quantity').on('click', function () {
+    $('#modelIreventypeQuantity').modal('show');
+});
+//calculate month difference-end
+$('#btnExportPatrolPdf').on('click', function () {
+    $('#btnExportExcel').attr('href', '#');
+    const fromDate = $('#date_from').val();
+    const toDate = $('#date_to').val();
+    if (fromDate === '' || toDate === '') {
+        alert('From date and to date is required');
+        return false;
+    }
+    //calculate month difference-start
+    var date1 = new Date($('#ReportRequest_FromDate').val());
+    var date2 = new Date($('#ReportRequest_ToDate').val());
+    var monthdiff = monthDiff(date1, date2);
+    if (monthdiff > 12) {
+        alert('Date Range is  greater than 12 months');
+
+
+        return false;
+    }
+    //calculate month difference-end
+    $('#loader-p').show();
+    $.ajax({
+        url: '/Reports/PatrolData?handler=GeneratePdfReport',
+        type: 'POST',
+        dataType: 'json',
+        data: $('#frm_patrol_report_request').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        const pdfName = response.fileName !== '' ? '/Pdf/Output/' + response.fileName : '#';
+        window.open(pdfName, '_target/')
+    }).fail(function () {
+    }).always(function () {
+        $('#loader-p').hide();
+    });
+});
+
+
+function drawPieChartUsingChartJsChart(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.key;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.value;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_ir_by_areaward");
+    var canvas2 = document.getElementById("pie_chart_ir_by_areaward1");
+    var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_areaward').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        window.myChart1 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_ir_by_areaward1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart2 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    if (canvas3 !== null) {
+        const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+        ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
+        window.myChart6 = new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+
+
+
+function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
+
+    var labels = dataValue.map(function (e) {
+        return e.key;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.value;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_ir_by_colorcode");
+    var canvas2 = document.getElementById("pie_chart_ir_by_colorcode1");
+    var canvas3 = document.getElementById("pie_chart_ir_by_colorcode3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_colorcode').getContext('2d');
+        window.myChart3 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: colors,
+                    borderColor: [
+                        'rgba(120, 120, 120, 1)'
+                    ],
+                    borderWidth: 1.5
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_colorcode1').getContext('2d');
+        window.myChart4 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: colors,
+                    borderColor: [
+                        'rgba(120, 120, 120, 1)'
+                    ],
+                    borderWidth: 1.5
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 50,
+                        right: 5,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    if (canvas3 !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_colorcode3').getContext('2d');
+        window.myChart5 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: colors,
+                    borderColor: [
+                        'rgba(120, 120, 120, 1)'
+                    ],
+                    borderWidth: 1.5
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 8,
+                        right: 2,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 10
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+
+                                    return data.labels.map((label, i) => {
+
+                                        var truncatedLabel = label.length > 25 ? label.substring(0, 25) + '...' : label;
+
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${truncatedLabel} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+    function getColors(length) {
+
+
+
+
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+$('#btncount_by_numberofduressPerWeek').on('click', function () {
+    $('#modelRCDuressEntriesGraphForWeek').modal('show');
+});
+$('#btncount_by_numberofduressPerMonth').on('click', function () {
+    $('#modelRCDuressEntriesGraphForMonth').modal('show');
+});
+$('#btncount_by_numberofduressPerYear').on('click', function () {
+    $('#modelRCDuressEntriesGraphForYear').modal('show');
+});
+
+$('#btncount_by_numberoftimesrcpushedbycro').on('click', function () {
+    $('#modelRCButtonPushedbyCRO').modal('show');
+});
+$('#btncount_by_numberofguardswnenttoprealarm').on('click', function () {
+    $('#modelRCGuardswenttoprealarm').modal('show');
+});
+$('#btncount_by_numberofguardswnentfromprealarmorangetored').on('click', function () {
+    $('#modelRCGuardswentfromprealarmorangetored').modal('show');
+});
+
+$('#btncount_hr_ActiveGuardVsInactiveGuard').on('click', function () {
+    $('#modelHrActiveGuardVsInactiveGuard').modal('show');
+});
+$('#btncount_hr_YearofOnboarding').on('click', function () {
+    $('#modelHrYearofOnboardingModel').modal('show');
+});
+
+$('#btncount_hr_GenderGuard').on('click', function () {
+    $('#modelHrGender').modal('show');
+});
+$('#btncount_hr_YearofOnboarding2').on('click', function () {
+    $('#modelHrYearofOnboardingModel2').modal('show');
+});
+//p4-41-start
+$('#btncount_daily_wandstrikes').on('click', function () {
+    $('#modelWandStrikesDaily').modal('show');
+});
+$('#btncount_individualwands').on('click', function () {
+    $('#modelWandStrikesIndividual').modal('show');
+});
+$('#btncount_daily_wandstrikesbydownselect').on('click', function () {
+    $('#modelWandStrikesDailyByDownselect').modal('show');
+});
+$('#btncount_individualwandsbydownselect').on('click', function () {
+    $('#modelWandStrikesIndividualByDownselect').modal('show');
+});
+
+//p4-41-end
+//p3-36-hrcharts partial-start
+$('#btncount_hr_GuardLanguages').on('click', function () {
+    $('#modelHrGuardLanguages').modal('show');
+});
+$('#btncount_hr_AttributionPerAnnum').on('click', function () {
+    $('#modelHrGuardAttributionPerAnnum').modal('show');
+});
+//p3-36-hrcharts partial-end
+function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.DateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.RecordCountNew;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_duress_forweek");
+    var canvas2 = document.getElementById("bar_chart_by_rc_duress_forweek1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_duress_forweek').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        window.myChart7 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_duress_forweek1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart8 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%',
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.DateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.RecordCountNew;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_duress_formonth");
+    var canvas2 = document.getElementById("bar_chart_by_rc_duress_formonth1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_duress_formonth').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        window.myChart9 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_duress_formonth1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart10 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%',
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+function drawPieChartUsingChartJsChartRCForYear(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.DateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.RecordCountNew;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_duress_foryear");
+    var canvas2 = document.getElementById("bar_chart_by_rc_duress_foryear1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_duress_foryear').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart11 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_duress_foryear1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart12 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%',
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+
+
+function drawPieChartUsingChartJsChartRCButton(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.DateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.RecordCountNew;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_pushedby_cro");
+    var canvas2 = document.getElementById("bar_chart_by_rc_pushedby_cro1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_pushedby_cro').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart13 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_pushedby_cro1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart14 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%',
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+
+
+function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.DateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.RecordCountNew;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_guards_wenttoprealarm");
+    var canvas2 = document.getElementById("bar_chart_by_rc_guards_wenttoprealarm1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_guards_wenttoprealarm').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart15 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_guards_wenttoprealarm1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart16 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%',
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 30,
+                        right: 0,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.DateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.RecordCountNew;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_guards_wentfromprealarmorangetored");
+    var canvas2 = document.getElementById("bar_chart_by_rc_guards_wentfromprealarmorangetored1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_guards_wentfromprealarmorangetored').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart17 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_guards_wentfromprealarmorangetored1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart18 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+
+
+
+
+
+
+
+function drawPieChartUsingChartJsChartYearOfOnBoarding(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.key;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.value;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_hr_YearofOnboarding");
+    var canvas2 = document.getElementById("pie_chart_by_hr_YearofOnboarding1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_hr_YearofOnboarding').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart20 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_hr_YearofOnboarding1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart21 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+
+
+function drawPieChartUsingChartJsActiveGuardVsInactiveGuard(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+
+        return e.status;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.percentage;
+    });
+    var Counts = dataValue.map(function (e) {
+        return e.count;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_hr_activeGuardVsInactiveGuard");
+    var canvas2 = document.getElementById("pie_chart_by_hr_activeGuardVsInactiveGuard");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_hr_activeGuardVsInactiveGuard').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart22 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Counts[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_hr_activeGuardVsInactiveGuard1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart23 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            //text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            text: `${label} (${Counts[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+
+
+
+function drawPieChartUsingChartJsGenderGuard(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.key;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.value;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_hr_genderGuard");
+    var canvas2 = document.getElementById("pie_chart_by_hr_genderGuard1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_hr_genderGuard').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart24 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_hr_genderGuard1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart25 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+
+
+
+
+function drawBarChartUsingChartJsGenderGuard(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.status;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.count;
+    });
+    var Percentage = dataValue.map(function (e) {
+        return e.percentage;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_hr_YearofOnboarding");
+    var canvas2 = document.getElementById("bar_chart_by_hr_YearofOnboarding1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_hr_YearofOnboarding').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart26 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Percentage[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_hr_YearofOnboarding1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart27 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Percentage[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+
+//p3-41-strat
+function drawBarChartUsingChartJsDailyWandStrikeData(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.dayLabel;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.strikes;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_sitecounters_wandstrikes");
+    var canvas2 = document.getElementById("bar_chart_by_sitecounters_wandstrikes1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_sitecounters_wandstrikes').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart28 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(1),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false,
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_sitecounters_wandstrikes1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart29 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(1),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false,
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+function drawPieChartUsingChartJsIndividualWandStrikeData(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.wands;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.strikes;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_individual_fq_wand_point");
+    var canvas2 = document.getElementById("pie_chart_by_individual_fq_wand_point1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_individual_fq_wand_point').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart30 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_individual_fq_wand_point1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart31 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+
+
+}
+function drawBarChartUsingChartJsDailyWandStrikeDataForDownselect(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.dayLabel;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.strikes;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_sitecounters_wandstrikesbydownselect");
+    var canvas2 = document.getElementById("bar_chart_by_sitecounters_wandstrikesbydownselect1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_sitecounters_wandstrikesbydownselect').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart32 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(1),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false,
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_sitecounters_wandstrikesbydownselect1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart33 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(1),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false,
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+function drawPieChartUsingChartJsIndividualWandStrikeDataForDownselect(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.wands;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.strikes;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_individual_fq_wand_pointbydownselect");
+    var canvas2 = document.getElementById("pie_chart_by_individual_fq_wand_pointbydownselect1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_individual_fq_wand_pointbydownselect').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart34 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_individual_fq_wand_pointbydownselect1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart35 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+
+
+}
+
+//p3-36-hrcharts partial-start
+function drawPieChartUsingChartJsGuardLanguages(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+
+        return e.language;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.percentage;
+    });
+    var Counts = dataValue.map(function (e) {
+        return e.count;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_by_hr_guardLanguages");
+    var canvas2 = document.getElementById("pie_chart_by_hr_guardLanguages1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_by_hr_guardLanguages').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart36 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Counts[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('pie_chart_by_hr_guardLanguages1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart37 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            //text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            text: `${label} (${Counts[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+function drawBarChartUsingChartJsGuardAttributionPerAnnum(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.year;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.count;
+    });
+    var Percentage = dataValue.map(function (e) {
+        return e.percentage;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_hr_AttributionPerAnnum");
+    var canvas2 = document.getElementById("bar_chart_by_hr_AttributionPerAnnum1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_hr_AttributionPerAnnum').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart38 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Percentage[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_hr_AttributionPerAnnum1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart39 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0, radius: '80%'
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${Percentage[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+
+
+}
+//p3-36-hrcharts partial-end
+$('.wandstrikemultiselect').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true
+});
+//p3-41-end
+
+// p3-44: percentage progress overlay so users can see long-running reports are still loading.
+// start(n) declares how many milestones the task has; each step() jumps the bar to the next
+// milestone; a slow timer creeps the bar between milestones so it never looks frozen.
+var loaderProgress = {
+    total: 0,
+    done: 0,
+    current: 0,
+    timer: null,
+    active: false,
+    // works on any page: uses #loader-p or #loader, injecting the progress box if the
+    // page markup doesn't include one
+    _overlayEl: function () {
+        var el = $('#loader-p');
+        if (!el.length) el = $('#loader');
+        return el;
+    },
+    _ensureBox: function () {
+        if (!$('#loader-progress-box').length) {
+            this._overlayEl().append(
+                '<div id="loader-progress-box">' +
+                '<div id="loader-progress-label">Loading...</div>' +
+                '<div id="loader-progress-track"><div id="loader-progress-bar"></div></div>' +
+                '<div id="loader-progress-percent">0%</div>' +
+                '</div>');
+        }
+    },
+    start: function (totalSteps, label) {
+        this.total = Math.max(1, totalSteps);
+        this.done = 0;
+        this.current = 0;
+        this.active = true;
+        this._ensureBox();
+        $('#loader-progress-label').text(label || 'Loading...');
+        $('#loader-progress-bar').css('width', '0%');
+        $('#loader-progress-percent').text('0%');
+        $('#loader-progress-box').show();
+        this._overlayEl().show();
+        this._render(2);
+        this._creep();
+    },
+    step: function (label) {
+        if (!this.active) return;
+        this.done = Math.min(this.done + 1, this.total);
+        if (label) $('#loader-progress-label').text(label);
+        this._render(Math.round((this.done / this.total) * 100));
+        this._creep();
+    },
+    finish: function () {
+        if (!this.active) return;
+        this.active = false;
+        clearInterval(this.timer);
+        this._render(100);
+        var self = this;
+        setTimeout(function () {
+            self._overlayEl().hide();
+            $('#loader-progress-box').hide();
+        }, 400);
+    },
+    _creep: function () {
+        clearInterval(this.timer);
+        if (this.done >= this.total) return;
+        var self = this;
+        // approach the next milestone asymptotically so the bar keeps visibly moving
+        // during long-running requests instead of freezing at a fixed percentage
+        var ceiling = ((this.done + 0.97) / this.total) * 100;
+        this.timer = setInterval(function () {
+            if (!self.active) { clearInterval(self.timer); return; }
+            var next = self.current + Math.max(0.1, (ceiling - self.current) * 0.06);
+            if (next > ceiling) next = ceiling;
+            if (next > self.current) self._render(next);
+        }, 600);
+    },
+    _render: function (pct) {
+        if (pct > 100) pct = 100;
+        if (pct < this.current) return;
+        this.current = pct;
+        $('#loader-progress-bar').css('width', pct + '%');
+        $('#loader-progress-percent').text(Math.round(pct) + '%');
+    }
+};
+
+$('#convert-to-pdf').click(function (e) {
+    if (window.patrolReportMode === 'report_only') {
+        var href = $(this).attr('href');
+        if (href === '#' || !href) {
+            alert('Please generate the report first.');
+            e.preventDefault();
+            return false;
+        }
+        // Allow standard browser navigation to download the server-generated PDF file!
+        return true;
+    }
+
+    e.preventDefault();
+    var currentDate = new Date();
+    var formattedDate = formatDate(currentDate);
+
+    // p3-44: Download Pdf exports the stats tab the user is on, not always IR Stats
+    var pdfTarget = getActiveStatsPdfTarget();
+
+    if (pdfTarget.paneId === '#pd-chart') {
+        // IR Stats keeps its dedicated pre-sized hidden layout (#content-to-pdf)
+        loaderProgress.start(2, 'Preparing charts...');
+        setTimeout(function () {
+            loaderProgress.step('Rendering PDF...');
+            var element = $('#content-to-pdf');
+            html2pdf(element[0], {
+                margin: [0, 0, 0, 0],
+                filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, scrollY: 0 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).then(function () {
+                loaderProgress.finish();
+            }, function (err) {
+                console.log('pdf generation failed', err);
+                loaderProgress.finish();
+            });
+        }, 1000); // Simulated delay of 1 second
+        return;
+    }
+
+    var pane = $(pdfTarget.paneId);
+    var hasRenderedChart = pane.find('canvas').filter(function () {
+        return this.width > 0 && this.height > 0;
+    }).length > 0;
+    if (!hasRenderedChart) {
+        alert('Please generate the report (Report + Graph) first.');
+        return;
+    }
+
+    loaderProgress.start(2, 'Preparing charts...');
+    setTimeout(function () {
+        // charts are snapshotted into a clean off-screen layout sized for one A4 landscape page
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'width:1px;height:1px;border:0 none;position:relative;overflow:hidden;';
+        try {
+            var element = buildStatsPdfElement(pdfTarget.title, pane, pdfTarget.perRow);
+            wrapper.appendChild(element);
+            document.body.appendChild(wrapper);
+            loaderProgress.step('Rendering PDF...');
+            html2pdf(element, {
+                margin: [0.2, 0.2, 0.2, 0.2],
+                filename: '' + formattedDate + ' - - ' + pdfTarget.title + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, scrollY: 0 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            }).then(function () {
+                wrapper.remove();
+                loaderProgress.finish();
+            }, function (err) {
+                console.log('pdf generation failed', err);
+                wrapper.remove();
+                loaderProgress.finish();
+            });
+        } catch (err) {
+            console.log('pdf generation failed', err);
+            wrapper.remove();
+            loaderProgress.finish();
+            alert('PDF generation failed. Please try again.');
+        }
+    }, 1000); // Simulated delay of 1 second
+});
+
+// Which stats tab should Download Pdf export? Falls back to IR Stats (old behaviour)
+// when the Report or IR Stats tab is active.
+function getActiveStatsPdfTarget() {
+    if ($('#rcstat-chart').hasClass('active'))
+        return { paneId: '#rcstat-chart', title: 'RC Statistics Report', perRow: 3 };
+    if ($('#hrstat-chart').hasClass('active'))
+        return { paneId: '#hrstat-chart', title: 'HR Statistics Report', perRow: 3 };
+    if ($('#wandstrike-chart').hasClass('active')) {
+        if ($('#tagdownselect-chart').hasClass('active'))
+            return { paneId: '#tagdownselect-chart', title: 'Wand Strike Report - Tag DownSelect', perRow: 1 };
+        return { paneId: '#siteeffortcounters-chart', title: 'Wand Strike Report', perRow: 1 };
+    }
+    return { paneId: '#pd-chart', title: 'IR Statistics Report', perRow: 2 };
+}
+
+// Rebuilds the active pane's chart cards into a print layout: header with title,
+// date range and logo, then the charts (canvas snapshots) in a perRow-column grid.
+// Filter controls and buttons are left out so the page stays clean.
+// dateRangeText is optional — pages other than IR & Patrol Statistics pass their own.
+function buildStatsPdfElement(title, pane, perRow, dateRangeText) {
+    var container = document.createElement('div');
+    container.style.cssText = 'width:1050px;background:#ffffff;padding:14px;font-family:Arial,Helvetica,sans-serif;color:#212529;';
+
+    var header = document.createElement('div');
+    header.style.cssText = 'position:relative;text-align:center;padding:6px 0 12px 0;';
+    var logo = document.createElement('img');
+    logo.src = '/images/cwslogopdf.png';
+    logo.style.cssText = 'position:absolute;right:0;top:0;height:48px;';
+    header.appendChild(logo);
+    var heading = document.createElement('div');
+    heading.style.cssText = 'font-size:18px;font-weight:bold;padding-top:10px;';
+    heading.textContent = title;
+    header.appendChild(heading);
+    var range = document.createElement('div');
+    range.style.cssText = 'font-size:12px;padding-top:2px;';
+    range.textContent = dateRangeText || (formatDate($('#ReportRequest_FromDate').val()) + ' to ' + formatDate($('#ReportRequest_ToDate').val()));
+    header.appendChild(range);
+    container.appendChild(header);
+
+    // collect the rendered charts first so the grid can be sized to fill the page.
+    // a canvas in a hidden tab can be 0x0 yet still hold a live Chart.js instance —
+    // the export path re-renders those at full size, so accept them too
+    var cards = [];
+    pane.find('.card').each(function () {
+        var canvas = $(this).find('canvas').get(0);
+        if (!canvas) return;
+        var hasChart = window.Chart && typeof Chart.getChart === 'function' && Chart.getChart(canvas);
+        if (!hasChart && (canvas.width === 0 || canvas.height === 0)) return;
+        cards.push({
+            headerText: $(this).find('.card-header').text().replace(/\s+/g, ' ').trim(),
+            canvas: canvas
+        });
+    });
+
+    // fixed geometry: 1050px wide container mapped onto one A4 landscape page
+    // (0.2in margins => ~93px/inch => ~730px of usable page height)
+    var PAGE_HEIGHT = 730;
+    var PAGE_HEADER_HEIGHT = 80;
+    var CONTAINER_PADDING = 14, CELL_PADDING = 5, CARD_HEADER_HEIGHT = 27, BODY_PADDING = 8, BORDER = 2;
+    var rowCount = Math.max(1, Math.ceil(cards.length / perRow));
+    var rowHeight = Math.floor((PAGE_HEIGHT - PAGE_HEADER_HEIGHT - CONTAINER_PADDING * 2) / rowCount);
+    var imgMaxHeight = rowHeight - CELL_PADDING * 2 - CARD_HEADER_HEIGHT - BODY_PADDING * 2 - BORDER;
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;margin:-' + CELL_PADDING + 'px;';
+    cards.forEach(function (item, index) {
+        // cards in a partial last row spread out to use the full page width
+        var lastRowStart = (rowCount - 1) * perRow;
+        var cardsInThisRow = index >= lastRowStart ? cards.length - lastRowStart : perRow;
+        var cellWidth = Math.floor((1050 - CONTAINER_PADDING * 2) / cardsInThisRow);
+        var imgMaxWidth = cellWidth - CELL_PADDING * 2 - BODY_PADDING * 2 - BORDER;
+
+        var cell = document.createElement('div');
+        cell.style.cssText = 'box-sizing:border-box;padding:' + CELL_PADDING + 'px;width:' + (100 / cardsInThisRow) + '%;';
+        var card = document.createElement('div');
+        card.style.cssText = 'border:1px solid #dee2e6;border-radius:4px;overflow:hidden;height:100%;box-sizing:border-box;';
+        var cardHeader = document.createElement('div');
+        cardHeader.style.cssText = 'background:#f5f5f5;border-bottom:1px solid #dee2e6;padding:6px 10px;font-size:11px;font-weight:bold;';
+        cardHeader.textContent = item.headerText;
+        card.appendChild(cardHeader);
+        var body = document.createElement('div');
+        body.style.cssText = 'padding:' + BODY_PADDING + 'px;background:#ffffff;';
+        var img = document.createElement('img');
+
+        // re-render the live Chart.js instance at the export size (like the popup version)
+        // so value labels and legends that are cramped on screen are not clipped in the PDF,
+        // then put the chart back to its on-screen size.
+        // NOTE: chart.options is a Chart.js proxy — only copy primitive values out of it and
+        // only assign fresh plain objects into it, or the proxy setter recurses infinitely.
+        var imgWidth = imgMaxWidth;
+        var imgHeight = imgMaxHeight;
+        var exported = false;
+        var chart = (window.Chart && typeof Chart.getChart === 'function') ? Chart.getChart(item.canvas) : null;
+        if (chart) {
+            var origPadding = 0;
+            try {
+                var p = (chart.options.layout && chart.options.layout.padding != null) ? chart.options.layout.padding : 0;
+                origPadding = (typeof p === 'object')
+                    ? { left: p.left || 0, right: p.right || 0, top: p.top || 0, bottom: p.bottom || 0 }
+                    : p;
+                // generous side padding so pies with outside labels (e.g. "Jul 2025 4.8%")
+                // don't clip at the export edges
+                chart.options.layout = { padding: { left: 45, right: 45, top: 28, bottom: 12 } };
+                chart.resize(imgWidth * 2, imgHeight * 2);
+                img.src = item.canvas.toDataURL('image/png');
+                exported = true;
+            } catch (err) {
+                console.log('chart export resize failed, falling back to screen snapshot', err);
+            }
+            try {
+                chart.options.layout = { padding: origPadding };
+                chart.resize();
+            } catch (err2) {
+                console.log('chart restore failed', err2);
+            }
+        }
+        if (!exported) {
+            // no Chart.js instance (or export failed) — scale the on-screen snapshot instead
+            var aspect = item.canvas.width / item.canvas.height;
+            imgHeight = imgMaxHeight;
+            imgWidth = Math.round(imgHeight * aspect);
+            if (imgWidth > imgMaxWidth) {
+                imgWidth = imgMaxWidth;
+                imgHeight = Math.round(imgWidth / aspect);
+            }
+            img.src = item.canvas.toDataURL('image/png');
+        }
+        img.style.cssText = 'width:' + imgWidth + 'px;height:' + imgHeight + 'px;display:block;margin:0 auto;';
+        body.appendChild(img);
+        card.appendChild(body);
+        cell.appendChild(card);
+        grid.appendChild(cell);
+    });
+    container.appendChild(grid);
+
+    return container;
+}
+
+function formatDate(dateStr) {
+    var date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+        return null; // Invalid date
+    }
+
+    var day = String(date.getDate()).padStart(2, '0');
+    var month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    var year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+}
+$('#btnPatrolIncidentReportBatchDownload').on('click', function () {
+    $('#loader-p').show();
+    $.ajax({
+        url: '/Reports/PatrolData?handler=GenerateBulkIRReport',
+        type: 'POST',
+        dataType: 'json',
+        data: $('#frm_patrol_report_request').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+
+        $('#download_IncidentReportBatch').attr('href', response.zipFile);
+        $('#download_IncidentReportBatch').trigger('click');
+        downloadZipViaAjax(response.zipFile);
+        $('#loader-p').hide();
+    });
+})
+function downloadZipViaAjax(url, fileName = url.split('/').pop()) {
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        })
+        .catch(err => console.error("Download failed", err));
+}
+$('#ReportRequest_IRSeriaNo').typeahead({
+    minLength: 3,
+    autoSelect: true,
+    source: function (request, response) {
+        $.ajax({
+            url: '/Reports/PatrolData?handler=DocketSerialNumbers',
+            data: { snoPart: request },
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                items = [];
+                map = {};
+                $.each(data, function (i, item) {
+                    items.push(item);
+                });
+                response(items);
+            },
+            error: function (response) {
+                alert(response.responseText);
+            },
+            failure: function (response) {
+                alert(response.responseText);
+            }
+        });
+    }
+
 });

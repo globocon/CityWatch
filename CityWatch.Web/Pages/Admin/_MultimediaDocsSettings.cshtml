@@ -1,0 +1,51 @@
+@* p7-141 Multimedia module - re-uses the existing staff document upload/download flow *@
+@using CityWatch.Web.Helpers;
+@model CityWatch.Web.Pages.Admin.SettingsModel
+
+<div id="multimedia">
+    <div class="row mb-2">
+        <label class="col-form-label col-md-3">Profile</label>
+        <div class="col-md-4 ">
+            <select class="form-control" id="report_multimedia_Profile">
+                <option value="">Citywatch</option>
+
+                @foreach (var item in Model.ViewDataService.GetUserSubDomainsHavingAccess(AuthUserHelper.LoggedInUserId))
+                {
+                    <option value="@item.Id">@item.Domain</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row mb-2">
+        <label class="col-form-label col-md-3">Category</label>
+        <div class="col-md-4 ">
+            @* Options are loaded from StaffDocumentCategories (document type 7) *@
+            <div class="d-flex">
+                <select class="form-control" id="report_multimedia_Category"></select>
+                @* Add / rename / remove the sub categories of this module *@
+                <button type="button" class="btn btn-outline-primary ml-2 btn_edit_staffdoc_categories"
+                        data-doc-type="7" title="Add, rename or remove sub categories">
+                    <i class="fa fa-cogs" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-2">
+        <div class="col-md-6 position-relative">
+            <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Multimedia</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+        </div>
+        <div class="col-md-6 text-right">
+            <label class="btn btn-success mb-3">
+                <form id="form_add_staff_document_file_multimedia" method="post">
+                    <i class="fa fa-upload mr-2"></i>Add File
+                    <input type="file" id="add_staff_document_file_multimedia" accept=".pdf, .docx, .xlsx, .mp4, .jpg, .jpeg, .png, .gif, .bmp, .webp, .webm, .mov, .avi, .mp3, .wav" hidden>
+                </form>
+            </label>
+        </div>
+    </div>
+    <div class="row mb-4" id="staffdocumentfilesformultimedia">
+        <div class="col-md-12">
+            <table class="table" id="staff_document_files_type_Multimedia"></table>
+        </div>
+    </div>
+</div>

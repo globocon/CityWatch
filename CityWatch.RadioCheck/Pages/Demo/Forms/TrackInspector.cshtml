@@ -1,0 +1,799 @@
+﻿@page
+@model FortescueWebApp.Pages.Forms.TrackInspectorModel
+@{
+    Layout = "/Pages/Shared/_LayoutDemo.cshtml";
+}
+
+
+<form class="row g-3 needs-validation" novalidate>
+    <div class="container mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white border-0 rounded-0">
+                Rerail Scoping Form
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label required">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="q308_name" required readonly disabled>
+                        <div class="invalid-feedback">Please provide a valid name.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="date" class="form-label required">Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="date" name="q7_01TrackInspector_Date" required readonly disabled>
+                        <div class="invalid-feedback">Please select a valid date.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="email" class="form-label required">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="q9_01TrackInspector_Email" required readonly disabled>
+                        <div class="invalid-feedback">Please provide a valid email.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- Engineering Data Card -->
+    <div class="container mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white border-0 rounded-0">
+                Engineering Data
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="workOrder" class="form-label required">Work Order <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="workOrder" name="q309_workOrder" required readonly disabled>
+                        <div class="invalid-feedback">Please provide a work order.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="description" class="form-label required">Description <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="description" name="q147_01TrackInspector_Eng_Data_engDescription" required readonly disabled>
+                        <div class="invalid-feedback">Description is required.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="engStart" class="form-label required">Eng Start <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="engStart" name="q256_engStart" required readonly disabled>
+                        <div class="invalid-feedback">Please provide a valid start time.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="engEnd" class="form-label required">Eng End <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="engEnd" name="q262_engEnd" required readonly disabled>
+                        <div class="invalid-feedback">Please provide a valid end time.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="engLine" class="form-label required">Eng Line <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="engLine" name="q184_01TrackInspector_Eng_Data_engLine" required readonly disabled>
+                        <div class="invalid-feedback">Engineering line is required.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="engLeg" class="form-label required">Eng Leg <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="engLeg" name="q185_01TrackInspector_Eng_Data_engLeg" required readonly disabled>
+                        <div class="invalid-feedback">Engineering leg is required.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white border-0 rounded-0">
+                TI Scoping Data
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <!-- TI Start (KM) -->
+                    <div class="col-md-6">
+                        <label for="input_271" class="form-label required">TI Start (KM) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_271" name="q271_tiStart" required placeholder="###.###" inputmode="text">
+                        <div class="invalid-feedback">Please provide a valid TI start value.</div>
+                    </div>
+
+                    <!-- TI End (KM) -->
+                    <div class="col-md-6">
+                        <label for="input_273" class="form-label required">TI End (KM) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_273" name="q273_tiEnd" required placeholder="###.###" inputmode="text">
+                        <div class="invalid-feedback">Please provide a valid TI end value.</div>
+                    </div>
+
+                    <!-- TI Line -->
+                    <div class="col-md-6">
+                        <label for="input_195" class="form-label required">TI Line <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_195" name="q195_01TrackInspector_TI_Scop_Data_tiLine" required>
+                            <option value="">Please Select</option>
+                            <option value="Mainline">Mainline</option>
+                            <option value="Bypass West">Bypass West</option>
+                            <option value="Eastline">Eastline</option>
+                            <option value="Passing Track">Passing Track</option>
+                            <option value="Loaded Car line">Loaded Car line</option>
+                            <option value="Empty Car line">Empty Car line</option>
+                            <option value="In Go Christmas Creek">In Go Christmas Creek</option>
+                            <option value="Out Go Christmas Creek">Out Go Christmas Creek</option>
+                            <option value="Solomon Mainline">Solomon Mainline</option>
+                            <option value="Solomon Passing Track">Solomon Passing Track</option>
+                            <option value="In Go Solomon">In Go Solomon</option>
+                            <option value="Out Go Solomon">Out Go Solomon</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a valid TI line.</div>
+                    </div>
+
+                    <!-- TI Leg -->
+                    <div class="col-md-6">
+                        <label for="input_196" class="form-label required">TI Leg <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_196" name="q196_01TrackInspector_TI_Scop_Data_tiLeg" required>
+                            <option value="">Please Select</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a valid TI leg.</div>
+                    </div>
+
+                    <!-- TI Length (m) -->
+                    <div class="col-md-6">
+                        <label for="input_198" class="form-label required">TI Length (m) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_198" name="q198_01TrackInspector_TI_Scop_Data_tiLength" readonly required value="" tabindex="-1">
+                        <div class="invalid-feedback">TI length is required.</div>
+                    </div>
+
+                    <!-- TI Strings Qty -->
+                    <div class="col-md-6">
+                        <label for="input_197" class="form-label required">TI Strings Qty <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_197" name="q197_01TrackInspector_TI_Scop_Data_tiTiStQty" required>
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="0.5">0.5</option>
+                            <option value="1">1</option>
+                            <option value="1.5">1.5</option>
+                            <option value="2">2</option>
+                            <option value="2.5">2.5</option>
+                            <option value="3">3</option>
+                            <option value="3.5">3.5</option>
+                            <option value="4">4</option>
+                            <option value="4.5">4.5</option>
+                            <option value="5">5</option>
+                            <option value="5.5">5.5</option>
+                            <option value="6">6</option>
+                            <option value="6.5">6.5</option>
+                            <option value="7">7</option>
+                            <option value="7.5">7.5</option>
+                            <option value="8">8</option>
+                            <option value="8.5">8.5</option>
+                            <option value="9">9</option>
+                            <option value="9.5">9.5</option>
+                            <option value="10">10</option>
+                            <option value="10.5">10.5</option>
+                            <option value="11">11</option>
+                            <option value="11.5">11.5</option>
+                            <option value="12">12</option>
+                            <option value="12.5">12.5</option>
+                            <option value="13">13</option>
+                            <option value="13.5">13.5</option>
+                            <option value="14">14</option>
+                            <option value="14.5">14.5</option>
+                            <option value="15">15</option>
+                            <option value="15.5">15.5</option>
+                            <option value="16">16</option>
+                            <option value="16.5">16.5</option>
+                            <option value="17">17</option>
+                            <option value="17.5">17.5</option>
+                            <option value="18">18</option>
+                            <option value="18.5">18.5</option>
+                            <option value="19">19</option>
+                            <option value="19.5">19.5</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+
+                    <!-- TI T/Rails Qty -->
+                    <div class="col-md-6">
+                        <label for="input_199" class="form-label required">TI T/Rails Qty <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_199" name="q199_01TrackInspector_TI_Scop_Data_tiTrailsQty" required>
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+
+                    <!-- Rail Wear North (mm) -->
+                    <div class="col-md-6">
+                        <label for="input_200" class="form-label required">Rail Wear North (mm) <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_200" name="q200_01TrackInspector_TI_Scop_Data_railWearNorth" required>
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+
+                    <!-- Rail Wear South (mm) -->
+                    <div class="col-md-6">
+                        <label for="input_201" class="form-label required">Rail Wear South (mm) <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_201" name="q201_01TrackInspector_TI_Scop_Data_railWearSouth" required>
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+
+                    <!-- Rail Type -->
+                    <div class="col-md-6">
+                        <label for="input_202" class="form-label required">Rail Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_202" name="q202_01TrackInspector_TI_Scop_Data_railType" required>
+                            <option value="">Please Select</option>
+                            <option value="60">60</option>
+                            <option value="47">47</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white border-0 rounded-0">
+                Expected Material Recoveries
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <!-- Expected Material Recoveries Header -->
+                    <!-- Type Dropdown -->
+                    <div class="col-md-6">
+                        <label for="input_274" class="form-label">Type (Trans Rail, Clamp, Plates, Rail etc..)</label>
+                        <select class="form-select" id="input_274" name="q274_typetrans274">
+                            <option value="">Please Select</option>
+                            <option value="Trans Rail">Trans Rail</option>
+                            <option value="Clamp">Clamp</option>
+                            <option value="Plates">Plates</option>
+                            <option value="Rail">Rail</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Leg Dropdown -->
+                    <div class="col-md-6">
+                        <label for="input_217" class="form-label">Leg <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_217" name="q217_01TrackInspector_ExpectedMaterial_leg" required>
+                            <option value="">Please Select</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                        </select>
+                    </div>
+
+                    <!-- Chainage Textbox -->
+                    <div class="col-md-6">
+                        <label for="input_118" class="form-label">Chainage <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_118" name="q118_01TrackInspector_ExpectedMaterial_Chainage1" required>
+                    </div>
+
+                    <!-- Length Textbox -->
+                    <div class="col-md-6">
+                        <label for="input_119" class="form-label">Length <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_119" name="q119_01TrackInspector_ExpectedMaterial_Length1" required>
+                    </div>
+
+                    <!-- H/W mm Dropdown -->
+                    <div class="col-md-6">
+                        <label for="input_218" class="form-label">H/W mm <span class="text-danger">*</span></label>
+                        <select class="form-select" id="input_218" name="q218_01TrackInspector_ExpectedMaterial_hwMm" required>
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+
+                    <!-- Note Textbox -->
+                    <div class="col-md-6">
+                        <label for="input_121" class="form-label">Note <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_121" name="q121_01TrackInspector_ExpectedMaterial_Note1" required>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    <!-- Type Dropdown 2 -->
+                    <div class="col-md-6">
+                        <label for="input_275" class="form-label">Type (Trans Rail, Clamp, Plates, Rail etc..) 2</label>
+                        <select class="form-select" id="input_275" name="q275_typetrans275">
+                            <option value="">Please Select</option>
+                            <option value="Trans Rail">Trans Rail</option>
+                            <option value="Clamp">Clamp</option>
+                            <option value="Plates">Plates</option>
+                            <option value="Rail">Rail</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Leg Dropdown 2 -->
+                    <div class="col-md-6">
+                        <label for="input_266" class="form-label">Leg 2</label>
+                        <select class="form-select" id="input_266" name="q266_leg2">
+                            <option value="">Please Select</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                        </select>
+                    </div>
+
+                    <!-- Chainage 2 Textbox -->
+                    <div class="col-md-6">
+                        <label for="input_267" class="form-label">Chainage 2</label>
+                        <input type="text" class="form-control" id="input_267" name="q267_chainage2">
+                    </div>
+
+
+
+                    <div class="col-md-6">
+                        <label for="input_268" class="form-label">Length 2</label>
+                        <input type="text" id="input_268" name="q268_length2" class="form-control" style="width: 100%" value="">
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_269" class="form-label">H/W mm 2</label>
+                        <select class="form-select" id="input_269" name="q269_hwMm">
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_270" class="form-label">Note 2</label>
+                        <input type="text" id="input_270" name="q270_note2" class="form-control" style="width: 100%" value="">
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_285" class="form-label">Type (Trans Rail, Clamp, Plates, Rail etc..) 3</label>
+                        <select class="form-select" id="input_285" name="q285_typetrans">
+                            <option value="">Please Select</option>
+                            <option value="Trans Rail">Trans Rail</option>
+                            <option value="Clamp">Clamp</option>
+                            <option value="Plates">Plates</option>
+                            <option value="Rail">Rail</option>
+                            <option value="Other">Other</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_286" class="form-label">Leg 3</label>
+                        <select class="form-select" id="input_286" name="q286_leg3">
+                            <option value="">Please Select</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_287" class="form-label">Chainage 3</label>
+                        <input type="text" id="input_287" name="q287_chainage3" class="form-control" style="width: 100%" value="" inputmode="text" maskvalue="###.###">
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_288" class="form-label">Length 3</label>
+                        <input type="text" id="input_288" name="q288_length3" class="form-control" style="width: 100%" value="">
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_289" class="form-label">H/W mm 3</label>
+                        <select class="form-select" id="input_289" name="q289_hwMm289">
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_290" class="form-label">Note 3</label>
+                        <input type="text" id="input_290" name="q290_note3" class="form-control" style="width: 100%" value="">
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label for="input_291" class="form-label">Type (Trans Rail, Clamp, Plates, Rail etc..) 4</label>
+                        <select class="form-select" id="input_291" name="q291_typetrans291">
+                            <option value="">Please Select</option>
+                            <option value="Trans Rail">Trans Rail</option>
+                            <option value="Clamp">Clamp</option>
+                            <option value="Plates">Plates</option>
+                            <option value="Rail">Rail</option>
+                            <option value="Other">Other</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_292" class="form-label">Leg 4</label>
+                        <select class="form-select" id="input_292" name="q292_leg4">
+                            <option value="">Please Select</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_293" class="form-label">Chainage 4</label>
+                        <input type="text" id="input_293" name="q293_chainage4" class="form-control" style="width: 100%" value="" inputmode="text" maskvalue="###.###">
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_294" class="form-label">Length 4</label>
+                        <input type="text" id="input_294" name="q294_length4" class="form-control" style="width: 100%" value="">
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_295" class="form-label">H/W mm 4</label>
+                        <select class="form-select" id="input_295" name="q295_hwMm295">
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_296" class="form-label">Note 4</label>
+                        <input type="text" id="input_296" name="q296_note4" class="form-control" style="width: 100%" value="">
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_297" class="form-label">Type (Trans Rail, Clamp, Plates, Rail etc..) 5</label>
+                        <select class="form-select" id="input_297" name="q297_typetrans297">
+                            <option value="">Please Select</option>
+                            <option value="Trans Rail">Trans Rail</option>
+                            <option value="Clamp">Clamp</option>
+                            <option value="Plates">Plates</option>
+                            <option value="Rail">Rail</option>
+                            <option value="Other">Other</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_298" class="form-label">Leg 5</label>
+                        <select class="form-select" id="input_298" name="q298_leg5">
+                            <option value="">Please Select</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_299" class="form-label">Chainage 5</label>
+                        <input type="text" id="input_299" name="q299_chainage5" class="form-control" style="width: 100%" value="" inputmode="text" maskvalue="###.###">
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_300" class="form-label">Length 5</label>
+                        <input type="text" id="input_300" name="q300_length5" class="form-control" style="width: 100%" value="">
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_301" class="form-label">H/W mm 5</label>
+                        <select class="form-select" id="input_301" name="q301_hwMm301">
+                            <option value="">Please Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="input_302" class="form-label">Note 5</label>
+                        <input type="text" id="input_302" name="q302_note5" class="form-control" style="width: 100%" value="">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white border-0 rounded-0">
+                Preworks Required
+                <div>Tamping, sleeper straightening, ballasting etc.</div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+
+
+
+                    <!-- Type of Prework -->
+                    <div class="form-group">
+                        <label for="input_220">Type (Sleeper Straightening, Ballast, other)<span class="text-danger">*</span></label>
+                        <select class="form-control" id="input_220" name="q220_01TrackInspector_PreworkReq_type" required>
+                            <option value="">Please Select</option>
+                            <option value="Sleeper Straightening">Sleeper Straightening</option>
+                            <option value="Ballast">Ballast</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Sleeper Type -->
+                    <div class="form-group">
+                        <label for="input_222">Sleeper Type<span class="text-danger">*</span></label>
+                        <select class="form-control" id="input_222" name="q222_01TrackInspector_PreworkReq_sleeperType222" required>
+                            <option value="">Please Select</option>
+                            <option value="Austrak 7/12mm">Austrak 7/12mm</option>
+                            <option value="Austrak 9.5mm">Austrak 9.5mm</option>
+                            <option value="Holcim">Holcim</option>
+                        </select>
+                    </div>
+
+                    <!-- Sleeper Start -->
+                    <div class="form-group" id="sleeperStart" style="display:none;">
+                        <label for="input_221">Sleeper Start<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_221" name="q221_01TrackInspector_PreworkReq_sleeperStart" required>
+                    </div>
+
+                    <!-- Sleeper End -->
+                    <div class="form-group" id="sleeperEnd" style="display:none;">
+                        <label for="input_223">Sleeper End<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_223" name="q223_01TrackInspector_PreworkReq_sleeperEnd" required>
+                    </div>
+
+                    <!-- Sleeper Note -->
+                    <div class="form-group" id="sleeperNote" style="display:none;">
+                        <label for="input_224">Sleeper Note<span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="input_224" name="q224_01TrackInspector_PreworkReq_sleeperNote" required></textarea>
+                    </div>
+
+                    <!-- Ballast Start -->
+                    <div class="form-group" id="ballastStart" style="display:none;">
+                        <label for="input_225">Ballast Start<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_225" name="q225_01TrackInspector_PreworkReq_ballastStart" required>
+                    </div>
+
+                    <!-- Ballast End -->
+                    <div class="form-group" id="ballastEnd" style="display:none;">
+                        <label for="input_226">Ballast End<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_226" name="q226_01TrackInspector_PreworkReq_ballastEnd" required>
+                    </div>
+
+                    <!-- Ballast Work Required -->
+                    <div class="form-group" id="ballastWork" style="display:none;">
+                        <label for="input_227">Ballast Work Required<span class="text-danger">*</span></label>
+                        <select class="form-control" id="input_227" name="q227_01TrackInspector_PreworkReq_ballastWork" required>
+                            <option value="">Please Select</option>
+                            <option value="Top Up">Top Up</option>
+                            <option value="Replace">Replace</option>
+                            <option value="Other (see note)">Other (see note)</option>
+                        </select>
+                    </div>
+
+                    <!-- Ballast Note -->
+                    <div class="form-group" id="ballastNote" style="display:none;">
+                        <label for="input_228">Ballast Note<span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="input_228" name="q228_01TrackInspector_PreworkReq_ballastNote" required></textarea>
+                    </div>
+
+                    <!-- Sleeper Straightening Start -->
+                    <div class="form-group" id="sleeperStraighteningStart" style="display:none;">
+                        <label for="input_303">Sleeper Straightening Start<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_303" name="q303_sleeperStraightening" required>
+                    </div>
+
+                    <!-- Sleeper Straightening End -->
+                    <div class="form-group" id="sleeperStraighteningEnd" style="display:none;">
+                        <label for="input_304">Sleeper Straightening End<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_304" name="q304_sleeperStraightening304" required>
+                    </div>
+
+                    <!-- Sleeper Straightening Required -->
+                    <div class="form-group" id="sleeperStraighteningRequired" style="display:none;">
+                        <label for="input_307">Sleeper Straightening Required<span class="text-danger">*</span></label>
+                        <select class="form-control" id="input_307" name="q307_sleeperStraightening307" required>
+                            <option value="">Please Select</option>
+                            <option value="Top Up">Top Up</option>
+                            <option value="Replace">Replace</option>
+                            <option value="Other (see note)">Other (see note)</option>
+                        </select>
+                    </div>
+
+                    <!-- Sleeper Straightening Note -->
+                    <div class="form-group" id="sleeperStraighteningNote" style="display:none;">
+                        <label for="input_306">Sleeper Straightening Note<span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="input_306" name="q306_sleeperStraightening306" required></textarea>
+                    </div>
+
+                    <!-- Other Work -->
+                    <div class="form-group" id="otherWork" style="display:none;">
+                        <label for="input_229">Other Work (Select)<span class="text-danger">*</span></label>
+                        <select class="form-control" id="input_229" name="q229_01TrackInspector_PreworkReq_otherWork" required>
+                            <option value="">Please Select</option>
+                            <option value="Not Applicable">Not Applicable</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Other Work Start -->
+                    <div class="form-group" id="otherWorkStart" style="display:none;">
+                        <label for="input_230">Other Work Start<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_230" name="q230_01TrackInspector_PreworkReq_otherWork230" required>
+                    </div>
+
+                    <!-- Other Work End -->
+                    <div class="form-group" id="otherWorkEnd" style="display:none;">
+                        <label for="input_231">Other Work End<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="input_231" name="q231_01TrackInspector_PreworkReq_otherWork231" required>
+                    </div>
+
+                    <!-- Other Work Note -->
+                    <div class="form-group" id="otherWorkNote" style="display:none;">
+                        <label for="input_232">Other Work Note<span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="input_232" name="q232_01TrackInspector_PreworkReq_otherWork232" required></textarea>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white border-0 rounded-0">
+                Post Works Required
+                <div>Tamping, sleeper straightening, ballasting, etc...</div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <!-- Notes Section -->
+                    <div class="mb-3">
+                        <label for="input_234" class="form-label">Notes</label>
+                        <textarea class="form-control" id="input_234" name="q234_01TrackInspector_PostworkReq_notes" rows="3" style="width: 100%;" required></textarea>
+                        <div class="invalid-feedback">Please provide your notes.</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        <!-- Section: Photos -->
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white border-0 rounded-0">
+                Photos
+                <div>Start and end points, IRJs, recoverable plates and clamps, etc...</div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+
+                    <!-- Photo 1 Upload -->
+                    <div class="mb-3">
+                        <label for="input_60" class="form-label">Photo 1</label>
+                        <input type="file" class="form-control" id="input_60" name="file" required>
+                        <div class="invalid-feedback">Please upload a photo.</div>
+                    </div>
+
+                    <!-- Photo Caption 1 -->
+                    <div class="mb-3">
+                        <label for="input_235" class="form-label">Photo Caption 1</label>
+                        <textarea class="form-control" id="input_235" name="q235_01TrackInspector_photoCaption1" rows="3" style="width: 100%;" required></textarea>
+                        <div class="form-text">Enter location, viewing direction, and observation/brief scope of work.</div>
+                        <div class="invalid-feedback">Please provide a caption for the photo.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</form>

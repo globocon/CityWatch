@@ -1,0 +1,1 @@
+alter table TrainingCourseCertificateRPL add FileName nvarchar(max)
