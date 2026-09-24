@@ -49,9 +49,15 @@ namespace CityWatch.Web.Tests
         private readonly List<SchedulerTaskError> _recordedErrors = new();
         private readonly List<PeriodicLogDumpJob> _savedJobs = new();
 
-        /// <summary>The week the run should pick when "today" is Monday 14 September 2026.</summary>
-        private static readonly DateTime WeekStart = new DateTime(2026, 9, 7);   // Monday
-        private static readonly DateTime WeekEnd = new DateTime(2026, 9, 13);    // Sunday
+        /* The week the run will actually pick, whenever these are run.
+
+           These were fixed dates to begin with - the week that was "previous" on the day they were
+           written - and they passed until the calendar moved on, because the service takes its
+           period from DateTime.Now and the assertions did not. Derived from the same rule the
+           service uses, so the fixture and the run can no longer disagree. The arithmetic itself is
+           pinned separately, by the tests below that pass GetPreviousWeek an explicit date. */
+        private static readonly DateTime WeekStart = SiteLogUploadService.GetPreviousWeek(DateTime.Now.Date).PeriodStart;
+        private static readonly DateTime WeekEnd = SiteLogUploadService.GetPreviousWeek(DateTime.Now.Date).PeriodEnd;
 
         [TestInitialize]
         public void Setup()
@@ -223,8 +229,8 @@ namespace CityWatch.Web.Tests
             // Monday 14 Sep 2026, the 2am run the settings screen promises.
             var (start, end) = SiteLogUploadService.GetPreviousWeek(new DateTime(2026, 9, 14));
 
-            Assert.AreEqual(WeekStart, start);
-            Assert.AreEqual(WeekEnd, end);
+            Assert.AreEqual(new DateTime(2026, 9, 7), start);    // Monday
+            Assert.AreEqual(new DateTime(2026, 9, 13), end);     // Sunday
             Assert.AreEqual(DayOfWeek.Monday, start.DayOfWeek);
             Assert.AreEqual(DayOfWeek.Sunday, end.DayOfWeek);
         }
@@ -236,8 +242,8 @@ namespace CityWatch.Web.Tests
                week and would dump a week that has not finished yet. */
             var (start, end) = SiteLogUploadService.GetPreviousWeek(new DateTime(2026, 9, 20)); // Sunday
 
-            Assert.AreEqual(WeekStart, start);
-            Assert.AreEqual(WeekEnd, end);
+            Assert.AreEqual(new DateTime(2026, 9, 7), start);
+            Assert.AreEqual(new DateTime(2026, 9, 13), end);
         }
 
         [TestMethod]
@@ -322,8 +328,8 @@ namespace CityWatch.Web.Tests
             /* Its own folder, not a day folder: a periodic dump must never land on top of, or be
                mistaken for, the daily one. */
             StringAssert.Contains(uploaded, "/WEEKLY LOGS/");
-            StringAssert.Contains(uploaded, "/C4i/VISY Carrara/FLIR - Wand Recordings - IRs - Daily Logs/2026/");
-            StringAssert.Contains(uploaded, "20260907-20260913 (Weekly).pdf");
+            StringAssert.Contains(uploaded, $"/C4i/VISY Carrara/FLIR - Wand Recordings - IRs - Daily Logs/{WeekStart:yyyy}/");
+            StringAssert.Contains(uploaded, $"{WeekStart:yyyyMMdd}-{WeekEnd:yyyyMMdd} (Weekly).pdf");
             StringAssert.Contains(uploaded, "Daily Guard Log");
         }
 

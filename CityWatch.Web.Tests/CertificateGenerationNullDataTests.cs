@@ -173,18 +173,43 @@ namespace CityWatch.Web.Tests
             StringAssert.Contains(ex.Message, "certificate document");
         }
 
-        /// <summary>Same for a course that has no training course rows at all.</summary>
+        /// <summary>
+        /// Same for a course certified by TEST that has no training course rows at all - that row is
+        /// what a test attempt hangs off, so without it there is nothing to certify.
+        /// </summary>
         [TestMethod]
-        public void GeneratePdf_CourseWithNoTrainingCourse_ReportsWhatIsMissing()
+        public void GeneratePdf_TestedCourseWithNoTrainingCourse_ReportsWhatIsMissing()
         {
             var generator = CreateGenerator(BrunoTimpanoGuardId, "Bruno Timpano", "569-829-XXX",
-                guardHasScores: false, courseHasTrainingCourse: false);
+                guardHasScores: false, courseHasTrainingCourse: false, certificateIsRpl: false);
 
             var ex = Assert.ThrowsException<InvalidOperationException>(() =>
                 generator.GeneratePdf(BrunoTimpanoGuardId, ThermalCameraHrSettingsId, "TEST-HASH", false, false, false));
 
             StringAssert.Contains(ex.Message, ThermalCameraDescription);
             StringAssert.Contains(ex.Message, "training course");
+        }
+
+        /// <summary>
+        /// An RPL course does not need one. "C4i System Training - Level 3 (LB, IR, SW, KV)" is RPL
+        /// and has no TrainingCourses row at all, and this check was the last thing stopping it being
+        /// released. The row is only used to look up the guard's start test, which an RPL guard has
+        /// never begun.
+        /// </summary>
+        [TestMethod]
+        public void GeneratePdf_RplCourseWithNoTrainingCourse_StillGeneratesTheCertificate()
+        {
+            var generator = CreateGenerator(BrunoTimpanoGuardId, "Bruno Timpano", "569-829-XXX",
+                guardHasScores: false, courseHasTrainingCourse: false, certificateIsRpl: true);
+
+            var fileName = generator.GeneratePdf(BrunoTimpanoGuardId, ThermalCameraHrSettingsId, "TEST-HASH",
+                isCertificateHold: false, isCertificatewithQADump: false, isCertificateExpiry: false);
+
+            Assert.IsFalse(string.IsNullOrEmpty(fileName), "Certificate generation returned no file name.");
+
+            var written = Path.Combine(_webRoot, "Uploads", "Guards", "License", "569-829-XXX", fileName);
+            Assert.IsTrue(File.Exists(written), $"Certificate was not written to {written}.");
+            Assert.IsTrue(new FileInfo(written).Length > 0, "Certificate is empty.");
         }
 
         /* ---------------- fixtures ---------------- */
@@ -224,11 +249,12 @@ namespace CityWatch.Web.Tests
         }
 
         private CertificateGenerator CreateGenerator(int guardId, string guardName, string securityNo,
-            bool guardHasScores, bool courseHasCertificateDocument = true, bool courseHasTrainingCourse = true)
+            bool guardHasScores, bool courseHasCertificateDocument = true, bool courseHasTrainingCourse = true,
+            bool certificateIsRpl = true)
         {
             WriteCertificateTemplate();
             BuildProviderMocks(guardId, guardName, securityNo, guardHasScores, courseHasCertificateDocument,
-                courseHasTrainingCourse, guardHasRplRow: false);
+                courseHasTrainingCourse, guardHasRplRow: false, certificateIsRpl: certificateIsRpl);
 
             return new CertificateGenerator(
                 new TestWebHostEnvironment(_webRoot),
@@ -271,7 +297,8 @@ namespace CityWatch.Web.Tests
         }
 
         private void BuildProviderMocks(int guardId, string guardName, string securityNo, bool guardHasScores,
-            bool courseHasCertificateDocument, bool courseHasTrainingCourse, bool guardHasRplRow)
+            bool courseHasCertificateDocument, bool courseHasTrainingCourse, bool guardHasRplRow,
+            bool certificateIsRpl = true)
         {
             var guard = new Guard { Id = guardId, Name = guardName, SecurityNo = securityNo, State = "VIC", IsActive = true };
             var course = ThermalCameraCourse();
@@ -289,8 +316,9 @@ namespace CityWatch.Web.Tests
                 ? new List<TrainingCourseCertificate>
                 {
                     // isRPLEnabled is on for this course in the dev database - that is what made the
-                    // missing RPL row a NullReferenceException rather than a no-op.
-                    new TrainingCourseCertificate { Id = CertificateDocumentId, HRSettingsId = ThermalCameraHrSettingsId, FileName = CertificateFileName, isRPLEnabled = true }
+                    // missing RPL row a NullReferenceException rather than a no-op. Tests that are
+                    // about a course certified by test turn it off.
+                    new TrainingCourseCertificate { Id = CertificateDocumentId, HRSettingsId = ThermalCameraHrSettingsId, FileName = CertificateFileName, isRPLEnabled = certificateIsRpl }
                 }
                 : new List<TrainingCourseCertificate>();
 

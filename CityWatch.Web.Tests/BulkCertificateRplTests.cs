@@ -65,9 +65,14 @@ namespace CityWatch.Web.Tests
         /// A generator whose every dependency is mocked. Enough is stubbed for a release to run to
         /// completion: the course, its certificate document, its TQ settings and the guard.
         /// </summary>
+        /// <param name="withTqSettings">
+        /// False leaves the course with no TrainingTestQuestionSettings row, which is how every RPL
+        /// course in the database actually is - there is no test to configure settings for.
+        /// </param>
         private RPLCertificateGeneratorService CreateGenerator(List<HrSettings> courses,
             List<TrainingCourseCertificate> certificateDocuments,
-            List<TrainingCourseCertificateRPL> existingAssessments = null)
+            List<TrainingCourseCertificateRPL> existingAssessments = null,
+            bool withTqSettings = true)
         {
             _guardLogDataProvider = new Mock<IGuardLogDataProvider>();
             _guardDataProvider = new Mock<IGuardDataProvider>();
@@ -84,7 +89,9 @@ namespace CityWatch.Web.Tests
 
                 // Configured course: no practical hold, no Q&A dump, no expiry.
                 _configDataProvider.Setup(z => z.GetTQSettings(id))
-                    .Returns(new List<TrainingTestQuestionSettings> { new TrainingTestQuestionSettings { HRSettingsId = id } });
+                    .Returns(withTqSettings
+                        ? new List<TrainingTestQuestionSettings> { new TrainingTestQuestionSettings { HRSettingsId = id } }
+                        : new List<TrainingTestQuestionSettings>());
 
                 _configDataProvider.Setup(z => z.GetTrainingCoursesWithHrSettingsId(id)).Returns(new List<TrainingCourses>());
             }
@@ -414,6 +421,67 @@ namespace CityWatch.Web.Tests
                 new HashSet<int> { ThermalCameraCourseId }, details);
 
             Assert.IsTrue(plan.IsValid);
+        }
+
+        /* ---------------- RPL courses have no test-question settings ---------------- */
+
+        [TestMethod]
+        public void AnRplRelease_DoesNotNeedTestQuestionSettings()
+        {
+            var service = CreateGenerator(
+                new List<HrSettings> { MakeCourse(ThermalCameraCourseId, "03", "e", "Thermal Camera (FLIR Ti)") },
+                ThermalCameraDocuments(rplEnabled: true),
+                withTqSettings: false);
+
+            service.IssueCertificateForGuard(BrunoGuardId, ThermalCameraCourseId, MakeDetails());
+
+            /* Every RPL course in the database has zero TrainingTestQuestionSettings rows -
+               Recognition of Prior Learning means no test was sat - so requiring them failed the
+               bulk release for all of them. */
+            _guardDataProvider.Verify(z => z.SaveGuardComplianceandlicanse(
+                It.Is<GuardComplianceAndLicense>(c => c.Description == "03e Thermal Camera (FLIR Ti)")), Times.Once);
+
+            // And the assessment is still consumed, so the nightly run will not re-issue it.
+            _guardLogDataProvider.Verify(z => z.SaveTrainingCourseCertificateRPL(
+                It.Is<TrainingCourseCertificateRPL>(r => r.isDeleted)), Times.Once);
+        }
+
+        [TestMethod]
+        public void AnRplReleaseWithNoSettings_BuildsWithoutHoldDumpOrExpiry()
+        {
+            var service = CreateGenerator(
+                new List<HrSettings> { MakeCourse(ThermalCameraCourseId, "03", "e", "Thermal Camera (FLIR Ti)") },
+                ThermalCameraDocuments(rplEnabled: true),
+                withTqSettings: false);
+
+            service.IssueCertificateForGuard(BrunoGuardId, ThermalCameraCourseId, MakeDetails());
+
+            /* The three values OnPostSaveRPLDetails hard-codes for the single-guard RPL release, so
+               both RPL paths produce the same certificate. A Q&A dump would be a dump of answers
+               the guard never gave, and the expiry period lives on the missing row. */
+            _certificateGenerator.Verify(z => z.GeneratePdf(BrunoGuardId, ThermalCameraCourseId,
+                It.IsAny<string>(), false, false, false), Times.Once);
+        }
+
+        [TestMethod]
+        public void ANonRplReleaseWithNoSettings_StillFailsFast()
+        {
+            var service = CreateGenerator(
+                new List<HrSettings> { MakeCourse(NonRplCourseId, "01", "g", "Level 5") },
+                new List<TrainingCourseCertificate>
+                {
+                    new TrainingCourseCertificate { Id = 90, HRSettingsId = NonRplCourseId, isRPLEnabled = false }
+                },
+                withTqSettings: false);
+
+            var ex = Assert.ThrowsException<InvalidOperationException>(
+                () => service.IssueCertificateForGuard(BrunoGuardId, NonRplCourseId));
+
+            /* Skipping the check for RPL must not weaken it for a course certified by test - this
+               message is what the release shows instead of a bare NullReferenceException. */
+            StringAssert.Contains(ex.Message, "Level 5");
+            _guardDataProvider.Verify(z => z.SaveGuardComplianceandlicanse(
+                It.IsAny<GuardComplianceAndLicense>()), Times.Never);
         }
 
         /* ---------------- what the browser posts ---------------- */

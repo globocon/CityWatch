@@ -210,15 +210,22 @@ namespace CityWatch.Web.Services
         /// </param>
         private void IssueCertificateForGuard(int guardId, int hrSettingsId, TrainingCourseCertificateRPL rplAssessment)
         {
-            /* A course with no TrainingTestQuestionSettings row cannot be certified: both methods below
-               read that row for IsCertificateHoldUntilPracticalTaken / IsCertificateWithQAndADump /
-               IsCertificateExpiry and dereference it unguarded, which threw a bare
-               NullReferenceException that told the operator nothing (e.g. "Martha Cove - Alarm Faults"
-               has no settings row). Fail fast here, before any training record is touched, with a
-               message the Bulk Certificate Release can show against the guard and course. Both private
-               methods are only reachable through here, so this one check covers them. */
-            var certificateSettings = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
-            if (certificateSettings == null)
+            /* A course that is certified by TEST needs its TrainingTestQuestionSettings row: the two
+               methods below read it for IsCertificateHoldUntilPracticalTaken /
+               IsCertificateWithQAndADump / IsCertificateExpiry, and without this check that was a
+               bare NullReferenceException telling the operator nothing (e.g. "Martha Cove - Alarm
+               Faults" has no settings row). Failing fast here, before any training record is
+               touched, gives the Bulk Certificate Release a message it can show against the guard
+               and the course.
+
+               An RPL course is the opposite case. Recognition of Prior Learning means no test was
+               ever sat, so there is nothing for test-question settings to describe and every RPL
+               course in the database has none - requiring them blocked the bulk release for all of
+               them. The single-guard RPL flow already treats those settings as not applying:
+               OnPostSaveRPLDetails tolerates a missing row and passes GeneratePdf a hard-coded
+               false, false, false. This does the same, so both RPL paths behave alike, and the
+               defaults below are what make that safe. */
+            if (!IsRplCourse(hrSettingsId) && _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault() == null)
             {
                 var course = _configDataProvider.GetHRSettings().FirstOrDefault(x => x.Id == hrSettingsId);
                 throw new InvalidOperationException(
@@ -228,16 +235,23 @@ namespace CityWatch.Web.Services
             GuardCertificateAndfeedBackStatus(guardId, hrSettingsId);
             GuardCertificate(guardId, hrSettingsId, rplAssessment);
         }
+
+        /// <summary>
+        /// Whether the course is set up for RPL, read from the same certificate document the guard's
+        /// Training and Assessment grid reads for its RPL button and the Bulk Certificate Release
+        /// reads to decide whether to prompt. One source, so a course cannot be RPL for the prompt
+        /// and not for the issue.
+        /// </summary>
+        private bool IsRplCourse(int hrSettingsId) =>
+            GetCertificateDocumentForCourse(hrSettingsId)?.isRPLEnabled == true;
         private void GuardCertificateAndfeedBackStatus(int guardId, int hrSettingsId)
         {
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
 
+            /* Absent for every RPL course - see IssueCertificateForGuard. Nothing below may
+               dereference it unguarded. */
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
-            //if (getcertificateSatus == null)
-            //{
-            //    return new JsonResult(new { error = "Certificate status not found." });
-            //}
 
             var tqNumberList = _configDataProvider.GetTrainingCoursesWithHrSettingsId(hrSettingsId)?.ToList();
             //if (tqNumberList == null || !tqNumberList.Any())
@@ -263,7 +277,10 @@ namespace CityWatch.Web.Services
                         Id = record.Id,
                         GuardId = guardId,
                         TrainingCourseId = trainingCourseId,
-                        TrainingCourseStatusId = getcertificateSatus.IsCertificateHoldUntilPracticalTaken ? 3 : 4,
+                        /* 3 is "held until the practical is taken", 4 is complete. With no
+                           settings row there is no practical to hold for, so the course is
+                           complete - an RPL certificate is the evidence, not a step towards it. */
+                        TrainingCourseStatusId = getcertificateSatus?.IsCertificateHoldUntilPracticalTaken == true ? 3 : 4,
                         Description = record.Description,
                         HRGroupId = record.HRGroupId
                     });
@@ -277,10 +294,19 @@ namespace CityWatch.Web.Services
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
             var getcertificateSatus = _configDataProvider.GetTQSettings(hrSettingsId).FirstOrDefault();
-            var filename = _certificateGenerator.GeneratePdf(guardId, hrSettingsId, hashCode, getcertificateSatus.IsCertificateHoldUntilPracticalTaken, getcertificateSatus.IsCertificateWithQAndADump, getcertificateSatus.IsCertificateExpiry);
+
+            /* No settings row means an RPL course, and false/false/false is exactly what
+               OnPostSaveRPLDetails passes for the single-guard RPL release: no practical hold, no
+               Q&A dump (there are no answers - the guard sat no test), and no expiry, because the
+               expiry period lives on the very row that is missing. */
+            var holdUntilPractical = getcertificateSatus?.IsCertificateHoldUntilPracticalTaken == true;
+            var withQAndADump = getcertificateSatus?.IsCertificateWithQAndADump == true;
+            var hasExpiry = getcertificateSatus?.IsCertificateExpiry == true;
+
+            var filename = _certificateGenerator.GeneratePdf(guardId, hrSettingsId, hashCode, holdUntilPractical, withQAndADump, hasExpiry);
             DateTime? expirydate = DateTime.Now;
             bool IsExpiry = false;
-            if (getcertificateSatus.IsCertificateExpiry == true)
+            if (hasExpiry)
             {
 
                 var expiryyears = _configDataProvider.GetTQSettings(hrSettingsId).Where(x => x.IsCertificateExpiry == true).FirstOrDefault().CertificateExpiryYears.Name;

@@ -34,6 +34,7 @@ namespace CityWatch.Web.Tests
         private Mock<IGuardDataProvider> _guardDataProvider;
         private Mock<IGuardLogDataProvider> _guardLogDataProvider;
         private Mock<IConfigDataProvider> _configDataProvider;
+        private Mock<ICertificateGenerator> _certificateGenerator;
 
         private static TrainingCourseCertificateRPL Row(int id, int guardId, int certificateDocumentId) =>
             new TrainingCourseCertificateRPL
@@ -93,8 +94,8 @@ namespace CityWatch.Web.Tests
             _guardDataProvider.Setup(z => z.GetGuardDetailsUsingId(It.IsAny<int>()))
                 .Returns(new List<Guard> { new Guard { Id = GuardId, Name = "A Guard", SecurityNo = "1" } });
 
-            var certificateGenerator = new Mock<ICertificateGenerator>();
-            certificateGenerator
+            _certificateGenerator = new Mock<ICertificateGenerator>();
+            _certificateGenerator
                 .Setup(z => z.GeneratePdf(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(),
                     It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .Returns("certificate.pdf");
@@ -107,7 +108,7 @@ namespace CityWatch.Web.Tests
                 _guardLogDataProvider.Object,
                 _guardDataProvider.Object,
                 _configDataProvider.Object,
-                certificateGenerator.Object,
+                _certificateGenerator.Object,
                 Options.Create(new CityWatch.Data.Helpers.EmailOptions { FromAddress = "noreply@test|CityWatch" }),
                 clientDataProvider.Object,
                 NullLogger<RPLCertificateGeneratorService>.Instance);
@@ -232,8 +233,16 @@ namespace CityWatch.Web.Tests
             _guardDataProvider.Verify(z => z.SaveGuardComplianceandlicanse(It.IsAny<GuardComplianceAndLicense>()), Times.Never);
         }
 
+        /// <summary>
+        /// An RPL course has no test-question settings, and must not need them.
+        ///
+        /// This test used to assert the opposite - that the issue failed - which is what blocked the
+        /// Bulk Certificate Release for every RPL course in the database: all of them have zero
+        /// TrainingTestQuestionSettings rows, because Recognition of Prior Learning means no test
+        /// was sat and there is nothing for those settings to describe.
+        /// </summary>
         [TestMethod]
-        public void RowWhoseCourseHasNoTestQuestionSettings_IsNotConsumed()
+        public void RplCourseWithNoTestQuestionSettings_IsStillIssued()
         {
             var queue = new List<TrainingCourseCertificateRPL> { Row(13, GuardId, 14) };
             var service = CreateService(queue,
@@ -242,13 +251,60 @@ namespace CityWatch.Web.Tests
                     new TrainingCourseCertificate { Id = 14, HRSettingsId = CourseId, isRPLEnabled = true }
                 });
 
-            // The course is unconfigured, so IssueCertificateForGuard fails fast.
             _configDataProvider.Setup(z => z.GetTQSettings(CourseId)).Returns(new List<TrainingTestQuestionSettings>());
 
             service.GenerateRPLCertificate();
 
-            Assert.IsFalse(queue.Single().isDeleted, "A failed issue must stay on the queue.");
+            Assert.IsTrue(queue.Single().isDeleted, "The assessment was issued, so it must leave the queue.");
+            _guardDataProvider.Verify(z => z.SaveGuardComplianceandlicanse(It.IsAny<GuardComplianceAndLicense>()), Times.Once);
+        }
+
+        /// <summary>
+        /// The same missing settings on a course certified by TEST still fail fast, and still say
+        /// which course. That check is what turned the bare NullReferenceException reported for
+        /// Bruno Timpano and John Remington into a message the release can show, and skipping it for
+        /// RPL must not weaken it here - the two private methods dereference that row.
+        /// </summary>
+        [TestMethod]
+        public void NonRplCourseWithNoTestQuestionSettings_StillFailsWithANamedMessage()
+        {
+            var service = CreateService(new List<TrainingCourseCertificateRPL>(),
+                new List<TrainingCourseCertificate>
+                {
+                    new TrainingCourseCertificate { Id = 14, HRSettingsId = CourseId, isRPLEnabled = false }
+                });
+
+            _configDataProvider.Setup(z => z.GetTQSettings(CourseId)).Returns(new List<TrainingTestQuestionSettings>());
+
+            var ex = Assert.ThrowsException<InvalidOperationException>(
+                () => service.IssueCertificateForGuard(GuardId, CourseId));
+
+            StringAssert.Contains(ex.Message, "Thermal Camera (FLIR Ti)");
+            StringAssert.Contains(ex.Message, "Training/Test Question settings");
             _guardDataProvider.Verify(z => z.SaveGuardComplianceandlicanse(It.IsAny<GuardComplianceAndLicense>()), Times.Never);
+        }
+
+        /// <summary>
+        /// With no settings row, the certificate is built with no practical hold, no Q&amp;A dump and
+        /// no expiry - the same three values OnPostSaveRPLDetails hard-codes for a single-guard RPL
+        /// release. A Q&amp;A dump in particular would be a dump of answers the guard never gave, and
+        /// the expiry period lives on the very row that is missing.
+        /// </summary>
+        [TestMethod]
+        public void RplCourseWithNoTestQuestionSettings_IsBuiltWithoutHoldDumpOrExpiry()
+        {
+            var queue = new List<TrainingCourseCertificateRPL> { Row(13, GuardId, 14) };
+            var service = CreateService(queue,
+                new List<TrainingCourseCertificate>
+                {
+                    new TrainingCourseCertificate { Id = 14, HRSettingsId = CourseId, isRPLEnabled = true }
+                });
+
+            _configDataProvider.Setup(z => z.GetTQSettings(CourseId)).Returns(new List<TrainingTestQuestionSettings>());
+
+            service.GenerateRPLCertificate();
+
+            _certificateGenerator.Verify(z => z.GeneratePdf(GuardId, CourseId, It.IsAny<string>(), false, false, false), Times.Once);
         }
 
         /// <summary>
