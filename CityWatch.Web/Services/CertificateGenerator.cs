@@ -157,10 +157,24 @@ namespace CityWatch.Web.Services
             if (hrSettings == null)
                 throw new InvalidOperationException($"Course {hrSettingsId} was not found, so a certificate cannot be generated.");
 
+            /* A course certified by TEST needs its TrainingCourses row: that row is what the guard's
+               test attempt hangs off, and the certificate prints the date they sat it.
+
+               An RPL course has no test, so it need not have one. "C4i System Training - Level 3
+               (LB, IR, SW, KV)" is RPL and has no TrainingCourses row at all, and this check was the
+               last thing stopping it being released. The id below is used for exactly one thing -
+               looking up the guard's start test - and an RPL guard has never started one.
+
+               The certificate-document lookup is repeated here rather than hoisted above, so the
+               order the two gaps are reported in does not change. && short-circuits, so it only
+               runs on the path that is about to throw anyway. */
             var firstTrainingCourse = _configDataProvider.GetTrainingCourses(hrSettingsId, 1).FirstOrDefault();
-            if (firstTrainingCourse == null)
+            if (firstTrainingCourse == null &&
+                _configDataProvider.GetCourseCertificateDocsUsingSettingsId(hrSettingsId).FirstOrDefault()?.isRPLEnabled != true)
+            {
                 throw new InvalidOperationException($"No training course is set up for '{hrSettings.Description}', so a certificate cannot be generated.");
-            int trainingCourseId = firstTrainingCourse.Id;
+            }
+            int? trainingCourseId = firstTrainingCourse?.Id;
 
             var hrreferenceNumber = "HR" + hrSettings.ReferenceNoNumbers?.Name + hrSettings.ReferenceNoAlphabets?.Name;
 
@@ -173,7 +187,11 @@ namespace CityWatch.Web.Services
             
             
             string CertificateTemplatePath = IO.Path.Combine(_TemplatePdf, hrreferenceNumber, "Certificate", certificateName);
-            var guardsstarttest = _configDataProvider.GetGuardTrainingStartTest(guardId, trainingCourseId).FirstOrDefault();
+            // No training course means an RPL course, and no start test to find. The uses below are
+            // already guarded by a null check.
+            var guardsstarttest = trainingCourseId.HasValue
+                ? _configDataProvider.GetGuardTrainingStartTest(guardId, trainingCourseId.Value).FirstOrDefault()
+                : null;
             int certificateId = certificateDocument.Id;
             var certificateRPL=_configDataProvider.GetCourseCertificateRPLUsingId( certificateId).Where(x=>x.GuardId==guardId);
             //_IncidentReport = incidentReport;
