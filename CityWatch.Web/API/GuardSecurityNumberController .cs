@@ -5184,6 +5184,175 @@ namespace CityWatch.Web.API
             }
         }
 
+        /* ---------------- AI Assistance (mobile Incident Report) ----------------
+           The mobile counterpart of the AI handlers on /Incident/Register, with the same three
+           operations, validation, prompts and guard-facing messages. The app sends the text and
+           gets the result back; the provider key never leaves this server.
+
+           This controller is anonymous, so every call must name an active guard - without that
+           anyone could spend the provider budget. Services come in as [FromServices] so the
+           controller's already long constructor is untouched. */
+
+        /// <summary>Target languages for the Language Converter, served so the app does not hard-code them.</summary>
+        [HttpGet("GetAiLanguages")]
+        public IActionResult GetAiLanguages(int guardId, [FromServices] IOptions<AiAssistanceSettings> aiSettings)
+        {
+            var guardError = ValidateAiGuard(guardId);
+            if (guardError != null)
+                return Ok(new { issuccess = false, message = guardError, data = new List<AiLanguageOption>() });
+
+            var settings = aiSettings.Value;
+            return Ok(new
+            {
+                issuccess = true,
+                message = "Successfully retrieved languages.",
+                data = settings.TargetLanguages.Select(z => new AiLanguageOption { Code = z.Code, Name = z.Name }).ToList(),
+                maxtextlength = settings.MaxTextLength
+            });
+        }
+
+        /// <summary>Grammar, spelling and style check. Returns suggestions; changes nothing.</summary>
+        [HttpPost("AiGrammarCheck")]
+        public async Task<IActionResult> AiGrammarCheck([FromBody] MobileAiTextRequest request,
+            [FromServices] ILanguageToolService languageTool,
+            [FromServices] IOptions<AiAssistanceSettings> aiSettings)
+        {
+            var error = ValidateAiGuard(request?.GuardId ?? 0) ?? ValidateAiText(request?.Text, aiSettings.Value);
+            if (error != null)
+                return Ok(new { issuccess = false, message = error, data = (object)null });
+
+            var text = request.Text.Trim();
+            _logger.LogInformation("AI operation started (mobile, guard {GuardId}): grammar check ({Length} characters).", request.GuardId, text.Length);
+
+            try
+            {
+                var result = await languageTool.CheckAsync(text, HttpContext.RequestAborted);
+                _logger.LogInformation("AI operation completed (mobile): grammar check found {Count} suggestion(s).", result.Matches.Count);
+                return Ok(new { issuccess = true, message = "Grammar check completed.", data = result });
+            }
+            catch (LanguageToolUnavailableException)
+            {
+                // Already logged with the provider detail by the service; the guard gets plain words.
+                return Ok(new { issuccess = false, message = AiGrammarUnavailableMessage, data = (object)null });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI operation failed (mobile): grammar check.");
+                return Ok(new { issuccess = false, message = AiGrammarUnavailableMessage, data = (object)null });
+            }
+        }
+
+        /// <summary>Professional rewrite of the incident text. Returns a result for the guard to review.</summary>
+        [HttpPost("AiImproveIncident")]
+        public async Task<IActionResult> AiImproveIncident([FromBody] MobileAiTextRequest request,
+            [FromServices] IAiService ai,
+            [FromServices] IOptions<AiAssistanceSettings> aiSettings)
+        {
+            var error = ValidateAiGuard(request?.GuardId ?? 0) ?? ValidateAiText(request?.Text, aiSettings.Value);
+            if (error != null)
+                return Ok(new { issuccess = false, message = error, data = (object)null });
+
+            var text = request.Text.Trim();
+            _logger.LogInformation("AI operation started (mobile, guard {GuardId}): incident rewrite ({Length} characters).", request.GuardId, text.Length);
+
+            try
+            {
+                var resultText = await ai.ImproveIncidentReportAsync(text, HttpContext.RequestAborted);
+                _logger.LogInformation("AI operation completed (mobile): incident rewrite.");
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = "Incident rewrite completed.",
+                    data = new AiTextResult { OriginalText = text, ResultText = resultText }
+                });
+            }
+            catch (AiServiceUnavailableException)
+            {
+                return Ok(new { issuccess = false, message = AiUnavailableMessage, data = (object)null });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI operation failed (mobile): incident rewrite.");
+                return Ok(new { issuccess = false, message = AiUnavailableMessage, data = (object)null });
+            }
+        }
+
+        /// <summary>Converts the incident text to another language or regional English variant.</summary>
+        [HttpPost("AiTranslate")]
+        public async Task<IActionResult> AiTranslate([FromBody] MobileAiTranslationRequest request,
+            [FromServices] IAiService ai,
+            [FromServices] IOptions<AiAssistanceSettings> aiSettings)
+        {
+            var settings = aiSettings.Value;
+            var error = ValidateAiGuard(request?.GuardId ?? 0) ?? ValidateAiText(request?.Text, settings);
+            if (error != null)
+                return Ok(new { issuccess = false, message = error, data = (object)null });
+
+            // The target must be one this server offers - the posted value is never trusted.
+            var target = settings.TargetLanguages
+                .FirstOrDefault(z => string.Equals(z.Code, request.TargetLanguage, StringComparison.OrdinalIgnoreCase));
+
+            if (target == null)
+                return Ok(new { issuccess = false, message = "The selected language is not supported.", data = (object)null });
+
+            var text = request.Text.Trim();
+            _logger.LogInformation("AI operation started (mobile, guard {GuardId}): translation to {Target} ({Length} characters).",
+                request.GuardId, target.Code, text.Length);
+
+            try
+            {
+                var resultText = await ai.TranslateAsync(text, target.Name, HttpContext.RequestAborted);
+                _logger.LogInformation("AI operation completed (mobile): translation to {Target}.", target.Code);
+                return Ok(new
+                {
+                    issuccess = true,
+                    message = "Translation completed.",
+                    data = new AiTextResult { OriginalText = text, ResultText = resultText }
+                });
+            }
+            catch (AiServiceUnavailableException)
+            {
+                return Ok(new { issuccess = false, message = AiUnavailableMessage, data = (object)null });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI operation failed (mobile): translation request to {Target}.", target.Code);
+                return Ok(new { issuccess = false, message = AiUnavailableMessage, data = (object)null });
+            }
+        }
+
+        // Wording matches the /Incident/Register handlers so web and mobile say the same thing.
+        private const string AiGrammarUnavailableMessage = "Grammar checking is temporarily unavailable. Please try again.";
+        private const string AiUnavailableMessage = "AI assistance is temporarily unavailable. Please try again.";
+
+        /// <summary>Only an active guard may use AI Assistance. Returns a guard-facing message, or null when allowed.</summary>
+        private string ValidateAiGuard(int guardId)
+        {
+            if (guardId <= 0)
+                return "Guard ID not found. Please log in again.";
+
+            var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+            if (guard == null || !guard.IsActive)
+            {
+                _logger.LogWarning("AI Assistance refused for guard {GuardId}: not found or inactive.", guardId);
+                return "AI assistance is not available for this guard.";
+            }
+
+            return null;
+        }
+
+        /// <summary>The same server-side text validation as /Incident/Register. Returns null when the text is acceptable.</summary>
+        private static string ValidateAiText(string text, AiAssistanceSettings settings)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return RegisterModel.EmptyTextMessage;
+
+            if (text.Trim().Length > settings.MaxTextLength)
+                return $"The text is too long for AI assistance. Please keep it under {settings.MaxTextLength:N0} characters.";
+
+            return null;
+        }
+
         [HttpPost("SetGuardNotificationReadStatus")]
         public IActionResult SetGuardNotificationReadStatus([FromBody] GuardNotificationReadRequest request)
         {
