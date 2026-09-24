@@ -87,6 +87,21 @@ namespace CityWatch.Web.Models
         public string TargetLanguage { get; set; }
     }
 
+    /// <summary>
+    /// Mobile app request (api/GuardSecurityNumber AI endpoints). Carries the guard because that
+    /// API is anonymous: only an active guard may spend the provider budget.
+    /// </summary>
+    public class MobileAiTextRequest
+    {
+        public int GuardId { get; set; }
+        public string Text { get; set; }
+    }
+
+    public class MobileAiTranslationRequest : MobileAiTextRequest
+    {
+        public string TargetLanguage { get; set; }
+    }
+
     /// <summary>Result of a rewrite or a conversion. The caller decides whether to keep it.</summary>
     public class AiTextResult
     {
