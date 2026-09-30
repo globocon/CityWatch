@@ -104,6 +104,10 @@ BEGIN
             WHERE Id = @BeforeLogId;
         END
 
+        -- A cursor entry that no longer exists (deleted) yields an empty page - never the newest
+        -- page again, which the app would append as "older" entries. The app moves its cursor
+        -- to the last card it still shows and asks again.
+        IF @BeforeLogId <= 0 OR @CursorId IS NOT NULL
         INSERT INTO @Page (Id)
         SELECT TOP (@PageSize) gl.Id
         FROM GuardLogs gl
