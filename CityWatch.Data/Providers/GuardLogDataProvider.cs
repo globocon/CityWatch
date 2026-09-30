@@ -427,6 +427,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogDocketHistory> GetKeyVehicleLogsDocketsHistory(int keyvehiclelogid);
         int GetLatestQuestionNumber(int hrsettingsId, int tqnumberId);
         Task<List<GuardLogDto>> GetSiteLogAsync(int clientsiteId, int lastLogId = 0);
+        Task<List<GuardLogDto>> GetSiteLogPageAsync(int clientsiteId, int beforeLogId, int pageSize, IReadOnlyCollection<int> logIds = null);
         public void DeleteGuardLogDocumentImagesByLogId(int guardLogId, string fileName);
 
         public List<SiteTagStatusPendingNew> GetTagStatusPendingForSpecificGuard(int clientId, int guardId);
@@ -8655,6 +8656,40 @@ WHERE f.ClientSiteId = @clientSiteId
                                 clientsiteId, lastLogId)
                     .ToListAsync();
 
+                return ToSiteLogDtos(rawData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching site log: {ex.Message}");
+                return new List<GuardLogDto>();
+            }
+        }
+
+        /// <summary>
+        /// One page of the mobile logbook (sp_GetSiteLogPage): the newest <paramref name="pageSize"/>
+        /// entries, the next ones after <paramref name="beforeLogId"/> as the guard scrolls, or
+        /// exactly <paramref name="logIds"/> for a live update. Same rows and mapping as
+        /// <see cref="GetSiteLogAsync"/>. Unlike it, a failure is thrown, not swallowed - an
+        /// empty page means "nothing (more)", so it must never also mean "the query failed".
+        /// </summary>
+        public async Task<List<GuardLogDto>> GetSiteLogPageAsync(int clientsiteId, int beforeLogId, int pageSize, IReadOnlyCollection<int> logIds = null)
+        {
+            // Built from integers only, so the procedure's XML split never sees markup.
+            var ids = logIds == null ? null : string.Join(",", logIds);
+
+            var rawData = await _context.Set<GuardLogRawProjection>()
+                .FromSqlRaw("EXEC sp_GetSiteLogPage @ClientSiteId, @BeforeLogId, @PageSize, @LogIds",
+                            new SqlParameter("@ClientSiteId", clientsiteId),
+                            new SqlParameter("@BeforeLogId", beforeLogId),
+                            new SqlParameter("@PageSize", pageSize),
+                            new SqlParameter("@LogIds", System.Data.SqlDbType.NVarChar, -1) { Value = (object)ids ?? DBNull.Value })
+                .ToListAsync();
+
+            return ToSiteLogDtos(rawData);
+        }
+
+        private static List<GuardLogDto> ToSiteLogDtos(List<GuardLogRawProjection> rawData)
+        {
                 var groupedResult = rawData
                     .GroupBy(r => r.Id)
                     .Select(g =>
@@ -8705,12 +8740,6 @@ WHERE f.ClientSiteId = @clientSiteId
                     .ToList();
 
                 return groupedResult;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error fetching site log: {ex.Message}");
-                return new List<GuardLogDto>();
-            }
         }
 
 
