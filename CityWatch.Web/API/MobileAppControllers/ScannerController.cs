@@ -194,6 +194,138 @@ namespace CityWatch.Web.API
             }
         }
 
+        /// <summary>
+        /// The guard's own name, security number and initials, for the app to name them in a
+        /// logbook entry it composes.
+        ///
+        /// Read from Guards rather than from whatever the device has in Preferences: a tag edit
+        /// is an audit record, and the name on it has to be the one the office holds, not one
+        /// cached on a handset at some earlier login.
+        /// </summary>
+        [HttpGet("GetGuardNameDetails")]
+        public IActionResult GetGuardNameDetails(int guardId)
+        {
+            try
+            {
+                if (guardId <= 0)
+                    return Ok(new { IsSuccess = false, message = "Guard ID is required." });
+
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+                if (guard == null)
+                    return Ok(new { IsSuccess = false, message = "Guard not found." });
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    message = "Guard found.",
+                    guard.Id,
+                    guard.Name,
+                    guard.SecurityNo,
+                    guard.Initial
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { IsSuccess = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Looks a tag up by its UID so the mobile app can edit its description.
+        ///
+        /// Deliberately NOT GetScannerTagInfoData: that one is the patrol scan path and writes
+        /// a hit log every time it is called. An admin opening a tag to correct its label has
+        /// not patrolled anything, and logging a scan they did not make would put a false entry
+        /// in the site's tag history. This only reads.
+        ///
+        /// tagType is "nfc" or "bluetooth" - the same values SmartWandTagsType holds - because
+        /// an NFC tag and a beacon can legitimately carry the same UID.
+        /// </summary>
+        [HttpGet("GetTagForEdit")]
+        public IActionResult GetTagForEdit(string tagUid, string tagType, int siteId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(tagUid) || string.IsNullOrWhiteSpace(tagType))
+                    return Ok(new { IsSuccess = false, tagFound = false, message = "Tag UID and type are required." });
+
+                var tag = _viewDataService.GetSmartWandTagDetailOfTag(tagUid.Trim(), tagType.Trim());
+
+                if (tag == null)
+                {
+                    // Not an error: an unknown tag is a normal outcome the app has to report.
+                    return Ok(new { IsSuccess = true, tagFound = false, message = "Tag not found in database." });
+                }
+
+                /* The tag exists, but that does not mean this guard may touch it. The scan path
+                   in MobileAppDataServices.CreateSmartWandScannerHitLogRecord already decides
+                   which sites a guard can scan from; editing has to obey the same rule, or a
+                   guard at one site could rename another site's tags by walking past them. */
+                var (allowed, refusal) = IsTagReachableFromSite(tag.ClientSiteId, siteId);
+                if (!allowed)
+                    return Ok(new { IsSuccess = false, tagFound = false, message = refusal });
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    tagFound = true,
+                    message = "Tag found.",
+                    tag.Id,
+                    tag.ClientSiteId,
+                    tag.ClientSiteName,
+                    tag.UId,
+                    tag.TagsTypeId,
+                    tag.TagsType,
+                    tag.LabelDescription
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { IsSuccess = false, tagFound = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Whether a guard signed in at <paramref name="loggedInSiteId"/> may work on a tag that
+        /// belongs to <paramref name="tagSiteId"/>.
+        ///
+        /// Mirrors the STND branch of CreateSmartWandScannerHitLogRecord: on a standard tour a
+        /// guard reaches their own site's tags, plus the sites linked to it through RC duress -
+        /// and only when that link has smart wand enabled (IsSW). On a patrol car or inspection
+        /// tour the whole point is that the unit moves between sites, so no restriction applies.
+        ///
+        /// The tour mode is read from the SITE, not from the handset, for the same reason the
+        /// scan path does: it is a site setting, and a device claiming otherwise should not
+        /// widen what it can reach.
+        /// </summary>
+        private (bool allowed, string refusal) IsTagReachableFromSite(int tagSiteId, int loggedInSiteId)
+        {
+            if (loggedInSiteId <= 0)
+                return (false, "Please select a valid Client Site.");
+
+            if (tagSiteId == loggedInSiteId)
+                return (true, string.Empty);
+
+            var site = _clientSitesDataProvider.GetClientSiteDetailsWithId(loggedInSiteId).FirstOrDefault();
+
+            // PCAR / INSP: the unit moves between sites, so any site's tag is fair game.
+            if (site != null && site.PatrolTourMode != PatrolTouringMode.STND)
+                return (true, string.Empty);
+
+            var linkedSites = _guardLogDataProvider.getallClientSitesLinkedDuress(loggedInSiteId);
+            var linkedMaster = _guardLogDataProvider.getallRCLinkedDuressMaster()
+                .FirstOrDefault(x => x.Id == linkedSites?.FirstOrDefault()?.RCLinkedId);
+
+            // Linked sites only count when smart wand is enabled on the link.
+            if (linkedMaster != null && !linkedMaster.IsSW)
+                linkedSites = new List<RCLinkedDuressClientSites>();
+
+            if (linkedSites != null && linkedSites.Any(x => x.ClientSiteId == tagSiteId))
+                return (true, string.Empty);
+
+            return (false, "Tag does not belong to logged in site. Please check.");
+        }
+
         [HttpPost("SaveNFCtagInfoData")]
         public IActionResult SaveNFCtagInfoData([FromBody] ClientSiteSmartWandTags csswt)
         {
