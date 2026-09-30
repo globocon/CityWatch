@@ -1894,6 +1894,50 @@ namespace CityWatch.Web.API
             }
         }
 
+        // Paged mobile logbook (app 1.56.3+): the newest entries first, then the next page after
+        // beforeLogId as the guard scrolls - WhatsApp-style, instead of the whole day at once.
+        // GetSiteLog above stays as it is for older app versions.
+        [HttpGet("GetSiteLogPage")]
+        public async Task<IActionResult> GetSiteLogPage(int clientsiteId, int beforeLogId = 0, int pageSize = 10)
+        {
+            try
+            {
+                var result = await _guardLogDataProvider.GetSiteLogPageAsync(clientsiteId, beforeLogId, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Error loading logs",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // Live update: exactly these entries, after a GuardLogChangedV2 push. An id missing from
+        // the result is no longer in today's logbook (deleted or moved) - the app removes it.
+        [HttpGet("GetSiteLogEntries")]
+        public async Task<IActionResult> GetSiteLogEntries(int clientsiteId, [FromQuery] int[] ids)
+        {
+            if (ids == null || ids.Length == 0)
+                return Ok(new List<GuardLogDto>());
+
+            try
+            {
+                var result = await _guardLogDataProvider.GetSiteLogPageAsync(clientsiteId, 0, 100, ids.Distinct().Take(100).ToList());
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Error loading logs",
+                    error = ex.Message
+                });
+            }
+        }
+
 
         [HttpGet("GetStaffDocuments")]
         public IActionResult GetStaffDocuments(int type, int UserId, string query = "")
