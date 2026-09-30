@@ -45,8 +45,16 @@ namespace CityWatch.Data
 
             foreach (var change in ResolveLogbookChanges(pending))
             {
-                await _hubContext.Clients.Group(change.SiteId.ToString())
-                    .SendAsync("GuardLogChangedV2", change.ChangedIds, change.DeletedIds);
+                try
+                {
+                    await _hubContext.Clients.Group(change.SiteId.ToString())
+                        .SendAsync("GuardLogChangedV2", change.ChangedIds, change.DeletedIds);
+                }
+                catch (Exception ex)
+                {
+                    // The save has already happened; a failed live update must never surface as a failed save.
+                    Console.WriteLine($"GuardLogChangedV2 not sent: {ex.Message}");
+                }
             }
 
             return result;
@@ -70,8 +78,15 @@ namespace CityWatch.Data
 
             foreach (var change in ResolveLogbookChanges(pending))
             {
-                _hubContext.Clients.Group(change.SiteId.ToString())
-                    .SendAsync("GuardLogChangedV2", change.ChangedIds, change.DeletedIds);
+                try
+                {
+                    _hubContext.Clients.Group(change.SiteId.ToString())
+                        .SendAsync("GuardLogChangedV2", change.ChangedIds, change.DeletedIds);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"GuardLogChangedV2 not sent: {ex.Message}");
+                }
             }
 
             return result;
