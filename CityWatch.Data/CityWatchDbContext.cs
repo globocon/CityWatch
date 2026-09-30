@@ -30,6 +30,7 @@ namespace CityWatch.Data
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var clientSiteIds = GetGuardLogChangedClientSiteIds();
+            var pending = GetPendingLogbookChanges();
 
             int result = await base.SaveChangesAsync(cancellationToken);
 
@@ -37,9 +38,15 @@ namespace CityWatch.Data
             {
                 // Notify all clients in the affected ClientSite groups
                 foreach (var siteId in clientSiteIds.Distinct())
-                {                    
+                {
                     await _hubContext.Clients.Group(siteId.ToString()).SendAsync("GuardLogChanged");
                 }
+            }
+
+            foreach (var change in ResolveLogbookChanges(pending))
+            {
+                await _hubContext.Clients.Group(change.SiteId.ToString())
+                    .SendAsync("GuardLogChangedV2", change.ChangedIds, change.DeletedIds);
             }
 
             return result;
@@ -48,6 +55,7 @@ namespace CityWatch.Data
         public override int SaveChanges()
         {
             var clientSiteIds = GetGuardLogChangedClientSiteIds();
+            var pending = GetPendingLogbookChanges();
 
             int result = base.SaveChanges();
 
@@ -60,7 +68,105 @@ namespace CityWatch.Data
                 }
             }
 
+            foreach (var change in ResolveLogbookChanges(pending))
+            {
+                _hubContext.Clients.Group(change.SiteId.ToString())
+                    .SendAsync("GuardLogChangedV2", change.ChangedIds, change.DeletedIds);
+            }
+
             return result;
+        }
+
+        // GuardLogChangedV2 (paged mobile logbook, app 1.56.3+): says WHICH entries changed, so
+        // the app fetches only those instead of reloading the whole day. Sent alongside the bare
+        // GuardLogChanged above, which older apps still listen for.
+        //
+        // Captured before the save (entity states are gone after it), resolved after it (an added
+        // log only has its Id then). A photo row counts as a change to its log entry: photos are
+        // saved in their own SaveChanges after the entry, and the app must refetch it to show them.
+        private sealed class PendingLogbookChange
+        {
+            public GuardLog Log;           // added/modified entry, Id read after the save
+            public int LogId;              // deleted entry, or the entry a photo belongs to
+            public int LogBookId;
+            public bool Deleted;
+        }
+
+        public sealed class LogbookChange
+        {
+            public int SiteId { get; init; }
+            public int[] ChangedIds { get; init; }
+            public int[] DeletedIds { get; init; }
+        }
+
+        private List<PendingLogbookChange> GetPendingLogbookChanges()
+        {
+            var pending = new List<PendingLogbookChange>();
+
+            foreach (var e in ChangeTracker.Entries()
+                         .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
+            {
+                if (e.Entity is GuardLog log)
+                {
+                    pending.Add(e.State == EntityState.Deleted
+                        ? new PendingLogbookChange { LogId = log.Id, LogBookId = log.ClientSiteLogBookId, Deleted = true }
+                        : new PendingLogbookChange { Log = log, LogBookId = log.ClientSiteLogBookId });
+                }
+                else if (e.Entity is GuardLogsDocumentImages image && image.GuardLogId is int logId && logId > 0)
+                {
+                    pending.Add(new PendingLogbookChange { LogId = logId });
+                }
+            }
+
+            return pending;
+        }
+
+        private List<LogbookChange> ResolveLogbookChanges(List<PendingLogbookChange> pending)
+        {
+            if (pending.Count == 0)
+                return new List<LogbookChange>();
+
+            try
+            {
+                foreach (var p in pending.Where(p => p.Log != null))
+                    p.LogId = p.Log.Id;
+
+                // Photo rows carry only the entry id; one query finds their logbooks.
+                var photoLogIds = pending.Where(p => p.Log == null && !p.Deleted).Select(p => p.LogId).Distinct().ToList();
+                if (photoLogIds.Count > 0)
+                {
+                    var books = GuardLogs.AsNoTracking()
+                        .Where(g => photoLogIds.Contains(g.Id))
+                        .Select(g => new { g.Id, g.ClientSiteLogBookId })
+                        .ToDictionary(g => g.Id, g => g.ClientSiteLogBookId);
+
+                    foreach (var p in pending.Where(p => p.Log == null && !p.Deleted))
+                        p.LogBookId = books.TryGetValue(p.LogId, out var bookId) ? bookId : 0;
+                }
+
+                var bookIds = pending.Select(p => p.LogBookId).Where(id => id > 0).Distinct().ToList();
+                var sites = ClientSiteLogBooks.AsNoTracking()
+                    .Where(b => bookIds.Contains(b.Id))
+                    .Select(b => new { b.Id, b.ClientSiteId })
+                    .ToDictionary(b => b.Id, b => b.ClientSiteId);
+
+                return pending
+                    .Where(p => p.LogId > 0 && sites.ContainsKey(p.LogBookId))
+                    .GroupBy(p => sites[p.LogBookId])
+                    .Select(g => new LogbookChange
+                    {
+                        SiteId = g.Key,
+                        ChangedIds = g.Where(p => !p.Deleted).Select(p => p.LogId).Distinct().ToArray(),
+                        DeletedIds = g.Where(p => p.Deleted).Select(p => p.LogId).Distinct().ToArray(),
+                    })
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                // A missed live update only leaves a phone a little stale; it must never fail the save.
+                Console.WriteLine($"GuardLogChangedV2 not sent: {ex.Message}");
+                return new List<LogbookChange>();
+            }
         }
 
         private List<int> GetGuardLogChangedClientSiteIds()
