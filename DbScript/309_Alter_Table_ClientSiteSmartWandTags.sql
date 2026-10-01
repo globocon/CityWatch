@@ -1,0 +1,2 @@
+ALTER TABLE ClientSiteSmartWandTags
+DROP CONSTRAINT UQ_ClientSiteSmartWandTags_UId;

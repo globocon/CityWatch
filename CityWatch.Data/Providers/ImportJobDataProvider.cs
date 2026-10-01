@@ -35,6 +35,7 @@ namespace CityWatch.Data.Providers
         public List<KpiDataImportJob> GetKpiDataImportJobs()
         {
             return _context.KpiDataImportJobs
+                .Where(z=> z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .OrderByDescending(x => x.CreatedDate)
                 .ToList();
@@ -43,6 +44,7 @@ namespace CityWatch.Data.Providers
         public KpiDataImportJob GetKpiDataImportJobById(int id)
         {
             return _context.KpiDataImportJobs
+                .Where(z=> z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .SingleOrDefault(x => x.Id == id);
         }

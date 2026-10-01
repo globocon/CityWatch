@@ -1,30 +1,121 @@
+using CityWatch.Common.Services;
+using CityWatch.Data;
+using CityWatch.Data.Helpers;
+using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
+using CityWatch.Kpi.Services;
+using CityWatch.Kpi.Services.FastReport;
+using CityWatch.Kpi.Helpers;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace CityWatch.Kpi
+var builder = WebApplication.CreateBuilder(args);
+
+var Configuration = builder.Configuration;
+// Add services to the container.
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.Configure<Settings>(Configuration.GetSection(Settings.Name));
+builder.Services.Configure<EmailOptions>(Configuration.GetSection(EmailOptions.Email));
+builder.Services.AddScoped<IClientDataProvider, ClientDataProvider>();
+builder.Services.AddScoped<IViewDataService, ViewDataService>();
+builder.Services.AddScoped<IReportGenerator, ReportGenerator>();
+builder.Services.AddScoped<IKpiDataProvider, KpiDataProvider>();
+builder.Services.AddScoped<IImportJobDataProvider, ImportJobDataProvider>();
+builder.Services.AddScoped<IImportDataService, ImportDataService>();
+builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
+builder.Services.AddScoped<IKpiSchedulesDataProvider, KpiSchedulesDataProvider>();
+builder.Services.AddScoped<ICleanupService, CleanupService>();
+builder.Services.AddScoped<ISendScheduleService, SendScheduleService>();
+builder.Services.AddScoped<IReportUploadService, ReportUploadService>();
+builder.Services.AddScoped<IDropboxService, DropboxService>();
+builder.Services.AddScoped<IIrDataProvider, IrDataProvider>();
+builder.Services.AddScoped<IPatrolDataReportService, PatrolDataReportService>();
+builder.Services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
+builder.Services.AddScoped<IGuardDataProvider, GuardDataProvider>();
+builder.Services.AddScoped<IUserDataProvider, UserDataProvider>();
+builder.Services.AddScoped <IClientSiteWandDataProvider,ClientSiteWandDataProvider>();
+builder.Services.AddScoped<IGuardLogDataProvider, GuardLogDataProvider>();
+builder.Services.AddScoped<IGuardSettingsDataProvider, GuardSettingsDataProvider>();
+builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
+builder.Services.AddScoped<ITimesheetGenerator, TimeSheetGenerator>();
+builder.Services.AddScoped<IClientSiteViewDataService, ClientSiteViewDataService>();
+builder.Services.AddScoped<IKeyVehicleGenerator, KeyVehicleGenerator>();
+builder.Services.AddScoped<IWandStrikeReportDataService, WandStrikeReportDataService>();
+builder.Services.AddScoped<ICustomWandExcelReportGenerator, CustomWandExcelReportGenerator>();
+
+// ---------------------------------------------------------------------------
+// Fast report generator (parallel implementation - additive only).
+// Nothing above this block is modified; the existing report path is unchanged.
+// The service collection is exposed so FastReportScopeFactory can mirror these
+// registrations into a child container and decorate the report path's data
+// providers with per-run caching. See docs/FAST-REPORT-GENERATOR.md.
+// ---------------------------------------------------------------------------
+builder.Services.AddSingleton<IServiceCollection>(builder.Services);
+builder.Services.AddSingleton<IFastReportJobStore, FastReportJobStore>();
+builder.Services.AddSingleton<IFastReportScopeFactory, FastReportScopeFactory>();
+builder.Services.AddSingleton<IFastReportService, FastReportService>();
+
+builder.Services.AddSession();
+builder.Services.AddRazorPages(options =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    // AllowAnonymousToFolder("/") given for allowing guard can access the KPI Dashboard 
+    options.Conventions.AllowAnonymousToFolder("/");
+    options.Conventions.AuthorizeFolder("/Develop");
+    options.Conventions.AllowAnonymousToFolder("/Account");
+});
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(120);
+});
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSignalR();
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureLogging((hostingContext, loggingBuilder) =>
-                {
-                    loggingBuilder.AddFile(hostingContext.Configuration.GetSection("Logging"));
-                })
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+
+var app = builder.Build();
+
+// ---------------------------------------------------------------------------
+// Email test-mode banner. Logged loudly at boot so a redirect left switched on
+// is visible in the log the moment the app starts, not discovered later when a
+// client asks why their report never arrived.
+// ---------------------------------------------------------------------------
+var emailTestRedirect = CityWatch.Kpi.Services.SendScheduleService.GetTestModeRedirectAddresses(
+    app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<CityWatch.Data.Helpers.EmailOptions>>().Value);
+if (emailTestRedirect.Count > 0)
+{
+    app.Services.GetRequiredService<ILoggerFactory>()
+        .CreateLogger("EmailTestMode")
+        .LogWarning(
+            "EMAIL TEST MODE IS ACTIVE. Every KPI report email will go only to {Redirect}; no client will receive one. " +
+            "Clear Email:TestModeRedirectTo in appsettings.json and restart to resume live sending.",
+            string.Join(", ", emailTestRedirect));
 }
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapRazorPages();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<MobileAppSignalRHub>("/MobileAppSignalRHub");
+app.Run();

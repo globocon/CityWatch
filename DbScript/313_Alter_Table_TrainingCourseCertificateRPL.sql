@@ -1,0 +1,3 @@
+
+alter table TrainingCourseCertificateRPL add TrainingTheoryLocationId int
+update TrainingCourseCertificateRPL set TrainingTheoryLocationId=1

@@ -1,0 +1,2649 @@
+<style>
+    /* Type Dropdown Color Dots */
+    .type-dot {
+        height: 10px;
+        width: 10px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* Table Styling matched to Booking module */
+    #guard_roster_grid { border-collapse: separate; border-spacing: 0; }
+    
+    #guard_roster_grid thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        padding: 12px 8px;
+        border: none !important;
+    }
+    .status-stamp-img {
+        max-width: 100px;
+        height: auto;
+        display: block;
+        margin: 5px auto 0;
+    }
+
+    #guard_roster_grid tbody td {
+        padding: 10px 8px !important;
+        vertical-align: top;
+        border-color: #dee2e6 !important;
+    }
+
+    .guard-site-name {
+        color: #007bff;
+        font-weight: 700;
+        font-size: 13.5px;
+        line-height: 1.2;
+    }
+    
+    .guard-client-type {
+        font-size: 10px;
+        color: #6c757d;
+        margin-top: 3px;
+        font-weight: 500;
+    }
+
+    .guard-day-cell { transition: background-color 0.2s ease; }
+    .guard-day-cell:hover { background-color: #f8f9fa; }
+    
+    /* Public Holiday Highlighting.
+       The day cells are rendered with class "guard-roster-cell" (not "guard-day-cell"), so the old
+       selector never matched a weekday holiday - only the nth-child(7)/(8) weekend columns lit up.
+       Targeting the real class with an #id-level selector means ANY holiday column (weekday or
+       weekend) shows the holiday colour, and the higher specificity + !important overrides the
+       single-class weekend rules below. Mirrors the Booking page behaviour. */
+    #guard_roster_grid tbody td.guard-roster-cell.guard-ph-highlight {
+        background-color: #FFF9C4 !important;
+        color: #333 !important;
+    }
+    .guard-sat-highlight { background-color: #d7f0d7 !important; }
+    .guard-sun-highlight { background-color: #fce4ec !important; }
+
+    /* Roster Status Stamp UI */
+    .guard-status-label {
+        font-weight: bold;
+        color: #000;
+        font-size: 11px;
+        margin-top: 15px;
+        display: block;
+    }
+    .guard-status-stamp {
+        display: inline-block;
+        border: 2px solid #ff0000;
+        color: #ff0000;
+        padding: 4px 10px;
+        font-weight: 800;
+        font-size: 14px;
+        text-transform: uppercase;
+        transform: rotate(-10deg);
+        margin-top: 5px;
+        border-radius: 4px;
+        background: rgba(255,0,0,0.05);
+    }
+    .guard-status-stamp.paid { border-color: #1B5E20; color: #1B5E20; background: rgba(27, 94, 32, 0.05); }
+    .guard-status-stamp.invoiced { border-color: #0056b3; color: #0056b3; background: rgba(0, 86, 179, 0.05); }
+    .guard-status-stamp.cancelled { border-color: #6c757d; color: #6c757d; background: rgba(108, 117, 125, 0.05); }
+
+    /* Totals Styling */
+    .total-item { padding: 10px 5px; text-align: center; }
+    .total-label { font-size: 9px; text-transform: uppercase; color: #888; display: block; margin-bottom: 2px; font-weight: 600; }
+    .total-value { font-size: 12px; }
+    .project-total-row {
+        background-color: #ffffff !important;
+        border-top: 1px solid #dee2e6;
+        border-bottom: 2px solid #667eea;
+    }
+    #guard_roster_grid tbody .project-total-row td {
+        background-color: #ffffff !important;
+    }
+
+    /* Drag and Drop & Add Button styling matched to Booking module */
+    .guard-shift-card[draggable="true"] {
+        cursor: grab;
+    }
+    .guard-shift-card.dragging {
+        opacity: 0.4;
+        cursor: grabbing;
+    }
+    .guard-roster-cell.drag-over {
+        background-color: rgba(0, 123, 255, 0.15) !important;
+        border: 2px dashed #007bff !important;
+    }
+    .btn-add-guard-roster {
+        transition: all 0.2s ease;
+    }
+
+    /* Shift Card Styles matched to Booking module */
+
+    .guard-shift-card {
+        position: relative;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); /* Default fallback */
+        color: white;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        font-size: 10.5px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 3px solid rgba(255,255,255,0.3);
+    }
+    .guard-shift-card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 10; }
+
+    /* Status Colors */
+    .guard-shift-card.type-regular.status-pushed {
+        background: linear-gradient(135deg, #FFB74D 0%, #FFA726 100%) !important;
+        border-left: 3px solid #FFE0B2 !important;
+    }
+    .guard-shift-card.type-adhoc.status-pushed {
+        background: linear-gradient(135deg, #EF6C00 0%, #E65100 100%) !important;
+        border-left: 3px solid #FFCC80 !important;
+    }
+    .guard-shift-card.type-provider,
+    .guard-shift-card.type-provider.status-pushed,
+    .guard-shift-card.type-provider.status-accepted {
+        background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%) !important;
+        border-left: 3px solid #9e9e9e !important;
+        color: #333 !important;
+    }
+    .guard-shift-card.type-regular.status-accepted {
+        background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%) !important;
+        border-left: 3px solid #C8E6C9 !important;
+    }
+    .guard-shift-card.type-adhoc.status-accepted {
+        background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%) !important;
+        border-left: 3px solid #81C784 !important;
+    }
+    .guard-shift-card.status-declined {
+        background: linear-gradient(135deg, #434343 0%, #000000 100%) !important;
+        border-left: 3px solid #616161 !important;
+        color: #FFFFFF !important;
+    }
+    .guard-shift-card.status-missed {
+        background: linear-gradient(135deg, #757575 0%, #424242 100%) !important;
+        border-left: 3px solid #9E9E9E !important;
+        color: #FFFFFF !important;
+    }
+
+    .guard-shift-card.shift-relief,
+    .guard-shift-card.shift-relief.status-accepted,
+    .guard-shift-card.shift-relief.status-pushed,
+    .guard-shift-card.shift-relief.status-missed,
+    .guard-shift-card.shift-relief.status-declined { 
+        background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%) !important; 
+        border-left: 3px solid #e1bee7 !important;
+        color: #FFFFFF !important;
+    }
+    .guard-relief-badge {
+        background-color: #ffffff;
+        color: #6f42c1;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .guard-shift-card.status-cancelled {
+        background: white !important;
+        color: #d32f2f !important;
+        border: 1px solid #ffcdd2 !important;
+        border-left: 3px solid #f44336 !important;
+        box-shadow: none !important;
+        opacity: 0.9;
+    }
+    .guard-shift-card.status-cancelled::before,
+    .guard-shift-card.status-cancelled::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: rgba(211, 47, 47, 0.4);
+        z-index: 5;
+    }
+    .guard-shift-card.status-cancelled::before { transform: rotate(15deg); }
+    .guard-shift-card.status-cancelled::after { transform: rotate(-15deg); }
+
+    /* For the big X overlay */
+    .guard-shift-card.status-cancelled .cancelled-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+    }
+    .guard-shift-card.status-cancelled .cancelled-overlay::before,
+    .guard-shift-card.status-cancelled .cancelled-overlay::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: -10%;
+        width: 120%;
+        height: 2px;
+        background: #f44336;
+    }
+    .guard-shift-card.status-cancelled .cancelled-overlay::before { transform: rotate(15deg); }
+    .guard-shift-card.status-cancelled .cancelled-overlay::after { transform: rotate(-15deg); }
+
+    .guard-shift-time {
+        font-weight: 700;
+        margin-top: 4px;
+        font-size: 10px;
+    }
+
+    /* Action Buttons & Edit Icon */
+    .guard-edit-icon {
+        position: absolute;
+        top: 5px;
+        right: 8px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    /* Standard Edit/Delete buttons from Booking module */
+    .btn-delete-shift {
+        position: absolute;
+        cursor: pointer;
+        right: 4px;
+        top: 4px;
+        color: white;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        opacity: 1;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+
+    .btn-edit-shift {
+        position: absolute;
+        cursor: pointer;
+        right: 4px;
+        bottom: 4px;
+        color: white;
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        opacity: 1;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+
+    .btn-delete-shift:hover, .btn-edit-shift:hover {
+        transform: scale(1.2);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        color: white !important;
+    }
+    
+    .guard-shift-actions {
+        margin-top: 8px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        gap: 5px;
+    }
+    
+    .btn-roster-action {
+        flex: 1;
+        font-size: 9px;
+        padding: 3px 5px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        transition: all 0.2s;
+    }
+    
+    .btn-roster-action:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .btn-roster-accept { background: rgba(76, 175, 80, 0.4); }
+    .btn-roster-cancel { background: rgba(244, 67, 54, 0.4); }
+    .btn-roster-relief { background: rgba(156, 39, 176, 0.4); }
+
+    /* Clickable area for entire card */
+    .clickable-shift { cursor: pointer; }
+
+    /* Remuneration Summary Styles */
+    #remuneration-summary-section {
+        margin: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
+        overflow: hidden;
+    }
+    .remuneration-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .remuneration-table th {
+        font-weight: 600;
+        color: #4a5568 !important;
+        background-color: #f1f5f9 !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        padding: 10px 15px !important;
+    }
+    .remuneration-table td {
+        vertical-align: middle;
+        padding: 8px 15px !important;
+        color: #2d3748;
+        font-size: 0.8rem;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .remuneration-total {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 0.9rem;
+    }
+    .remuneration-note-input {
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        padding: 3px 8px;
+        width: 100%;
+        font-size: 0.75rem;
+        background-color: #fcfcfc;
+    }
+    .remuneration-note-input:focus {
+        border-color: #667eea;
+        background-color: #fff;
+        outline: none;
+    }
+    .paid-checkbox {
+        transform: scale(1.1);
+        cursor: pointer;
+    }
+</style>
+<div class="modal fade" id="guardRosterModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1051;">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 95%;">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            <div class="modal-header bg-white text-dark p-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-inline-flex align-items-center bg-white border rounded shadow-sm px-2 py-1 mr-2">
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnPrevWeekGuard" title="Previous Week"><i class="fa fa-chevron-left"></i></button>
+                    <span class="font-weight-bold text-dark px-2 text-nowrap" style="min-width: 140px; font-size: 0.8rem;" id="guardWeekRangeText">Loading...</span>
+                    <button class="btn btn-link btn-sm text-secondary p-0 px-2" id="btnNextWeekGuard" title="Next Week"><i class="fa fa-chevron-right"></i></button>
+                </div>
+
+                <div class="flex-grow-1 text-center text-nowrap">
+                    <span class="font-weight-bold mb-0" style="color: #333; font-size: 13.5px; letter-spacing: 1px;">ROSTER</span>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <!-- Roster Admin Controls -->
+                    <div id="guardRosterAdminControls" class="d-none align-items-center mr-2 pr-2 border-right">
+                        <!-- Financials & Buy/Sell Rate capsule -->
+                        <div class="d-inline-flex align-items-center mr-2 bg-light px-2 py-1 rounded-pill border" style="vertical-align: middle; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                            <span class="text-dark font-weight-bold mr-2" style="font-size: 1.1rem; line-height: 1;">$</span>
+                            <input type="checkbox" id="adminFinancialToggle" class="mr-2" style="transform: scale(1.1); cursor: pointer;" title="Enable Financial Figures">
+                            
+                            <i class="fa fa-user-secret mr-2" style="font-size: 1.1rem; color: #555;" title="Guard Pay Rate"></i>
+                            <div class="custom-control custom-switch mr-2">
+                                <input type="checkbox" class="custom-control-input" id="adminRateTypeSwitch" disabled>
+                                <label class="custom-control-label" for="adminRateTypeSwitch"></label>
+                            </div>
+                            <i class="fa fa-cube" style="font-size: 1.1rem; color: #555;" title="Sell Rate to Client"></i>
+                        </div>
+
+                        <!-- Truck Toggle group -->
+                        <div class="d-inline-flex align-items-center mr-2" style="vertical-align: middle;">
+                            <div style="position: relative; display: inline-block; line-height: 1;" class="mr-2">
+                                <i class="fa fa-truck text-dark" style="font-size: 1.1rem;"></i>
+                                <span style="position: absolute; right: -4px; top: -6px; background: #0056b3; color: white; border-radius: 2px; font-size: 7px; padding: 1px 2px; font-weight: bold; border: 1px solid #fff;">S</span>
+                            </div>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="adminTruckToggle">
+                                <label class="custom-control-label" for="adminTruckToggle"></label>
+                            </div>
+                        </div>
+
+                        <!-- Roster Status Control -->
+                        <div class="input-group input-group-sm ml-2" style="width: 160px;">
+                             <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0 text-muted small font-weight-bold">STATUS</span>
+                            </div>
+                            <select id="adminRosterStatus" class="form-control font-weight-bold text-uppercase" style="font-size: 10px; height: 32px; border-left: 0;">
+                                <option value="Live">🟩 Live</option>
+                                <option value="Invoiced">🟦 Invoiced</option>
+                                <option value="Paid">🟥 Paid</option>
+                                <option value="Disputed">🟧 Disputed</option>
+                                <option value="Cancelled">⬛ Cancelled</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter Group [Issue 68] - Guard + Callsign filters in one neat outlined container -->
+                        <div class="d-flex align-items-center ml-2 border rounded bg-white overflow-hidden" style="height: 32px;" title="Filter Roster">
+                            <span class="text-muted pl-2 pr-1" style="font-size: 11px;"><i class="fa fa-filter"></i></span>
+                            <select id="adminGuardFilter" class="form-control font-weight-bold border-0 rounded-0 shadow-none h-100 pl-1" style="font-size: 10px; width: 105px;" title="Filter by Guard">
+                                <option value="ALL">ALL GUARDS</option>
+                            </select>
+                            <select id="adminCallsignFilter" class="form-control font-weight-bold border-0 border-left rounded-0 shadow-none h-100 pl-1" style="font-size: 10px; width: 115px;" title="Filter by Callsign">
+                                <option value="ALL">ALL CALLSIGNS</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Site Switcher (Admins & RO Editors) -->
+                    <div id="guardRosterSiteSwitcher" class="d-none align-items-center mr-2">
+                        <div class="input-group input-group-sm mr-2" style="width: 130px;">
+                            <select id="grModalClientType" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px;">
+                                <option value="">Client Type</option>
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm" style="width: 180px;">
+                            <select id="grModalClientSite" class="form-control font-weight-bold text-truncate" style="font-size: 10px; height: 32px;">
+                                <option value="">Client Site</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-dark btn-sm px-3 shadow-sm font-weight-bold mr-2 d-none text-nowrap" id="btnToggleRosterEditMode" style="height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;" title="Toggle Edit Mode">
+                        <i class="fa fa-pencil-square-o mr-1"></i>RO
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 shadow-sm font-weight-bold mr-2 text-nowrap d-inline-flex align-items-center justify-content-center" id="btnDownloadGuardPdf" style="height: 32px; flex-shrink: 0;" title="Download PDF">
+                        <i class="fa fa-file-pdf-o mr-1"></i>PDF
+                    </button>
+                    <button type="button" class="close ml-3 pl-2" data-dismiss="modal" aria-label="Close" style="opacity: 1; outline: none; box-shadow: none; flex-shrink: 0;">
+                        <span aria-hidden="true" style="font-size: 1.5rem; color: #000;">&times;</span>
+                    </button>
+                </div>
+            </div>
+            <div id="rosterAdminAlert" class="alert alert-success d-none py-1 px-3 m-0 rounded-0 text-center font-weight-bold" style="font-size: 0.8rem; border-bottom: 1px solid #c3e6cb;">
+                <i class="fa fa-check-circle mr-2"></i>Status updated to <span id="spanUpdatedStatusName"></span> successfully!
+            </div>
+            <div class="modal-body p-0 bg-light" style="min-height: 500px; max-height: 80vh; overflow-y: auto;">
+                <div id="guardRosterEmpty" class="d-none text-center py-5 bg-white m-3 rounded shadow-sm">
+                    <div style="font-size: 64px; color: #e9ecef; margin-bottom: 20px;">
+                        <i class="fa fa-calendar-times-o"></i>
+                    </div>
+                    <h4 class="text-secondary mb-3" style="font-weight: 300;">No Roster Found</h4>
+                    <p class="text-muted mb-0">We couldn't find any scheduled shifts for this site in the selected week.</p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0" id="guard_roster_grid">
+                        <thead id="guard_roster_header">
+                            <tr>
+                                <th style="width: 15%;" class="align-middle">Client Site</th>
+                                <!-- Day headers will be injected here -->
+                            </tr>
+                        </thead>
+                        <tbody id="guard_roster_body">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                        <tfoot id="guard_roster_footer" style="display: none; background: #fff; border-top: 2px solid #dee2e6;">
+                            <tr>
+                                <td class="p-0 border-right align-middle">
+                                    <div class="grand-total-container" style="background: #f8faff;">
+                                        <div class="total-item">
+                                            <span class="total-label">Weekly Total</span>
+                                            <span class="total-value font-weight-bold text-primary" id="guard_weekly_grand_total">0h</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- Daily totals will be injected here -->
+                        </tfoot>
+                    </table>
+                </div>
+
+ 
+
+                <!-- Remuneration Summary Section -->
+                <div id="remuneration-summary-section" style="display: none;">
+                    <div class="remuneration-header">
+                        <h6 class="mb-0 text-primary font-weight-bold">
+                            <i class="fa fa-money mr-2"></i> Remuneration Summary
+                        </h6>
+                        <span class="badge badge-info px-3 py-1 rounded-pill" id="remuneration-week-label"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 remuneration-table" id="remuneration-summary-table">
+                            <thead>
+                                <tr>
+                                    <th class="px-3">Guard Name</th>
+                                    <th class="text-right" style="width: 130px;">Total Amount</th>
+                                    <th class="text-center" style="width: 70px;">Paid</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="remuneration-summary-body">
+                                <!-- Dynamic rows via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Filter Modal for PDF Download -->
+<div class="modal fade" id="guardDownloadFilterModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header p-3">
+                <h6 class="modal-title font-weight-bold">PDF Export Options</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <label class="small font-weight-bold text-muted mb-2 d-block text-uppercase">Duration to export</label>
+                <select id="guardPdfWeeks" class="form-control form-control-sm border-primary">
+                    <option value="1">This Week Only</option>
+                    <option value="2">2 Weeks Binder</option>
+                    <option value="4">4 Weeks Binder</option>
+                </select>
+            </div>
+            <div class="modal-footer p-2 bg-light">
+                <button type="button" class="btn btn-primary btn-block font-weight-bold" id="btnConfirmGuardDownload">GENERATE REPORT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Cancellation Reason -->
+<div class="modal fade" id="guardCancellationModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1100;">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-dark text-white p-3">
+                <h6 class="modal-title font-weight-bold"><i class="fa fa-exclamation-triangle mr-2 text-warning"></i>Reason for Relief</h6>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="small text-muted mb-3 font-weight-bold text-uppercase">Please select a reason for cancelling this shift:</p>
+                
+                <div class="d-flex flex-wrap mb-3">
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optSick" name="cancelReason" class="custom-control-input" value="Sick">
+                        <label class="custom-control-label font-weight-bold" for="optSick">Sick</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optAL" name="cancelReason" class="custom-control-input" value="AL">
+                        <label class="custom-control-label font-weight-bold" for="optAL">AL</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optRDO" name="cancelReason" class="custom-control-input" value="RDO">
+                        <label class="custom-control-label font-weight-bold" for="optRDO">RDO</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optLWOP" name="cancelReason" class="custom-control-input" value="LWOP">
+                        <label class="custom-control-label font-weight-bold" for="optLWOP">LWOP</label>
+                    </div>
+                    <div class="custom-control custom-radio mr-3 mb-2">
+                        <input type="radio" id="optShiftSwap" name="cancelReason" class="custom-control-input" value="Shift Swap">
+                        <label class="custom-control-label font-weight-bold" for="optShiftSwap">Shift Swap</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="optOther" name="cancelReason" class="custom-control-input" value="Other">
+                        <label class="custom-control-label font-weight-bold" for="optOther">Other</label>
+                    </div>
+                </div>
+
+                <div id="cancelReasonOtherArea" style="display: none;">
+                    <label class="small font-weight-bold text-muted mb-1 text-uppercase">Specify Other Reason</label>
+                    <textarea id="txtCancelReasonOther" class="form-control border-primary" rows="2" placeholder="Enter details..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light p-2">
+                <button type="button" class="btn btn-secondary btn-sm font-weight-bold" data-dismiss="modal">CLOSE</button>
+                <button type="button" class="btn btn-danger btn-sm px-4 font-weight-bold" id="btnConfirmCancellation">CONFIRM CANCELLATION</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overnight Shift Modal -->
+<div class="modal fade" id="geOvernightShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1250;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-header bg-warning text-dark" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h5 class="modal-title font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i>Overnight Shift</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <!-- Dynamic Content Injected Here -->
+            </div>
+            <div class="modal-footer justify-content-center border-top-0">
+                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Edit</button>
+                <button type="button" class="btn btn-primary px-4" id="btnSplitGuardShift">Split</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Guard Roster Rollover Modal -->
+<div class="modal fade" id="guardRolloverModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Roster Rollover</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="guardRolloverStep1">
+                <p>Duplicate this week's roster to:</p>
+                <div class="form-group">
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptNextWeek" name="guardRolloverOption" class="custom-control-input" value="NextWeek" checked>
+                        <label class="custom-control-label" for="guardOptNextWeek">Next week</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptMonth" name="guardRolloverOption" class="custom-control-input" value="Month">
+                        <label class="custom-control-label" for="guardOptMonth">Whole month</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptYear" name="guardRolloverOption" class="custom-control-input" value="Year">
+                        <label class="custom-control-label" for="guardOptYear">Whole Year</label>
+                    </div>
+                </div>
+                <div class="custom-control custom-switch mb-3">
+                    <input type="checkbox" class="custom-control-input" id="guardOptClearNames">
+                    <label class="custom-control-label font-weight-bold" for="guardOptClearNames">Clear Names?</label>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle mr-1"></i> This will replicate all shifts from the current week to the selected period.
+                </div>
+            </div>
+            <div class="modal-body" id="guardRolloverStep2" style="display:none;">
+                <p>The projected roster for this site already has data. Would you like to:</p>
+                <div class="form-group">
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptErase" name="guardRolloverConflictOption" class="custom-control-input" value="Erase">
+                        <label class="custom-control-label" for="guardOptErase"><strong>Erase</strong> all existing future entries, and mirror current week across instead?</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" id="guardOptMerge" name="guardRolloverConflictOption" class="custom-control-input" value="Merge" checked>
+                        <label class="custom-control-label" for="guardOptMerge"><strong>Merge</strong> new entries into existing data sets, which risks duplicate entries?</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmGuardRollover">Confirm Rollover</button>
+                <button type="button" class="btn btn-primary" id="btnExecuteGuardRollover" style="display:none;">Execute Rollover</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full Add/Edit Shift Modal (Copied from Booking) -->
+<div class="modal fade" id="guardAddShiftModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1200;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold"><i class="fa fa-calendar-plus-o mr-2"></i>Add/Edit Shift</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="geModalShiftId" />
+                <input type="hidden" id="geModalSiteId" />
+                <input type="hidden" id="geModalGroupId" />
+
+                <!-- Tab Headers -->
+                <ul class="nav nav-tabs mb-3" id="geModalShiftTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="geModal-guard-tab" data-toggle="tab" href="#geModal-guard" role="tab" style="font-size: 0.9rem; font-weight: 600;">Main Guard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="geModal-relief-tab" data-toggle="tab" href="#geModal-relief" role="tab" style="font-size: 0.9rem; font-weight: 600; color: #6f42c1;">
+                            <i class="fa fa-user-plus mr-1"></i>Relief Guard
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Main Guard Tab -->
+                    <div class="tab-pane fade show active" id="geModal-guard" role="tabpanel">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">GUARD</label>
+                            <select id="geModalGuardId" class="form-control" style="width: 100%"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">PROVIDER (SUBCONTRACTOR)</label>
+                            <select id="geModalProviderId" class="form-control" style="width: 100%"></select>
+                        </div>
+                    </div>
+
+                    <!-- Relief Guard Tab -->
+                    <div class="tab-pane fade" id="geModal-relief" role="tabpanel">
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">RELIEF GUARD</label>
+                            <select id="geModalReliefGuardId" class="form-control" style="width: 100%"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">RELIEF PROVIDER</label>
+                            <select id="geModalReliefProviderId" class="form-control" style="width: 100%"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="small font-weight-bold text-muted mb-1">REASON FOR RELIEF</label>
+                            <select id="geModalReliefReason" class="form-control">
+                                <option value="">Select Reason</option>
+                                <option value="Sick">Sick</option>
+                                <option value="AL">AL</option>
+                                <option value="RDO">RDO</option>
+                                <option value="LWOP">LWOP</option>
+                                <option value="Shift Swap">Shift Swap</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">CALLSIGN / POSITION</label>
+                        <select id="geModalCallsignId" class="form-control" style="width: 100%"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">ADHOC / OFFSITE</label>
+                        <input type="text" id="geModalAdhocOffsiteText" class="form-control" placeholder="Optional text..." />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">START TIME</label>
+                        <input type="time" id="geModalShiftStart" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">END TIME</label>
+                        <input type="time" id="geModalShiftEnd" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1 text-primary">PAYMENT PROFILE</label>
+                        <select id="geModalPayRateGroupId" class="form-control" style="width: 100%" disabled></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">SHIFT STATUS</label>
+                        <select id="geModalShiftType" class="form-control" style="width: 100%">
+                            <option value="Regular" data-color="#FFA726">Unassigned - FIXED</option>
+                            <option value="Adhoc" data-color="#E65100">Unassigned - ADHOC</option>
+                            <option value="RegularAccepted" data-color="#66BB6A">Accepted - FIXED</option>
+                            <option value="AdhocAccepted" data-color="#2E7D32">Accepted - ADHOC</option>
+                            <option value="Declined" data-color="#212121">DECLINED (OPEN)</option>
+                            <option value="Missed" data-color="#424242">MISSED (inc LATE)</option>
+                            <option value="Cancelled" data-color="#B71C1C">&#x274C; CANCELLED (CLOSED)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1 text-primary">RATE PROFILE</label>
+                        <select id="geModalPositionId" class="form-control" style="width: 100%"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="small font-weight-bold text-muted mb-1">PAY RATE</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            <input type="text" id="geModalPayRate" class="form-control font-weight-bold" style="color: transparent;" readonly />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary px-4 font-weight-bold" id="btnSaveGuardEditShift">SAVE SHIFT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    var guardRosterStartDate = null;
+    var currentGuardSiteId = null;
+    var currentRosterGroupId = null;
+    var loggedGuardId = null;
+    var isAdminRoster = false;
+    var isAdminFinancialsOn = false;
+    var isAdminSupplierOn = false;
+    var adminRateType = 'guard'; // 'guard' or 'sell'
+    var currentRosterStatus = 'Live';
+    var lastGuardRosterData = null;
+    var isROEditor = false;
+    var isEditMode = false;
+    var isWeekLocked = false;
+    
+    // Public Holiday Orange Sun SVG
+    const phIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="width: 16px; height: 16px; fill: #FFA500; vertical-align: middle; margin-left: 4px;"><path d="M608 384h-141.2c-7.1 0-14.1-2.1-20.1-6.1L382.5 335.1l-64.2-42.8L192 384H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h155.6l69.8-46.5c10.3-6.9 23.9-6.9 34.2 0l64.4 42.9 85.5 28.5H608c17.7 0 32 14.3 32 32s-14.3 32-32 32zM32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32zM280.4 224l-59.3-59.3-59.3 59.3 59.3 59.3 59.3-59.3zM256 0c-43.8 0-82.6 25.1-102.3 62.4l-31.1-10.4c-8.4-2.8-17.5 1.7-20.3 10.1s1.7 17.5 10.1 20.3l31.1 10.4c.1 3.5.3 7 1.1 10.4 12.4 56.6 62.1 98.8 121.4 98.8s109-42.2 121.4-98.8c.8-3.5.9-7 1.1-10.4l31.1-10.4c8.4-2.8 12.9-11.9 10.1-20.3s-11.9-12.9-20.3-10.1l-31.1 10.4C338.6 25.1 299.8 0 256 0z"/></svg>`;
+
+    $(document).ready(function() {
+        // Pause auto-refresh timer when Roster modal is shown and resume when hidden
+        $('#guardRosterModal').on('show.bs.modal', function () {
+            if (window.isPaused !== undefined) {
+                window.isPaused = true;
+            }
+        });
+
+        $('#guardRosterModal').on('hidden.bs.modal', function () {
+            if (window.isPaused !== undefined) {
+                window.isPaused = false;
+            }
+        });
+
+        // Site Switcher logic for Guard Roster Popup
+        $('#grModalClientType').off('change').on('change', function() {
+            var typeId = $(this).val();
+            var siteDd = $('#grModalClientSite');
+            siteDd.empty().append('<option value="">Client Site</option>');
+            if (typeId) {
+                $.ajax({
+                    url: '/RoosterHub?handler=ClientSitesWithIds',
+                    type: 'GET',
+                    data: { type: typeId },
+                    success: function(res) {
+                        $.each(res, function(i, item) {
+                            siteDd.append('<option value="'+item.value+'">'+item.text+'</option>');
+                        });
+                    }
+                });
+            }
+        });
+
+        $('#grModalClientSite').off('change').on('change', function() {
+            var newSiteId = $(this).val();
+            if (newSiteId) {
+                currentGuardSiteId = newSiteId;
+                loadGuardRoster();
+                if (isAdminRoster) loadAdminRosterStatus();
+            }
+        });
+
+        $('#btnToggleRosterEditMode').on('click', function() {
+            isEditMode = !isEditMode;
+            $(this).toggleClass('btn-outline-dark btn-primary');
+            $(this).find('i').toggleClass('fa-pencil-square-o fa-check');
+            $(this).html(isEditMode ? '<i class="fa fa-check mr-1"></i> Exit' : '<i class="fa fa-pencil-square-o mr-1"></i> RO');
+            loadGuardRoster();
+        });
+
+        // Drag and Drop Event Listeners for Guard Roster
+        $(document).on('dragstart', '.guard-shift-card', function (e) {
+            var card = $(this);
+            if (!isEditMode || isWeekLocked) { e.preventDefault(); return; }
+            card.addClass('dragging');
+            
+            var shiftData = {
+                guardId: card.data('guard-id'),
+                providerName: card.data('provider-name'),
+                payRateId: card.data('payrate-id'),
+                callsignId: card.data('callsign-id'),
+                startTime: card.data('shift-start'),
+                endTime: card.data('shift-end'),
+                groupId: card.data('group-id'),
+                buyRate: card.data('buy-rate'),
+                type: card.data('type')
+            };
+            e.originalEvent.dataTransfer.setData('application/json', JSON.stringify(shiftData));
+            e.originalEvent.dataTransfer.effectAllowed = 'copy';
+        });
+
+        $(document).on('dragend', '.guard-shift-card', function (e) {
+            $(this).removeClass('dragging');
+            $('.guard-roster-cell').removeClass('drag-over');
+        });
+
+        $(document).on('dragover', '.guard-roster-cell', function (e) {
+            if (isEditMode && !isWeekLocked && $(this).data('site-id')) {
+                e.preventDefault();
+                e.originalEvent.dataTransfer.dropEffect = 'copy';
+                $(this).addClass('drag-over');
+            }
+        });
+
+        $(document).on('dragleave', '.guard-roster-cell', function (e) {
+            $(this).removeClass('drag-over');
+        });
+
+        $(document).on('drop', '.guard-roster-cell', function (e) {
+            e.preventDefault();
+            $(this).removeClass('drag-over');
+            if (!isEditMode || isWeekLocked) return;
+
+            var siteId = $(this).data('site-id');
+            var cellDate = $(this).data('date');
+            if (!siteId || !cellDate) return;
+            
+            var dataStr = e.originalEvent.dataTransfer.getData('application/json');
+            if (!dataStr) return;
+            
+            var shiftData = JSON.parse(dataStr);
+            var startDateTime = cellDate + 'T' + shiftData.startTime;
+            var endDateTime = cellDate + 'T' + shiftData.endTime;
+
+            if (shiftData.endTime < shiftData.startTime) {
+                var startD = new Date(cellDate + 'T00:00:00');
+                var endD = new Date(startD);
+                endD.setDate(endD.getDate() + 1);
+                var endStr = endD.getFullYear() + '-' + String(endD.getMonth() + 1).padStart(2, '0') + '-' + String(endD.getDate()).padStart(2, '0');
+                endDateTime = endStr + 'T' + shiftData.endTime;
+            }
+
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '/roster/Booking?handler=AddShift',
+                type: 'POST',
+                headers: { "RequestVerificationToken": token },
+                data: {
+                    groupId: $(this).data('group-id') || shiftData.groupId,
+                    siteId: siteId,
+                    start: startDateTime,
+                    end: endDateTime,
+                    guardId: shiftData.guardId,
+                    providerName: shiftData.providerName,
+                    payRateId: shiftData.payRateId,
+                    payRate: shiftData.buyRate,
+                    callsignId: shiftData.callsignId,
+                    shiftType: shiftData.type || 'Regular',
+                    shiftId: null
+                },
+                success: function (res) {
+                    if (res.success) {
+                        loadGuardRoster();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        });
+
+        // Click Event for "+" Add Shift in Guard Roster Cell
+        $(document).on('click', '.btn-add-guard-roster', function (e) {
+            e.preventDefault();
+            var date = $(this).data('date');
+            var siteId = $(this).data('site-id');
+            var groupId = $(this).data('group-id');
+            openNewShiftModalForSite(date, siteId, groupId);
+        });
+
+        $('#btnPrevWeekGuard').on('click', function() {
+            var parts = guardRosterStartDate.split('-');
+            var d = new Date(parts[0], parts[1] - 1, parts[2]);
+            d.setDate(d.getDate() - 7);
+            guardRosterStartDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            loadGuardRoster();
+            if (isAdminRoster) loadAdminRosterStatus();
+        });
+
+        $('#btnNextWeekGuard').on('click', function() {
+            var parts = guardRosterStartDate.split('-');
+            var d = new Date(parts[0], parts[1] - 1, parts[2]);
+            d.setDate(d.getDate() + 7);
+            guardRosterStartDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            loadGuardRoster();
+            if (isAdminRoster) loadAdminRosterStatus();
+        });
+
+        // --- Initialize Guard Modal Select2s (Copied from Booking) ---
+        function formatGuardShiftType(state) {
+            if (!state.id) return state.text;
+            var color = $(state.element).data('color');
+            if (!color) return state.text;
+            var $state = $(
+                '<span><span class="type-dot" style="background-color:' + color + ';"></span>' + state.text + '</span>'
+            );
+            return $state;
+        };
+
+        $('#geModalShiftType').select2({
+            theme: 'bootstrap4',
+            minimumResultsForSearch: -1, // Hide search box
+            dropdownParent: $('#guardAddShiftModal'),
+            templateResult: formatGuardShiftType,
+            templateSelection: formatGuardShiftType
+        });
+
+        $('#geModalGuardId').select2({
+            placeholder: 'Select Guard',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchGuards',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        siteId: $('#geModalSiteId').val()
+                    };
+                },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            var pId = data.providerId || data.provider;
+            if (pId && data.provider && data.provider !== 'N/A') {
+                if ($('#geModalProviderId').find("option[value='" + pId + "']").length) {
+                    $('#geModalProviderId').val(pId).trigger('change');
+                } else {
+                    var newOption = new Option(data.provider, pId, true, true);
+                    $('#geModalProviderId').append(newOption).trigger('change');
+                }
+            }
+        });
+
+        $('#geModalProviderId').select2({
+            placeholder: 'Select Provider',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchProviders',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        });
+
+        $('#geModalReliefGuardId').select2({
+            placeholder: 'Select Relief Guard',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchGuards',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term,
+                        siteId: $('#geModalSiteId').val()
+                    };
+                },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        });
+
+        $('#geModalReliefProviderId').select2({
+            placeholder: 'Select Relief Provider',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchProviders',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        });
+
+        $('#geModalPayRateGroupId').select2({
+            placeholder: 'Select Payment Profile',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchPayRateGroups',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { 
+                    return { 
+                        search: params.term,
+                        siteId: $('#geModalSiteId').val()
+                    }; 
+                },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        });
+
+        $('#geModalPositionId').select2({
+            placeholder: 'Select Rate Profile',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchPayRates',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { 
+                    return { 
+                        search: params.term,
+                        groupId: $('#geModalPayRateGroupId').val()
+                    }; 
+                },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            },
+            minimumInputLength: 0
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            if (data && data.guardPayRate !== undefined) {
+                $('#geModalPayRate').val(data.guardPayRate);
+            }
+        });
+
+        $('#geModalCallsignId').select2({
+            placeholder: 'Select Position',
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownParent: $('#guardAddShiftModal'),
+            ajax: {
+                url: '/roster/Booking?handler=SearchCallsigns', // I should check if this handler exists
+                dataType: 'json',
+                delay: 250,
+                data: function (params) { return { search: params.term, siteId: $('#geModalSiteId').val() }; },
+                processResults: function (data) { return { results: data.results }; },
+                cache: true
+            }
+        });
+
+        $('#btnSaveGuardEditShift').on('click', function() {
+            saveGuardRosterShift();
+        });
+
+        $('#btnDownloadGuardPdf').on('click', function() {
+            $('#guardDownloadFilterModal').modal('show');
+        });
+
+        $('#btnConfirmGuardDownload').on('click', function() {
+            var weeks = $('#guardPdfWeeks').val();
+            var status = currentRosterStatus; // Send the status regardless of role
+            var url = '/roster/GuardRosterAction?handler=DownloadSiteRosterPdf' +
+                '&siteId=' + currentGuardSiteId +
+                '&startDate=' + guardRosterStartDate +
+                '&weeks=' + weeks +
+                '&includeFinancials=' + isAdminFinancialsOn +
+                '&rateType=' + adminRateType +
+                '&status=' + status +
+                '&includeSuppliers=' + isAdminSupplierOn +
+                '&guardFilter=' + encodeURIComponent($('#adminGuardFilter').val() || 'ALL') +
+                '&callsignFilter=' + encodeURIComponent($('#adminCallsignFilter').val() || 'ALL');
+            window.open(url, '_blank');
+            $('#guardDownloadFilterModal').modal('hide');
+        });
+
+        // Admin Toggles
+        $('#adminFinancialToggle').on('change', function() {
+            isAdminFinancialsOn = $(this).is(':checked');
+            $('#adminRateTypeSwitch').prop('disabled', !isAdminFinancialsOn);
+            if (!isAdminFinancialsOn) {
+                $('#adminRateTypeSwitch').prop('checked', false);
+                adminRateType = 'guard';
+            }
+            checkRemunerationVisibility();
+            loadGuardRoster();
+        });
+
+        $('#adminRateTypeSwitch').on('change', function() {
+            adminRateType = $(this).is(':checked') ? 'sell' : 'guard';
+            checkRemunerationVisibility();
+            loadGuardRoster();
+        });
+
+        // New Truck Toggle logic
+        $('#adminTruckToggle').on('change', function() {
+            isAdminSupplierOn = $(this).is(':checked');
+            checkRemunerationVisibility();
+            loadGuardRoster();
+        });
+
+        $('#adminRosterStatus').on('change', function() {
+            saveAdminRosterStatus($(this).val());
+        });
+
+        $('#adminGuardFilter').on('change', function() {
+            applyGuardFilter();
+        });
+
+        $('#adminCallsignFilter').on('change', function() {
+            applyGuardFilter();
+        });
+
+        // Cancellation Reason Logic
+        $('input[name="cancelReason"]').on('change', function() {
+            if ($(this).val() === 'Other') {
+                $('#cancelReasonOtherArea').slideDown();
+            } else {
+                $('#cancelReasonOtherArea').slideUp();
+            }
+        });
+
+        $('#btnConfirmCancellation').on('click', function() {
+            var selectedReason = $('input[name="cancelReason"]:checked').val();
+            var finalReason = selectedReason;
+            if (selectedReason === 'Other') {
+                finalReason = $('#txtCancelReasonOther').val();
+            }
+            
+            if (!finalReason || finalReason.trim() === "") {
+                alert("Please provide a reason for cancellation.");
+                return;
+            }
+
+            var shiftId = $(this).data('shift-id');
+            var expectedStatus = $(this).data('expected-status');
+            
+            $('#guardCancellationModal').modal('hide');
+            executeShiftStatusUpdate(shiftId, 2, expectedStatus, finalReason);
+        });
+    });
+
+    function openGuardRosterPortal(siteId, _isAdmin, guardId, _isROEditor, fromLogbook) {
+        currentGuardSiteId = siteId;
+        isAdminRoster = _isAdmin;
+        loggedGuardId = guardId ? parseInt(guardId) : null;
+        isROEditor = _isROEditor || _isAdmin; // Admins are editors by default
+        isEditMode = false; // Always start with edit mode off as requested
+        // Reset Edit Button
+        $('#btnToggleRosterEditMode').removeClass('btn-primary').addClass('btn-outline-dark');
+        $('#btnToggleRosterEditMode').html('<i class="fa fa-pencil-square-o mr-1"></i> RO');
+
+        // Only show Edit button and Site Switcher if user has permission
+        if (isROEditor) {
+            $('#btnToggleRosterEditMode').removeClass('d-none');
+            $('#guardRosterSiteSwitcher').removeClass('d-none').addClass('d-flex');
+            
+            // Reset dropdowns so they don't show stale data if the modal was previously opened for another site
+            $('#grModalClientType').val('');
+            $('#grModalClientSite').empty().append('<option value="">Client Site</option>');
+            
+            // Fetch Client Types if not loaded yet
+            if ($('#grModalClientType option').length <= 1) {
+                $.ajax({
+                    url: '/RoosterHub?handler=ClientTypesList',
+                    type: 'GET',
+                    success: function(res) {
+                        var dd = $('#grModalClientType');
+                        dd.empty().append('<option value="">Client Type</option>');
+                        $.each(res, function(i, item) {
+                            dd.append('<option value="'+item.value+'">'+item.text+'</option>');
+                        });
+                    }
+                });
+            }
+        } else {
+            $('#btnToggleRosterEditMode').addClass('d-none');
+            $('#guardRosterSiteSwitcher').removeClass('d-flex').addClass('d-none');
+        }
+        if (isAdminRoster) {
+            $('#guardRosterAdminControls').removeClass('d-none').addClass('d-flex');
+        } else {
+            $('#guardRosterAdminControls').removeClass('d-flex').addClass('d-none');
+            isAdminFinancialsOn = false;
+            adminRateType = 'guard';
+            $('#adminFinancialToggle').prop('checked', false);
+            $('#adminRateTypeSwitch').prop('checked', false).prop('disabled', true);
+            $('#adminTruckToggle').prop('checked', false);
+            isAdminSupplierOn = false;
+        }
+        checkRemunerationVisibility();
+
+        // Fetch correct start of week from server to ensure parity with Booking
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=GetStartOfWeek',
+            type: 'GET',
+            success: function(res) {
+                guardRosterStartDate = res.startDate;
+                $('#guardRosterModal').modal('show');
+                loadGuardRoster();
+                if (isAdminRoster) loadAdminRosterStatus();
+            }
+        });
+    }
+
+    function loadAdminRosterStatus() {
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRosterStatus',
+            type: 'GET',
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate },
+            success: function(res) {
+                $('#adminRosterStatus').val(res.status || 'Live');
+                updateGridStatusDisplay(res.status || 'Live');
+                
+                var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                isWeekLocked = !!(res.status && lockedStatusList.indexOf(res.status.toUpperCase()) !== -1);
+            }
+        });
+    }
+
+    function updateGridStatusDisplay(status) {
+        var container = $('.admin-status-grid-display');
+        container.empty();
+        
+        if (status) {
+            var imgName = '';
+            switch(status.toUpperCase()) {
+                case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
+                case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
+            }
+            if (imgName) {
+                container.append('<div class="text-center">' + 
+                                 '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + status + '" />' + 
+                                 '</div>');
+            }
+        }
+    }
+
+    function checkRemunerationVisibility() {
+        var showSummary = isAdminRoster && isAdminFinancialsOn && adminRateType === 'guard' && !isAdminSupplierOn;
+        if (showSummary) {
+            $('#remuneration-summary-section').show();
+            if (lastGuardRosterData) updateRemunerationSummary();
+        } else {
+            $('#remuneration-summary-section').hide();
+        }
+    }
+
+    function updateRemunerationSummary() {
+        if (!lastGuardRosterData || !lastGuardRosterData.results) return;
+
+        var entities = {}; // Key: guardId ?? ("P_" + providerName)
+        var weekStart = guardRosterStartDate;
+        var weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        $('#remuneration-week-label').text('Week: ' + formatGuardDate(new Date(weekStart)) + ' - ' + formatGuardDate(weekEnd));
+
+        // Aggregate Pay per Entity
+        lastGuardRosterData.results.forEach(function(row) {
+            row.days.forEach(function(dayShifts) {
+                dayShifts.forEach(function(s) {
+                    var guardId = s.reliefGuardId || s.guardId;
+                    var guardName = s.reliefGuardName || s.guardName;
+                    
+                    var key = guardId ? ("G" + guardId) : ("P" + guardName);
+                    
+                    if (!guardName) return;
+
+                    if (!entities[key]) {
+                        entities[key] = { id: guardId, name: guardName, provider: !guardId ? guardName : null, total: 0 };
+                    }
+                    
+                    var duration = parseFloat(s.durationHours) || 0;
+                    var payRate = s.buyRate || 0;
+                    entities[key].total += (payRate * duration);
+                });
+            });
+        });
+
+        var entityKeys = Object.keys(entities);
+        if (entityKeys.length === 0) {
+            $('#remuneration-summary-body').html('<tr><td colspan="4" class="text-center text-muted p-3 small">No guards to summarize.</td></tr>');
+            return;
+        }
+
+        // Fetch Database Status (Paid/Notes)
+        var guardIdsStr = entityKeys.filter(k => k.startsWith('G')).map(k => k.substring(1)).join(',');
+        
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRemunerationSummary',
+            type: 'GET',
+            data: { startDate: weekStart, guardIds: guardIdsStr, siteId: currentGuardSiteId },
+            success: function(res) {
+                if (!res.success) return;
+                
+                var tbody = $('#remuneration-summary-body');
+                tbody.empty();
+
+                var sortedKeys = entityKeys.sort(function(a, b) {
+                    return entities[a].name.localeCompare(entities[b].name);
+                });
+
+                var grandTotal = 0;
+
+                sortedKeys.forEach(function(key) {
+                    var ent = entities[key];
+                    grandTotal += ent.total;
+
+                    var dbItem = res.results.find(function(x) { 
+                        if (ent.id) return x.guardId == ent.id;
+                        return x.providerName == ent.provider;
+                    }) || { isPaid: false, notes: '' };
+                    
+                    var rowHtml = '<tr>' +
+                        '<td class="px-3 font-weight-bold">' + ent.name + '</td>' +
+                        '<td class="text-right remuneration-total">$' + ent.total.toFixed(2) + '</td>' +
+                        '<td class="text-center">' +
+                            '<input type="checkbox" class="paid-checkbox" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" ' + (dbItem.isPaid ? 'checked' : '') + ' ' + (isWeekLocked ? 'disabled' : '') + ' />' +
+                        '</td>' +
+                        '<td>' +
+                            '<input type="text" class="remuneration-note-input" data-guardid="' + (ent.id || '') + '" data-providername="' + (ent.provider || '') + '" data-total="' + ent.total + '" value="' + (dbItem.notes || '') + '" placeholder="Add notes..." ' + (isWeekLocked ? 'disabled' : '') + ' />' +
+                        '</td>' +
+                    '</tr>';
+                    tbody.append(rowHtml);
+                });
+
+                // Add Summary Total Row
+                tbody.append('<tr class="bg-light font-weight-bold">' +
+                    '<td class="px-3 text-uppercase text-muted small">Summary Total</td>' +
+                    '<td class="text-right" style="color: #ff3d00; border-top: 2px solid #dee2e6;">$' + grandTotal.toFixed(2) + '</td>' +
+                    '<td colspan="2"></td>' +
+                    '</tr>');
+
+                $('.paid-checkbox').on('change', function() { saveRemunerationItem($(this)); });
+                $('.remuneration-note-input').on('blur', function() { saveRemunerationItem($(this)); }).on('keypress', function(e) { if (e.which === 13) $(this).blur(); });
+            }
+        });
+    }
+
+    function saveRemunerationItem(input) {
+        if (isWeekLocked) return;
+        var guardId = input.data('guardid');
+        var providerName = input.data('providername');
+        var totalAmount = input.data('total');
+        var row = input.closest('tr');
+        var isPaid = row.find('.paid-checkbox').is(':checked');
+        var notes = row.find('.remuneration-note-input').val();
+
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=SaveRemunerationSummary',
+            type: 'POST',
+            container: '#guardRosterModal',
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: {
+                startDate: guardRosterStartDate,
+                guardId: guardId || null,
+                providerName: providerName || "",
+                isPaid: isPaid,
+                notes: notes,
+                totalAmount: totalAmount,
+                siteId: currentGuardSiteId
+            },
+            success: function(res) {
+                if (!res.success) console.error('Error saving remuneration:', res.message);
+            }
+        });
+    }
+
+    function saveAdminRosterStatus(newStatus) {
+         $.ajax({
+            url: '/roster/GuardRosterAction?handler=SaveRosterStatus',
+            type: 'POST',
+            container: '#guardRosterModal',
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, status: newStatus },
+            success: function(res) {
+                currentRosterStatus = newStatus;
+                updateGridStatusDisplay(newStatus);
+                
+                // Show Success Message
+                $('#spanUpdatedStatusName').text(newStatus.toUpperCase());
+                $('#rosterAdminAlert').removeClass('d-none').hide().fadeIn();
+                setTimeout(function() {
+                    $('#rosterAdminAlert').fadeOut();
+                }, 3000);
+
+                // Reload the roster to apply lock/unlock state
+                loadGuardRoster();
+            }
+        });
+    }
+
+    function applyGuardFilter() {
+        var selectedVal = $('#adminGuardFilter').val(); // "G123" or "PProviderName"
+        loadGuardRoster(); // Re-render everything to update totals
+    }
+
+    function loadGuardRoster() {
+        if (!currentGuardSiteId || !guardRosterStartDate) return;
+
+        var parts = guardRosterStartDate.split('-');
+        var end = new Date(parts[0], parts[1] - 1, parts[2]);
+        end.setDate(end.getDate() + 6);
+        $('#guardWeekRangeText').html(formatGuardDate(new Date(parts[0], parts[1] - 1, parts[2])) + ' - ' + formatGuardDate(end));
+
+        var tbody = $('#guard_roster_body');
+        var thead = $('#guard_roster_header tr');
+        var tfoot = $('#guard_roster_footer');
+        
+        tbody.html('<tr><td colspan="8" class="text-center py-5"><i class="fa fa-spinner fa-spin fa-3x text-primary opacity-25"></i><p class="mt-3 text-muted font-weight-bold">LOADING ROSTER...</p></td></tr>');
+        tfoot.hide();
+
+        $.ajax({
+            url: '/roster/GuardRosterAction?handler=LoadRosterForSite',
+            type: 'GET',
+            data: { siteId: currentGuardSiteId, startDate: guardRosterStartDate, isEditMode: isEditMode },
+            success: function (res) {
+                tbody.empty();
+                thead.find('th:not(:first-child)').remove();
+                tfoot.find('td:not(:first-child)').remove();
+
+                if (!res.results || res.results.length === 0) {
+                    $('#guardRosterEmpty').removeClass('d-none');
+                    $('#guard_roster_grid').addClass('d-none');
+                    return;
+                }
+                $('#guardRosterEmpty').addClass('d-none');
+                $('#guard_roster_grid').removeClass('d-none');
+                tfoot.show();
+
+                // Inject Day Headers (Arranged like Booking)
+                var p = guardRosterStartDate.split('-');
+                var d = new Date(p[0], p[1] - 1, p[2]);
+                for (var i = 0; i < 7; i++) {
+                    var dayDate = new Date(d);
+                    dayDate.setDate(d.getDate() + i);
+                    
+                    var ph = isPublicHolidayAtDate(dayDate.getTime(), res.holidays, res.siteState);
+                    var phIcon = ph ? phIconSvg : "";
+                    var phTitle = ph ? ph.reason : "";
+                    
+                    var dateStr = dayDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+                    thead.append('<th style="width: 12.14%;" title="' + phTitle + '"><div>' + dateStr + phIcon + '</div></th>');
+                    tfoot.children('tr').append('<td class="p-0"><div class="total-item"><span class="total-label">Daily Total</span><span class="total-value font-weight-bold" id="daily_total_' + i + '">0h</span></div></td>');
+                }
+
+                 lastGuardRosterData = res;
+                 currentRosterGroupId = res.rosterGroupId || null;
+
+                 var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                 isWeekLocked = !!(res.status && lockedStatusList.indexOf(res.status.toUpperCase()) !== -1);
+
+                // Update Filter Dropdown (Add unique guards found in data)
+                var filterSelect = $('#adminGuardFilter');
+                var currentSelection = filterSelect.val();
+                filterSelect.find('option:not([value="ALL"])').remove();
+                
+                var filterGuards = [];
+                res.results.forEach(function(row) {
+                    row.days.forEach(function(dayShifts) {
+                        dayShifts.forEach(function(s) {
+                            var gId = s.reliefGuardId || s.guardId;
+                            var gName = s.reliefGuardName || s.guardName;
+                            var k = gId ? ("G" + gId) : ("P" + gName);
+                            if (gName && !filterGuards.find(x => x.key === k)) {
+                                filterGuards.push({ key: k, name: gName });
+                            }
+                        });
+                    });
+                });
+                
+                filterGuards.sort((a,b) => a.name.localeCompare(b.name)).forEach(g => {
+                    filterSelect.append('<option value="' + g.key + '">' + g.name + '</option>');
+                });
+                filterSelect.val(currentSelection || "ALL");
+                if (!filterSelect.val()) filterSelect.val("ALL"); // Selected guard not rostered this week
+                var filterVal = filterSelect.val();
+
+                // Update Callsign Filter Dropdown (Add unique callsigns found in this week's data) [Issue 68]
+                var callsignSelect = $('#adminCallsignFilter');
+                var currentCallsignSelection = callsignSelect.val();
+                callsignSelect.find('option:not([value="ALL"])').remove();
+
+                var filterCallsigns = [];
+                res.results.forEach(function(row) {
+                    row.days.forEach(function(dayShifts) {
+                        dayShifts.forEach(function(s) {
+                            if (s.callsignId && s.callsignName && !filterCallsigns.find(x => x.key === ("C" + s.callsignId))) {
+                                filterCallsigns.push({ key: "C" + s.callsignId, name: s.callsignName });
+                            }
+                        });
+                    });
+                });
+
+                filterCallsigns.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+                    callsignSelect.append('<option value="' + c.key + '">' + c.name + '</option>');
+                });
+                callsignSelect.val(currentCallsignSelection || "ALL");
+                if (!callsignSelect.val()) callsignSelect.val("ALL"); // Selected callsign not used this week
+                var callsignFilterVal = callsignSelect.val();
+                var grandTotalHours = 0;
+                var grandTotalCost = 0;
+                var dailyTotalHours = [0,0,0,0,0,0,0];
+                var dailyTotalCost = [0,0,0,0,0,0,0];
+
+                var absenceDict = {};
+                res.results.forEach(function (r) {
+                    r.days.forEach(function (ds, dayIndex) {
+                        var ps = guardRosterStartDate.split('-');
+                        var loopDate = new Date(ps[0], ps[1]-1, ps[2]);
+                        loopDate.setDate(loopDate.getDate() + dayIndex);
+                        var dateStr = String(loopDate.getDate()).padStart(2, '0') + '/' + String(loopDate.getMonth()+1).padStart(2, '0');
+                        
+                        ds.forEach(function (s) {
+                            if (s.reliefReason) {
+                                var key = (s.guardName || "Unassigned") + " - " + s.reliefReason;
+                                if (s.reliefReasonOther) key += " (" + s.reliefReasonOther + ")";
+                                
+                                if (!absenceDict[key]) absenceDict[key] = [];
+                                if (absenceDict[key].indexOf(dateStr) === -1) absenceDict[key].push(dateStr);
+                            }
+                            if (s.status === 2) {
+                                var key = (s.guardName || "Unassigned") + " - Declined";
+                                
+                                if (!absenceDict[key]) absenceDict[key] = [];
+                                if (absenceDict[key].indexOf(dateStr) === -1) absenceDict[key].push(dateStr);
+                            }
+                        });
+                    });
+                });
+                var globalAbsences = Object.keys(absenceDict).map(function(key) {
+                    return "- " + key + " (" + absenceDict[key].join(', ') + ")";
+                });
+
+                var legendHtml = '<div class="mt-3 pt-2 border-top" style="font-size: 9px; line-height: 1.2; text-shadow: none;">' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #9E9E9E; margin-right: 4px; font-size: 10px;">●</span> Unassigned - UNKNOWN</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #FFA726; margin-right: 4px; font-size: 10px;">●</span> Unassigned - FIXED</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #E65100; margin-right: 4px; font-size: 10px;">●</span> Unassigned - ADHOC</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #66BB6A; margin-right: 4px; font-size: 10px;">●</span> Accepted - FIXED</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #1B5E20; margin-right: 4px; font-size: 10px;">●</span> Accepted - ADHOC</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #8e24aa; margin-right: 4px; font-size: 10px;">●</span> Relief Guard (Accepted)</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #000; margin-right: 4px; font-size: 10px;">●</span> DECLINED (OPEN)</div>' +
+                    '<div class="d-flex align-items-center mb-1"><span style="color: #424242; margin-right: 4px; font-size: 10px;">●</span> MISSED (inc LATE)</div>' +
+                    '<div class="d-flex align-items-center mb-2"><span style="color: #e53935; margin-right: 4px; font-size: 10px;">● <i class="fa fa-times" style="font-size: 8px;"></i></span> CANCELLED (CLOSED)</div>' +
+                    '<div class="font-weight-bold mt-2 mb-1" style="color: #000;">Not Avalible (DNC):</div>' +
+                    '<div style="color: #000;">';
+                
+                if (globalAbsences.length > 0) {
+                    globalAbsences.forEach(function(note) {
+                        legendHtml += '<div class="mb-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' + note + '">' + note + '</div>';
+                    });
+                } else {
+                    legendHtml += '<div class="text-muted font-italic">None</div>';
+                }
+                legendHtml += '</div></div>';
+
+                res.results.forEach(function (row) {
+                    var projectWeeklyHours = 0;
+                    var projectWeeklyCost = 0;
+                    var projectDailyHours = [0,0,0,0,0,0,0];
+                    var projectDailyCost = [0,0,0,0,0,0,0];
+
+                    if (isEditMode) {
+                        var headerRowHtml = '<tr class="bg-light">' +
+                            '<td colspan="8" class="py-2 px-3 font-weight-bold text-dark text-left" style="font-size: 12.5px; border-bottom: 1px solid #dee2e6;">' +
+                                '<div class="d-flex justify-content-between align-items-center">' +
+                                    '<div>&#128193; Project: ' + row.projectName + '</div>' +
+                                    '<button type="button" class="btn btn-outline-info btn-sm py-0 px-2 btn-guard-project-rollover" data-group-id="' + row.rosterGroupId + '" title="Rollover Project"><i class="fa fa-copy mr-1"></i>Rollover</button>' +
+                                '</div>' +
+                            '</td>' +
+                        '</tr>';
+                        tbody.append(headerRowHtml);
+                    }
+
+                    var statusStampHtml = '';
+                    var status = row.projectStatus || res.status;
+                    var lockedStatusList = ['INVOICED', 'PAID', 'CANCELLED'];
+                    var isRowLocked = !!(status && lockedStatusList.indexOf(status.toUpperCase()) !== -1);
+                    if (isEditMode && status) {
+                        var imgName = '';
+                        switch(status.toUpperCase()) {
+                            case 'LIVE': imgName = 'STAMP - LIVE.png'; break;
+                            case 'PAID': imgName = 'STAMP - PAID.png'; break;
+                            case 'INVOICED': case 'INV': imgName = 'STAMP - INV.png'; break;
+                            case 'DISPUTED': imgName = 'STAMP - DISPUTED.png'; break;
+                            case 'CANCELLED': case 'CANCELED': case 'CANCEL': imgName = 'STAMP - CANCELD.png'; break;
+                        }
+                        if (imgName) {
+                            statusStampHtml = '<div class="text-center">' + 
+                                             '<img src="/images/stamps/' + imgName + '" class="status-stamp-img" alt="' + status + '" />' + 
+                                             (isRowLocked ? '<div class="mt-1 text-danger font-weight-bold" style="font-size: 11px;" title="This week is locked (' + status + '). Change status to Live or Disputed to edit shifts."><i class="fa fa-lock mr-1"></i>LOCKED</div>' : '') +
+                                             '</div>';
+                        }
+                    }
+
+                    var rowHtml = '<tr>' +
+                        '<td class="align-top px-3 text-left d-flex flex-column" style="min-height: 150px;">' + 
+                            '<div>' + 
+                                '<div class="guard-site-name">' + row.siteName + '</div>' + 
+                                '<div class="guard-client-type">' + row.clientTypeName + '</div>' + 
+                            '</div>' + 
+                            '<div class="admin-status-grid-display mt-auto pb-2">' + statusStampHtml + '</div>' + 
+                            legendHtml +
+                        '</td>';
+
+                    row.days.forEach(function (dayShifts, index) {
+                        var ps = guardRosterStartDate.split('-');
+                        var loopDate = new Date(ps[0], ps[1]-1, ps[2]);
+                        loopDate.setDate(loopDate.getDate() + index);
+                        
+                        var ph = isPublicHolidayAtDate(loopDate.getTime(), res.holidays, res.siteState);
+                        var phClass = ph ? "guard-ph-highlight" : "";
+                        var phReason = ph ? ph.reason : "";
+                        
+                        var weekendClass = "";
+                        if (loopDate.getDay() === 6) weekendClass = "guard-sat-highlight";
+                        else if (loopDate.getDay() === 0) weekendClass = "guard-sun-highlight";
+                        
+                        var dStr = loopDate.getFullYear() + '-' + String(loopDate.getMonth() + 1).padStart(2, '0') + '-' + String(loopDate.getDate()).padStart(2, '0');
+                        rowHtml += '<td class="guard-roster-cell ' + phClass + ' ' + weekendClass + '" data-date="' + dStr + '" data-site-id="' + row.siteId + '" data-group-id="' + (row.rosterGroupId || '') + '" title="' + phReason + '">';
+                        
+                        dayShifts.forEach(function (s) {
+                            var guardId = s.reliefGuardId || s.guardId;
+                            var guardName = s.reliefGuardName || s.reliefProviderName || s.guardName;
+                            var key = guardId ? ("G" + guardId) : ("P" + guardName);
+                            
+                            // Apply Filtering
+                            if (filterVal !== "ALL" && filterVal !== key) return;
+
+                            // Apply Callsign Filtering [Issue 68]
+                            var callsignKey = s.callsignId ? ("C" + s.callsignId) : "NONE";
+                            if (callsignFilterVal !== "ALL" && callsignFilterVal !== callsignKey) return;
+
+                            var duration = parseFloat(s.durationHours);
+                            var activeRate = (adminRateType == 'sell' ? s.sellRate : s.buyRate);
+                            var cost = duration * activeRate;
+
+                            dailyTotalHours[index] += duration;
+                            grandTotalHours += duration;
+                            dailyTotalCost[index] += cost;
+                            grandTotalCost += cost;
+
+                            projectDailyHours[index] += duration;
+                            projectWeeklyHours += duration;
+                            projectDailyCost[index] += cost;
+                            projectWeeklyCost += cost;
+
+                            var statusClass = 'status-pushed';
+                            if (s.status === 1) statusClass = 'status-accepted';
+                            if (s.status === 2) statusClass = 'status-declined';
+                            if (s.status === 3) statusClass = 'status-cancelled';
+                            if (s.status === 4) statusClass = 'status-missed';
+
+                            var typeClass = 'type-regular';
+                            if (s.shiftType === 'Adhoc') typeClass = 'type-adhoc';
+                            if (s.providerName && (!s.guardId || s.guardName === 'External')) typeClass += ' type-provider';
+
+                             var isRelief = s.reliefGuardId || s.reliefProviderName;
+                            // Ownership logic: If a relief guard is assigned, they are the ONLY owner. 
+                            // Otherwise, the main guard is the owner.
+                            var belongsToLoggedGuard = loggedGuardId && (
+                                s.reliefGuardId ? (s.reliefGuardId === loggedGuardId) : (s.guardId === loggedGuardId)
+                            );
+                            
+                            // Check if date is today or future
+                            var shiftDate = new Date(s.shiftDate || loopDate);
+                            var today = new Date();
+                            today.setHours(0,0,0,0);
+                            var isFutureOrToday = shiftDate >= today;
+
+                            rowHtml += '<div class="guard-shift-card clickable-shift ' + (isRelief ? 'shift-relief ' : '') + statusClass + ' ' + typeClass + '" draggable="' + (isEditMode && !isRowLocked) + '" ' +
+                                'data-shift-id="' + s.id + '" data-status="' + s.status + '" data-type="' + s.shiftType + '" data-guard-id="' + s.guardId + '" data-relief-guard-id="' + (s.reliefGuardId || '') + '" data-is-future="' + isFutureOrToday + '" ' +
+                                'data-guard-name="' + (s.guardName || '') + '" data-shift-start="' + s.shiftStart + '" data-shift-end="' + s.shiftEnd + '" ' +
+                                'data-provider-name="' + (s.providerName || '') + '" data-relief-provider-name="' + (s.reliefProviderName || '') + '" ' +
+                                'data-relief-reason="' + (s.reliefReason || '') + '" data-relief-reason-other="' + (s.reliefReasonOther || '') + '" ' +
+                                'data-adhoc-text="' + (s.adhocOffsiteText || '') + '" data-callsign-id="' + (s.callsignId || '') + '" data-callsign-name="' + (s.callsignName || '') + '" ' +
+                                'data-payrate-id="' + (s.payRateId || '') + '" data-payrate-group-id="' + (s.payRateGroupId || '') + '" ' +
+                                'data-buy-rate="' + s.buyRate + '" data-group-id="' + s.groupId + '">' +
+                                (isEditMode && !isRowLocked ? '<span class="btn-delete-shift" onclick="deleteGuardRosterShift(event, ' + s.id + ')"><i class="fa fa-times"></i></span>' : '') +
+                                (isEditMode && !isRowLocked ? '<span class="btn-edit-shift" onclick="openEditShiftModal(' + s.id + ', ' + s.groupId + ', ' + row.siteId + ')"><i class="fa fa-pencil"></i></span>' : '') +
+                                (belongsToLoggedGuard && !isEditMode ? '<i class="fa fa-pencil guard-edit-icon" title="Your Shift"></i>' : '') +
+                                '<div class="text-truncate font-weight-bold">' + 
+                                    (isRelief ? '<span class="guard-relief-badge">R</span>' : '<i class="fa fa-user mr-1 small opacity-75"></i>') + 
+                                    (s.reliefGuardName || s.reliefProviderName || s.guardName || 'Unassigned') + 
+                                '</div>' +
+                                (s.status === 3 ? '<div class="cancelled-overlay"></div>' : '') + 
+                                (s.reliefReason ? '<div class="text-truncate mt-1 italic opacity-75" style="font-size: 8px;">[' + s.reliefReason + '] ' + truncateGuardName(s.guardName, 12) + '</div>' : '') +
+                                ((s.reliefGuardId || s.reliefProviderName) ? '' : '<div class="guard-shift-license">LIC: ' + s.guardLicense + '</div>') +
+                                '<div class="guard-shift-time">' + s.shiftStart + ' - ' + s.shiftEnd + ' (' + s.durationHours.toString().replace(/\.00$/, "") + 'h)</div>' +
+                                (isAdminSupplierOn ? 
+                                    '<div style="font-weight: 800; color: #0056b3; font-size: 11px; margin-top: 1px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">' + (s.reliefGuardId ? s.reliefProviderName : s.guardProvider) + (s.callsignName ? ' (' + s.callsignName + ')' : '') + '</div>' : 
+                                    (!isAdminSupplierOn && s.callsignName ? '<div class="mt-1 font-weight-bold" style="font-size: 9px; color: inherit; opacity: 0.8;">' + s.callsignName + '</div>' : '')
+                                ) +
+                                (isAdminFinancialsOn ? 
+                                    '<div style="font-weight: 800; color: #ff3d00; font-size: 13px; margin-top: 2px; text-shadow: 0 0 1px rgba(0,0,0,0.1);">$ ' + ((adminRateType == 'sell' ? s.sellRate : s.buyRate) * duration).toFixed(2) + '</div>' : 
+                                    ''
+                                );
+                            
+                            rowHtml += '</div>';
+                        });
+                        if (isEditMode && !isRowLocked) {
+                             rowHtml += '<button class="btn btn-xs btn-outline-primary btn-add-guard-roster btn-block mt-1" style="padding: 0px 4px; font-size: 10px;" data-date="' + dStr + '" data-site-id="' + row.siteId + '" data-group-id="' + (row.rosterGroupId || '') + '"><i class="fa fa-plus"></i></button>';
+                        }
+                        rowHtml += '</td>';
+                    });
+
+                    rowHtml += '</tr>';
+                    tbody.append(rowHtml);
+
+                    if (isEditMode) {
+                        var projectTotalRowHtml = '<tr class="project-total-row">';
+                        
+                        var weeklyTotalDisplay = "";
+                        if (isAdminFinancialsOn) {
+                            weeklyTotalDisplay = '<span style="font-weight: 800; color: #ff3d00;">$ ' + projectWeeklyCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
+                        } else {
+                            weeklyTotalDisplay = projectWeeklyHours.toFixed(2).replace(/\.00$/, "") + "h";
+                        }
+                        
+                        projectTotalRowHtml += '<td class="p-0 border-right align-middle">' +
+                            '<div class="total-item" style="padding: 5px 8px; text-align: left; padding-left: 15px;">' +
+                                '<span class="total-label" style="font-size: 8.5px; font-weight: 700; color: #555;">Project Total</span>' +
+                                '<span class="total-value font-weight-bold text-primary" style="font-size: 11.5px;">' + weeklyTotalDisplay + '</span>' +
+                            '</div>' +
+                        '</td>';
+                        
+                        for (var i = 0; i < 7; i++) {
+                            var dailyTotalDisplay = "";
+                            if (isAdminFinancialsOn) {
+                                dailyTotalDisplay = '<span style="font-weight: 800; color: #ff3d00;">$ ' + projectDailyCost[i].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
+                            } else {
+                                dailyTotalDisplay = projectDailyHours[i].toFixed(2).replace(/\.00$/, "") + "h";
+                            }
+                            projectTotalRowHtml += '<td class="p-0 align-middle"><div class="total-item" style="padding: 5px 2px;"><span class="total-label" style="font-size: 8px;">Proj. Total</span><span class="total-value font-weight-bold" style="font-size: 10.5px;">' + dailyTotalDisplay + '</span></div></td>';
+                        }
+                        
+                        projectTotalRowHtml += '</tr>';
+                        tbody.append(projectTotalRowHtml);
+                    }
+                });
+
+ 
+
+                // Show Status Stamp in Grid
+                if (res.status) {
+                    currentRosterStatus = res.status;
+                    if (!isEditMode) {
+                        updateGridStatusDisplay(res.status);
+                    }
+                    if (isAdminRoster) {
+                        $('#adminRosterStatus').val(res.status);
+                    }
+                }
+
+                // Update Totals
+                if (isAdminFinancialsOn) {
+                    $('#guard_weekly_grand_total').html('<span style="font-weight: 800; color: #ff3d00;">$ ' + grandTotalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>');
+                    $('.total-label:contains("Weekly Total")').text("Weekly Pay");
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).html('<span style="font-weight: 800; color: #ff3d00;">$ ' + dailyTotalCost[i].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>');
+                    }
+                } else {
+                    $('#guard_weekly_grand_total').text(grandTotalHours.toFixed(2).replace(/\.00$/, "") + "h");
+                    $('.total-label:contains("Weekly Pay")').text("Weekly Total");
+                    for(var i=0; i<7; i++) {
+                        $('#daily_total_' + i).text(dailyTotalHours[i].toFixed(2).replace(/\.00$/, "") + "h");
+                    }
+                }
+                
+                // Update Legend or Status labels if needed
+                $('.status-label:contains("PUSHED")').text("PENDING");
+                $('.status-label:contains("Pushed")').text("Pending");
+
+                checkRemunerationVisibility();
+            },
+            error: function() {
+                tbody.html('<tr><td colspan="8" class="text-center py-5 text-danger font-weight-bold"><i class="fa fa-exclamation-triangle mr-2"></i> FAILED TO LOAD ROSTER DATA</td></tr>');
+            }
+        });
+    }
+
+    function isPublicHolidayAtDate(time, holidays, state) {
+        if (!holidays) return null;
+        var date = new Date(time);
+        var dYear = date.getFullYear();
+        var dMonth = date.getMonth();
+        var dDay = date.getDate();
+        
+        // Use local date string YYYY-MM-DD to avoid timezone shift issues with toISOString()
+        var dStr = dYear + '-' + String(dMonth + 1).padStart(2, '0') + '-' + String(dDay).padStart(2, '0');
+        var siteState = (state || "").trim().toUpperCase();
+        
+        for (var i = 0; i < holidays.length; i++) {
+            var h = holidays[i];
+            var hS = new Date(h.startDate);
+            var hE = new Date(h.expiryDate);
+            var hSStr = hS.getFullYear() + '-' + String(hS.getMonth() + 1).padStart(2, '0') + '-' + String(hS.getDate()).padStart(2, '0');
+            var hEStr = hE.getFullYear() + '-' + String(hE.getMonth() + 1).padStart(2, '0') + '-' + String(hE.getDate()).padStart(2, '0');
+            
+            var isMatch = false;
+            // 1. Exact date range match (using local date strings)
+            if (dStr >= hSStr && dStr <= hEStr) {
+                isMatch = true;
+            }
+            // 2. RepeatYearly match (Month/Day)
+            else if (h.repeatYearly && hS.getMonth() === dMonth && hS.getDate() === dDay) {
+                isMatch = true;
+            }
+
+            if (isMatch) {
+                if (!h.states || h.states.length === 0 || h.states.indexOf("ALL") !== -1 || h.states.indexOf(siteState) !== -1) {
+                    return h;
+                }
+            }
+        }
+        return null;
+    }
+
+    function formatGuardDate(date) {
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function openAddShiftModal(date, siteId) {
+        openNewShiftModalForSite(date, siteId);
+    }
+
+    function openNewShiftModalForSite(cellDate, siteId, groupId) {
+        $('#geModalShiftId').val('');
+        $('#geModalGroupId').val(groupId || currentRosterGroupId || 0);
+        $('#geModalSiteId').val(siteId);
+        $('#guardAddShiftModal').data('date', cellDate);
+        
+        // Clear other fields
+        $('#geModalGuardId').empty().trigger('change');
+        $('#geModalProviderId').empty().val(null).trigger('change');
+        $('#geModalReliefGuardId').empty().val(null).trigger('change');
+        $('#geModalReliefProviderId').empty().val(null).trigger('change');
+        $('#geModalReliefReason').val('').trigger('change');
+        $('#geModalReliefReasonOther').val('');
+        $('#geModalCallsignId').empty().val(null).trigger('change');
+        
+        // Populate default Times
+        $('#geModalShiftStart').val('08:00');
+        $('#geModalShiftEnd').val('16:00');
+        $('#geModalShiftType').val('Regular').trigger('change');
+        $('#geModalAdhocOffsiteText').val('');
+        
+        // Auto-select Pay Rate Group (Payment Profile) if default exists
+        $.ajax({
+            url: '/roster/Booking?handler=SiteDefaultAssignment',
+            data: { siteId: siteId },
+            success: function (res) {
+                if (res.success) {
+                    var newOption = new Option(res.groupName, res.groupId, true, true);
+                    $('#geModalPayRateGroupId').empty().append(newOption).trigger('change');
+                    
+                    // Fetch and select the first rate profile for this payment profile group
+                    $.ajax({
+                        url: '/roster/Booking?handler=SearchPayRates',
+                        dataType: 'json',
+                        data: { search: '', groupId: res.groupId },
+                        success: function(data) {
+                            if (data.results && data.results.length > 0) {
+                                var rate = data.results[0];
+                                var rateOption = new Option(rate.text, rate.id, true, true);
+                                $('#geModalPositionId').empty().append(rateOption).trigger('change');
+                                $('#geModalPayRate').val(rate.guardPayRate || 0);
+                            } else {
+                                $('#geModalPositionId').empty().trigger('change');
+                                $('#geModalPayRate').val('');
+                            }
+                        }
+                    });
+                } else {
+                    $('#geModalPayRateGroupId').empty().trigger('change');
+                    $('#geModalPositionId').empty().trigger('change');
+                    $('#geModalPayRate').val('');
+                }
+            }
+        });
+
+        // Open the modal
+        $('#guardAddShiftModal').modal('show');
+    }
+
+    function openEditShiftModal(shiftId, groupId, siteId) {
+        var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
+        
+        $('#geModalShiftId').val(shiftId);
+        $('#geModalGroupId').val(groupId);
+        $('#geModalSiteId').val(siteId);
+        
+        // Populate Guard
+        var gId = card.data('guard-id');
+        var gName = card.data('guard-name');
+        if (gId) {
+            $('#geModalGuardId').empty().append(new Option(gName, gId, true, true)).trigger('change');
+        } else {
+            $('#geModalGuardId').empty().trigger('change');
+        }
+
+        // Populate Provider
+        var pName = card.data('provider-name');
+        if (pName) {
+            $('#geModalProviderId').empty().append(new Option(pName, pName, true, true)).trigger('change');
+        } else {
+            $('#geModalProviderId').empty().val(null).trigger('change');
+        }
+
+        // Populate Relief Data
+        var rGuardId = card.data('relief-guard-id');
+        var rProviderName = card.data('relief-provider-name');
+        var rReason = card.data('relief-reason');
+
+        if (rGuardId) {
+            var nameToUse = card.find('.text-truncate.font-weight-bold').text().replace(/^R/, '').trim();
+            $('#geModalReliefGuardId').empty().append(new Option(nameToUse, rGuardId, true, true)).trigger('change');
+        } else {
+            $('#geModalReliefGuardId').empty().val(null).trigger('change');
+        }
+
+        if (rProviderName) {
+            $('#geModalReliefProviderId').empty().append(new Option(rProviderName, rProviderName, true, true)).trigger('change');
+        } else {
+            $('#geModalReliefProviderId').empty().val(null).trigger('change');
+        }
+
+        $('#geModalReliefReason').val(rReason || "").trigger('change');
+
+        // Populate Callsign & Adhoc
+        var cId = card.data('callsign-id');
+        var cName = card.data('callsign-name');
+        if (cId) {
+            $('#geModalCallsignId').empty().append(new Option(cName, cId, true, true)).trigger('change');
+        } else {
+            $('#geModalCallsignId').empty().val(null).trigger('change');
+        }
+        $('#geModalAdhocOffsiteText').val(card.data('adhoc-text') || "");
+
+        // Populate Times
+        $('#geModalShiftStart').val(card.data('shift-start'));
+        $('#geModalShiftEnd').val(card.data('shift-end'));
+        
+        // Populate Status/Type
+        var currentType = card.data('type') || 'Regular';
+        var currentStatus = parseInt(card.data('status') || '0');
+        var compositeType = currentType;
+        
+        if (currentStatus === 1) {
+            compositeType = (currentType === 'Adhoc' ? 'AdhocAccepted' : 'RegularAccepted');
+        } else if (currentStatus === 2) {
+            compositeType = 'Declined';
+        } else if (currentStatus === 3) {
+            compositeType = 'Cancelled';
+        } else if (currentStatus === 4) {
+            compositeType = 'Missed';
+        }
+        $('#geModalShiftType').val(compositeType).trigger('change');
+
+        var pgId = card.data('payrate-group-id');
+        var prId = card.data('payrate-id');
+        
+        // Load Payment Profile
+        if (pgId) {
+            $.ajax({
+                url: '/roster/Booking?handler=SearchPayRateGroups',
+                dataType: 'json',
+                data: { search: '', siteId: siteId },
+                success: function(data) {
+                    var group = data.results.find(function(g) { return g.id == pgId; });
+                    if (group) {
+                        $('#geModalPayRateGroupId').empty().append(new Option(group.text, group.id, true, true)).trigger('change');
+                    }
+                }
+            });
+        } else {
+            $('#geModalPayRateGroupId').empty().trigger('change');
+        }
+        
+        // Load Rate Profile
+        if (prId) {
+            $.ajax({
+                url: '/roster/Booking?handler=SearchPayRates',
+                dataType: 'json',
+                data: { search: '', id: prId },
+                success: function(data) {
+                    var rate = data.results.find(function(r) { return r.id == prId; });
+                    if (rate) {
+                        $('#geModalPositionId').empty().append(new Option(rate.text, rate.id, true, true)).trigger('change');
+                    }
+                }
+            });
+        } else {
+            $('#geModalPositionId').empty().trigger('change');
+        }
+        
+        $('#geModalPayRate').val(card.data('buy-rate'));
+        
+        $('#guardAddShiftModal').modal('show');
+    }
+
+    function saveGuardRosterShift() {
+        saveGuardRosterShiftAttempt(false);
+    }
+
+    function saveGuardRosterShiftAttempt(ignoreUnavail) {
+        if (isWeekLocked) {
+            alert('Cannot save: This week is locked.');
+            return;
+        }
+        var shiftId = parseInt($('#geModalShiftId').val()) || 0;
+        var groupId = parseInt($('#geModalGroupId').val()) || 0;
+        var siteId = parseInt($('#geModalSiteId').val()) || 0;
+        
+        var guardId = parseInt($('#geModalGuardId').val()) || null;
+        var providerData = $('#geModalProviderId').select2('data');
+        var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
+        
+        var payRateId = parseInt($('#geModalPositionId').val()) || null;
+        var payRateValue = $('#geModalPayRate').val();
+        var startTime = $('#geModalShiftStart').val();
+        var endTime = $('#geModalShiftEnd').val();
+        var shiftType = $('#geModalShiftType').val();
+        var callsignId = parseInt($('#geModalCallsignId').val()) || null;
+        var adhocOffsiteText = $('#geModalAdhocOffsiteText').val();
+
+        // Relief Data
+        var reliefGuardId = parseInt($('#geModalReliefGuardId').val()) || null;
+        var reliefProviderData = $('#geModalReliefProviderId').select2('data');
+        var reliefProviderName = (reliefProviderData && reliefProviderData.length > 0) ? reliefProviderData[0].text : null;
+        var reliefReason = $('#geModalReliefReason').val();
+
+        if (!payRateId) { alert('Please select a Rate Profile.'); return; }
+        
+        var card = $('.guard-shift-card[data-shift-id="' + shiftId + '"]');
+        var cellDate = card.closest('.guard-roster-cell').data('date');
+        
+        if (!cellDate) {
+            cellDate = $('#guardAddShiftModal').data('date');
+        }
+        if (!cellDate) {
+            cellDate = new Date().toISOString().split('T')[0];
+        }
+
+        // Client-side Validation: Time range check (00:01 - 23:59)
+        if (startTime === '00:00' || endTime === '00:00') {
+            alert('Time values of 00:00 or 24:00 are not allowed. Minimum value is 00:01 and maximum is 23:59.');
+            return;
+        }
+
+        // Client-side Validation: At least one selected
+        if (!guardId && !providerName && shiftType !== 'Cancelled') {
+            alert('Please select either a Guard OR a Provider.');
+            return;
+        }
+
+        // Client-side Validation: Time check (Overnight Shift Split)
+        if (startTime >= endTime) {
+            var dateStr = cellDate;
+            
+            var shiftDateObj = new Date(cellDate + 'T00:00:00');
+            var nextShiftDate = new Date(shiftDateObj);
+            nextShiftDate.setDate(nextShiftDate.getDate() + 1);
+            var nextDateStr = nextShiftDate.getFullYear() + '-' + String(nextShiftDate.getMonth() + 1).padStart(2, '0') + '-' + String(nextShiftDate.getDate()).padStart(2, '0');
+
+            // Calculate Durations
+            var parts1 = startTime.split(':');
+            var h1 = parseInt(parts1[0]);
+            var m1 = parseInt(parts1[1]);
+            
+            var parts2 = endTime.split(':');
+            var h2 = parseInt(parts2[0]);
+            var m2 = parseInt(parts2[1]);
+
+            var totalMin1 = (23 - h1) * 60 + (59 - m1);
+            var hrs1 = Math.floor(totalMin1 / 60);
+            var mins1 = totalMin1 % 60;
+            var durationStr1 = hrs1 + 'h ' + mins1 + 'm';
+
+            var totalMin2 = h2 * 60 + m2 - 1;
+            var hrs2 = Math.floor(totalMin2 / 60);
+            var mins2 = totalMin2 % 60;
+            var durationStr2 = hrs2 + 'h ' + mins2 + 'm';
+
+            // Update Modal Content
+            $('#geOvernightShiftModal .modal-body').html(
+                '<p class="mb-3 text-muted">This shift crosses midnight. If you split, it will create two shifts:</p>' +
+                '<div class="alert alert-light border text-left mb-3" style="font-size: 0.9rem;">' +
+                    '<div><i class="fa fa-calendar mr-2 text-primary"></i><strong>' + dateStr + '</strong>: ' + startTime + ' - 23:59 (' + durationStr1 + ')</div>' +
+                    '<div class="mt-2"><i class="fa fa-calendar mr-2 text-success"></i><strong>' + nextDateStr + '</strong>: 00:01 - ' + endTime + ' (' + durationStr2 + ')</div>' +
+                '</div>' +
+                '<p class="mb-0 text-muted">Please choose how to proceed.</p>'
+            );
+
+            $('#geOvernightShiftModal').modal('show');
+            
+            $('#btnSplitGuardShift').off('click').on('click', function() {
+                $('#geOvernightShiftModal').modal('hide');
+                
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                var statusValue = $('#geModalStatus').length ? $('#geModalStatus').val() : null;
+                
+                var postData1 = {
+                    groupId: groupId,
+                    siteId: siteId,
+                    start: dateStr + 'T' + startTime,
+                    end: dateStr + 'T23:59',
+                    guardId: guardId,
+                    providerName: providerName,
+                    payRateId: payRateId,
+                    payRate: payRateValue,
+                    shiftId: shiftId,
+                    callsignId: callsignId,
+                    reliefGuardId: reliefGuardId,
+                    reliefProviderName: reliefProviderName,
+                    reliefReason: reliefReason,
+                    reliefReasonOther: $('#geModalReliefReasonOther').val() || "",
+                    shiftType: shiftType,
+                    status: statusValue,
+                    adhocOffsiteText: adhocOffsiteText,
+                    ignoreUnavailability: ignoreUnavail
+                };
+
+                var postData2 = Object.assign({}, postData1);
+                postData2.start = nextDateStr + 'T00:01';
+                postData2.end = nextDateStr + 'T' + endTime;
+                postData2.shiftId = 0; // Always new shift
+
+                if (shiftId > 0) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=DeleteShift',
+                        type: 'POST',
+                        data: { id: shiftId },
+                        headers: { "RequestVerificationToken": token },
+                        success: function() {
+                            createSplitGuardShifts(postData1, postData2, token);
+                        }
+                    });
+                } else {
+                    createSplitGuardShifts(postData1, postData2, token);
+                }
+            });
+            return;
+        }
+
+        var startDateTime = cellDate + 'T' + startTime;
+        var endDateTime = cellDate + 'T' + endTime;
+
+        var postData = {
+            groupId: groupId,
+            siteId: siteId,
+            start: startDateTime,
+            end: endDateTime,
+            guardId: guardId,
+            providerName: providerName,
+            payRateId: payRateId,
+            payRate: payRateValue,
+            shiftId: shiftId,
+            callsignId: callsignId,
+            reliefGuardId: reliefGuardId,
+            reliefProviderName: reliefProviderName,
+            reliefReason: reliefReason,
+            reliefReasonOther: $('#geModalReliefReasonOther').val() || "",
+            shiftType: shiftType,
+            status: $('#geModalStatus').val() || null,
+            adhocOffsiteText: adhocOffsiteText,
+            ignoreUnavailability: ignoreUnavail
+        };
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '/roster/Booking?handler=AddShift',
+            type: 'POST',
+            data: postData,
+            headers: { "RequestVerificationToken": token },
+            success: function(res) {
+                if (res.success) {
+                    $('#guardAddShiftModal').modal('hide');
+                    loadGuardRoster();
+                } else if (res.isUnavailConflict || (res.message && res.message.indexOf('Conflict:') > -1)) {
+                    if (confirm(res.message + "\n\nDo you want to proceed anyway?")) {
+                        saveGuardRosterShiftAttempt(true);
+                    }
+                } else {
+                    alert('Failed to save: ' + res.message);
+                }
+            }
+        });
+    }
+
+    function createSplitGuardShifts(postData1, postData2, token) {
+        $.ajax({
+            url: '/roster/Booking?handler=AddShift',
+            type: 'POST',
+            data: postData1,
+            headers: { "RequestVerificationToken": token },
+            success: function(res1) {
+                if (res1.success) {
+                    $.ajax({
+                        url: '/roster/Booking?handler=AddShift',
+                        type: 'POST',
+                        data: postData2,
+                        headers: { "RequestVerificationToken": token },
+                        success: function(res2) {
+                            if (res2.success) {
+                                loadGuardRoster();
+                            } else {
+                                alert('First part saved, but failed to save the second part: ' + res2.message);
+                                loadGuardRoster();
+                            }
+                        }
+                    });
+                } else if (res1.isUnavailConflict || (res1.message && res1.message.indexOf('Conflict:') > -1)) {
+                    if (confirm(res1.message + "\n\nDo you want to proceed with the split anyway?")) {
+                        postData1.ignoreUnavailability = true;
+                        postData2.ignoreUnavailability = true;
+                        createSplitGuardShifts(postData1, postData2, token);
+                    }
+                } else {
+                    alert('Failed to save the first part: ' + res1.message);
+                }
+            }
+        });
+    }
+    
+    function deleteGuardRosterShift(event, shiftId) {
+        if (event) event.stopPropagation();
+        if (confirm('Are you sure you want to delete this shift?')) {
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/roster/Booking?handler=DeleteShift',
+                type: 'POST',
+                data: { id: shiftId },
+                headers: { "RequestVerificationToken": token },
+                success: function(res) {
+                    if (res.success) {
+                        loadGuardRoster();
+                    } else {
+                        alert('Failed to delete: ' + res.message);
+                    }
+                }
+            });
+        }
+    }
+
+    // Click-to-cycle status logic for Guard Roster
+    // FLOW SUMMARY (as requested 24/04/2026):
+    // 1. Owner clicks Orange (Pending) -> Status 1 (Green/Accepted) [One-click]
+    // 2. Owner clicks Green (Accepted) -> Status 2 (Black/Cancelled) [Reason Modal]
+    // 3. Owner clicks Black (Cancelled) -> Status 1 (Green/Accepted) [Re-Accept Prompt]
+    // 4. Non-Owner clicks Black (Cancelled) -> Status 1 (Purple/Relief) [Relief Prompt]
+    // * Note: Guards cannot reset back to Orange (Pending) once interacted.
+    $(document).on('click', '.clickable-shift', function(e) {
+        if ($(e.target).closest('.btn-delete-shift, .btn-edit-shift').length) return;
+        if (isWeekLocked) return;
+        var card = $(this);
+        var shiftId = card.data('shift-id');
+        var currentStatus = parseInt(card.data('status'));
+        var isFuture = card.data('is-future') === true;
+
+        if (isEditMode) {
+            // Use the same endpoint as Booking.cshtml to correctly cycle shift type/status
+            cycleShiftTypeGuardRoster(shiftId, card);
+        } else {
+            // Guard Logic
+            if (!isFuture || !loggedGuardId) return;
+
+            var shiftGuardId = card.data('guard-id') ? parseInt(card.data('guard-id')) : null;
+            var shiftReliefId = card.data('relief-guard-id') ? parseInt(card.data('relief-guard-id')) : null;
+            
+            // Ownership logic: If relief exists, only relief guard can edit. Otherwise, main guard.
+            var belongsToMe = loggedGuardId && (
+                shiftReliefId ? (shiftReliefId === loggedGuardId) : (shiftGuardId === loggedGuardId)
+            );
+
+            if (belongsToMe) {
+                if (currentStatus === 0) { // Orange (Pending) -> Green (Accept)
+                    processGuardShiftAction(shiftId, 1, 0);
+                } else if (currentStatus === 1) { // Green (Accepted) -> Black (Cancel)
+                    processGuardShiftAction(shiftId, 2, 1);
+                } else if (currentStatus === 2) { // Black (Cancelled) -> Green (Re-Accept)
+                    processGuardShiftAction(shiftId, 1, 2);
+                }
+            } else {
+                // Not my shift - can only pickup if Black (Declined)
+                if (currentStatus === 2) {
+                    processGuardShiftAction(shiftId, 1, 2, true);
+                }
+            }
+        }
+    });
+
+    function cycleShiftTypeGuardRoster(id, card) {
+        $.ajax({
+            url: '/roster/Booking?handler=CycleShiftType',
+            type: 'POST',
+            headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+            data: { id: id },
+            success: function (res) {
+                if (res.success) {
+                    // Find all instances of this shift in the DOM
+                    var allCards = $('.guard-shift-card[data-shift-id="' + id + '"]');
+                    
+                    // Remove all status/type classes
+                    allCards.removeClass('status-pushed status-accepted status-declined type-regular type-adhoc adhoc-accepted adhoc-not-accepted type-provider');
+                    
+                    var typeClass = res.shiftType === 'Adhoc' ? 'type-adhoc' : 'type-regular';
+                    if (allCards.data('provider-name') && (!allCards.data('guard-id') || allCards.data('guard-name') === 'External')) typeClass += ' type-provider';
+                    var statusClass = 'status-pushed';
+                    if (res.status === 1) statusClass = 'status-accepted';
+                    if (res.status === 2) statusClass = 'status-declined';
+                    if (res.status === 3) statusClass = 'status-cancelled';
+                    if (res.status === 4) statusClass = 'status-missed';
+                    
+                    allCards.addClass(statusClass + ' ' + typeClass);
+                    
+                    // Update Card Data and DOM Attributes for all instances
+                    allCards.data('type', res.shiftType);
+                    allCards.attr('data-type', res.shiftType);
+                    allCards.data('status', res.status);
+                    allCards.attr('data-status', res.status);
+                } else {
+                    if (res.message) alert(res.message);
+                }
+            }
+        });
+    }
+
+    /**
+     * Handles specific guard actions based on current status.
+     * Flow: Orange -> Green (Accept), Green -> Black (Cancel), Black -> Green (Re-Accept) or Purple (Relief)
+     */
+    function processGuardShiftAction(shiftId, newStatus, expectedStatus, isReliefPickup) {
+        if (newStatus === 2) { // Cancel (Green -> Black)
+            // Show custom cancellation modal
+            $('input[name="cancelReason"]').prop('checked', false);
+            $('#cancelReasonOtherArea').hide();
+            $('#txtCancelReasonOther').val('');
+            $('#btnConfirmCancellation').data('shift-id', shiftId).data('expected-status', expectedStatus);
+            $('#guardCancellationModal').modal('show');
+            return;
+        }
+
+        if (isReliefPickup) {
+            if (!confirm("Do you want to add as relief guard?")) return;
+        } else if (newStatus === 1 && expectedStatus === 2) {
+            if (!confirm("Do you want to re-accept this shift?")) return;
+        } else if (newStatus === 0) {
+            // Guards shouldn't be able to reset to 0 based on new rules, but keeping for admin/system safety
+            if (!confirm("Do you want to reset this shift to Pending status?")) return;
+        }
+
+        executeShiftStatusUpdate(shiftId, newStatus, expectedStatus, "");
+    }
+
+    function executeShiftStatusUpdate(shiftId, newStatus, expectedStatus, reason) {
+        $('#loader').show();
+        $.ajax({
+            url: '/api/GuardSecurityNumber/UpdateShiftStatus',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                shiftId: shiftId,
+                newStatus: newStatus,
+                expectedStatus: expectedStatus,
+                callingGuardId: loggedGuardId,
+                reason: reason
+            }),
+            success: function(res) {
+                if (res.isSuccess) {
+                    loadGuardRoster(); 
+                } else {
+                    alert(res.message || "Action failed. Please try again.");
+                }
+            },
+            complete: function() {
+                $('#loader').hide();
+            }
+        });
+    }
+
+    function truncateGuardName(str, num) {
+        if (!str) return "";
+        if (str.length <= num) return str;
+        return str.slice(0, num) + '..';
+    }
+
+    // Guard Roster Rollover Logic
+    var guardRolloverTargetGroupId = null;
+
+    $(document).on('click', '.btn-guard-project-rollover', function() {
+        var groupId = $(this).data('group-id');
+        if (!groupId) {
+            alert('Cannot rollover: No group ID found for this project.');
+            return;
+        }
+        guardRolloverTargetGroupId = groupId;
+        $('#guardRolloverStep1').show();
+        $('#guardRolloverStep2').hide();
+        $('#btnConfirmGuardRollover').show();
+        $('#btnExecuteGuardRollover').hide();
+        $('#btnConfirmGuardRollover').prop('disabled', false).text('Confirm Rollover');
+        $('#guardRolloverModal').modal('show');
+    });
+
+    var guardRolloverHasSourceData = true;
+
+    $('#btnConfirmGuardRollover').on('click', function() {
+        var option = $('input[name="guardRolloverOption"]:checked').val();
+        var btn = $(this);
+
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Checking...');
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '/roster/Booking?handler=CheckFutureData',
+            type: 'POST',
+            headers: { "RequestVerificationToken": token },
+            data: {
+                groupId: guardRolloverTargetGroupId,
+                startDate: guardRosterStartDate,
+                option: option
+            },
+            success: function (res) {
+                if (res.success) {
+                    guardRolloverHasSourceData = res.hasSourceData;
+
+                    if (res.hasData) {
+                        $('#guardRolloverStep1').hide();
+                        $('#guardRolloverStep2').show();
+                        btn.hide();
+                        $('#btnExecuteGuardRollover').show().prop('disabled', false).text('Execute Rollover');
+                    } else {
+                        if (!res.hasSourceData) {
+                            btn.prop('disabled', false).text('Confirm Rollover');
+                            alert('Both the current week and the target period are empty. No shifts to copy or clear.');
+                            return;
+                        }
+                        // No future data, proceed with rollover normally (Erase = false)
+                        executeGuardRollover(option, false);
+                    }
+                } else {
+                    btn.prop('disabled', false).text('Confirm Rollover');
+                    alert(res.message || 'An error occurred.');
+                }
+            },
+            error: function() {
+                btn.prop('disabled', false).text('Confirm Rollover');
+                alert('An error occurred checking future data.');
+            }
+        });
+    });
+
+    $('#btnExecuteGuardRollover').on('click', function() {
+        var option = $('input[name="guardRolloverOption"]:checked').val();
+        var conflictOption = $('input[name="guardRolloverConflictOption"]:checked').val();
+        executeGuardRollover(option, conflictOption === 'Erase');
+    });
+
+    function executeGuardRollover(option, eraseFuture) {
+        if (!guardRolloverHasSourceData && eraseFuture) {
+            if (!confirm('The current week is empty. Clicking "OK" will CLEAR all existing future shifts for the selected period. Do you want to proceed?')) {
+                var executeBtn = $('#btnExecuteGuardRollover').is(':visible') ? $('#btnExecuteGuardRollover') : $('#btnConfirmGuardRollover');
+                executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
+                return;
+            }
+        }
+
+        var executeBtn = $('#btnExecuteGuardRollover').is(':visible') ? $('#btnExecuteGuardRollover') : $('#btnConfirmGuardRollover');
+        executeBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '/roster/Booking?handler=RolloverRoster',
+            type: 'POST',
+            headers: { "RequestVerificationToken": token },
+            data: {
+                groupId: guardRolloverTargetGroupId,
+                startDate: guardRosterStartDate,
+                option: option,
+                eraseFuture: eraseFuture,
+                clearNames: $('#guardOptClearNames').is(':checked')
+            },
+            success: function (res) {
+                executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
+                if (res.success) {
+                    $('#guardRolloverModal').modal('hide');
+                    //p7-RolloverOverlapFix-start
+                    // Same as the Booking page rollover: the server now skips shifts that would
+                    // double-book a guard and sends back a message listing them. Show it so nothing
+                    // is dropped silently. This popup uses the SAME handler (RolloverRoster), so the
+                    // overlap check, audit rows and refresh broadcast all apply here too.
+                    alert(res.message ? res.message : 'Roster operation completed successfully.');
+                    //p7-RolloverOverlapFix-end
+                    loadGuardRoster();
+                } else {
+                    alert(res.message);
+                }
+            },
+            error: function() {
+                executeBtn.prop('disabled', false).text(executeBtn.is('#btnExecuteGuardRollover') ? 'Execute Rollover' : 'Confirm Rollover');
+                alert('An error occurred during rollover.');
+            }
+        });
+    }
+</script>

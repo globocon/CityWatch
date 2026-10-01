@@ -361,3 +361,45 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/CityWatch.Web/wwwroot/Pdf/FromDropbox
+/CityWatch.Web/wwwroot/Pdf/Output
+/CityWatch.Web/wwwroot/Pdf/ToDropbox/20230817 - IR Report - VISY-Banyule [VR] - OH&S - SN 07009 - v1.0.pdf
+/CityWatch.Kpi/wwwroot/Pdf/Output
+/CityWatch.Web/wwwroot/Pdf/ToDropbox/20240229 - IR Report - Clarion Suites - G2 - HR - SN 12224 - v1.0.pdf
+/CityWatch.Web/wwwroot/GpsImageLive/Gps_10.1881335,76.3687294_29022024192258.jpg
+/CityWatch.Web/wwwroot/Pdf/ToDropbox/20240319 - IR Report - Casey Fields - Criterium Circuit - COL - Code PINK - Obstetric - SN 12693 - v1.0.pdf
+/CityWatch.Web/wwwroot/Pdf/ToDropbox/20240319 - IR Report - Mercy - Aged Care (Abbotsford) - COL - Code ORANGE - Evacuation - SN 12692 - v1.0.pdf
+/CityWatch.Web/wwwroot/Pdf/ToDropbox/20240319 - IR Report - Mercy - Aged Care (Abbotsford) - COL - Code ORANGE - Evacuation - SN 12697 - v1.0.pdf
+/CityWatch.Web/wwwroot/Pdf/ToDropbox/20240319 - IR Report - Mercy - Aged Care (Abbotsford) - COL - Code YELLOW - OH&S Matter - SN 12695 - v1.0.pdf
+/CityWatch.Web/wwwroot/Pdf/ToDropbox/20240319 - IR Report - Mercy - Aged Care (Abbotsford) - G2 - HR - SN 12696 - v1.0.pdf
+/CityWatch.RadioCheck/appsettings.json
+/CityWatch.Web/wwwroot/Pdf/ToDropbox
+/CityWatch.Web/appsettings.json
+/CityWatch.Web/wwwroot/Uploads
+/CityWatch.Kpi/appsettings.json
+/CityWatch.RadioCheck/appsettings.json
+/CityWatch.Kpi/wwwroot/RCImage/403-error.png
+/CityWatch.Kpi/wwwroot/RCImage
+/CityWatch.RadioCheck/wwwroot/uploads
+
+/CityWatch.Kpi/wwwroot/SiteImage
+
+/CityWatch.Web/wwwroot/GpsImage/Client_189.jpg
+
+
+/CityWatch.Web/wwwroot/StaffDocs
+
+/CityWatch.Web/wwwroot/StaffDocs/Citywatch - Training - C4i - 01a System FAQ - v2.95.pdf
+/CityWatch.Web/wwwroot/StaffDocs/Citywatch - OPERATIONS & HSE INSPECTION CHECKLIST MONITORING AND SURVEILLANCE Rev 0.docx
+/CityWatch.Web/wwwroot/StaffDocs/Citywatch - Employee Handbook - 20220807 - rev 2.7.pdf
+
+/CityWatch.Web/wwwroot/SubdomainLogo/RIVICA_451635.jpg
+/CityWatch.Web/wwwroot/SubdomainLogo/Oxford_873384.jpg
+/CityWatch.Web/wwwroot/SubdomainLogo/lyonswood_logo_336007.png
+/CityWatch.Web/wwwroot/Downloads/MobileApp/Android/1.28.2
+/CityWatch.Web/wwwroot/DglUploads
+/CityWatch.Web/wwwroot/Uploads/104dcff0-1cab-4d19-b37c-91a9fe8e236f/file_example_MP3_700KB.mp3
+/CityWatch.Web/wwwroot/Uploads/ff7ce26a-fa26-47cb-82fb-aa444e04030f/sample-3s.mp3
+/CityWatch.Kpi/wwwroot/Excel/Output
+/CityWatch.Web/wwwroot/Excel/Output
+/CityWatch.Web/wwwroot/TA

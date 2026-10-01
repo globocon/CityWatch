@@ -12,5 +12,8 @@
     "convert-svg-to-png": "^0.6.4",
     "d3": "^6.7.0",
     "jsdom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3"
   }
 }

@@ -15,6 +15,7 @@ namespace CityWatch.Data.Models
             var isCreate = keyVehicleLog.Id == 0;
 
             KeyVehicleLogId = keyVehicleLog.Id;
+            ProfileId = 0;
             GuardLoginId = !isCreate ? keyVehicleLog.ActiveGuardLoginId.Value : keyVehicleLog.GuardLoginId;
             AuditMessage = KeyVehicleLogHelper.GetKeyVehicleLogAuditMessage(keyVehicleLog, keyVehicleLogFromDb);
             AuditTime = DateTime.Now;
@@ -30,9 +31,14 @@ namespace CityWatch.Data.Models
 
         public DateTime AuditTime { get; set; }
 
+        [NotMapped]
+        public string AuditTimeString { get { return AuditTime.ToString("dd MMM yyyy @ HH:mmm"); } }
+
         public string AuditMessage { get; set; }
 
         public bool IsCreate { get; set; }
+
+        public int ProfileId { get; set; }
 
         [ForeignKey("GuardLoginId")]
         public GuardLogin GuardLogin { get; set; }
@@ -40,5 +46,7 @@ namespace CityWatch.Data.Models
         [ForeignKey("KeyVehicleLogId")]
         public KeyVehicleLog KeyVehicleLog { get; set; }
 
+        [ForeignKey("ProfileId")]
+        public KeyVehicleLogProfile KeyVehicleLogProfile { get; set; }
     }
 }

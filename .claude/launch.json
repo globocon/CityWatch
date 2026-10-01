@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "citywatch-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "CityWatch.Web", "--no-launch-profile", "--urls", "http://localhost:5080"],
+      "port": 5080
+    }
+  ]
+}
