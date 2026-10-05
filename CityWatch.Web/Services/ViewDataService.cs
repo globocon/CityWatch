@@ -3153,7 +3153,7 @@ namespace CityWatch.Web.Services
 
             var smartWand = allSmartWands.FirstOrDefault(x => x.DeviceId != null && x.DeviceId.Trim() == DeviceIdToCheck.Trim());
 
-            return smartWand.Id; // true = registered
+            return smartWand != null ? smartWand.Id : 0; // true = registered
         }
 
         public Dictionary<string, string> GetCustomFieldConfig(int clientSiteId)
