@@ -2,6 +2,7 @@
 using Azure.Storage.Blobs;
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -61,6 +62,22 @@ namespace CityWatch.Web.Services
 
         public bool IsEnabled(ClientSite site, LogDumpPeriodType periodType) =>
             periodType == LogDumpPeriodType.Weekly ? IsEnabledWeekly(site) : IsEnabledMonthly(site);
+
+        /// <summary>
+        /// Which entries go in: a "Schedule PCAR" dump has the patrol car entries only; a normal LB,
+        /// SW or Fusion dump leaves them out when "Disable PCAR" is on for the period. KV has no PCAR
+        /// marker and is always complete.
+        /// </summary>
+        public PcarEntryFilter GetPcarFilter(ClientSite site, LogDumpPeriodType periodType)
+        {
+            if (PcarEntryFilterHelper.IsPcarReportType(ReportType))
+                return PcarEntryFilter.OnlyPcar;
+
+            if (ReportType == LogBookType.VehicleAndKeyLog)
+                return PcarEntryFilter.All;
+
+            return PcarEntryFilterHelper.GetScheduleFilter(site, periodType);
+        }
     }
 
     public class SiteLogUploadService : ISiteLogUploadService
@@ -198,7 +215,7 @@ namespace CityWatch.Web.Services
                 {
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start Guard Logbook" + siteLogBook.ClientSite.Name + "----" });
 
-                    string logFileName = GetLogFilePath(siteLogBook, siteLogBook.Type);
+                    string logFileName = GetLogFilePath(siteLogBook, siteLogBook.Type, PcarEntryFilterHelper.GetScheduleFilter(siteLogBook.ClientSite, null));
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "GuardlogBook :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id });
@@ -331,7 +348,7 @@ namespace CityWatch.Web.Services
                         _smartWandLogs = _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, LogBookType.SmartWandLog, siteLogBook.Date);
                     }
                     //siteLogBook.Type = LogBookType.SmartWandLog;
-                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.SmartWandLog);
+                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.SmartWandLog, PcarEntryFilterHelper.GetScheduleFilter(siteLogBook.ClientSite, null));
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBooksmartwand :" + siteLogBook.ClientSite.Name + " LogBookId:" + siteLogBook.Id + " SmartWandLogBookId:" + _smartWandLogs.Id });
@@ -408,7 +425,7 @@ namespace CityWatch.Web.Services
                         _fusionLogbook = _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, LogBookType.FusionLog, siteLogBook.Date);
                     }
 
-                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.FusionLog);
+                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.FusionLog, PcarEntryFilterHelper.GetScheduleFilter(siteLogBook.ClientSite, null));
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBookfusion :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id + " FusionLogBookId:" + _fusionLogbook.Id });
@@ -463,6 +480,7 @@ namespace CityWatch.Web.Services
 
             //************ Fusion LogBook End ***********
 
+            ProcessDailyPcarLogs(siteLogBooksToUpload, outputDirectory, markAsUploaded: true);
 
             _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler end---" });
         }
@@ -499,7 +517,7 @@ namespace CityWatch.Web.Services
                 {
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start Guard Logbook" + siteLogBook.ClientSite.Name + "----" });
 
-                    string logFileName = GetLogFilePath(siteLogBook, siteLogBook.Type);
+                    string logFileName = GetLogFilePath(siteLogBook, siteLogBook.Type, PcarEntryFilterHelper.GetScheduleFilter(siteLogBook.ClientSite, null));
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "GuardlogBook :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id });
@@ -632,7 +650,7 @@ namespace CityWatch.Web.Services
                         _smartWandLogs = _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, LogBookType.SmartWandLog, siteLogBook.Date);
                     }
                     //siteLogBook.Type = LogBookType.SmartWandLog;
-                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.SmartWandLog);
+                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.SmartWandLog, PcarEntryFilterHelper.GetScheduleFilter(siteLogBook.ClientSite, null));
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBooksmartwand :" + siteLogBook.ClientSite.Name + " LogBookId:" + siteLogBook.Id + " SmartWandLogBookId:" + _smartWandLogs.Id });
@@ -709,7 +727,7 @@ namespace CityWatch.Web.Services
                         _fusionLogbook = _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, LogBookType.FusionLog, siteLogBook.Date);
                     }
 
-                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.FusionLog);
+                    string logFileName = GetLogFilePath(siteLogBook, LogBookType.FusionLog, PcarEntryFilterHelper.GetScheduleFilter(siteLogBook.ClientSite, null));
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBookfusion :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id + " FusionLogBookId:" + _fusionLogbook.Id });
@@ -764,6 +782,8 @@ namespace CityWatch.Web.Services
 
             //************ Fusion LogBook End ***********
 
+            // Same-day re-send, so like every loop above it marks nothing.
+            ProcessDailyPcarLogs(siteLogBooksToUpload, outputDirectory, markAsUploaded: false);
 
             _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler end second run ---" });
         }
@@ -1018,6 +1038,107 @@ namespace CityWatch.Web.Services
         }
 
         /* ---------------------------------------------------------------------------------------
+           "Schedule PCAR" daily dumps (Kpi > site > LB > Schedule PCAR).
+
+           The LB, SW and Fusion reports of the day with only the entries a patrol car made
+           (GuardLogs.IsEntryByPCAR), sent to the same recipients and Dropbox day folder as the
+           normal daily dump, under their own "... - PCAR-Report.pdf" name. A day without patrol car
+           entries produces nothing - no empty PDF is mailed.
+
+           Tracked like the smart wand and fusion dumps: a log book of the PCAR type per site per
+           day, marked uploaded once sent, and looked up first so a re-run does not send it again.
+           --------------------------------------------------------------------------------------- */
+
+        private static readonly (LogBookType ReportType, Func<ClientSite, bool> IsEnabled)[] DailyPcarSelections =
+        {
+            (LogBookType.PcarGuardLog, site => site.UploadPcarGuardLog),
+            (LogBookType.PcarSmartWandLog, site => site.UploadPcarSWLog),
+            (LogBookType.PcarFusionLog, site => site.UploadPcarFusionLog)
+        };
+
+        private void ProcessDailyPcarLogs(List<ClientSiteLogBook> siteLogBooksToUpload, string outputDirectory, bool markAsUploaded)
+        {
+            foreach (var (reportType, isEnabled) in DailyPcarSelections)
+            {
+                /* All three are built from the guard log book - PCAR entries live in the guard log.
+                   Fusion, as in the normal daily run, falls back to the key and vehicle log book on a
+                   day the site has no guard log. */
+                var sourceLogBooks = siteLogBooksToUpload
+                    .Where(x => isEnabled(x.ClientSite) &&
+                                (x.Type == LogBookType.DailyGuardLog ||
+                                 (reportType == LogBookType.PcarFusionLog && x.Type == LogBookType.VehicleAndKeyLog)))
+                    .OrderBy(x => x.Type)
+                    .DistinctBy(x => x.ClientSiteId)
+                    .ToList();
+
+                foreach (var siteLogBook in sourceLogBooks)
+                {
+                    try
+                    {
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = $"----- Start {reportType.ToDisplayName()} {siteLogBook.ClientSite.Name}----" });
+
+                        var pcarLogBook = siteLogBooksToUpload.FirstOrDefault(x => x.ClientSiteId == siteLogBook.ClientSiteId && x.Type == reportType && x.Date == siteLogBook.Date)
+                                          ?? _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, reportType, siteLogBook.Date);
+                        if (markAsUploaded && pcarLogBook != null && pcarLogBook.DbxUploaded)
+                        {
+                            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = $"{reportType.ToDisplayName()} : {siteLogBook.ClientSite.Name} already sent, skipped" });
+                            continue;
+                        }
+
+                        string logFileName = GetLogFilePath(siteLogBook, reportType, PcarEntryFilter.OnlyPcar);
+                        if (string.IsNullOrEmpty(logFileName))
+                        {
+                            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = $"{reportType.ToDisplayName()} : {siteLogBook.ClientSite.Name} no PCAR entries, nothing sent" });
+                            continue;
+                        }
+
+                        var fileToUpload = Path.Combine(outputDirectory, logFileName);
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + "File" + fileToUpload });
+                        var uploaded = ProcessDailyGuardLogUploadNew(siteLogBook, fileToUpload);
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + "Dropboxupload Status " + uploaded.ToString() });
+
+                        if (!string.IsNullOrEmpty(siteLogBook.ClientSite.GuardLogEmailTo))
+                            SendEmail(fileToUpload, siteLogBook, reportType.ToDisplayName());
+
+                        if (markAsUploaded)
+                        {
+                            if (pcarLogBook == null)
+                            {
+                                _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook
+                                {
+                                    ClientSiteId = siteLogBook.ClientSiteId,
+                                    Type = reportType,
+                                    Date = siteLogBook.Date,
+                                    DbxUploaded = false
+                                });
+                                pcarLogBook = _clientDataProvider.GetClientSiteLogBook(siteLogBook.ClientSiteId, reportType, siteLogBook.Date);
+                            }
+
+                            if (pcarLogBook != null)
+                                _clientDataProvider.MarkClientSiteLogBookAsUploaded(pcarLogBook.Id, logFileName);
+                        }
+
+                        if (File.Exists(fileToUpload))
+                            File.Delete(fileToUpload);
+
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = $"-----{reportType.ToDisplayName()} upload end {siteLogBook.ClientSite.Name}----" });
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Error Message : " + siteLogBook.ClientSite.Name + "---message--" + ex.Message });
+                            _logger.LogError($"{reportType.ToDisplayName()} Upload | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
+                        }
+                        catch
+                        {
+                        }
+                    }
+                }
+            }
+        }
+
+        /* ---------------------------------------------------------------------------------------
            Weekly and monthly log dumps.
 
            The settings for these (Admin > site > "Enable Weekly/Monthly Log Dump", the LB/KV/SW/
@@ -1068,6 +1189,29 @@ namespace CityWatch.Web.Services
                 SourceType = LogBookType.DailyGuardLog,
                 IsEnabledWeekly = site => site.UploadFusionWeeklyLog,
                 IsEnabledMonthly = site => site.UploadFusionMonthlyLog
+            },
+
+            // "Schedule PCAR": the same three reports with the patrol car entries only.
+            new PeriodicLogSelection
+            {
+                ReportType = LogBookType.PcarGuardLog,
+                SourceType = LogBookType.DailyGuardLog,
+                IsEnabledWeekly = site => site.UploadPcarGuardWeeklyLog,
+                IsEnabledMonthly = site => site.UploadPcarGuardMonthlyLog
+            },
+            new PeriodicLogSelection
+            {
+                ReportType = LogBookType.PcarSmartWandLog,
+                SourceType = LogBookType.DailyGuardLog,
+                IsEnabledWeekly = site => site.UploadPcarSWWeeklyLog,
+                IsEnabledMonthly = site => site.UploadPcarSWMonthlyLog
+            },
+            new PeriodicLogSelection
+            {
+                ReportType = LogBookType.PcarFusionLog,
+                SourceType = LogBookType.DailyGuardLog,
+                IsEnabledWeekly = site => site.UploadPcarFusionWeeklyLog,
+                IsEnabledMonthly = site => site.UploadPcarFusionMonthlyLog
             }
         };
 
@@ -1246,7 +1390,7 @@ namespace CityWatch.Web.Services
 
             /* Fusion draws on both books, so on a day with no guard log the key and vehicle log is
                used instead - the daily run picks its fusion books the same way. */
-            if (selection.ReportType == LogBookType.FusionLog)
+            if (selection.ReportType == LogBookType.FusionLog || selection.ReportType == LogBookType.PcarFusionLog)
             {
                 var datesAlreadyCovered = sourceBooks.Select(x => x.Date).ToHashSet();
                 sourceBooks.AddRange(siteLogBooks
@@ -1263,13 +1407,15 @@ namespace CityWatch.Web.Services
                 return false;
             }
 
+            var pcarFilter = selection.GetPcarFilter(clientSite, periodType);
+
             var dailyFiles = new List<string>();
             try
             {
                 foreach (var logBook in sourceBooks)
                 {
                     // The same call the daily run makes, so the pages are identical to that day's dump.
-                    var dailyFileName = GetLogFilePath(logBook, selection.ReportType);
+                    var dailyFileName = GetLogFilePath(logBook, selection.ReportType, pcarFilter);
                     if (string.IsNullOrEmpty(dailyFileName))
                         continue;
 
@@ -1383,12 +1529,18 @@ namespace CityWatch.Web.Services
             return (firstOfLastMonth, firstOfThisMonth.AddDays(-1));
         }
 
-        /// <summary>e.g. "Daily Guard Log - VISY Carrara - 20260907-20260913 (Weekly).pdf".</summary>
+        /// <summary>
+        /// e.g. "Daily Guard Log - VISY Carrara - 20260907-20260913 (Weekly).pdf", and for a
+        /// "Schedule PCAR" dump "Daily Guard Log - VISY Carrara - 20260907-20260913 (Weekly) - PCAR-Report.pdf".
+        /// </summary>
         private static string GetPeriodicFileName(ClientSite clientSite, LogBookType reportType,
             LogDumpPeriodType periodType, DateTime periodStart, DateTime periodEnd)
         {
-            var name = $"{reportType.ToDisplayName()} - {clientSite.Name} - " +
+            var name = $"{PcarEntryFilterHelper.GetBaseReportType(reportType).ToDisplayName()} - {clientSite.Name} - " +
                        $"{periodStart:yyyyMMdd}-{periodEnd:yyyyMMdd} ({periodType}).pdf";
+
+            if (PcarEntryFilterHelper.IsPcarReportType(reportType))
+                name = PcarEntryFilterHelper.AppendPcarReportSuffix(name);
 
             // The site name is free text and reaches a file path, so strip anything a path rejects.
             return string.Concat(name.Split(Path.GetInvalidFileNameChars()));
@@ -1615,9 +1767,30 @@ namespace CityWatch.Web.Services
         private static string Truncate(string value, int max) =>
             string.IsNullOrEmpty(value) || value.Length <= max ? value : value.Substring(0, max);
 
-        private string GetLogFilePath(ClientSiteLogBook logBook, LogBookType logbooktype)
+        private string GetLogFilePath(ClientSiteLogBook logBook, LogBookType logbooktype, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
         {
             string fileName = string.Empty;
+
+            /* PCAR filtering goes through the generator's filtered overloads; without it the calls
+               below are made exactly as they always have been. A PCAR report type is its base report
+               with the patrol car entries only. */
+            if (PcarEntryFilterHelper.IsPcarReportType(logbooktype))
+            {
+                logbooktype = PcarEntryFilterHelper.GetBaseReportType(logbooktype);
+                pcarFilter = PcarEntryFilter.OnlyPcar;
+            }
+
+            if (pcarFilter != PcarEntryFilter.All)
+            {
+                if (logbooktype == LogBookType.DailyGuardLog)
+                    return _guardLogReportGenerator.GeneratePdfReport(logBook.Id, null, pcarFilter);
+
+                if (logbooktype == LogBookType.SmartWandLog)
+                    return _guardLogReportGenerator.GeneratePdfReportSmartWand(logBook.Id, pcarFilter);
+
+                if (logbooktype == LogBookType.FusionLog)
+                    return _guardLogReportGenerator.GeneratePdfReportFusion(logBook.Id, pcarFilter);
+            }
 
             if (logbooktype == LogBookType.DailyGuardLog)
                 return _guardLogReportGenerator.GeneratePdfReport(logBook.Id, null);
@@ -1633,7 +1806,7 @@ namespace CityWatch.Web.Services
             return fileName;
         }
 
-        private void SendEmail(string fileName, ClientSiteLogBook siteLogBook)
+        private void SendEmail(string fileName, ClientSiteLogBook siteLogBook, string subjectOverride = null)
         {
             //return;
 
@@ -1647,7 +1820,7 @@ namespace CityWatch.Web.Services
 
                 // Common email details
                 var fromAddress = _emailOptions.FromAddress.Split('|');
-                var subject = siteLogBook.Type.ToDisplayName();
+                var subject = subjectOverride ?? siteLogBook.Type.ToDisplayName();
                 var messageHtml = $"Dear Citywatch Security Client;<br><br>";
                 if (!bigSize)
                 {
