@@ -1,5 +1,6 @@
 using CityWatch.Common.Helpers;
 using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
@@ -43,6 +44,15 @@ namespace CityWatch.Web.Services
 
         public string GeneratePdfReportFusion(int clientSiteLogBookId);
         public string GeneratePdfReportSmartWand(int clientSiteLogBookId);
+
+        /* The same three reports with patrol car entries excluded ("Disable PCAR") or kept alone
+           ("Schedule PCAR"). The overloads above are these with PcarEntryFilter.All, so every
+           existing caller gets exactly the report it always has. An OnlyPcar report is named
+           "... - PCAR-Report.pdf" and is not produced at all (empty name returned) when the day
+           has no patrol car entries. */
+        string GeneratePdfReport(int clientSiteLogBookId, string keywordDownSelect, PcarEntryFilter pcarFilter);
+        string GeneratePdfReportFusion(int clientSiteLogBookId, PcarEntryFilter pcarFilter);
+        string GeneratePdfReportSmartWand(int clientSiteLogBookId, PcarEntryFilter pcarFilter);
     }
 
     public class GuardLogReportGenerator : IGuardLogReportGenerator
@@ -95,7 +105,10 @@ namespace CityWatch.Web.Services
             _subDomainImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SubdomainLogo");
         }
 
-        public string GeneratePdfReport(int clientSiteLogBookId, string keywordDownSelect)
+        public string GeneratePdfReport(int clientSiteLogBookId, string keywordDownSelect) =>
+            GeneratePdfReport(clientSiteLogBookId, keywordDownSelect, PcarEntryFilter.All);
+
+        public string GeneratePdfReport(int clientSiteLogBookId, string keywordDownSelect, PcarEntryFilter pcarFilter)
         {
             var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
 
@@ -103,14 +116,13 @@ namespace CityWatch.Web.Services
                 return string.Empty;
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            var reportPdf = GetReportPdfFilePath(clientsiteLogBook, version);
-            var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date)
+            var reportPdf = GetReportPdfFilePath(clientsiteLogBook, version, pcarFilter);
+            var _guardLogs = PcarEntryFilterHelper.Apply(_guardLogDataProvider.GetGuardLogs(clientSiteLogBookId, clientsiteLogBook.Date)
      .Where(x =>
          (string.IsNullOrEmpty(keywordDownSelect) ||
           (!string.IsNullOrEmpty(x.Notes) && x.Notes.Contains(keywordDownSelect)))
          && x.WAND_TAG_ENTRY_TYPE == ScanningType.Normal
-     )
-     .ToList();
+     ), pcarFilter);
             if (_guardLogs.Count() > 0)
             {
                 var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
@@ -134,9 +146,10 @@ namespace CityWatch.Web.Services
                     .SetFontSize(CELL_FONT_SIZE * 1.5f)
                     .SetMarginTop(5));
 
-                var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
-                var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
-                var crowdControlLogs = _guardLogDataProvider.GetMobileCrowdControlLogs(clientsiteLogBook.ClientSite.Id, clientSiteLogBookId, clientsiteLogBook.Date, clientsiteLogBook.Date).ToList();
+                // These summary tables carry no PCAR marker, so a PCAR-only report leaves them out.
+                var customFieldLogs = pcarFilter == PcarEntryFilter.OnlyPcar ? new List<CustomFieldLog>() : _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
+                var patrolCarLogs = pcarFilter == PcarEntryFilter.OnlyPcar ? new List<PatrolCarLog>() : _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
+                var crowdControlLogs = pcarFilter == PcarEntryFilter.OnlyPcar ? new List<MobileCrowdControlReportData>() : _guardLogDataProvider.GetMobileCrowdControlLogs(clientsiteLogBook.ClientSite.Id, clientSiteLogBookId, clientsiteLogBook.Date, clientsiteLogBook.Date).ToList();
                 if (customFieldLogs.Any() || patrolCarLogs.Any() || crowdControlLogs.Any())
                 {
                     //var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
@@ -329,9 +342,9 @@ namespace CityWatch.Web.Services
             doc.Add(image);
         }
         /* New code for Image in Pdf Dileep 19092024 end*/
-        private string GetReportPdfFilePath(ClientSiteLogBook clientsiteLogBook, string version)
+        private string GetReportPdfFilePath(ClientSiteLogBook clientsiteLogBook, string version, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
         {
-            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Daily Guard Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf");
+            var reportPdfPath = GetPcarAwarePath(IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Daily Guard Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf"), pcarFilter);
 
             if (IO.File.Exists(reportPdfPath))
                 IO.File.Delete(reportPdfPath);
@@ -1591,7 +1604,10 @@ namespace CityWatch.Web.Services
 
 
 
-        public string GeneratePdfReportFusion(int clientSiteLogBookId)
+        public string GeneratePdfReportFusion(int clientSiteLogBookId) =>
+            GeneratePdfReportFusion(clientSiteLogBookId, PcarEntryFilter.All);
+
+        public string GeneratePdfReportFusion(int clientSiteLogBookId, PcarEntryFilter pcarFilter)
         {
             var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
 
@@ -1599,7 +1615,6 @@ namespace CityWatch.Web.Services
                 return string.Empty;
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            var reportPdf = GetReportPdfFilePathFusion(clientsiteLogBook, version);
 
             /* Fusion report only: a site can belong to a linked duress group (RCLinkedDuressMaster +
                RCLinkedDuressClientSites), and a duress raised on one member is actioned across the whole
@@ -1627,8 +1642,14 @@ namespace CityWatch.Web.Services
                be pulled in. The provider returns one combined list ordered by EventDateTime, so the
                primary site's logs keep their existing chronological order with the linked entries
                interleaved by time. */
-            var _guardLogs = _guardLogDataProvider.GetGuardFusionLogs(clientSiteId, clientsiteLogBook.Date, clientsiteLogBook.Date, false);
+            var _guardLogs = ApplyPcarFilter(_guardLogDataProvider.GetGuardFusionLogs(clientSiteId, clientsiteLogBook.Date, clientsiteLogBook.Date, false), pcarFilter);
             //var _guardLogs = _guardLogDataProvider.ClientSiteRadioChecksActivityStatus_History(clientsiteLogBook.ClientSite.Id, clientsiteLogBook.Date);
+
+            // A PCAR-only report is not produced for a day the patrol cars did not log anything.
+            if (pcarFilter == PcarEntryFilter.OnlyPcar && _guardLogs.Count == 0)
+                return string.Empty;
+
+            var reportPdf = GetReportPdfFilePathFusion(clientsiteLogBook, version, pcarFilter);
 
             /* The Fusion table renders a "Client Site" column so each row can be attributed to the site
                it came from - necessary now that a linked duress group contributes rows from several sites,
@@ -1668,9 +1689,10 @@ namespace CityWatch.Web.Services
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
                 .SetMarginTop(5));
 
-            var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
-            var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
-            var crowdControlLogs = _guardLogDataProvider.GetMobileCrowdControlLogs(clientsiteLogBook.ClientSite.Id, clientSiteLogBookId, clientsiteLogBook.Date, clientsiteLogBook.Date).ToList();
+            // These summary tables carry no PCAR marker, so a PCAR-only report leaves them out.
+            var customFieldLogs = pcarFilter == PcarEntryFilter.OnlyPcar ? new List<CustomFieldLog>() : _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId).ToList();
+            var patrolCarLogs = pcarFilter == PcarEntryFilter.OnlyPcar ? new List<PatrolCarLog>() : _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBookId).ToList();
+            var crowdControlLogs = pcarFilter == PcarEntryFilter.OnlyPcar ? new List<MobileCrowdControlReportData>() : _guardLogDataProvider.GetMobileCrowdControlLogs(clientsiteLogBook.ClientSite.Id, clientSiteLogBookId, clientsiteLogBook.Date, clientsiteLogBook.Date).ToList();
             if (customFieldLogs.Any() || patrolCarLogs.Any() || crowdControlLogs.Any())
             {
                 //var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs, crowdControlLogs);
@@ -1769,9 +1791,9 @@ namespace CityWatch.Web.Services
         }
 
 
-        private string GetReportPdfFilePathFusion(ClientSiteLogBook clientsiteLogBook, string version)
+        private string GetReportPdfFilePathFusion(ClientSiteLogBook clientsiteLogBook, string version, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
         {
-            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Daily Guard Fusion Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf");
+            var reportPdfPath = GetPcarAwarePath(IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Daily Guard Fusion Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf"), pcarFilter);
 
             if (IO.File.Exists(reportPdfPath))
                 IO.File.Delete(reportPdfPath);
@@ -1779,7 +1801,10 @@ namespace CityWatch.Web.Services
             return reportPdfPath;
         }
 
-        public string GeneratePdfReportSmartWand(int clientSiteLogBookId)
+        public string GeneratePdfReportSmartWand(int clientSiteLogBookId) =>
+            GeneratePdfReportSmartWand(clientSiteLogBookId, PcarEntryFilter.All);
+
+        public string GeneratePdfReportSmartWand(int clientSiteLogBookId, PcarEntryFilter pcarFilter)
         {
             var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
 
@@ -1787,10 +1812,28 @@ namespace CityWatch.Web.Services
                 return string.Empty;
 
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            var reportPdfsw = GetReportPdfFilePathSmartWand(clientsiteLogBook, version);
             int[] clientSiteId = { clientsiteLogBook.ClientSite.Id };
             var _swGuardLogs = _guardLogDataProvider.GetGuardFusionLogs(clientsiteLogBook.ClientSite.Id, clientsiteLogBook.Date, clientsiteLogBook.Date, false);
-            var _guardLogs = _swGuardLogs.Where(x => x.ActivityType.Trim().ToUpper().Equals("SW")).ToList(); // Filter for Smart Wand logs only
+            var _guardLogs = ApplyPcarFilter(_swGuardLogs.Where(x => x.ActivityType.Trim().ToUpper().Equals("SW")).ToList(), pcarFilter); // Filter for Smart Wand logs only
+
+            // A PCAR-only report is not produced for a day the patrol cars did not log anything.
+            if (pcarFilter == PcarEntryFilter.OnlyPcar && _guardLogs.Count == 0)
+                return string.Empty;
+
+            /* The GPS column was always blank: this single-site GetGuardFusionLogs overload, unlike the
+               site-array one the Fusion report uses, never fills gpsCoordinates - the history rows do
+               not carry it, the scan's guard log (LBId) does. Filled here from those guard logs in one
+               query, leaving the rows and their times exactly as this report has always shown them. */
+            var gpsByGuardLogId = _guardLogDataProvider.GetGuardLogGpsCoordinates(
+                _guardLogs.Where(x => x.LBId.HasValue && string.IsNullOrEmpty(x.gpsCoordinates)).Select(x => x.LBId.Value));
+            foreach (var entry in _guardLogs)
+            {
+                if (string.IsNullOrEmpty(entry.gpsCoordinates) && entry.LBId.HasValue &&
+                    gpsByGuardLogId.TryGetValue(entry.LBId.Value, out var gps))
+                    entry.gpsCoordinates = gps;
+            }
+
+            var reportPdfsw = GetReportPdfFilePathSmartWand(clientsiteLogBook, version, pcarFilter);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdfsw));
             pdfDoc.SetDefaultPageSize(PageSize.A4);
@@ -1863,14 +1906,39 @@ namespace CityWatch.Web.Services
         }
 
 
-        private string GetReportPdfFilePathSmartWand(ClientSiteLogBook clientsiteLogBook, string version)
+        private string GetReportPdfFilePathSmartWand(ClientSiteLogBook clientsiteLogBook, string version, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
         {
-            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Smart Wand Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf");
+            var reportPdfPath = GetPcarAwarePath(IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Smart Wand Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf"), pcarFilter);
 
             if (IO.File.Exists(reportPdfPath))
                 IO.File.Delete(reportPdfPath);
 
             return reportPdfPath;
+        }
+
+        /// <summary>
+        /// A PCAR-only report gets its own name ("... - PCAR-Report.pdf"), so it never overwrites, or
+        /// is deleted as, the site's normal report of the same day. Every other report keeps its name.
+        /// </summary>
+        private static string GetPcarAwarePath(string reportPdfPath, PcarEntryFilter pcarFilter) =>
+            pcarFilter == PcarEntryFilter.OnlyPcar
+                ? PcarEntryFilterHelper.AppendPcarReportSuffix(reportPdfPath)
+                : reportPdfPath;
+
+        /// <summary>
+        /// Smart wand / fusion rows have no PCAR flag of their own; they are matched to their guard
+        /// log through LBId, looked up in a single query for the whole report.
+        /// </summary>
+        private List<ClientSiteRadioChecksActivityStatus_History> ApplyPcarFilter(
+            List<ClientSiteRadioChecksActivityStatus_History> rows, PcarEntryFilter pcarFilter)
+        {
+            if (pcarFilter == PcarEntryFilter.All)
+                return rows;
+
+            var pcarGuardLogIds = _guardLogDataProvider.GetPcarGuardLogIds(
+                rows.Where(x => x.LBId.HasValue).Select(x => x.LBId.Value));
+
+            return PcarEntryFilterHelper.Apply(rows, pcarGuardLogIds, pcarFilter);
         }
 
     }

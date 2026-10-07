@@ -55,6 +55,15 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetClientSites(int? typeId);
         List<ClientSite> GetNewClientSites();
         void SaveClientSite(ClientSite clientSite);
+
+        /// <summary>"Disable PCAR" on the LB > Schedule tab. Always saved off for a PCAR site.</summary>
+        void SaveClientSiteDisablePcarSettings(int clientSiteId, bool disableDaily, bool disableWeekly, bool disableMonthly);
+
+        /// <summary>The LB > "Schedule PCAR" tab: which PCAR-only dumps the site gets.</summary>
+        void SaveClientSitePcarScheduleSettings(int clientSiteId,
+            bool dailyLb, bool dailySw, bool dailyFusion,
+            bool weeklyLb, bool weeklySw, bool weeklyFusion,
+            bool monthlyLb, bool monthlySw, bool monthlyFusion);
         void SaveCompanyDetails(CompanyDetails companyDetails);
         void SaveCompanyMailDetails(CompanyDetails companyDetails);
         void SavePlateLoaded(IncidentReportsPlatesLoaded report);
@@ -1013,11 +1022,48 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        /* The PCAR settings are saved on their own rather than through SaveClientSite, which copies a
+           whole posted ClientSite - a save from any other screen would otherwise switch them off. */
+        public void SaveClientSiteDisablePcarSettings(int clientSiteId, bool disableDaily, bool disableWeekly, bool disableMonthly)
+        {
+            var clientSite = _context.ClientSites.SingleOrDefault(x => x.Id == clientSiteId);
+            if (clientSite == null)
+                return;
+
+            var applicable = clientSite.IsDisablePcarApplicable;
+            clientSite.DisablePcarDailyLog = applicable && disableDaily;
+            clientSite.DisablePcarWeeklyLog = applicable && disableWeekly;
+            clientSite.DisablePcarMonthlyLog = applicable && disableMonthly;
+            _context.SaveChanges();
+        }
+
+        public void SaveClientSitePcarScheduleSettings(int clientSiteId,
+            bool dailyLb, bool dailySw, bool dailyFusion,
+            bool weeklyLb, bool weeklySw, bool weeklyFusion,
+            bool monthlyLb, bool monthlySw, bool monthlyFusion)
+        {
+            var clientSite = _context.ClientSites.SingleOrDefault(x => x.Id == clientSiteId);
+            if (clientSite == null)
+                return;
+
+            clientSite.UploadPcarGuardLog = dailyLb;
+            clientSite.UploadPcarSWLog = dailySw;
+            clientSite.UploadPcarFusionLog = dailyFusion;
+            clientSite.UploadPcarGuardWeeklyLog = weeklyLb;
+            clientSite.UploadPcarSWWeeklyLog = weeklySw;
+            clientSite.UploadPcarFusionWeeklyLog = weeklyFusion;
+            clientSite.UploadPcarGuardMonthlyLog = monthlyLb;
+            clientSite.UploadPcarSWMonthlyLog = monthlySw;
+            clientSite.UploadPcarFusionMonthlyLog = monthlyFusion;
+            _context.SaveChanges();
+        }
+
         public List<ClientSiteLogBook> GetClientSiteLogBooksForDailyLogBookGeneration(DateTime LogDate)
         {
             return _context.ClientSiteLogBooks
                 .Where(x => x.ClientSite.IsActive == true && 
-                (x.ClientSite.UploadGuardLog || x.ClientSite.UploadFusionLog || x.ClientSite.UploadSWLog || x.ClientSite.UploadKVLog) && 
+                (x.ClientSite.UploadGuardLog || x.ClientSite.UploadFusionLog || x.ClientSite.UploadSWLog || x.ClientSite.UploadKVLog ||
+                 x.ClientSite.UploadPcarGuardLog || x.ClientSite.UploadPcarSWLog || x.ClientSite.UploadPcarFusionLog) && 
                 x.Date == LogDate && !x.DbxUploaded)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
@@ -1044,9 +1090,13 @@ namespace CityWatch.Data.Providers
             // translatable SQL expression over indexed columns.
             query = periodType == LogDumpPeriodType.Weekly
                 ? query.Where(x => x.ClientSite.UploadGuardWeeklyLog || x.ClientSite.UploadFusionWeeklyLog ||
-                                   x.ClientSite.UploadSWWeeklyLog || x.ClientSite.UploadKVWeeklyLog)
+                                   x.ClientSite.UploadSWWeeklyLog || x.ClientSite.UploadKVWeeklyLog ||
+                                   x.ClientSite.UploadPcarGuardWeeklyLog || x.ClientSite.UploadPcarSWWeeklyLog ||
+                                   x.ClientSite.UploadPcarFusionWeeklyLog)
                 : query.Where(x => x.ClientSite.UploadGuardMonthlyLog || x.ClientSite.UploadFusionMonthlyLog ||
-                                   x.ClientSite.UploadSWMonthlyLog || x.ClientSite.UploadKVMonthlyLog);
+                                   x.ClientSite.UploadSWMonthlyLog || x.ClientSite.UploadKVMonthlyLog ||
+                                   x.ClientSite.UploadPcarGuardMonthlyLog || x.ClientSite.UploadPcarSWMonthlyLog ||
+                                   x.ClientSite.UploadPcarFusionMonthlyLog);
 
             return query
                 .Include(x => x.ClientSite)

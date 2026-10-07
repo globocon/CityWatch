@@ -378,6 +378,12 @@ namespace CityWatch.Data.Providers
         //p5-Issue-20-Instructor-end
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
+
+        /// <summary>Of the given guard log ids, the ones a patrol car made (IsEntryByPCAR).</summary>
+        HashSet<int> GetPcarGuardLogIds(IEnumerable<int> guardLogIds);
+
+        /// <summary>GPS coordinates of the given guard logs, by guard log id (those without GPS left out).</summary>
+        Dictionary<int, string> GetGuardLogGpsCoordinates(IEnumerable<int> guardLogIds);
         void DeleteTrainingCourseInstructor(int id);
         List<TrainingLocation> GetTrainingLocation();
         void SaveTrainingLocation(TrainingLocation trainingLocation);
@@ -7164,6 +7170,35 @@ WHERE f.ClientSiteId = @clientSiteId
         }
 
 
+
+        /* One query per report, never one per row. The ids are the LBIds of a report's history rows,
+           so the lookup is by primary key and covers rows whose guard log sits in the previous day's
+           log book (scans just after midnight) as well. */
+        public HashSet<int> GetPcarGuardLogIds(IEnumerable<int> guardLogIds)
+        {
+            var ids = guardLogIds?.Distinct().ToArray() ?? Array.Empty<int>();
+            if (ids.Length == 0)
+                return new HashSet<int>();
+
+            return _context.GuardLogs
+                .AsNoTracking()
+                .Where(x => ids.Contains(x.Id) && x.IsEntryByPCAR)
+                .Select(x => x.Id)
+                .ToHashSet();
+        }
+
+        public Dictionary<int, string> GetGuardLogGpsCoordinates(IEnumerable<int> guardLogIds)
+        {
+            var ids = guardLogIds?.Distinct().ToArray() ?? Array.Empty<int>();
+            if (ids.Length == 0)
+                return new Dictionary<int, string>();
+
+            return _context.GuardLogs
+                .AsNoTracking()
+                .Where(x => ids.Contains(x.Id) && x.GpsCoordinates != null && x.GpsCoordinates != "")
+                .Select(x => new { x.Id, x.GpsCoordinates })
+                .ToDictionary(x => x.Id, x => x.GpsCoordinates);
+        }
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {

@@ -323,11 +323,43 @@ $(function () {
                 enableSWMonthlyLogDump: isUpdateSWMonthlyLog,
                 uploadFusionMonthlyLog: isUpdateMonthlyLogFusion,
                 guardEmailMonthlyLogTo: $('#gs_email_monthly_recipients').val(),
-                
+
+                // Disable PCAR per period - never on for a PCAR site (the switches are disabled there).
+                disablePcarDailyLog: $('#disablePcarDailyLogDump').is(':checked') && !$('#disablePcarDailyLogDump').is(':disabled'),
+                disablePcarWeeklyLog: $('#disablePcarWeeklyLogDump').is(':checked') && !$('#disablePcarWeeklyLogDump').is(':disabled'),
+                disablePcarMonthlyLog: $('#disablePcarMonthlyLogDump').is(':checked') && !$('#disablePcarMonthlyLogDump').is(':disabled'),
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
             alert("Saved successfully");
+        }).fail(function () {
+            console.log("error");
+        });
+    });
+
+    // LB > Schedule PCAR tab: PCAR-only dumps, to the Schedule tab's recipients.
+    $('#btnSaveGuardSitePcarScheduleSettings').on('click', function () {
+        $.ajax({
+            url: '/admin/settings?handler=SaveSitePcarScheduleSettings',
+            type: 'POST',
+            data: {
+                siteId: $('#gl_client_site_id').val(),
+                enablePcarLBLogDump: $('#enablePcarLBLogDump').is(':checked'),
+                enablePcarSWLogDump: $('#enablePcarSWLogDump').is(':checked'),
+                enablePcarFusionLogDump: $('#enablePcarFusionLogDump').is(':checked'),
+                enablePcarLBWeeklyLogDump: $('#enablePcarLBWeeklyLogDump').is(':checked'),
+                enablePcarSWWeeklyLogDump: $('#enablePcarSWWeeklyLogDump').is(':checked'),
+                enablePcarFusionWeeklyLogDump: $('#enablePcarFusionWeeklyLogDump').is(':checked'),
+                enablePcarLBMonthlyLogDump: $('#enablePcarLBMonthlyLogDump').is(':checked'),
+                enablePcarSWMonthlyLogDump: $('#enablePcarSWMonthlyLogDump').is(':checked'),
+                enablePcarFusionMonthlyLogDump: $('#enablePcarFusionMonthlyLogDump').is(':checked')
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (result) {
+            if (result && result.success)
+                alert("Saved successfully");
+            else
+                alert("Save failed. " + (result && result.message ? result.message : ''));
         }).fail(function () {
             console.log("error");
         });
@@ -1655,6 +1687,27 @@ $(function () {
                 if (isUploadFusionMonthlyLog)
                     $('#enableFusionMonthlyDump').prop('checked', true);
                 $('#gs_email_monthly_recipients').val(guardLogEmailMonthlyLogTo);
+
+                // Disable PCAR: off and locked for a PCAR site, where every entry is a PCAR entry.
+                const isDisablePcarApplicable = result[0].isDisablePcarApplicable !== false;
+                $('#disablePcarDailyLogDump').prop('checked', isDisablePcarApplicable && result[0].disablePcarDailyLog === true);
+                $('#disablePcarWeeklyLogDump').prop('checked', isDisablePcarApplicable && result[0].disablePcarWeeklyLog === true);
+                $('#disablePcarMonthlyLogDump').prop('checked', isDisablePcarApplicable && result[0].disablePcarMonthlyLog === true);
+                $('#disablePcarDailyLogDump, #disablePcarWeeklyLogDump, #disablePcarMonthlyLogDump').prop('disabled', !isDisablePcarApplicable);
+                $('.pcar-disable-switch').attr('title', isDisablePcarApplicable
+                    ? 'Leave patrol car (PCAR) entries out of the LB, SW and Fusion log dump'
+                    : 'Not available for a PCAR site');
+
+                // Schedule PCAR tab
+                $('#enablePcarLBLogDump').prop('checked', result[0].uploadPcarGuardLog === true);
+                $('#enablePcarSWLogDump').prop('checked', result[0].uploadPcarSWLog === true);
+                $('#enablePcarFusionLogDump').prop('checked', result[0].uploadPcarFusionLog === true);
+                $('#enablePcarLBWeeklyLogDump').prop('checked', result[0].uploadPcarGuardWeeklyLog === true);
+                $('#enablePcarSWWeeklyLogDump').prop('checked', result[0].uploadPcarSWWeeklyLog === true);
+                $('#enablePcarFusionWeeklyLogDump').prop('checked', result[0].uploadPcarFusionWeeklyLog === true);
+                $('#enablePcarLBMonthlyLogDump').prop('checked', result[0].uploadPcarGuardMonthlyLog === true);
+                $('#enablePcarSWMonthlyLogDump').prop('checked', result[0].uploadPcarSWMonthlyLog === true);
+                $('#enablePcarFusionMonthlyLogDump').prop('checked', result[0].uploadPcarFusionMonthlyLog === true);
 
             }
         }).fail(function () { });

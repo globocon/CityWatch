@@ -3057,7 +3057,8 @@ namespace CityWatch.Kpi.Pages.Admin
         public void OnPostSaveSiteEmailBasedOnLogs(int siteId,
             bool enableLBLogDump, bool enableKVLogDump, bool enableSWLogDump, bool uploadFusionLog, string guardEmailTo,
             bool enableLBWeeklyLogDump, bool enableKVWeeklyLogDump, bool enableSWWeeklyLogDump, bool uploadFusionWeeklyLog, string guardEmailWeeklyLogTo,
-            bool enableLBMonthlyLogDump, bool enableKVMonthlyLogDump, bool enableSWMonthlyLogDump, bool uploadFusionMonthlyLog, string guardEmailMonthlyLogTo)
+            bool enableLBMonthlyLogDump, bool enableKVMonthlyLogDump, bool enableSWMonthlyLogDump, bool uploadFusionMonthlyLog, string guardEmailMonthlyLogTo,
+            bool disablePcarDailyLog = false, bool disablePcarWeeklyLog = false, bool disablePcarMonthlyLog = false)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
             if (clientSite != null)
@@ -3083,6 +3084,33 @@ namespace CityWatch.Kpi.Pages.Admin
             }
 
             _clientDataProvider.SaveClientSite(clientSite);
+
+            // Saved separately: SaveClientSite does not carry the PCAR settings. Forced off for a PCAR site.
+            _clientDataProvider.SaveClientSiteDisablePcarSettings(siteId, disablePcarDailyLog, disablePcarWeeklyLog, disablePcarMonthlyLog);
+        }
+
+        /// <summary>LB > "Schedule PCAR" tab. Recipients are those of the Schedule tab.</summary>
+        public JsonResult OnPostSaveSitePcarScheduleSettings(int siteId,
+            bool enablePcarLBLogDump, bool enablePcarSWLogDump, bool enablePcarFusionLogDump,
+            bool enablePcarLBWeeklyLogDump, bool enablePcarSWWeeklyLogDump, bool enablePcarFusionWeeklyLogDump,
+            bool enablePcarLBMonthlyLogDump, bool enablePcarSWMonthlyLogDump, bool enablePcarFusionMonthlyLogDump)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientDataProvider.SaveClientSitePcarScheduleSettings(siteId,
+                    enablePcarLBLogDump, enablePcarSWLogDump, enablePcarFusionLogDump,
+                    enablePcarLBWeeklyLogDump, enablePcarSWWeeklyLogDump, enablePcarFusionWeeklyLogDump,
+                    enablePcarLBMonthlyLogDump, enablePcarSWMonthlyLogDump, enablePcarFusionMonthlyLogDump);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
         }
     }
 
