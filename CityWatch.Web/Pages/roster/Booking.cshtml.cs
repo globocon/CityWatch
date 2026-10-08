@@ -575,11 +575,13 @@ namespace CityWatch.Web.Pages.roster
         // identically. OnPostAddShift is deliberately left untouched in this change so the existing
         // add/edit screen keeps working exactly as before; it can be migrated onto this method later.
         // If the rule is ever changed, change it in BOTH places.
+        // Issue 83: "who is working the shift" now comes from RosterConflictHelper (shared with
+        // OnPostAddShift) so a company-only relief frees the rostered guard in both paths.
         private async Task<RosterSchedule> FindConflictingShiftAsync(int guardIdToCheck, DateTime start, DateTime end, int excludeShiftId)
         {
             return await _context.RosterSchedules
-                .Where(x => ((x.GuardId == guardIdToCheck && x.ReliefGuardId == null) || x.ReliefGuardId == guardIdToCheck) &&
-                            !x.IsDeleted && x.Id != excludeShiftId && x.Status != RosterShiftStatus.Cancelled &&
+                .Where(RosterConflictHelper.IsWorkedBy(guardIdToCheck))
+                .Where(x => !x.IsDeleted && x.Id != excludeShiftId && x.Status != RosterShiftStatus.Cancelled &&
                             ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                              (end > x.ShiftStart && end <= x.ShiftEnd) ||
                              (start <= x.ShiftStart && end >= x.ShiftEnd)))
@@ -629,9 +631,10 @@ namespace CityWatch.Web.Pages.roster
             // Therefore, we skip the conflict and unavailability checks for the main guard for this specific shift instance.
             if (guardId.HasValue && !reliefGuardId.HasValue && string.IsNullOrEmpty(reliefProviderName))
             {
+                // Issue 83: a shift the guard was released from (relief guard OR company-only relief) is not a clash.
                 var conflict = await _context.RosterSchedules
-                    .Where(x => ((x.GuardId == guardId && x.ReliefGuardId == null) || x.ReliefGuardId == guardId) &&
-                                !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
+                    .Where(RosterConflictHelper.IsWorkedBy(guardId.Value))
+                    .Where(x => !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
                                 ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                                  (end > x.ShiftStart && end <= x.ShiftEnd) ||
                                  (start <= x.ShiftStart && end >= x.ShiftEnd)))
@@ -659,8 +662,8 @@ namespace CityWatch.Web.Pages.roster
             if (reliefGuardId.HasValue)
             {
                 var reliefConflict = await _context.RosterSchedules
-                    .Where(x => ((x.GuardId == reliefGuardId && x.ReliefGuardId == null) || x.ReliefGuardId == reliefGuardId) &&
-                                !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
+                    .Where(RosterConflictHelper.IsWorkedBy(reliefGuardId.Value))
+                    .Where(x => !x.IsDeleted && x.Id != (shiftId ?? 0) && x.Status != RosterShiftStatus.Cancelled &&
                                 ((start >= x.ShiftStart && start < x.ShiftEnd) ||
                                  (end > x.ShiftStart && end <= x.ShiftEnd) ||
                                  (start <= x.ShiftStart && end >= x.ShiftEnd)))

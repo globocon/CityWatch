@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using CityWatch.Data.Models;
 
@@ -303,6 +304,25 @@ namespace CityWatch.Data.Helpers
             return sourceDateTime.ToLocalTime().DateTime;
         }
 
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // RosterConflictHelper — "is this guard actually working this shift?" for conflict checks.
+    //
+    //   A guard works a shift when they are its relief guard, or when they are its rostered
+    //   guard and nobody has taken it over. A shift is taken over by a relief guard OR by a
+    //   relief company only (ReliefProviderName set, no ReliefGuardId — e.g. "Oxford" with no
+    //   guard named). Before Issue 83 the company-only case was missed, so a released guard was
+    //   still reported as "Conflict: … currently assigned to …" and could not be rostered elsewhere.
+    //
+    //   Expression so EF translates it to SQL. Used by Add/Edit Shift (main + relief guard) and
+    //   Roster Rollover in Booking.cshtml.cs.
+    // ------------------------------------------------------------------------------------------
+    public static class RosterConflictHelper
+    {
+        public static Expression<Func<RosterSchedule, bool>> IsWorkedBy(int guardId) =>
+            x => (x.GuardId == guardId && x.ReliefGuardId == null && string.IsNullOrWhiteSpace(x.ReliefProviderName))
+                 || x.ReliefGuardId == guardId;
     }
 
     public static class ColorConvertorHelper

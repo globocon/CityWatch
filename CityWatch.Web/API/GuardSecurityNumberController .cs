@@ -5889,10 +5889,12 @@ namespace CityWatch.Web.API
                     else if (shift.Status == RosterShiftStatus.Declined)
                     {
                         // Conflict Validation for Relief Guard
+                        // Issue 83: a shift the guard was released from by a company-only relief is not a clash
+                        // (same rule as RosterConflictHelper on the web; the <= 0 check is kept for mobile data).
                         var conflict = await _context.RosterSchedules
                             .Include(s => s.ClientSite)
                             .FirstOrDefaultAsync(s => s.Id != shift.Id && !s.IsDeleted &&
-                                                      ((s.GuardId == model.CallingGuardId && (s.ReliefGuardId == null || s.ReliefGuardId <= 0)) || s.ReliefGuardId == model.CallingGuardId) &&
+                                                      ((s.GuardId == model.CallingGuardId && (s.ReliefGuardId == null || s.ReliefGuardId <= 0) && string.IsNullOrWhiteSpace(s.ReliefProviderName)) || s.ReliefGuardId == model.CallingGuardId) &&
                                                       s.ShiftStart < shift.ShiftEnd && s.ShiftEnd > shift.ShiftStart);
 
                         if (conflict != null)
