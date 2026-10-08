@@ -5785,8 +5785,8 @@ namespace CityWatch.Web.API
                             status = (int)s.Status,
                             callsignName = s.Callsign != null ? s.Callsign.Name : "",
                             durationHours = DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd),
-                            sellRate = s.PayRate != null ? s.PayRate.SellRateToClient : 0,
-                            buyRate = s.PayRate != null ? s.PayRate.GuardPayRate : 0
+                            sellRate = RosterPayHelper.GetSellRate(s),
+                            buyRate = RosterPayHelper.GetGuardPayRate(s)
                         })
                         .ToList<object>();
                     days.Add(dayShifts);

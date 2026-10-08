@@ -320,4 +320,35 @@ namespace CityWatch.Data.Helpers
             return rgbColor;
         }
     }
+
+    // ------------------------------------------------------------------------------------------
+    // RosterPayHelper — the rate a roster shift is costed at.
+    //
+    //   A shift's PayRate belongs to the guard it was rostered with. When that guard is relieved
+    //   by a company only (ReliefProviderName set, no ReliefGuardId — e.g. "GroupOne"), the
+    //   company covers the shift and the original guard's rate no longer applies, so the shift
+    //   costs $0 — the same as a normal company shift with no rate. Picking a relief guard
+    //   auto-fills ReliefProviderName with that guard's company, so a named relief guard keeps
+    //   the shift's rate exactly as before.
+    //
+    //   Display-only: the stored PayRateId is untouched, so removing the company relief (or
+    //   naming a relief guard) brings the normal rate straight back.
+    //
+    // Used by: Booking page (Projects + Groups grids), Guard roster modal, mobile roster API,
+    // and the Roster / Guard Roster PDFs, so every $ figure agrees.
+    // ------------------------------------------------------------------------------------------
+    public static class RosterPayHelper
+    {
+        public static bool IsCompanyOnlyRelief(RosterSchedule shift) =>
+            shift != null && !shift.ReliefGuardId.HasValue && !string.IsNullOrWhiteSpace(shift.ReliefProviderName);
+
+        public static decimal GetGuardPayRate(RosterSchedule shift) =>
+            IsCompanyOnlyRelief(shift) ? 0m : (shift?.PayRate?.GuardPayRate ?? 0m);
+
+        public static decimal GetSellRate(RosterSchedule shift) =>
+            IsCompanyOnlyRelief(shift) ? 0m : (shift?.PayRate?.SellRateToClient ?? 0m);
+
+        public static decimal GetRate(RosterSchedule shift, string rateType) =>
+            rateType == "sell" ? GetSellRate(shift) : GetGuardPayRate(shift);
+    }
 }

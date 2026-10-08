@@ -597,7 +597,7 @@ namespace CityWatch.Web.Services
                                 foreach (var shift in dayShifts)
                                 {
                                     var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
-                                    var rate = (rateType == "sell") ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
+                                    var rate = RosterPayHelper.GetRate(shift, rateType);
                                     var value = includeFinancials ? (duration * (double)rate) : duration;
                                     
                                     if (shift.Status != CityWatch.Data.Enums.RosterShiftStatus.Cancelled && shift.Status != CityWatch.Data.Enums.RosterShiftStatus.Missed)
