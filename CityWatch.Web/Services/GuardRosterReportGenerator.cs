@@ -374,7 +374,7 @@ namespace CityWatch.Web.Services
                                  foreach (var shift in dayShifts)
                                 {
                                     var duration = DateTimeHelper.CalculateDisplayDuration(shift.ShiftStart, shift.ShiftEnd);
-                                    var rate = (rateType == "sell") ? (shift.PayRate?.SellRateToClient ?? 0) : (shift.PayRate?.GuardPayRate ?? 0);
+                                    var rate = RosterPayHelper.GetRate(shift, rateType);
                                     var value = includeFinancials ? (duration * (double)rate) : duration;
 
                                     if (shift.Status != CityWatch.Data.Enums.RosterShiftStatus.Cancelled && shift.Status != CityWatch.Data.Enums.RosterShiftStatus.Missed)
@@ -520,7 +520,7 @@ namespace CityWatch.Web.Services
                                     var key = guardId.HasValue ? ("G" + guardId.Value) : ("P" + guardName);
                                     
                                     decimal duration = (decimal)DateTimeHelper.CalculateDisplayDuration(s.ShiftStart, s.ShiftEnd);
-                                    decimal payRate = (rateType == "sell") ? (s.PayRate?.SellRateToClient ?? 0m) : (s.PayRate?.GuardPayRate ?? 0m);
+                                    decimal payRate = RosterPayHelper.GetRate(s, rateType);
                                     decimal amount = duration * payRate;
 
                                     if (!entities.ContainsKey(key))
