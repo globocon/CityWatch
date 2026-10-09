@@ -25,8 +25,8 @@ namespace CityWatch.Data.Providers
         void SaveClientSitePatrolCar(ClientSitePatrolCar clientSitePatrolCar);
         void DeleteClientSitePatrolCar(int id);
         ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber, int id);
-        void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag);
-        void DeleteClientSiteSmartWandTags(int id);
+        void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag, int changedByUserId = 0, int changedByGuardId = 0);
+        void DeleteClientSiteSmartWandTags(int id, int changedByUserId = 0, int changedByGuardId = 0);
         List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags();
         List<SmartWandTagsType> GetSmartWandTagsType();
         void SaveSmartWandTagLog(ClientSiteSmartWandTagsHitLog log);
@@ -248,7 +248,15 @@ namespace CityWatch.Data.Providers
             _dbContext.SaveChanges();
         }
 
-        public void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag)
+        /// <param name="changedByUserId">
+        /// The signed-in user making the change, 0 when it is a guard or unknown. Not stored by this
+        /// method - it is handed to the history trigger on ClientSiteSmartWandTags, which is what
+        /// writes ClientSiteSmartWandTagsHist. A change saved without it is still recorded, just
+        /// without a name against it.
+        /// </param>
+        /// <param name="changedByGuardId">The guard making the change, 0 when it is a user or unknown.</param>
+        public void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag,
+            int changedByUserId = 0, int changedByGuardId = 0)
         {
             if (clientSiteSmartWandTag == null)
                 throw new ArgumentNullException();
@@ -290,17 +298,91 @@ namespace CityWatch.Data.Providers
 
                 }
             }
-            _dbContext.SaveChanges();
+            SaveWithTagChangeAttributed(changedByUserId, changedByGuardId);
         }
 
-        public void DeleteClientSiteSmartWandTags(int id)
+        /// <param name="changedByUserId">See SaveClientSiteSmartWandTags.</param>
+        /// <param name="changedByGuardId">See SaveClientSiteSmartWandTags.</param>
+        public void DeleteClientSiteSmartWandTags(int id, int changedByUserId = 0, int changedByGuardId = 0)
         {
             var deleteClientSiteSmartWandTags = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == id);
             if (deleteClientSiteSmartWandTags != null)
                 deleteClientSiteSmartWandTags.IsDeleted = true;
             //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
 
+            SaveWithTagChangeAttributed(changedByUserId, changedByGuardId);
+        }
+
+        /// <summary>
+        /// Saves, having first told the history trigger who is responsible for the change.
+        ///
+        /// Session context belongs to a connection, and EF is free to hand the save a different
+        /// connection from the one the context was set on - so both run inside one transaction,
+        /// which pins them to the same connection. Without that the trigger would intermittently
+        /// see no actor and record the change as a direct database edit.
+        ///
+        /// Attribution never costs a save: if the name lookup or the context call fails, the save
+        /// still happens and the trigger records the change with whatever it has.
+        /// </summary>
+        private void SaveWithTagChangeAttributed(int changedByUserId, int changedByGuardId)
+        {
+            // Something upstream already owns the transaction; set the context on its connection
+            // and let it commit.
+            if (_dbContext.Database.CurrentTransaction != null)
+            {
+                ApplyTagChangeContext(changedByUserId, changedByGuardId);
+                _dbContext.SaveChanges();
+                return;
+            }
+
+            using var transaction = _dbContext.Database.BeginTransaction();
+            ApplyTagChangeContext(changedByUserId, changedByGuardId);
             _dbContext.SaveChanges();
+            transaction.Commit();
+        }
+
+        private void ApplyTagChangeContext(int changedByUserId, int changedByGuardId)
+        {
+            try
+            {
+                var who = ResolveTagChangeActorName(changedByUserId, changedByGuardId);
+
+                _dbContext.Database.ExecuteSqlRaw(
+                    "EXEC sp_set_session_context @key=N'cw_TagChangeUserId', @value={0};" +
+                    "EXEC sp_set_session_context @key=N'cw_TagChangeGuardId', @value={1};" +
+                    "EXEC sp_set_session_context @key=N'cw_TagChangeBy', @value={2};",
+                    changedByUserId, changedByGuardId, (object)who ?? DBNull.Value);
+            }
+            catch
+            {
+                /* The history is worth less than the change itself. A server without session
+                   context support, or a failed lookup, must not stop a tag being saved - the
+                   trigger still records the change, just without a name. */
+            }
+        }
+
+        private string ResolveTagChangeActorName(int changedByUserId, int changedByGuardId)
+        {
+            if (changedByGuardId > 0)
+            {
+                var guard = _dbContext.Guards.AsNoTracking()
+                    .Where(x => x.Id == changedByGuardId)
+                    .Select(x => x.Name).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(guard))
+                    return $"{guard} (guard)";
+            }
+
+            if (changedByUserId > 0)
+            {
+                var user = _dbContext.Users.AsNoTracking()
+                    .Where(x => x.Id == changedByUserId)
+                    .Select(x => x.UserName).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(user))
+                    return $"{user} (user)";
+            }
+
+            // Known id but no matching row, or no id at all: let the trigger say what it can.
+            return null;
         }
 
         public List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSites(int[] clientSiteIds)
