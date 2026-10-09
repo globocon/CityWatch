@@ -326,15 +326,21 @@ namespace CityWatch.Web.API
             return (false, "Tag does not belong to logged in site. Please check.");
         }
 
+        /// <param name="GuardId">
+        /// The guard registering the tag, for the tag's change history. Optional and defaulted so
+        /// that app versions released before this still work - they simply record the change with
+        /// no name against it. The other scanner actions already take the guard the same way.
+        /// </param>
+        /// <param name="UserId">The signed-in user, when the action came from one rather than a guard.</param>
         [HttpPost("SaveNFCtagInfoData")]
-        public IActionResult SaveNFCtagInfoData([FromBody] ClientSiteSmartWandTags csswt)
+        public IActionResult SaveNFCtagInfoData([FromBody] ClientSiteSmartWandTags csswt, int GuardId = 0, int UserId = 0)
         {
             var IsSuccess = false;
             var message = string.Empty;
             var TagFound = false;
             try
             {
-                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt);
+                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt, UserId, GuardId);
                 IsSuccess = true;
                 TagFound = true;
                 message = "Tag saved successfully.";

@@ -137,6 +137,16 @@ namespace CityWatch.Kpi.Pages.Admin
             {   /* admin login only*/
                 ReportRequest = new KpiRequest();
                 HttpContext.Session.SetInt32("GuardId", 0);
+
+                /* Refresh the real signed-in user id from the sign-in itself. Login sets this too;
+                   doing it here as well covers a session that has expired or been dropped while the
+                   auth cookie is still valid, and anyone already signed in when this shipped.
+                   Deliberately read before the role check below, which zeroes loginUserId for an
+                   Administrator. */
+                var signedInSid = claimsIdentity.Claims
+                    .FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Sid)?.Value;
+                if (int.TryParse(signedInSid, out var signedInUserId) && signedInUserId > 0)
+                    HttpContext.Session.SetInt32("SignedInUserId", signedInUserId);
                 var roleClaim = claimsIdentity.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
                 if (roleClaim == "Administrator")
                 {
@@ -2723,7 +2733,12 @@ namespace CityWatch.Kpi.Pages.Admin
             var message = string.Empty;
             try
             {
-                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(record);
+                // Who is doing this, for the tag's change history. SignedInUserId, not
+                // loginUserId: the latter is deliberately 0 for an Administrator, which is the
+                // account that does most tag editing.
+                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(record,
+                    HttpContext.Session.GetInt32("SignedInUserId") ?? 0,
+                    HttpContext.Session.GetInt32("GuardId") ?? 0);
                 success = true;
             }
             catch (Exception ex)
@@ -2739,7 +2754,9 @@ namespace CityWatch.Kpi.Pages.Admin
             var message = string.Empty;
             try
             {
-                _clientSiteWandDataProvider.DeleteClientSiteSmartWandTags(id);
+                _clientSiteWandDataProvider.DeleteClientSiteSmartWandTags(id,
+                    HttpContext.Session.GetInt32("SignedInUserId") ?? 0,
+                    HttpContext.Session.GetInt32("GuardId") ?? 0);
                 success = true;
             }
             catch (Exception ex)
