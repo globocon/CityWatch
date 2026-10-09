@@ -1,0 +1,3 @@
+
+alter table ClientSiteKpiSettings
+add KPITelematicsFieldID int

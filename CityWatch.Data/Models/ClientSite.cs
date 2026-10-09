@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CityWatch.Data.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -37,10 +38,62 @@ namespace CityWatch.Data.Models
 
         public string LandLine { get; set; }
 
+        public string DuressEmail { get; set; }
+
+        public string DuressSms { get; set; }
+
         public bool UploadGuardLog { get; set; }
+        public bool UploadKVLog { get; set; }
+        public bool UploadSWLog { get; set; }
+        public bool UploadFusionLog { get; set; }
 
         public string GuardLogEmailTo { get; set; }
 
         public bool DataCollectionEnabled { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsDosDontList { get; set; }
+        [NotMapped]
+        public string AccountManager { get; set; }
+        public PatrolTouringMode PatrolTourMode { get; set; }
+
+        public bool MobAppShowClientTypeandSite { get; set; }
+
+        public bool UploadGuardWeeklyLog { get; set; }
+        public bool UploadFusionWeeklyLog { get; set; }
+        public bool UploadKVWeeklyLog { get; set; }
+        public bool UploadSWWeeklyLog { get; set; }
+        public string GuardLogEmailWeeklyLogTo { get; set; }
+
+        public bool UploadGuardMonthlyLog { get; set; }
+        public bool UploadFusionMonthlyLog { get; set; }
+        public bool UploadKVMonthlyLog { get; set; }
+        public bool UploadSWMonthlyLog { get; set; }
+        public string GuardLogEmailMonthlyLogTo { get; set; }
+
+        // "Disable PCAR" per period: leave patrol car entries out of the LB/SW/Fusion dumps.
+        // Never applies to a PCAR site itself - see IsDisablePcarApplicable.
+        public bool DisablePcarDailyLog { get; set; }
+        public bool DisablePcarWeeklyLog { get; set; }
+        public bool DisablePcarMonthlyLog { get; set; }
+
+        // "Schedule PCAR": dumps of the patrol car entries only, to the same recipients as above.
+        public bool UploadPcarGuardLog { get; set; }
+        public bool UploadPcarSWLog { get; set; }
+        public bool UploadPcarFusionLog { get; set; }
+
+        public bool UploadPcarGuardWeeklyLog { get; set; }
+        public bool UploadPcarSWWeeklyLog { get; set; }
+        public bool UploadPcarFusionWeeklyLog { get; set; }
+
+        public bool UploadPcarGuardMonthlyLog { get; set; }
+        public bool UploadPcarSWMonthlyLog { get; set; }
+        public bool UploadPcarFusionMonthlyLog { get; set; }
+
+        /// <summary>
+        /// Every entry in a PCAR site's own log book is a PCAR entry, so "Disable PCAR" would empty
+        /// its reports. It is therefore off and not settable for those sites.
+        /// </summary>
+        [NotMapped]
+        public bool IsDisablePcarApplicable => PatrolTourMode != PatrolTouringMode.PCAR;
     }
 }

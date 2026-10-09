@@ -1,0 +1,4 @@
+ALTER TABLE GuardTrainingAndAssessmentScore ADD TheoryDate datetime
+ALTER TABLE GuardTrainingAndAssessment ADD IsCompleted bit default 0
+update GuardTrainingAndAssessment set IsCompleted=0
+update GuardTrainingAndAssessment set TrainingCourseStatusId=1

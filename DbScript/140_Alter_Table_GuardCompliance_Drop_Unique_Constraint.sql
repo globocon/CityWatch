@@ -1,0 +1,2 @@
+ALTER TABLE GuardCompliances
+DROP CONSTRAINT uc_ReferenceNo;

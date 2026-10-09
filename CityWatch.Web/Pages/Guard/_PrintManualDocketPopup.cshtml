@@ -1,4 +1,12 @@
 ﻿<!-- Print Manual Docket Modal -->
+@using CityWatch.Web.Services;
+@inject IClientSiteViewDataService clientViewDataService
+<!-- Include jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Include multiselect CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
+<input  type="hidden" id="EmailPopup"/>
 <div class="modal" tabindex="-1" role="dialog" id="print-manual-docket-modal" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -13,20 +21,37 @@
                 <h5>
                     Why did you create the manual docket?
                 </h5>
-                <div class="row">
+                <div class="row m-0">
                     <div class="col-md-12">
+                        
                         <ul class="list-unstyled">
+                            
                             <li class="py-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input print-docket-reason" type="checkbox" id="cbxProofOfDelivery" value="3" checked>
+                                    <label class="form-check-label" for="cbxProofOfDelivery">Proof Of Delivery (Receipt)</label>
+                                    
+                                </div>
+                               @* <div class="col-md-6">
+
+                                    <h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarningPrint" hidden>POI Warning</h5>
+                                    <i id="imagesirenprint" hidden><img id="img1" src="~/images/ziren.png" height="25px;" /></i>
+                                </div>*@
+                            </li>
+                            <li>
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input print-docket-reason" type="checkbox" id="cbxOther" value="0">
                                     <label class="form-check-label mr-2" for="cbxOther">Other</label>
                                     <select id="otherReason" disabled class="form-control" asp-items="@Model.ViewDataService.GetKeyVehicleLogFieldsByType(Data.Models.KvlFieldType.DocketReasons, true)"></select>
+                                    <h5 style="color:red; text-align:center" class="ml-5" id="titlePOIWarningPrint" hidden>POI Warning</h5>
+                                    <i id="imagesirenprint" hidden><img id="img1" src="~/images/ziren.png" height="25px;" class="ml-2"  /></i>
                                 </div>
                             </li>
                             <li class="py-2">
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input print-docket-reason" type="checkbox" id="cbxBridgeNoComms" value="1">
                                     <label class="form-check-label" for="cbxBridgeNoComms">Weighbridge Down = No Comms</label>
+                                    
                                 </div>
                             </li>
                             <li class="py-2">
@@ -35,6 +60,29 @@
                                     <label class="form-check-label" for="cbxBridgeRepair">Weighbridge Down = Physical Repair</label>
                                 </div>
                             </li>
+                            <li class="py-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input print-docket-reason" type="checkbox" id="cbxPOIList" value="3">
+                                    <label class="form-check-label" for="cbxPOIList">POI List</label>
+                                </div>
+                            </li>
+                            <li class="py-2">
+                                <div class="form-check form-check-inline">
+                                 
+                                    <label class="form-check-label mr-2" for="cbxPOIList">Site POC</label>
+                                    @* <select id="multiselectVehiclelogDocket" class="form-control js-example-basic-multiple"  multiple>
+                                        @foreach (var item in clientViewDataService.GetClientSitePocsVehicleLog(new int[] { 189}))
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select> *@
+                                    <select id="multiselectVehiclelogDocket" class="form-control js-example-basic-multiple" multiple>
+                                       
+                                    </select>
+                                    
+                                </div>
+                            </li>
+                        
                             <li class="pt-3">
                                 <div class="form-group">
                                     <label for="stakeholderEmail" class="form-label">Stakeholder Emails</label>
@@ -52,9 +100,36 @@
                 </div>
             </div>
             <div class="modal-footer justify-content-start">
-                <button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>
-                <a class="btn btn-outline-primary" id="download_kvl_docket" href="#" target="_blank" style="display:none">Download Pdf</a>
+                <div class="form-group col-md-6">
+                    <button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>
+                    <button class="btn btn-primary" id="generate_kvl_AlldocketList" style="display:none">Generate Docket</button>
+                    <button class="btn btn-primary" id="generate_logbook_AlldocketList" style="display:none">Generate Docket</button>
+                    <a class="btn btn-outline-primary mt-2" style="width:135px;" id="download_kvl_docket" href="#" target="_blank" style="display:none">Download Pdf</a>
+                </div>
+                <div class="form-group col-md-6 b-0">
+                    <div class="custom-control custom-switch custom-control-inline">
+                            <input type="checkbox" class="custom-control-input" id="chb_IsBlankNote">
+                            <label class="custom-control-label ml-4 mb-2" for="chb_IsBlankNote"></label>
+                            <input hidden id="IsBlankNoteOn" />
+                        <label id="lbl_BlankNotes">Blank Notes Off</label>
+                    </div>
+                    
+                        <div class="custom-control custom-switch custom-control-inline">
+                            <input type="checkbox" class="custom-control-input" id="chb_IsPDFBinder">
+                            <label class="custom-control-label ml-4 mb-2" for="chb_IsPDFBinder"></label>
+                            <input hidden id="IsPDFBinderOn" />
+                            <label id="lbl_PDFBinder">PDF Binder Off (ZIP)</label>
+                        </div>
+                    
+                    <div class="row">
+                        <span style="font-size:0.8rem;font:italic bold;color:red" class="mr-4">
+                            Note: Consider "Blanking" POI Profiles
+                        </span>
+                    </div>
+                </div>
+                
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.min.js"></script>

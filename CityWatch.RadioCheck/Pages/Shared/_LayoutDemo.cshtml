@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Demo Site</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style id="theme-style">
+        body {
+            background-color: #f4f7fc;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .navbar, .footer {
+            background: linear-gradient(135deg, #004aad, #0084ff);
+            color: white;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+            .navbar-brand, .nav-link, .footer a {
+                color: white !important;
+            }
+
+        .navbar-nav .nav-link:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            padding: 15px 0;
+            margin-top: auto;
+            font-size: 14px;
+        }
+
+        .search-box {
+            width: 250px;
+            border-radius: 20px;
+            padding: 5px 10px;
+        }
+
+        .dropdown-menu {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+            .dropdown-menu li a:hover {
+                background-color: #f0f0f0;
+            }
+
+        main {
+            flex: 1;
+            min-height: 60vh;
+            padding-bottom: 20px;
+        }
+
+        .btn-custom {
+            background-color: #0084ff;
+            color: white;
+            border-radius: 20px;
+            padding: 5px 15px;
+        }
+
+            .btn-custom:hover {
+                background-color: #0070e0;
+            }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-page="/Demo/Index">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"></circle>
+                        <path d="M8 12h8" stroke="white" stroke-width="2" stroke-linecap="round"></path>
+                        <path d="M12 8v8" stroke="white" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                    <span class="ms-2">Demo Site</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <input type="text" class="form-control search-box" placeholder="Search...">
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/demo/Index"><i class="bi bi-house-door"></i> Home</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="formsDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-file-earmark-text"></i> Forms
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-page="/demo/forms/engineeringdata">Engineering Data</a></li>
+                                <li><a class="dropdown-item" asp-page="/demo/forms/TrackInspector">Inspector Form</a></li>
+                                <li><a class="dropdown-item disabled" href="#">Coordinator Forms</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item disabled" href="#">Logistics Delivery Form</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-page="/demo/admin/AddWorkOrder">Add Work Order</a></li>
+                                <li><a class="dropdown-item" asp-page="/demo/admin/AddUserDetails">Add User Details</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="bi bi-gear"></i> Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                        </li>
+                        <li class="nav-item d-flex align-items-center ms-3">
+                            <i class="bi bi-person-circle text-white me-2" style="font-size: 1.5rem;"></i>
+                            <span class="text-white">Welcome, User</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container my-4">
+        @RenderBody()
+    </main>
+
+    <footer class="footer text-center">
+        <div class="container">
+            <span>&copy; @DateTime.Now.Year - Demo Site | <a asp-page="/demo/Privacy" class="text-white text-decoration-none">Privacy</a></span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/jsDemo/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+
+
+
+
+
+
+@* <html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Demo Site</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="~/cssDemo/site.css" asp-append-version="true">
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <!-- Logo -->
+                <a class="navbar-brand" asp-area="" asp-page="/Demo/Index">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><g data-name="06-plan"><path d="M17 1v6a2.006 2.006 0 0 1-2 2H9z" style="fill:#4a98f7" /><path d="M55 5v54a4 4 0 0 1-4 4H13a4 4 0 0 1-4-4V9h6a2.006 2.006 0 0 0 2-2V1h34a4 4 0 0 1 4 4z" style="fill:#65b1fc" /><path d="M19 17h13v15H17V19a2 2 0 0 1 2-2z" style="fill:#a3d4ff" /><path d="M32 17h15v15H34a2 2 0 0 1-2-2V17z" transform="rotate(-180 39.5 24.5)" style="fill:#bfe1ff" /><path d="M34 32h13v15H32V34a2 2 0 0 1 2-2z" transform="rotate(180 39.5 39.5)" style="fill:#a3d4ff" /><path d="M17 32h15v15H19a2 2 0 0 1-2-2V32z" style="fill:#bfe1ff" /><path d="M45 16H28v2h3v13h-3v2h3v3h2v-3h8v-2h-8V18h12a1 1 0 0 1 1 1v5h2v-5a3 3 0 0 0-3-3z" style="fill:#dbeeff" /><path d="M46 45a1 1 0 0 1-1 1H33v-2.586l4.707-4.707-1.414-1.414-5 5A1 1 0 0 0 31 43v3H19a1 1 0 0 1-1-1V33h3a1 1 0 0 0 .707-.293l5-5-1.414-1.414L20.586 31H18V19a1 1 0 0 1 1-1h2a1 1 0 0 0 .707-.293l5-5-1.414-1.414L20.586 16H19a3 3 0 0 0-3 3v26a3 3 0 0 0 3 3h26a3 3 0 0 0 3-3v-9h-2zM16 50h2v2h-2zM20 50h28v2H20zM18 54h28v2H18z" style="fill:#dbeeff" /><path style="fill:#d2eb5a" d="M63 52v7h-8v-7h8z" /><path style="fill:#b4d241" d="M63 55v4h-8v-4h8z" /><path d="M61 59v4H51a4 4 0 0 0 4-4z" style="fill:#d2eb5a" /><path d="M60.83 32.33c-1.3-2.1-3.22-4.28-5.83-5.04V19l3 2z" style="fill:#faa68e" /><path d="M61 49v3h-6V41.48c-5-1.9-5-8.48-5-8.48h-4a3 3 0 0 1 0-6h7a6.858 6.858 0 0 1 2 .29c2.61.76 4.53 2.94 5.83 5.04A21.866 21.866 0 0 1 63 37v10a1.959 1.959 0 0 1-2 2z" style="fill:#ffdecf" /><path d="M46 30a3 3 0 0 1 3-3h-3a3 3 0 0 0 0 6h3a3 3 0 0 1-3-3zM53 33h-3s0 6.58 5 8.48V52h3V41.48c-5-1.9-5-8.48-5-8.48z" style="fill:#ffcdbe" /><path d="M64 47V37a1.033 1.033 0 0 0-.042-.287 22.619 22.619 0 0 0-2.2-4.811L58.97 20.758a1 1 0 0 0-.415-.59L56 18.465V5a5.006 5.006 0 0 0-5-5H17a1 1 0 0 0-.707.293l-8 8A1 1 0 0 0 8 9v50a5.006 5.006 0 0 0 5 5h38a5.009 5.009 0 0 0 4.9-4H60v3h2v-3h1a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1h-1v-1.167A2.818 2.818 0 0 0 64 47zm-2 0a.915.915 0 0 1-1 1 1 1 0 0 0-1 1v2h-4v-8.2a10.081 10.081 0 0 0 2 .2v-2c-6.891 0-7-7.675-7-8a1 1 0 0 0-1-1h-4a2 2 0 0 1 0-4h7c5.761 0 8.625 8.023 9 9.156zm-4.877-25.382 1.67 6.681A9.649 9.649 0 0 0 56 26.573v-5.7zM16 3.414V7a1 1 0 0 1-1 1h-3.586zM51 62H13a3 3 0 0 1-3-3V10h5a3 3 0 0 0 3-3V2h33a3 3 0 0 1 3 3v21.067A8.151 8.151 0 0 0 53 26h-7a4 4 0 0 0 0 8h3.048c.251 2.708 1.54 6.462 4.952 8.134V59a3 3 0 0 1-3 3zm11-4h-6v-5h6z" /><path d="M31 36h2v-3h8v-2h-8V18h12a1 1 0 0 1 1 1v5h2v-5a3 3 0 0 0-3-3H28v2h3v13h-3v2h3z" /><path d="M46 45a1 1 0 0 1-1 1H33v-2.586l4.707-4.707-1.414-1.414-5 5A1 1 0 0 0 31 43v3H19a1 1 0 0 1-1-1V33h3a1 1 0 0 0 .707-.293l5-5-1.414-1.414L20.586 31H18V19a1 1 0 0 1 1-1h2a1 1 0 0 0 .707-.293l5-5-1.414-1.414L20.586 16H19a3 3 0 0 0-3 3v26a3 3 0 0 0 3 3h26a3 3 0 0 0 3-3v-9h-2zM16 50h2v2h-2zM20 50h28v2H20zM18 54h28v2H18z" /></g></svg>
+                </a>
+
+                <!-- Navbar Toggler -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/demo/Index">Home</a>
+                        </li>
+
+                        <!-- Forms Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="formsDropdown" role="button" data-bs-toggle="dropdown">
+                                Forms
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-page="/demo/forms/engineeringdata">Engineering Data</a></li>
+                                <li><a class="dropdown-item" asp-page="/demo/forms/TrackInspector">Inspector Form</a></li>
+                                <li><a class="dropdown-item disabled" href="#">Coordinator Forms</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item disabled" href="#">Logistics Delivery Form</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Admin Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-page="/demo/admin/AddWorkOrder">Add Work Order</a></li>
+                                <li><a class="dropdown-item" asp-page="/demo/admin/AddUserDetails">Add User Details</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-page="/demo/Privacy">Privacy</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-lg-start border-top mt-4 py-3">
+        <div class="container">
+            <span class="text-muted">
+                &copy; @DateTime.Now.Year - Demo Site | <a asp-page="/demo/Privacy" class="text-decoration-none">Privacy</a>
+            </span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/jsDemo/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html> *@
