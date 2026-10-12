@@ -257,8 +257,9 @@ namespace CityWatch.Data.Providers
         public bool RemovePCarDeatils(int PcarRouteId, List<int> siteIds);
 
         List<PayRate> GetPayRates();
-        void SavePayRate(PayRate payRate);
-        void DeletePayRate(int id);
+        void SavePayRate(PayRate payRate, int changedByUserId = 0);
+        void DeletePayRate(int id, int changedByUserId = 0);
+        List<PayRatesHist> GetPayRateHistory(int payRateId);
         List<PayRateGroup> GetPayRateGroups();
         void SavePayRateGroup(PayRateGroup group);
         void DeletePayRateGroup(int id);
@@ -285,7 +286,11 @@ namespace CityWatch.Data.Providers
             return _context.PayRates.Include(x => x.PayRateGroup).Where(x => !x.IsDeleted).OrderBy(x => x.Description).ToList();
         }
 
-        public void SavePayRate(PayRate payRate)
+        /// <remarks>
+        /// changedByUserId is who the PayRatesHist trigger records against this change (DbScript 383).
+        /// Added 12 Oct 2026 - before that a pay rate could change with no trace of who or when.
+        /// </remarks>
+        public void SavePayRate(PayRate payRate, int changedByUserId = 0)
         {
             if (_context.PayRates.Any(x => x.Description == payRate.Description && x.Id != payRate.Id && !x.IsDeleted))
             {
@@ -310,16 +315,74 @@ namespace CityWatch.Data.Providers
                     existing.Currency = payRate.Currency;
                 }
             }
-            _context.SaveChanges();
+            SaveWithPayRateChangeAttributed(changedByUserId);
         }
 
-        public void DeletePayRate(int id)
+        public void DeletePayRate(int id, int changedByUserId = 0)
         {
             var existing = _context.PayRates.SingleOrDefault(x => x.Id == id);
             if (existing != null)
             {
                 existing.IsDeleted = true;
+                SaveWithPayRateChangeAttributed(changedByUserId);
+            }
+        }
+
+        /// <summary>Change history for one pay rate, newest first (Pay Rates grid > History button).</summary>
+        public List<PayRatesHist> GetPayRateHistory(int payRateId)
+        {
+            return _context.PayRatesHist.AsNoTracking()
+                .Where(x => x.PayRateId == payRateId)
+                .OrderByDescending(x => x.ChangedOn).ThenByDescending(x => x.Id)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Saves with the acting user handed to the PayRatesHist trigger through SQL session context.
+        ///
+        /// Session context belongs to a connection, and EF can run SaveChanges on a different
+        /// connection from the one the context was set on - so both run inside one transaction,
+        /// which pins them to the same connection. Same approach as
+        /// ClientSiteWandDataProvider.SaveWithTagChangeAttributed.
+        ///
+        /// Attribution never costs a save: if the lookup or the context call fails, the save still
+        /// happens and the trigger records the change with the SQL login instead of a name.
+        /// </summary>
+        private void SaveWithPayRateChangeAttributed(int changedByUserId)
+        {
+            if (_context.Database.CurrentTransaction != null)
+            {
+                ApplyPayRateChangeContext(changedByUserId);
                 _context.SaveChanges();
+                return;
+            }
+
+            using var transaction = _context.Database.BeginTransaction();
+            ApplyPayRateChangeContext(changedByUserId);
+            _context.SaveChanges();
+            transaction.Commit();
+        }
+
+        private void ApplyPayRateChangeContext(int changedByUserId)
+        {
+            try
+            {
+                string who = null;
+                if (changedByUserId > 0)
+                {
+                    who = _context.Users.AsNoTracking()
+                        .Where(x => x.Id == changedByUserId)
+                        .Select(x => x.UserName).FirstOrDefault();
+                }
+
+                _context.Database.ExecuteSqlRaw(
+                    "EXEC sp_set_session_context @key=N'cw_PayRateChangeUserId', @value={0};" +
+                    "EXEC sp_set_session_context @key=N'cw_PayRateChangeBy', @value={1};",
+                    changedByUserId, (object)who ?? DBNull.Value);
+            }
+            catch
+            {
+                /* The history is worth less than the change itself - never block a pay rate save. */
             }
         }
 

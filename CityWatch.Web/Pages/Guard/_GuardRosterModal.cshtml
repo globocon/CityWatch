@@ -978,7 +978,6 @@
                     guardId: shiftData.guardId,
                     providerName: shiftData.providerName,
                     payRateId: shiftData.payRateId,
-                    payRate: shiftData.buyRate,
                     callsignId: shiftData.callsignId,
                     shiftType: shiftData.type || 'Regular',
                     shiftId: null
@@ -2157,7 +2156,6 @@
         var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
         
         var payRateId = parseInt($('#geModalPositionId').val()) || null;
-        var payRateValue = $('#geModalPayRate').val();
         var startTime = $('#geModalShiftStart').val();
         var endTime = $('#geModalShiftEnd').val();
         var shiftType = $('#geModalShiftType').val();
@@ -2248,7 +2246,6 @@
                     guardId: guardId,
                     providerName: providerName,
                     payRateId: payRateId,
-                    payRate: payRateValue,
                     shiftId: shiftId,
                     callsignId: callsignId,
                     reliefGuardId: reliefGuardId,
@@ -2294,7 +2291,6 @@
             guardId: guardId,
             providerName: providerName,
             payRateId: payRateId,
-            payRate: payRateValue,
             shiftId: shiftId,
             callsignId: callsignId,
             reliefGuardId: reliefGuardId,

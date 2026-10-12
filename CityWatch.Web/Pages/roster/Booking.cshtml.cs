@@ -590,17 +590,27 @@ namespace CityWatch.Web.Pages.roster
         }
         //p7-RolloverOverlapFix-end
 
-        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, decimal? payRate = null, bool ignoreUnavailability = false)
+        public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, bool ignoreUnavailability = false)
         {
-            if (payRateId.HasValue && payRate.HasValue)
-            {
-                var pr = await _context.PayRates.FindAsync(payRateId.Value);
-                if (pr != null && pr.GuardPayRate != payRate.Value)
-                {
-                    pr.GuardPayRate = payRate.Value;
-                    // No need for separate save here, it will be saved with the shift
-                }
-            }
+            // P7 PayRate overwrite fix (12 Oct 2026, Dileep) - a shift save must NEVER change the master pay rate.
+            //
+            // WHAT WAS HERE: since 11 May 2026 (commit 24adf0ae) this handler took a "payRate" value from
+            // the shift popup and copied it into PayRates.GuardPayRate - the MASTER rate shared by every
+            // guard and every shift on that Rate Profile. A shift only stores PayRateId, so there was
+            // nowhere per-shift for the value to go; one shift save changed pay for everyone.
+            //
+            // WHAT IT BROKE: on 10 Oct 2026 Guard Pay for "Prixcar - Sat (2026)" went to $0.00 on live and
+            // guards were paid wrong (reported by Bruno, CityWatch). Shift 12072 (Webb Dock, Sat 10 Oct
+            // 18:00, guard relieved by GroupOne only) was saved twice with "no major changes" just
+            // before. Since PR #1841 (8 Oct) a company-only relief shift shows a $0
+            // rate on purpose, and the Guard Roster popup posts that hidden card rate back on save /
+            // drag-copy - so this line wrote $0 into the master rate with nobody typing anything. The
+            // Booking popup did the same if a plain number was typed into its Pay Rate box.
+            // Reproduced on test.c4i-system.com 12 Oct: $40 rate -> shift saved with "0" -> master $0.00.
+            //
+            // NOW: the popups only DISPLAY the profile's rate. Master rates change only in
+            // Admin > Settings > HR Settings > Pay Rates, and every change is recorded with who/when/
+            // old/new in PayRatesHist (DbScript 383, History button on that grid).
             // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
             var addShiftLockMessage = await GetWeekStatusLockMessageAsync(siteId, start);
             if (addShiftLockMessage != null)
