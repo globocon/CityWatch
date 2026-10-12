@@ -4241,10 +4241,13 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Saved successfully";
             try
             {
+                //p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845 + #1847)
                 // Who saved it goes to PayRatesHist (DbScript 383) - see the History button on the grid.
                 // GetLoggedInUserId, not LoggedInUserId: the latter is null for Administrator logins
                 // (e.g. cwsadmin), which made History show "(direct database change)" instead of the user.
+                // REVERT: _configDataProvider.SavePayRate(payRate);
                 _configDataProvider.SavePayRate(payRate, AuthUserHelper.GetLoggedInUserId ?? 0);
+                //p7-PayRateOverwriteFix-end
                 success = true;
             }
             catch (Exception ex)
@@ -4260,7 +4263,10 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Deleted successfully";
             try
             {
+                //p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845 + #1847) - user recorded in PayRatesHist.
+                // REVERT: _configDataProvider.DeletePayRate(id);
                 _configDataProvider.DeletePayRate(id, AuthUserHelper.GetLoggedInUserId ?? 0);
+                //p7-PayRateOverwriteFix-end
                 success = true;
             }
             catch (Exception ex)
@@ -4270,6 +4276,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
+        //p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845) - new handler. REVERT: delete this method.
         /// <summary>
         /// Who changed a pay rate, when, and from what (PayRatesHist, DbScript 383). Added 12 Oct 2026
         /// after "Prixcar - Sat (2026)" Guard Pay was found at $0.00 with no record of who set it.
@@ -4292,6 +4299,7 @@ namespace CityWatch.Web.Pages.Admin
                 return new JsonResult(new { success = false, message = ex.Message });
             }
         }
+        //p7-PayRateOverwriteFix-end
 
         public JsonResult OnGetPayRateGroupsList()
         {

@@ -6474,7 +6474,9 @@
     </div>
 </div>
 
-@* Pay rate change history - who changed it, when, what changed (PayRatesHist, DbScript 383). Added 12 Oct 2026. *@
+@* p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845)
+   Pay rate change history - who changed it, when, what changed (PayRatesHist, DbScript 383).
+   REVERT: delete this whole modal (down to p7-PayRateOverwriteFix-end). *@
 <div class="modal fade" id="payRateHistoryModal" tabindex="-1" role="dialog" aria-labelledby="payRateHistoryTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -6498,6 +6500,7 @@
         </div>
     </div>
 </div>
+@* p7-PayRateOverwriteFix-end *@
 
 <div class="modal fade" id="allowanceModal" tabindex="-1" role="dialog" aria-labelledby="allowanceModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">

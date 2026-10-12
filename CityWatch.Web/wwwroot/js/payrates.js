@@ -169,6 +169,7 @@ function initializePayRatesGrid() {
             { field: 'comms2', title: 'Comms 2', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'guardPayRate', title: 'Guard Pay', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'currency', title: 'Currency', width: 80, align: 'center' },
+            // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): width 100 -> 150 to fit the History button. REVERT: width: 100
             { title: '', field: 'Action', width: 150, align: 'center', renderer: payRatesActionRenderer }
         ],
         paramNames: { page: 'pageNo' },
@@ -184,6 +185,8 @@ function currencyRenderer(value, record) {
     return '$' + parseFloat(value).toFixed(2);
 }
 
+// p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): added the History button (3rd) and "mr-2" on the delete button.
+// REVERT: remove the openPayRateHistory button line and change the delete button class back to "btn btn-outline-danger".
 function payRatesActionRenderer(value, record) {
     return '<div class="text-center">' +
         '<button onclick="openEditPayRate(' + record.id + ', \'' + record.description + '\', ' + record.sellRateToClient + ', ' + record.comms1 + ', ' + record.comms2 + ', ' + record.guardPayRate + ', \'' + (record.currency || '') + '\', ' + (record.payRateGroupId || 0) + ')" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
@@ -192,6 +195,7 @@ function payRatesActionRenderer(value, record) {
         '</div>';
 }
 
+// p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845) - REVERT: delete this function.
 // Who changed this pay rate, when, and what changed (PayRatesHist, DbScript 383).
 // Added 12 Oct 2026 after "Prixcar - Sat (2026)" Guard Pay was found at $0.00 with no record of who set it.
 function openPayRateHistory(id) {
@@ -226,6 +230,7 @@ function openPayRateHistory(id) {
         }
     });
 }
+// p7-PayRateOverwriteFix-end
 
 function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate, currency, groupId) {
     loadPayRateGroupsDropdown(groupId);

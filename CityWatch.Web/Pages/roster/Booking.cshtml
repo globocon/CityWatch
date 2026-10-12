@@ -710,9 +710,13 @@
                                 <div class="input-group-prepend" style="@(Model.RosterAccessRole == "Base" ? "visibility: hidden;" : "")">
                                     <span class="input-group-text">$</span>
                                 </div>
-                                @* Display only (P7 PayRate overwrite fix, 12 Oct 2026): this box used to be saved into the
-                                   MASTER pay rate for everyone on the Rate Profile. Change rates in Admin > Settings > Pay Rates. *@
+                                @* p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845)
+                                   Display only: this box used to be saved into the MASTER pay rate for everyone on the
+                                   Rate Profile. Change rates in Admin > Settings > Pay Rates.
+                                   REVERT: replace the input below with the original (editable except for Base role):
+                                   <input type="text" id="modalPayRate" class="form-control" @(Model.RosterAccessRole == "Base" ? "readonly" : "") style="@(Model.RosterAccessRole == "Base" ? "color: transparent;" : "")" /> *@
                                 <input type="text" id="modalPayRate" class="form-control" readonly title="Rate Profile's Guard Pay. To change it, edit the rate in Admin > Settings > Pay Rates." style="@(Model.RosterAccessRole == "Base" ? "color: transparent;" : "")" />
+                                @* p7-PayRateOverwriteFix-end *@
                             </div>
                         </div>
                     </div>
@@ -2817,6 +2821,7 @@
                                         guardId: guardId,
                                         providerName: providerName,
                                         payRateId: payRateId,
+                                        // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed "payRate: $('#modalPayRate').val()," here - it overwrote the master rate. REVERT: put that line back.
                                         shiftId: '', // Always new shift
                                         callsignId: callsignId,
                                         reliefGuardId: reliefGuardId,
@@ -2866,6 +2871,7 @@
                             guardId: guardId,
                             providerName: providerName,
                             payRateId: payRateId,
+                            // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed "payRate: $('#modalPayRate').val()," here - it overwrote the master rate. REVERT: put that line back.
                             shiftId: '',
                             callsignId: callsignId,
                             reliefGuardId: reliefGuardId,
@@ -2922,6 +2928,7 @@
                         guardId: guardId,
                         providerName: providerName,
                         payRateId: payRateId,
+                        // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed "payRate: $('#modalPayRate').val()," here - it overwrote the master rate. REVERT: put that line back.
                         shiftId: shiftId,
                         callsignId: callsignId,
                         reliefGuardId: reliefGuardId,

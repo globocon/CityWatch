@@ -569,6 +569,7 @@ namespace CityWatch.Data
         public DbSet<RosterSchedule> RosterSchedules { get; set; }
         public DbSet<PayRate> PayRates { get; set; }
 
+        //p7-PayRateOverwriteFix (12 Oct 2026, PR #1845) - REVERT: delete this DbSet (and Models/PayRatesHist.cs).
         /// <summary>Change history for PayRates (who/when/old/new). Written by a trigger; never inserted from code.</summary>
         public DbSet<PayRatesHist> PayRatesHist { get; set; }
         public DbSet<PayRateGroup> PayRateGroups { get; set; }
