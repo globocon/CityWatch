@@ -568,6 +568,9 @@ namespace CityWatch.Data
         public DbSet<RosterGroupSite> RosterGroupSites { get; set; }
         public DbSet<RosterSchedule> RosterSchedules { get; set; }
         public DbSet<PayRate> PayRates { get; set; }
+
+        /// <summary>Change history for PayRates (who/when/old/new). Written by a trigger; never inserted from code.</summary>
+        public DbSet<PayRatesHist> PayRatesHist { get; set; }
         public DbSet<PayRateGroup> PayRateGroups { get; set; }
         public DbSet<RosterBinder> RosterBinders { get; set; }
         public DbSet<RosterBinderProject> RosterBinderProjects { get; set; }

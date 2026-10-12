@@ -169,7 +169,7 @@ function initializePayRatesGrid() {
             { field: 'comms2', title: 'Comms 2', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'guardPayRate', title: 'Guard Pay', width: 100, align: 'center', renderer: currencyRenderer },
             { field: 'currency', title: 'Currency', width: 80, align: 'center' },
-            { title: '', field: 'Action', width: 100, align: 'center', renderer: payRatesActionRenderer }
+            { title: '', field: 'Action', width: 150, align: 'center', renderer: payRatesActionRenderer }
         ],
         paramNames: { page: 'pageNo' },
         pager: { limit: 10, sizes: [10, 20, 50, 100] },
@@ -187,8 +187,44 @@ function currencyRenderer(value, record) {
 function payRatesActionRenderer(value, record) {
     return '<div class="text-center">' +
         '<button onclick="openEditPayRate(' + record.id + ', \'' + record.description + '\', ' + record.sellRateToClient + ', ' + record.comms1 + ', ' + record.comms2 + ', ' + record.guardPayRate + ', \'' + (record.currency || '') + '\', ' + (record.payRateGroupId || 0) + ')" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
-        '<button onclick="deletePayRate(' + record.id + ')" class="btn btn-outline-danger"><i class="fa fa-trash"></i></button>' +
+        '<button onclick="deletePayRate(' + record.id + ')" class="btn btn-outline-danger mr-2"><i class="fa fa-trash"></i></button>' +
+        '<button onclick="openPayRateHistory(' + record.id + ')" class="btn btn-outline-secondary" title="Change history"><i class="fa fa-history"></i></button>' +
         '</div>';
+}
+
+// Who changed this pay rate, when, and what changed (PayRatesHist, DbScript 383).
+// Added 12 Oct 2026 after "Prixcar - Sat (2026)" Guard Pay was found at $0.00 with no record of who set it.
+function openPayRateHistory(id) {
+    var tbody = $('#tblPayRateHistory tbody');
+    tbody.html('<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>');
+    $('#payRateHistoryModal').modal('show');
+    $.ajax({
+        url: '/Admin/Settings?handler=PayRateHistory',
+        type: 'GET',
+        data: { id: id },
+        success: function (result) {
+            tbody.empty();
+            if (!result.success) {
+                tbody.html('<tr><td colspan="4" class="text-danger">' + $('<div>').text(result.message).html() + '</td></tr>');
+                return;
+            }
+            if (!result.data || result.data.length === 0) {
+                tbody.html('<tr><td colspan="4" class="text-center text-muted">No changes recorded yet. History starts from when this was deployed.</td></tr>');
+                return;
+            }
+            $.each(result.data, function (i, item) {
+                var row = $('<tr>');
+                row.append($('<td>').text(item.changedOn));
+                row.append($('<td>').text(item.action));
+                row.append($('<td>').text(item.changedBy || ''));
+                row.append($('<td>').text(item.note || ''));
+                tbody.append(row);
+            });
+        },
+        error: function () {
+            tbody.html('<tr><td colspan="4" class="text-danger">Failed to load history.</td></tr>');
+        }
+    });
 }
 
 function openEditPayRate(id, description, sellRate, comms1, comms2, guardPayRate, currency, groupId) {

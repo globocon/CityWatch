@@ -710,7 +710,9 @@
                                 <div class="input-group-prepend" style="@(Model.RosterAccessRole == "Base" ? "visibility: hidden;" : "")">
                                     <span class="input-group-text">$</span>
                                 </div>
-                                <input type="text" id="modalPayRate" class="form-control" @(Model.RosterAccessRole == "Base" ? "readonly" : "") style="@(Model.RosterAccessRole == "Base" ? "color: transparent;" : "")" />
+                                @* Display only (P7 PayRate overwrite fix, 12 Oct 2026): this box used to be saved into the
+                                   MASTER pay rate for everyone on the Rate Profile. Change rates in Admin > Settings > Pay Rates. *@
+                                <input type="text" id="modalPayRate" class="form-control" readonly title="Rate Profile's Guard Pay. To change it, edit the rate in Admin > Settings > Pay Rates." style="@(Model.RosterAccessRole == "Base" ? "color: transparent;" : "")" />
                             </div>
                         </div>
                     </div>
@@ -2815,7 +2817,6 @@
                                         guardId: guardId,
                                         providerName: providerName,
                                         payRateId: payRateId,
-                                        payRate: $('#modalPayRate').val(),
                                         shiftId: '', // Always new shift
                                         callsignId: callsignId,
                                         reliefGuardId: reliefGuardId,
@@ -2865,7 +2866,6 @@
                             guardId: guardId,
                             providerName: providerName,
                             payRateId: payRateId,
-                            payRate: $('#modalPayRate').val(),
                             shiftId: '',
                             callsignId: callsignId,
                             reliefGuardId: reliefGuardId,
@@ -2922,7 +2922,6 @@
                         guardId: guardId,
                         providerName: providerName,
                         payRateId: payRateId,
-                        payRate: $('#modalPayRate').val(),
                         shiftId: shiftId,
                         callsignId: callsignId,
                         reliefGuardId: reliefGuardId,

@@ -4241,7 +4241,8 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Saved successfully";
             try
             {
-                _configDataProvider.SavePayRate(payRate);
+                // Who saved it goes to PayRatesHist (DbScript 383) - see the History button on the grid.
+                _configDataProvider.SavePayRate(payRate, AuthUserHelper.LoggedInUserId ?? 0);
                 success = true;
             }
             catch (Exception ex)
@@ -4257,7 +4258,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Deleted successfully";
             try
             {
-                _configDataProvider.DeletePayRate(id);
+                _configDataProvider.DeletePayRate(id, AuthUserHelper.LoggedInUserId ?? 0);
                 success = true;
             }
             catch (Exception ex)
@@ -4265,6 +4266,29 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
             return new JsonResult(new { success, message });
+        }
+
+        /// <summary>
+        /// Who changed a pay rate, when, and from what (PayRatesHist, DbScript 383). Added 12 Oct 2026
+        /// after "Prixcar - Sat (2026)" Guard Pay was found at $0.00 with no record of who set it.
+        /// </summary>
+        public JsonResult OnGetPayRateHistory(int id)
+        {
+            try
+            {
+                var data = _configDataProvider.GetPayRateHistory(id).Select(x => new
+                {
+                    changedOn = x.ChangedOn.ToString("dd MMM yyyy HH:mm:ss"),
+                    x.Action,
+                    x.ChangedBy,
+                    x.Note
+                });
+                return new JsonResult(new { success = true, data });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
         }
 
         public JsonResult OnGetPayRateGroupsList()
