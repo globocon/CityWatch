@@ -345,6 +345,12 @@ namespace CityWatch.Data.Providers
         /// which pins them to the same connection. Same approach as
         /// ClientSiteWandDataProvider.SaveWithTagChangeAttributed.
         ///
+        /// The transaction runs inside the context's execution strategy: CityWatch.Web registers the
+        /// DbContext with EnableRetryOnFailure, and a retrying strategy refuses a user-started
+        /// transaction outside it ("does not support user-initiated transactions") - every pay rate
+        /// save failed on test until this was wrapped. On a transient failure the whole unit
+        /// (context + save) is retried together.
+        ///
         /// Attribution never costs a save: if the lookup or the context call fails, the save still
         /// happens and the trigger records the change with the SQL login instead of a name.
         /// </summary>
@@ -357,10 +363,14 @@ namespace CityWatch.Data.Providers
                 return;
             }
 
-            using var transaction = _context.Database.BeginTransaction();
-            ApplyPayRateChangeContext(changedByUserId);
-            _context.SaveChanges();
-            transaction.Commit();
+            _context.Database.CreateExecutionStrategy().Execute(() =>
+            {
+                using var transaction = _context.Database.BeginTransaction();
+                ApplyPayRateChangeContext(changedByUserId);
+                _context.SaveChanges(acceptAllChangesOnSuccess: false);
+                transaction.Commit();
+            });
+            _context.ChangeTracker.AcceptAllChanges();
         }
 
         private void ApplyPayRateChangeContext(int changedByUserId)
