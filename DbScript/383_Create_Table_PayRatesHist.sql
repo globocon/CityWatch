@@ -22,6 +22,48 @@
     thing in a sentence, for reading rather than querying.
 
     Same pattern as 382_Create_Table_ClientSiteSmartWandTagsHist.sql.
+
+    ------------------------------------------------------------------------------------------------
+    CHANGE LOG  (every code change is tagged "p7-PayRateOverwriteFix" - search for it)
+    ------------------------------------------------------------------------------------------------
+    PR #1845 (12 Oct 2026, Dileep)  Stop shift saves overwriting the master pay rate; this script;
+                                    History button.
+    PR #1846 (12 Oct 2026, Dileep)  Pay rate save failed on test ("does not support user-initiated
+                                    transactions") - save now runs inside the execution strategy.
+    PR #1847 (12 Oct 2026, Dileep)  History showed the SQL login for admin users - now the logged-in
+                                    user (AuthUserHelper.GetLoggedInUserId).
+    PR #1848 (12 Oct 2026, Dileep)  Comments / revert notes only, no behaviour change.
+
+    ------------------------------------------------------------------------------------------------
+    HOW TO REVERT
+    ------------------------------------------------------------------------------------------------
+    Each part can be reverted on its own. Every spot has a "REVERT:" note beside it.
+
+    A. Only remove the change history (keep the $0-overwrite fix) - safe:
+       1. CityWatch.Web/wwwroot/js/payrates.js       - History button, openPayRateHistory(), column width
+       2. CityWatch.Web/Pages/Admin/Settings.cshtml  - payRateHistoryModal
+       3. CityWatch.Web/Pages/Admin/Settings.cshtml.cs - OnGetPayRateHistory; SavePayRate/DeletePayRate calls
+       4. CityWatch.Data/Providers/ConfigDataProvider.cs - interface lines, changedByUserId params,
+          GetPayRateHistory, SaveWithPayRateChangeAttributed, ApplyPayRateChangeContext
+       5. CityWatch.Data/CityWatchDbContext.cs (PayRatesHist DbSet) + CityWatch.Data/Models/PayRatesHist.cs
+       6. Deploy that Web build FIRST, then run the database undo below.
+
+    B. Bring back editing the master rate from the shift popup - NOT recommended, restores the $0 bug:
+       1. CityWatch.Web/Pages/roster/Booking.cshtml.cs - OnPostAddShift parameter + write-back block
+       2. CityWatch.Web/Pages/roster/Booking.cshtml    - modalPayRate input + 3 "payRate:" lines
+       3. CityWatch.Web/Pages/Guard/_GuardRosterModal.cshtml - 3 "payRate:" lines + payRateValue var
+
+    Or with git, in order: git revert -m 1 <merge of #1847>, <merge of #1846>, <merge of #1845>
+    (then run the database undo).
+
+    Database undo (run only AFTER the Web build without the history code is deployed - the old build
+    is fine with the table present, the new build fails without it):
+
+        DROP TRIGGER IF EXISTS [dbo].[Trigger_PayRatesHist];
+        DROP TABLE IF EXISTS [dbo].[PayRatesHist];
+
+    Dropping the table deletes the recorded history - export it first if it may be needed:
+        SELECT * FROM dbo.PayRatesHist ORDER BY ChangedOn;
 */
 
 SET ANSI_NULLS ON

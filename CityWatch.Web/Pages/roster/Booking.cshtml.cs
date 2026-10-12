@@ -590,9 +590,13 @@ namespace CityWatch.Web.Pages.roster
         }
         //p7-RolloverOverlapFix-end
 
+        //p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed the "decimal? payRate = null" parameter that sat
+        // after adhocOffsiteText. REVERT: add ", decimal? payRate = null" back before "bool ignoreUnavailability".
+        // Full revert list for this fix: DbScript/383_Create_Table_PayRatesHist.sql, "HOW TO REVERT".
         public async Task<IActionResult> OnPostAddShift(int groupId, int siteId, DateTime start, DateTime end, int? guardId, string providerName, int? payRateId, int? shiftId, int? callsignId, int? reliefGuardId, string reliefProviderName, string reliefReason, string reliefReasonOther, string shiftType, int? status, string adhocOffsiteText, bool ignoreUnavailability = false)
         {
-            // P7 PayRate overwrite fix (12 Oct 2026, Dileep) - a shift save must NEVER change the master pay rate.
+            //p7-PayRateOverwriteFix-start (12 Oct 2026, Dileep, PR #1845)
+            // A shift save must NEVER change the master pay rate.
             //
             // WHAT WAS HERE: since 11 May 2026 (commit 24adf0ae) this handler took a "payRate" value from
             // the shift popup and copied it into PayRates.GuardPayRate - the MASTER rate shared by every
@@ -611,6 +615,19 @@ namespace CityWatch.Web.Pages.roster
             // NOW: the popups only DISPLAY the profile's rate. Master rates change only in
             // Admin > Settings > HR Settings > Pay Rates, and every change is recorded with who/when/
             // old/new in PayRatesHist (DbScript 383, History button on that grid).
+            //
+            // REVERT (not recommended - brings the $0 bug back): restore the parameter above and this block:
+            //   if (payRateId.HasValue && payRate.HasValue)
+            //   {
+            //       var pr = await _context.PayRates.FindAsync(payRateId.Value);
+            //       if (pr != null && pr.GuardPayRate != payRate.Value)
+            //       {
+            //           pr.GuardPayRate = payRate.Value;
+            //           // No need for separate save here, it will be saved with the shift
+            //       }
+            //   }
+            //p7-PayRateOverwriteFix-end
+
             // Lock Check (P9 Issue 65: linked to week STATUS, not calendar month)
             var addShiftLockMessage = await GetWeekStatusLockMessageAsync(siteId, start);
             if (addShiftLockMessage != null)
