@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
+    //p7-PayRateOverwriteFix (12 Oct 2026, PR #1845) - whole file is new. REVERT: delete this file and the
+    // PayRatesHist DbSet in CityWatchDbContext. Full list: DbScript/383_Create_Table_PayRatesHist.sql "HOW TO REVERT".
     /// <summary>
     /// One recorded change to a pay rate (Admin > Settings > HR Settings > Renumeration - Pay Rates).
     ///

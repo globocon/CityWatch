@@ -978,6 +978,7 @@
                     guardId: shiftData.guardId,
                     providerName: shiftData.providerName,
                     payRateId: shiftData.payRateId,
+                    // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed "payRate: shiftData.buyRate," here - a drag-copied company-relief card ($0) zeroed the master rate. REVERT: put that line back.
                     callsignId: shiftData.callsignId,
                     shiftType: shiftData.type || 'Regular',
                     shiftId: null
@@ -2156,6 +2157,7 @@
         var providerName = (providerData && providerData.length > 0) ? providerData[0].text : null;
         
         var payRateId = parseInt($('#geModalPositionId').val()) || null;
+        // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed "var payRateValue = $('#geModalPayRate').val();" (only fed payRate below). REVERT: put it back.
         var startTime = $('#geModalShiftStart').val();
         var endTime = $('#geModalShiftEnd').val();
         var shiftType = $('#geModalShiftType').val();
@@ -2246,6 +2248,7 @@
                     guardId: guardId,
                     providerName: providerName,
                     payRateId: payRateId,
+                    // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed "payRate: payRateValue," here - it overwrote the master rate. REVERT: put that line back (and the payRateValue var).
                     shiftId: shiftId,
                     callsignId: callsignId,
                     reliefGuardId: reliefGuardId,
@@ -2291,6 +2294,7 @@
             guardId: guardId,
             providerName: providerName,
             payRateId: payRateId,
+            // p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): removed "payRate: payRateValue," here - it overwrote the master rate. REVERT: put that line back (and the payRateValue var).
             shiftId: shiftId,
             callsignId: callsignId,
             reliefGuardId: reliefGuardId,

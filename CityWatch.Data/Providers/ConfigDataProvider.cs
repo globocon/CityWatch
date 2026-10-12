@@ -257,9 +257,12 @@ namespace CityWatch.Data.Providers
         public bool RemovePCarDeatils(int PcarRouteId, List<int> siteIds);
 
         List<PayRate> GetPayRates();
+        //p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845) - changedByUserId + GetPayRateHistory added.
+        // REVERT: void SavePayRate(PayRate payRate);  void DeletePayRate(int id);  and remove GetPayRateHistory.
         void SavePayRate(PayRate payRate, int changedByUserId = 0);
         void DeletePayRate(int id, int changedByUserId = 0);
         List<PayRatesHist> GetPayRateHistory(int payRateId);
+        //p7-PayRateOverwriteFix-end
         List<PayRateGroup> GetPayRateGroups();
         void SavePayRateGroup(PayRateGroup group);
         void DeletePayRateGroup(int id);
@@ -286,6 +289,9 @@ namespace CityWatch.Data.Providers
             return _context.PayRates.Include(x => x.PayRateGroup).Where(x => !x.IsDeleted).OrderBy(x => x.Description).ToList();
         }
 
+        //p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): changedByUserId parameter added, and the final
+        // "_context.SaveChanges();" replaced by SaveWithPayRateChangeAttributed(changedByUserId).
+        // REVERT: drop the parameter and put "_context.SaveChanges();" back as the last line.
         /// <remarks>
         /// changedByUserId is who the PayRatesHist trigger records against this change (DbScript 383).
         /// Added 12 Oct 2026 - before that a pay rate could change with no trace of who or when.
@@ -318,6 +324,8 @@ namespace CityWatch.Data.Providers
             SaveWithPayRateChangeAttributed(changedByUserId);
         }
 
+        //p7-PayRateOverwriteFix (12 Oct 2026, PR #1845): changedByUserId parameter added, SaveChanges replaced.
+        // REVERT: drop the parameter and use "_context.SaveChanges();" instead of SaveWithPayRateChangeAttributed.
         public void DeletePayRate(int id, int changedByUserId = 0)
         {
             var existing = _context.PayRates.SingleOrDefault(x => x.Id == id);
@@ -328,6 +336,8 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        //p7-PayRateOverwriteFix-start (12 Oct 2026, PR #1845 + #1846) - new methods below.
+        // REVERT: delete everything down to p7-PayRateOverwriteFix-end.
         /// <summary>Change history for one pay rate, newest first (Pay Rates grid > History button).</summary>
         public List<PayRatesHist> GetPayRateHistory(int payRateId)
         {
@@ -395,6 +405,7 @@ namespace CityWatch.Data.Providers
                 /* The history is worth less than the change itself - never block a pay rate save. */
             }
         }
+        //p7-PayRateOverwriteFix-end
 
         public List<PayRateGroup> GetPayRateGroups()
         {
