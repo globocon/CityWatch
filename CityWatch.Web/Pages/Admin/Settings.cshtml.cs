@@ -4242,7 +4242,9 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 // Who saved it goes to PayRatesHist (DbScript 383) - see the History button on the grid.
-                _configDataProvider.SavePayRate(payRate, AuthUserHelper.LoggedInUserId ?? 0);
+                // GetLoggedInUserId, not LoggedInUserId: the latter is null for Administrator logins
+                // (e.g. cwsadmin), which made History show "(direct database change)" instead of the user.
+                _configDataProvider.SavePayRate(payRate, AuthUserHelper.GetLoggedInUserId ?? 0);
                 success = true;
             }
             catch (Exception ex)
@@ -4258,7 +4260,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Deleted successfully";
             try
             {
-                _configDataProvider.DeletePayRate(id, AuthUserHelper.LoggedInUserId ?? 0);
+                _configDataProvider.DeletePayRate(id, AuthUserHelper.GetLoggedInUserId ?? 0);
                 success = true;
             }
             catch (Exception ex)
