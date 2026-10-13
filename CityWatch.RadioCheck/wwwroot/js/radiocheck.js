@@ -183,7 +183,13 @@ function ClearTimerAndReload() {
     clearInterval(nIntervId);
     DuressAlarmNotificationPending = false;
     nIntervId = null;
-    location.reload();
+    // Save the voice recording in progress first - recorder.js resumes it after the reload
+    if (window.RcRecorder) {
+        window.RcRecorder.flush().then(function () { location.reload(); });
+    }
+    else {
+        location.reload();
+    }
 }
 
 
@@ -340,12 +346,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: 'btn btn-md mr-2 btn-custom',
             name: 'audioStart',
             action: function (e, dt, node, config) {
+                // recorder.js switches the mic buttons on all grids/tabs once the mic is on
                 clickstarAudio();
-                clientSiteActiveGuards.buttons('audioStart:name').disable();
-                clientSiteActiveGuards.buttons('audioStop:name').enable();
-
-                clientSiteInActiveGuards.buttons('audioStart:name').disable();
-                clientSiteInActiveGuards.buttons('audioStop:name').enable();
             }
         },
         {
@@ -356,11 +358,6 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             name: 'audioStop',
             action: function () {
                 clickStopAudio();
-                clientSiteActiveGuards.buttons('audioStop:name').disable();
-                clientSiteActiveGuards.buttons('audioStart:name').enable();
-
-                clientSiteInActiveGuards.buttons('audioStop:name').disable();
-                clientSiteInActiveGuards.buttons('audioStart:name').enable();
             }
         },
         /*
@@ -1069,12 +1066,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             className: 'btn btn-md mr-2 btn-custom',
             name: 'audioStart',
             action: function (e, dt, node, config) {
+                // recorder.js switches the mic buttons on all grids/tabs once the mic is on
                 clickstarAudio();
-                clientSiteInActiveGuards.buttons('audioStart:name').disable();
-                clientSiteInActiveGuards.buttons('audioStop:name').enable();
-                clientSiteActiveGuards.buttons('audioStart:name').disable();
-                clientSiteActiveGuards.buttons('audioStop:name').enable();
-
             }
         },
         {
@@ -1085,12 +1078,6 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             name: 'audioStop',
             action: function () {
                 clickStopAudio();
-                clientSiteInActiveGuards.buttons('audioStop:name').disable();
-                clientSiteInActiveGuards.buttons('audioStart:name').enable();
-
-                clientSiteActiveGuards.buttons('audioStop:name').disable();
-                clientSiteActiveGuards.buttons('audioStart:name').enable();
-
             }
         },
 
@@ -4151,11 +4138,8 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             className: 'btn btn-md mr-2 btn-custom',
             name: 'audioStart',
             action: function (e, dt, node, config) {
+                // recorder.js switches the mic buttons on all grids/tabs once the mic is on
                 clickstarAudio();
-                clientSiteInActiveGuardsSinglePage.buttons('audioStart:name').disable();
-                clientSiteInActiveGuardsSinglePage.buttons('audioStop:name').enable();
-
-
             }
         },
         {
@@ -4166,9 +4150,6 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             name: 'audioStop',
             action: function () {
                 clickStopAudio();
-                clientSiteInActiveGuardsSinglePage.buttons('audioStop:name').disable();
-                clientSiteInActiveGuardsSinglePage.buttons('audioStart:name').enable();
-
             }
         },
         {
@@ -4671,11 +4652,8 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: 'btn btn-md mr-2 btn-custom',
             name: 'audioStart',
             action: function (e, dt, node, config) {
+                // recorder.js switches the mic buttons on all grids/tabs once the mic is on
                 clickstarAudio();
-                clientSiteActiveGuardsSinglePage.buttons('audioStart:name').disable();
-                clientSiteActiveGuardsSinglePage.buttons('audioStop:name').enable();
-
-
             }
         },
         {
@@ -4686,9 +4664,6 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             name: 'audioStop',
             action: function () {
                 clickStopAudio();
-                clientSiteActiveGuardsSinglePage.buttons('audioStop:name').disable();
-                clientSiteActiveGuardsSinglePage.buttons('audioStart:name').enable();
-
             }
         },
 
@@ -9972,47 +9947,32 @@ $('#startBtn').click(async function () {
     $('#stopBtn').prop('disabled', false);
 });
 
-async function clickstarAudio() {
-
-    // Clear previous recording data
-    audioChunks = [];
-    mediaRecorder = null;
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-
-    mediaRecorder.ondataavailable = function (event) {
-        audioChunks.push(event.data);
-    };
-
-    mediaRecorder.onstop = function () {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        $('#audioPlayback').attr('src', audioUrl);
-        uploadAudio(audioBlob);
-    };
-
-    mediaRecorder.start();
-    //$(this).prop('disabled', true);
-    //$('#stopBtn').prop('disabled', false);
+// Mic buttons on RadioCheckV2 / ActiveGuardSinglePage / InActiveGuardSinglePage grids.
+// Recording, reload recovery, upload and releasing the mic are handled in recorder.js
+function clickstarAudio() {
+    if (window.RcRecorder) {
+        window.RcRecorder.start();
+    }
 }
 
 function clickStopAudio() {
-
-    mediaRecorder.stop();
-    //$(this).prop('disabled', true);
-    //$('#startBtn').prop('disabled', false);
+    if (window.RcRecorder) {
+        window.RcRecorder.stop();
+    }
 }
 
 $('#stopBtn').click(function () {
     mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(function (track) { track.stop(); }); // release the mic
     $(this).prop('disabled', true);
     $('#startBtn').prop('disabled', false);
 });
 
 function uploadAudio(blob) {
-
-
-
+    // Nothing recorded - the server rejects empty files
+    if (!blob || blob.size === 0) {
+        return;
+    }
 
 
     let formData = new FormData();
