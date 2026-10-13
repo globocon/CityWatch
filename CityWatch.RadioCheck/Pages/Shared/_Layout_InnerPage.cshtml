@@ -52,6 +52,8 @@
     <header>
 
         <input type="hidden" id="pageName" name="pageName" value="@pageNameNew" />
+        @* Logged-in guard, sent by recorder.js with each voice recording part *@
+        <input type="hidden" id="rcRecorderGuardId" value="@Model.GuardId" />
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
 
@@ -404,6 +406,7 @@
 
     <script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
     <script src="~/js/radiocheck.js" asp-append-version="true"></script>
+    <script src="~/js/recorder.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
