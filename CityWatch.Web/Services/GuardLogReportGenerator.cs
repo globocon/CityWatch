@@ -130,7 +130,7 @@ namespace CityWatch.Web.Services
                 var doc = new Document(pdfDoc);
                 doc.SetMargins(15f, 30f, 40f, 30f);
 
-                var headerTable = CreateReportHeader(clientsiteLogBook.ClientSite, version);
+                var headerTable = CreateReportHeader(clientsiteLogBook.ClientSite, version, pcarFilter);
                 doc.Add(headerTable);
 
                 doc.Add(new Paragraph("On-Duty Guard Details")
@@ -138,7 +138,7 @@ namespace CityWatch.Web.Services
                     .SetFontSize(CELL_FONT_SIZE * 1.5f)
                     .SetMarginTop(5));
 
-                var guardDetails = CreateGuardDetails(clientsiteLogBook);
+                var guardDetails = CreateGuardDetails(clientsiteLogBook, pcarFilter);
                 doc.Add(guardDetails);
 
                 doc.Add(new Paragraph("Log Book")
@@ -611,8 +611,11 @@ namespace CityWatch.Web.Services
             return patrolCarLogTable;
         }
 
-        private Table CreateReportHeader(ClientSite clientSite, string version)
+        private Table CreateReportHeader(ClientSite clientSite, string version, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
         {
+            // A "Schedule PCAR" report says so in its title; every other report keeps the title it has always had.
+            var title = pcarFilter == PcarEntryFilter.OnlyPcar ? "Daily Shift Log Book [PCAR]" : "Daily Shift Log Book";
+
             var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 45, 30 })).UseAllAvailableWidth();
 
             headerTable.AddCell(new Cell()
@@ -631,7 +634,7 @@ namespace CityWatch.Web.Services
                 .SetBackgroundColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
                 .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .Add(new Paragraph("Daily Shift Log Book"))
+                .Add(new Paragraph(title))
                 .Add(new Paragraph(version).SetFontSize(CELL_FONT_SIZE)));
 
             var clientSiteWandNos = GetClientSiteWandNumbers(clientSite);
@@ -647,8 +650,10 @@ namespace CityWatch.Web.Services
             return headerTable;
         }
 
-        private Table CreateReportHeaderForSmartWand(ClientSite clientSite, string version)
+        private Table CreateReportHeaderForSmartWand(ClientSite clientSite, string version, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
         {
+            var title = pcarFilter == PcarEntryFilter.OnlyPcar ? "Smart Wand Strikes [PCAR]" : "Smart Wand Strikes";
+
             var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 45, 30 })).UseAllAvailableWidth();
 
             headerTable.AddCell(new Cell()
@@ -667,7 +672,7 @@ namespace CityWatch.Web.Services
                 .SetBackgroundColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
                 .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .Add(new Paragraph("Smart Wand Strikes"))
+                .Add(new Paragraph(title))
                 .Add(new Paragraph(version).SetFontSize(CELL_FONT_SIZE)));
 
             var clientSiteWandNos = GetClientSiteWandNumbers(clientSite);
@@ -696,11 +701,25 @@ namespace CityWatch.Web.Services
             return wandNumbers.ToString();
         }
 
-        private Table CreateGuardDetails(ClientSiteLogBook clientSiteLogBook)
+        private Table CreateGuardDetails(ClientSiteLogBook clientSiteLogBook, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
         {
             var clientSite = clientSiteLogBook.ClientSite;
             var logDate = clientSiteLogBook.Date;
             var guardDetailGroup = _guardLoginDetailService.GetGuardDetailsByLogBookId(clientSiteLogBook.Id);
+
+            /* A "Schedule PCAR" report lists the site's own guards only: any guard login that made a
+               PCAR entry in this log book - the patrol car guard's login, which the PCAR flow creates
+               on the visited site with no wand or position - is left out. Groups and their order are
+               kept; a group left with no guard is dropped. */
+            if (pcarFilter == PcarEntryFilter.OnlyPcar)
+            {
+                var pcarGuardLoginIds = _guardLogDataProvider.GetPcarGuardLoginIds(clientSiteLogBook.Id);
+                guardDetailGroup = guardDetailGroup
+                    .SelectMany(group => group)
+                    .Where(detail => !pcarGuardLoginIds.Contains(detail.GuardLoginId))
+                    .GroupBy(detail => detail.SmartWandOrPosition)
+                    .ToList();
+            }
 
             var guardDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 12, 9, 13, 9, 13, 9, 13, 9, 13 })).UseAllAvailableWidth();
 
@@ -1673,7 +1692,7 @@ namespace CityWatch.Web.Services
             var doc = new Document(pdfDoc);
             doc.SetMargins(15f, 30f, 40f, 30f);
 
-            var headerTable = CreateReportHeader(clientsiteLogBook.ClientSite, version);
+            var headerTable = CreateReportHeader(clientsiteLogBook.ClientSite, version, pcarFilter);
             doc.Add(headerTable);
 
             doc.Add(new Paragraph("On-Duty Guard Details")
@@ -1681,7 +1700,7 @@ namespace CityWatch.Web.Services
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
                 .SetMarginTop(5));
 
-            var guardDetails = CreateGuardDetails(clientsiteLogBook);
+            var guardDetails = CreateGuardDetails(clientsiteLogBook, pcarFilter);
             doc.Add(guardDetails);
 
             doc.Add(new Paragraph("Log Book")
@@ -1840,7 +1859,7 @@ namespace CityWatch.Web.Services
             var doc = new Document(pdfDoc);
             doc.SetMargins(15f, 30f, 40f, 30f);
 
-            var headerTable = CreateReportHeaderForSmartWand(clientsiteLogBook.ClientSite, version);
+            var headerTable = CreateReportHeaderForSmartWand(clientsiteLogBook.ClientSite, version, pcarFilter);
             doc.Add(headerTable);
 
             doc.Add(new Paragraph("On-Duty Guard Details")
@@ -1848,7 +1867,7 @@ namespace CityWatch.Web.Services
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
                 .SetMarginTop(5));
 
-            var guardDetails = CreateGuardDetails(clientsiteLogBook);
+            var guardDetails = CreateGuardDetails(clientsiteLogBook, pcarFilter);
             doc.Add(guardDetails);
 
             doc.Add(new Paragraph("Smart Wand Strike Logs")

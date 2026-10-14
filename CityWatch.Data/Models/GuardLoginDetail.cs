@@ -6,6 +6,7 @@ namespace CityWatch.Data.Models
     {
         public GuardLoginDetail(GuardLogin guardLogin)
         {
+            GuardLoginId = guardLogin.Id;
             var logBookDate = guardLogin.ClientSiteLogBook.Date.Date;
             var onDutyValue = guardLogin.OnDuty;
             var offDutyValue = guardLogin.OffDuty.Value;
@@ -32,6 +33,8 @@ namespace CityWatch.Data.Models
             OffDuty = offDutyValue;
             GuardName = guardLogin.Guard.Name;
         }
+
+        public int GuardLoginId { get; set; }
 
         public bool IsPosition { get; set; }
 
