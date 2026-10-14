@@ -537,6 +537,86 @@ namespace CityWatch.Web.Tests
             return count;
         }
 
+        /// <summary>
+        /// A "Schedule PCAR" report is marked [PCAR] in its title - "Daily Shift Log Book [PCAR]" for the
+        /// guard log and fusion reports, "Smart Wand Strikes [PCAR]" for smart wand; others are unchanged.
+        /// </summary>
+        [TestMethod]
+        public void MercyAbbotsford_PcarReportHeading()
+        {
+            using var scope = _services.CreateScope();
+            var sp = scope.ServiceProvider;
+            var generator = sp.GetRequiredService<IGuardLogReportGenerator>();
+            var output = Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().WebRootPath, "Pdf", "Output");
+            var book = sp.GetRequiredService<CityWatchDbContext>().ClientSiteLogBooks.AsNoTracking()
+                .Single(x => x.ClientSiteId == MercyAbbotsfordSiteId && x.Date == MercyAbbotsford.Day && x.Type == LogBookType.DailyGuardLog);
+
+            var reports = new (string Name, Func<PcarEntryFilter, string> Generate, string Title)[]
+            {
+                ("Guard log", f => generator.GeneratePdfReport(book.Id, null, f), "Daily Shift Log Book"),
+                ("Fusion", f => generator.GeneratePdfReportFusion(book.Id, f), "Daily Shift Log Book"),
+                ("Smart wand", f => generator.GeneratePdfReportSmartWand(book.Id, f), "Smart Wand Strikes")
+            };
+
+            foreach (var (name, generate, title) in reports)
+            {
+                foreach (var filter in new[] { PcarEntryFilter.All, PcarEntryFilter.ExcludePcar, PcarEntryFilter.OnlyPcar })
+                {
+                    var fileName = generate(filter);
+                    if (string.IsNullOrEmpty(fileName))
+                        continue;   // Mercy's guard log with PCAR excluded is empty, so not produced
+
+                    var file = Path.Combine(output, fileName);
+                    var text = Text(file);
+                    File.Delete(file);
+
+                    StringAssert.Contains(text, title, $"{name} {filter}");
+                    if (filter == PcarEntryFilter.OnlyPcar)
+                        StringAssert.Contains(text, $"{title} [PCAR]", $"{name} PCAR report is not marked [PCAR].");
+                    else
+                        Assert.IsFalse(text.Contains($"{title} [PCAR]"), $"{name} {filter} report must keep its title.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// The guard section of a "Schedule PCAR" report leaves out every guard login that made a PCAR
+        /// entry in the log book. Milleara Mall, 30-Sep-2026: Abrar Alam is the patrol car guard
+        /// (00:10-01:10, all 10 entries PCAR); Muhammad Ibrahim and Mohammed Vasim Sarvar made no PCAR
+        /// entry. The normal report still lists all of them.
+        /// </summary>
+        [TestMethod]
+        public void MillearaMall_PcarReportGuardSection_LeavesOutPcarGuards()
+        {
+            using var scope = _services.CreateScope();
+            var sp = scope.ServiceProvider;
+            var generator = sp.GetRequiredService<IGuardLogReportGenerator>();
+            var output = Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().WebRootPath, "Pdf", "Output");
+            var book = sp.GetRequiredService<CityWatchDbContext>().ClientSiteLogBooks.AsNoTracking()
+                .Single(x => x.ClientSiteId == MillearaMallSiteId && x.Date == MillearaMall.Day && x.Type == LogBookType.DailyGuardLog);
+
+            string Generate(PcarEntryFilter filter)
+            {
+                var file = Path.Combine(output, generator.GeneratePdfReport(book.Id, null, filter));
+                var target = Path.Combine(Directory.CreateDirectory(Path.Combine(_samplesRoot, "_Guard section check")).FullName, Path.GetFileName(file));
+                File.Copy(file, target, overwrite: true);
+                File.Delete(file);
+                return Text(target);
+            }
+
+            var normal = Generate(PcarEntryFilter.All);
+            var pcar = Generate(PcarEntryFilter.OnlyPcar);
+
+            // The guard name cell is narrow: "Mohammed Vasim Sarvar" wraps, so only its first line is matched.
+            foreach (var guard in new[] { "Muhammad Ibrahim", "Abrar Alam", "Mohammed Vasim" })
+                StringAssert.Contains(normal, guard, "Normal report must list every guard login.");
+
+            StringAssert.Contains(pcar, "Muhammad Ibrahim");
+            StringAssert.Contains(pcar, "Mohammed Vasim");
+            Assert.IsFalse(pcar.Contains("Abrar Alam"), "The PCAR guard is still in the PCAR report's guard section.");
+            StringAssert.Contains(pcar, "Daily Shift Log Book [PCAR]");
+        }
+
         [TestMethod]
         public void Generator_GuardLogReport_AllFilters()
         {

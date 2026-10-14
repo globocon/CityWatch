@@ -384,6 +384,9 @@ namespace CityWatch.Data.Providers
 
         /// <summary>GPS coordinates of the given guard logs, by guard log id (those without GPS left out).</summary>
         Dictionary<int, string> GetGuardLogGpsCoordinates(IEnumerable<int> guardLogIds);
+
+        /// <summary>The guard logins of a log book that made at least one PCAR entry in it.</summary>
+        HashSet<int> GetPcarGuardLoginIds(int clientSiteLogBookId);
         void DeleteTrainingCourseInstructor(int id);
         List<TrainingLocation> GetTrainingLocation();
         void SaveTrainingLocation(TrainingLocation trainingLocation);
@@ -7184,6 +7187,16 @@ WHERE f.ClientSiteId = @clientSiteId
                 .AsNoTracking()
                 .Where(x => ids.Contains(x.Id) && x.IsEntryByPCAR)
                 .Select(x => x.Id)
+                .ToHashSet();
+        }
+
+        public HashSet<int> GetPcarGuardLoginIds(int clientSiteLogBookId)
+        {
+            return _context.GuardLogs
+                .AsNoTracking()
+                .Where(x => x.ClientSiteLogBookId == clientSiteLogBookId && x.IsEntryByPCAR && x.GuardLoginId != null)
+                .Select(x => x.GuardLoginId.Value)
+                .Distinct()
                 .ToHashSet();
         }
 
