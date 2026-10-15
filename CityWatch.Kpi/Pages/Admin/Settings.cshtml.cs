@@ -2736,9 +2736,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 // Who is doing this, for the tag's change history. SignedInUserId, not
                 // loginUserId: the latter is deliberately 0 for an Administrator, which is the
                 // account that does most tag editing.
-                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(record,
-                    HttpContext.Session.GetInt32("SignedInUserId") ?? 0,
-                    HttpContext.Session.GetInt32("GuardId") ?? 0);
+                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(record, WandTagChangedHere());
                 success = true;
             }
             catch (Exception ex)
@@ -2754,9 +2752,7 @@ namespace CityWatch.Kpi.Pages.Admin
             var message = string.Empty;
             try
             {
-                _clientSiteWandDataProvider.DeleteClientSiteSmartWandTags(id,
-                    HttpContext.Session.GetInt32("SignedInUserId") ?? 0,
-                    HttpContext.Session.GetInt32("GuardId") ?? 0);
+                _clientSiteWandDataProvider.DeleteClientSiteSmartWandTags(id, WandTagChangedHere());
                 success = true;
             }
             catch (Exception ex)
@@ -2765,6 +2761,21 @@ namespace CityWatch.Kpi.Pages.Admin
             }
 
             return new JsonResult(new { success, message });
+        }
+
+        /// <summary>
+        /// Who is editing wand tags on this page, for ClientSiteSmartWandTagsHist. The page is
+        /// reachable both signed in and by a guard through the ?guardId= fallback, so whichever
+        /// of the two the session holds is passed on.
+        /// </summary>
+        private WandTagChange WandTagChangedHere()
+        {
+            return new WandTagChange
+            {
+                UserId = HttpContext.Session.GetInt32("SignedInUserId") ?? 0,
+                GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0,
+                AppType = WandTagAppType.Web
+            };
         }
 
         public JsonResult OnPostSaveClientSiteMobileAppPatrolTouringModeSettings(int clientSiteId, PatrolTouringMode PatrolTourMode)

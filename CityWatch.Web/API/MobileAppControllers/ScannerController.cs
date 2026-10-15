@@ -332,15 +332,28 @@ namespace CityWatch.Web.API
         /// no name against it. The other scanner actions already take the guard the same way.
         /// </param>
         /// <param name="UserId">The signed-in user, when the action came from one rather than a guard.</param>
+        /// <param name="AppType">"Android" or "iOS". Also defaulted, for the same reason.</param>
+        /// <param name="AppVersion">
+        /// The app's own build, e.g. "1.54.2". When the app does not send it the history falls
+        /// back to the version this guard's app last reported on login, so a build released
+        /// before this still gets a version recorded against its tag changes.
+        /// </param>
         [HttpPost("SaveNFCtagInfoData")]
-        public IActionResult SaveNFCtagInfoData([FromBody] ClientSiteSmartWandTags csswt, int GuardId = 0, int UserId = 0)
+        public IActionResult SaveNFCtagInfoData([FromBody] ClientSiteSmartWandTags csswt, int GuardId = 0, int UserId = 0,
+            string AppType = null, string AppVersion = null)
         {
             var IsSuccess = false;
             var message = string.Empty;
             var TagFound = false;
             try
             {
-                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt, UserId, GuardId);
+                _clientSiteWandDataProvider.SaveClientSiteSmartWandTags(csswt, new WandTagChange
+                {
+                    UserId = UserId,
+                    GuardId = GuardId,
+                    AppType = AppType,
+                    AppVersion = AppVersion
+                });
                 IsSuccess = true;
                 TagFound = true;
                 message = "Tag saved successfully.";
