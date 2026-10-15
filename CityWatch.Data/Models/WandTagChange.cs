@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace CityWatch.Data.Models
 {
     /// <summary>The applications that can change a wand tag.</summary>
@@ -65,10 +67,27 @@ namespace CityWatch.Data.Models
         /// </summary>
         public string AppVersion { get; set; }
 
-        /// <summary>A change made from one of the web portals by the given user.</summary>
-        public static WandTagChange FromWeb(int userId, int guardId = 0)
+        /// <summary>
+        /// A change made from one of the web portals by the given user, stamped with that
+        /// portal's build.
+        /// </summary>
+        /// <param name="app">
+        /// The assembly whose version to record - pass Assembly.GetExecutingAssembly() from the
+        /// calling portal, which is the same expression its own page footer and report headers
+        /// use, so the history shows the version a user reading the footer would quote back.
+        /// Left out, it falls back to the entry assembly, which under ASP.NET Core is the
+        /// running application; GetExecutingAssembly cannot be used from in here, as that would
+        /// only ever name CityWatch.Data.
+        /// </param>
+        public static WandTagChange FromWeb(int userId, int guardId = 0, Assembly app = null)
         {
-            return new WandTagChange { UserId = userId, GuardId = guardId, AppType = WandTagAppType.Web };
+            return new WandTagChange
+            {
+                UserId = userId,
+                GuardId = guardId,
+                AppType = WandTagAppType.Web,
+                AppVersion = (app ?? Assembly.GetEntryAssembly())?.GetName()?.Version?.ToString()
+            };
         }
     }
 }
