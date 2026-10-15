@@ -25,8 +25,8 @@ namespace CityWatch.Data.Providers
         void SaveClientSitePatrolCar(ClientSitePatrolCar clientSitePatrolCar);
         void DeleteClientSitePatrolCar(int id);
         ClientSiteSmartWand GetClientSiteSmartWandsNo(string PhoneNumber, int id);
-        void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag, int changedByUserId = 0, int changedByGuardId = 0);
-        void DeleteClientSiteSmartWandTags(int id, int changedByUserId = 0, int changedByGuardId = 0);
+        void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag, WandTagChange changedBy = null);
+        void DeleteClientSiteSmartWandTags(int id, WandTagChange changedBy = null);
         List<ClientSiteSmartWandTags> GetClientSiteSmartWandTags();
         List<SmartWandTagsType> GetSmartWandTagsType();
         void SaveSmartWandTagLog(ClientSiteSmartWandTagsHitLog log);
@@ -248,15 +248,12 @@ namespace CityWatch.Data.Providers
             _dbContext.SaveChanges();
         }
 
-        /// <param name="changedByUserId">
-        /// The signed-in user making the change, 0 when it is a guard or unknown. Not stored by this
-        /// method - it is handed to the history trigger on ClientSiteSmartWandTags, which is what
-        /// writes ClientSiteSmartWandTagsHist. A change saved without it is still recorded, just
-        /// without a name against it.
+        /// <param name="changedBy">
+        /// Who is making the change and from which app, for the tag's change history. Optional:
+        /// the tag still saves without it, the history row just has less to say about who did it.
         /// </param>
-        /// <param name="changedByGuardId">The guard making the change, 0 when it is a user or unknown.</param>
         public void SaveClientSiteSmartWandTags(ClientSiteSmartWandTags clientSiteSmartWandTag,
-            int changedByUserId = 0, int changedByGuardId = 0)
+            WandTagChange changedBy = null)
         {
             if (clientSiteSmartWandTag == null)
                 throw new ArgumentNullException();
@@ -268,6 +265,11 @@ namespace CityWatch.Data.Providers
             var _existingTagUID = _dbContext.ClientSiteSmartWandTags.Where(x => x.UId == clientSiteSmartWandTag.UId
                 && x.ClientSite.IsActive == true && x.IsDeleted == false).ToList();
 
+            // What the tag looked like before this save, captured before anything is changed -
+            // the history row is the difference between this and the tag afterwards.
+            ClientSiteSmartWandTags before = null;
+            ClientSiteSmartWandTags after;
+
             if (clientSiteSmartWandTag.Id <= 0)
             {
                 clientSiteSmartWandTag.Id = 0;
@@ -277,6 +279,7 @@ namespace CityWatch.Data.Providers
                     throw new ArgumentException($"Tag with UID: {clientSiteSmartWandTag.UId} already exists.");
                 }
                 _dbContext.ClientSiteSmartWandTags.Add(clientSiteSmartWandTag);
+                after = clientSiteSmartWandTag;
             }
             else
             {
@@ -287,8 +290,11 @@ namespace CityWatch.Data.Providers
                     throw new ArgumentException($"Tag with UID: {clientSiteSmartWandTag.UId} already exists.");
                 }
                 var clientSiteSmartWandTagToUpdate = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == clientSiteSmartWandTag.Id);
+                after = clientSiteSmartWandTagToUpdate;
                 if (clientSiteSmartWandTagToUpdate != null)
                 {
+                    before = SnapshotTag(clientSiteSmartWandTagToUpdate);
+
                     clientSiteSmartWandTagToUpdate.UId = clientSiteSmartWandTag.UId;
                     clientSiteSmartWandTagToUpdate.ClientSiteId = clientSiteSmartWandTag.ClientSiteId;
                     clientSiteSmartWandTagToUpdate.TagsTypeId = clientSiteSmartWandTag.TagsTypeId;
@@ -298,67 +304,204 @@ namespace CityWatch.Data.Providers
 
                 }
             }
-            SaveWithTagChangeAttributed(changedByUserId, changedByGuardId);
+
+            _dbContext.SaveChanges();
+            RecordTagChange(before, after, changedBy);
         }
 
-        /// <param name="changedByUserId">See SaveClientSiteSmartWandTags.</param>
-        /// <param name="changedByGuardId">See SaveClientSiteSmartWandTags.</param>
-        public void DeleteClientSiteSmartWandTags(int id, int changedByUserId = 0, int changedByGuardId = 0)
+        /// <param name="changedBy">See SaveClientSiteSmartWandTags.</param>
+        public void DeleteClientSiteSmartWandTags(int id, WandTagChange changedBy = null)
         {
             var deleteClientSiteSmartWandTags = _dbContext.ClientSiteSmartWandTags.SingleOrDefault(x => x.Id == id);
+            ClientSiteSmartWandTags before = null;
             if (deleteClientSiteSmartWandTags != null)
+            {
+                before = SnapshotTag(deleteClientSiteSmartWandTags);
                 deleteClientSiteSmartWandTags.IsDeleted = true;
+            }
             //_dbContext.ClientSiteSmartWandTags.Remove(deleteClientSiteSmartWandTags);
 
-            SaveWithTagChangeAttributed(changedByUserId, changedByGuardId);
+            _dbContext.SaveChanges();
+            RecordTagChange(before, deleteClientSiteSmartWandTags, changedBy);
+        }
+
+        /// <summary>A detached copy of the values the history cares about, taken before a change.</summary>
+        private static ClientSiteSmartWandTags SnapshotTag(ClientSiteSmartWandTags tag)
+        {
+            return new ClientSiteSmartWandTags
+            {
+                Id = tag.Id,
+                ClientSiteId = tag.ClientSiteId,
+                UId = tag.UId,
+                TagsTypeId = tag.TagsTypeId,
+                LabelDescription = tag.LabelDescription,
+                IsDeleted = tag.IsDeleted,
+                FqBypass = tag.FqBypass
+            };
         }
 
         /// <summary>
-        /// Saves, having first told the history trigger who is responsible for the change.
+        /// Writes one ClientSiteSmartWandTagsHist row for the change just saved.
         ///
-        /// Session context belongs to a connection, and EF is free to hand the save a different
-        /// connection from the one the context was set on - so both run inside one transaction,
-        /// which pins them to the same connection. Without that the trigger would intermittently
-        /// see no actor and record the change as a direct database edit.
+        /// Deliberately after the tag's own SaveChanges rather than in it: the row needs the
+        /// generated Id of a newly added tag, which only exists once that save has returned.
         ///
-        /// Attribution never costs a save: if the name lookup or the context call fails, the save
-        /// still happens and the trigger records the change with whatever it has.
+        /// Equally deliberately NOT inside an explicit transaction with it. CityWatch.Web
+        /// registers the DbContext with EnableRetryOnFailure, and a retrying execution strategy
+        /// refuses a user-started transaction - "The configured execution strategy 'SqlServer
+        /// RetryingExecutionStrategy' does not support user-initiated transactions". Wrapping
+        /// the two saves together would mean running the whole unit of work inside the strategy,
+        /// and a replayed attempt cannot re-apply changes the tracker already thinks are saved.
+        /// The cost of keeping them separate is that a process dying between the two loses one
+        /// history row; the tag change itself is never at risk, which is the right way round.
+        ///
+        /// The history never costs a save, for the same reason: if this throws - most likely on
+        /// a database where DbScript 382 has not been run and the table does not exist yet - the
+        /// tag change stands and the failure is swallowed. The pending row is detached so it
+        /// cannot resurface on someone else's later SaveChanges on this same scoped context.
         /// </summary>
-        private void SaveWithTagChangeAttributed(int changedByUserId, int changedByGuardId)
+        private void RecordTagChange(ClientSiteSmartWandTags before, ClientSiteSmartWandTags after,
+            WandTagChange changedBy)
         {
-            // Something upstream already owns the transaction; set the context on its connection
-            // and let it commit.
-            if (_dbContext.Database.CurrentTransaction != null)
-            {
-                ApplyTagChangeContext(changedByUserId, changedByGuardId);
-                _dbContext.SaveChanges();
-                return;
-            }
-
-            using var transaction = _dbContext.Database.BeginTransaction();
-            ApplyTagChangeContext(changedByUserId, changedByGuardId);
-            _dbContext.SaveChanges();
-            transaction.Commit();
-        }
-
-        private void ApplyTagChangeContext(int changedByUserId, int changedByGuardId)
-        {
+            ClientSiteSmartWandTagsHist history = null;
             try
             {
-                var who = ResolveTagChangeActorName(changedByUserId, changedByGuardId);
+                history = BuildTagChangeHistory(before, after, changedBy);
+                if (history == null)
+                    return;
 
-                _dbContext.Database.ExecuteSqlRaw(
-                    "EXEC sp_set_session_context @key=N'cw_TagChangeUserId', @value={0};" +
-                    "EXEC sp_set_session_context @key=N'cw_TagChangeGuardId', @value={1};" +
-                    "EXEC sp_set_session_context @key=N'cw_TagChangeBy', @value={2};",
-                    changedByUserId, changedByGuardId, (object)who ?? DBNull.Value);
+                _dbContext.ClientSiteSmartWandTagsHist.Add(history);
+                _dbContext.SaveChanges();
             }
             catch
             {
-                /* The history is worth less than the change itself. A server without session
-                   context support, or a failed lookup, must not stop a tag being saved - the
-                   trigger still records the change, just without a name. */
+                if (history != null)
+                {
+                    try { _dbContext.Entry(history).State = EntityState.Detached; }
+                    catch { /* nothing further to do - the tag change is already safe */ }
+                }
             }
+        }
+
+        /// <summary>
+        /// The history row for a change, or null when there is nothing worth recording - a save
+        /// that rewrote identical values, or one that matched no tag at all.
+        /// </summary>
+        private ClientSiteSmartWandTagsHist BuildTagChangeHistory(ClientSiteSmartWandTags before,
+            ClientSiteSmartWandTags after, WandTagChange changedBy)
+        {
+            if (after == null)
+                return null;
+
+            var added = before == null;
+            if (!added && !TagChanged(before, after))
+                return null;
+
+            string action;
+            if (added)
+                action = "Added";
+            else if (!before.IsDeleted && after.IsDeleted)
+                action = "Deleted";
+            else if (before.IsDeleted && !after.IsDeleted)
+                action = "Restored";
+            else
+                action = "Changed";
+
+            var userId = changedBy?.UserId ?? 0;
+            var guardId = changedBy?.GuardId ?? 0;
+
+            return new ClientSiteSmartWandTagsHist
+            {
+                TagId = after.Id,
+                Action = action,
+                ChangedOn = DateTime.Now,
+                ChangedByUserId = userId > 0 ? userId : (int?)null,
+                ChangedByGuardId = guardId > 0 ? guardId : (int?)null,
+                ChangedBy = ResolveTagChangeActorName(userId, guardId),
+                AppType = WandTagAppType.Normalise(changedBy?.AppType),
+                AppVersion = ResolveTagChangeAppVersion(changedBy),
+                Note = DescribeTagChange(before, after, action),
+
+                OldClientSiteId = before?.ClientSiteId,
+                NewClientSiteId = after.ClientSiteId,
+                OldUId = before?.UId,
+                NewUId = after.UId,
+                OldTagsTypeId = before?.TagsTypeId,
+                NewTagsTypeId = after.TagsTypeId,
+                OldLabelDescription = before?.LabelDescription,
+                NewLabelDescription = after.LabelDescription,
+                OldIsDeleted = before?.IsDeleted,
+                NewIsDeleted = after.IsDeleted,
+                OldFqBypass = before?.FqBypass,
+                NewFqBypass = after.FqBypass
+            };
+        }
+
+        private static bool TagChanged(ClientSiteSmartWandTags before, ClientSiteSmartWandTags after)
+        {
+            return !string.Equals(before.UId ?? "", after.UId ?? "", StringComparison.Ordinal)
+                || before.ClientSiteId != after.ClientSiteId
+                || before.TagsTypeId != after.TagsTypeId
+                || !string.Equals(before.LabelDescription ?? "", after.LabelDescription ?? "", StringComparison.Ordinal)
+                || before.IsDeleted != after.IsDeleted
+                || before.FqBypass != after.FqBypass;
+        }
+
+        /// <summary>
+        /// The change in a sentence, for reading rather than querying - it says only what
+        /// actually changed. The Old/New columns carry the same information for queries.
+        /// </summary>
+        private static string DescribeTagChange(ClientSiteSmartWandTags before,
+            ClientSiteSmartWandTags after, string action)
+        {
+            var label = after.LabelDescription ?? "";
+            var uid = after.UId ?? "";
+
+            switch (action)
+            {
+                case "Added":
+                    return $"Tag {uid} added to site {after.ClientSiteId} as '{label}'";
+                case "Deleted":
+                    return $"Tag {uid} ('{label}') marked deleted";
+                case "Restored":
+                    return $"Tag {uid} ('{label}') restored";
+            }
+
+            var parts = new List<string>();
+            if (!string.Equals(before.UId ?? "", after.UId ?? "", StringComparison.Ordinal))
+                parts.Add($"UID changed from '{before.UId}' to '{after.UId}'");
+            if (before.ClientSiteId != after.ClientSiteId)
+                parts.Add($"site changed from {before.ClientSiteId} to {after.ClientSiteId}");
+            if (!string.Equals(before.LabelDescription ?? "", after.LabelDescription ?? "", StringComparison.Ordinal))
+                parts.Add($"label changed from '{before.LabelDescription}' to '{after.LabelDescription}'");
+            if (before.TagsTypeId != after.TagsTypeId)
+                parts.Add($"tag type changed from {before.TagsTypeId} to {after.TagsTypeId}");
+            if (before.FqBypass != after.FqBypass)
+                parts.Add($"frequency bypass turned {(after.FqBypass ? "on" : "off")}");
+
+            return string.Join("; ", parts);
+        }
+
+        /// <summary>
+        /// The app version to record. The mobile app reports its build on login (see
+        /// GuardMobileAppVersion), so when a tag change does not carry one we can still name the
+        /// build from that - which means app versions released before this get attributed too,
+        /// with no app change needed.
+        /// </summary>
+        private string ResolveTagChangeAppVersion(WandTagChange changedBy)
+        {
+            if (!string.IsNullOrWhiteSpace(changedBy?.AppVersion))
+                return changedBy.AppVersion.Trim();
+
+            var guardId = changedBy?.GuardId ?? 0;
+            if (guardId <= 0)
+                return null;
+
+            return _dbContext.GuardMobileAppVersions.AsNoTracking()
+                .Where(x => x.GuardId == guardId)
+                .OrderByDescending(x => x.LastSeen)
+                .Select(x => x.AppVersion)
+                .FirstOrDefault();
         }
 
         private string ResolveTagChangeActorName(int changedByUserId, int changedByGuardId)
@@ -381,7 +524,8 @@ namespace CityWatch.Data.Providers
                     return $"{user} (user)";
             }
 
-            // Known id but no matching row, or no id at all: let the trigger say what it can.
+            // Known id but no matching row, or no id at all. The ids themselves are still on the
+            // history row; there is just no name to put beside them.
             return null;
         }
 
