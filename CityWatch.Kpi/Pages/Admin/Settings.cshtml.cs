@@ -2770,12 +2770,10 @@ namespace CityWatch.Kpi.Pages.Admin
         /// </summary>
         private WandTagChange WandTagChangedHere()
         {
-            return new WandTagChange
-            {
-                UserId = HttpContext.Session.GetInt32("SignedInUserId") ?? 0,
-                GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0,
-                AppType = WandTagAppType.Web
-            };
+            return WandTagChange.FromWeb(
+                HttpContext.Session.GetInt32("SignedInUserId") ?? 0,
+                HttpContext.Session.GetInt32("GuardId") ?? 0,
+                System.Reflection.Assembly.GetExecutingAssembly());
         }
 
         public JsonResult OnPostSaveClientSiteMobileAppPatrolTouringModeSettings(int clientSiteId, PatrolTouringMode PatrolTourMode)

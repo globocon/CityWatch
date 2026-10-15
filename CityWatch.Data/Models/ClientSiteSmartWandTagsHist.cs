@@ -48,8 +48,11 @@ namespace CityWatch.Data.Models
         public string AppType { get; set; }
 
         /// <summary>
-        /// The build that application was running, e.g. "1.54.2". For the mobile app this is
-        /// whatever it last reported - see WandTagChange. Null when it is not known.
+        /// The build that application was running. For a web portal this is its AssemblyVersion,
+        /// "2.39.1.0" - the same number its page footer shows, so it matches what a user would
+        /// quote. For the mobile app it is the version the app reports of itself, "1.54.2". The
+        /// two have different shapes because each app describes itself that way; see
+        /// WandTagChange. Null when it is not known.
         /// </summary>
         public string AppVersion { get; set; }
 
