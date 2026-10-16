@@ -580,13 +580,12 @@ namespace CityWatch.Web.Tests
         }
 
         /// <summary>
-        /// The guard section of a "Schedule PCAR" report leaves out every guard login that made a PCAR
-        /// entry in the log book. Milleara Mall, 30-Sep-2026: Abrar Alam is the patrol car guard
-        /// (00:10-01:10, all 10 entries PCAR); Muhammad Ibrahim and Mohammed Vasim Sarvar made no PCAR
-        /// entry. The normal report still lists all of them.
+        /// The guard section of a "Schedule PCAR" report lists every guard login on the log book, exactly
+        /// as the normal report does. Milleara Mall, 30-Sep-2026: Muhammad Ibrahim and Mohammed Vasim
+        /// Sarvar (no PCAR entries) and Abrar Alam, the patrol car guard (00:10-01:10, all entries PCAR).
         /// </summary>
         [TestMethod]
-        public void MillearaMall_PcarReportGuardSection_LeavesOutPcarGuards()
+        public void MillearaMall_PcarReportGuardSection_SameAsNormalReport()
         {
             using var scope = _services.CreateScope();
             var sp = scope.ServiceProvider;
@@ -609,12 +608,23 @@ namespace CityWatch.Web.Tests
 
             // The guard name cell is narrow: "Mohammed Vasim Sarvar" wraps, so only its first line is matched.
             foreach (var guard in new[] { "Muhammad Ibrahim", "Abrar Alam", "Mohammed Vasim" })
+            {
                 StringAssert.Contains(normal, guard, "Normal report must list every guard login.");
+                StringAssert.Contains(pcar, guard, "PCAR report must list every guard login, as the normal report does.");
+            }
 
-            StringAssert.Contains(pcar, "Muhammad Ibrahim");
-            StringAssert.Contains(pcar, "Mohammed Vasim");
-            Assert.IsFalse(pcar.Contains("Abrar Alam"), "The PCAR guard is still in the PCAR report's guard section.");
+            // The whole guard section, not only the names: same rows, times and groups in both reports.
+            Assert.AreEqual(GuardSection(normal), GuardSection(pcar));
             StringAssert.Contains(pcar, "Daily Shift Log Book [PCAR]");
+        }
+
+        /// <summary>The text from "Guard 1" up to the "Log Book" heading that follows the guard table.</summary>
+        private static string GuardSection(string reportText)
+        {
+            var start = reportText.IndexOf("Guard 1", StringComparison.Ordinal);
+            Assert.IsTrue(start >= 0, "No guard section in the report.");
+            var end = reportText.IndexOf("Log Book", start, StringComparison.Ordinal);
+            return end > start ? reportText.Substring(start, end - start) : reportText.Substring(start);
         }
 
         [TestMethod]
