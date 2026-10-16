@@ -138,7 +138,7 @@ namespace CityWatch.Web.Services
                     .SetFontSize(CELL_FONT_SIZE * 1.5f)
                     .SetMarginTop(5));
 
-                var guardDetails = CreateGuardDetails(clientsiteLogBook, pcarFilter);
+                var guardDetails = CreateGuardDetails(clientsiteLogBook);
                 doc.Add(guardDetails);
 
                 doc.Add(new Paragraph("Log Book")
@@ -701,25 +701,12 @@ namespace CityWatch.Web.Services
             return wandNumbers.ToString();
         }
 
-        private Table CreateGuardDetails(ClientSiteLogBook clientSiteLogBook, PcarEntryFilter pcarFilter = PcarEntryFilter.All)
+        // Every guard login on the log book, in every report - a "Schedule PCAR" report lists the same guards as the normal one.
+        private Table CreateGuardDetails(ClientSiteLogBook clientSiteLogBook)
         {
             var clientSite = clientSiteLogBook.ClientSite;
             var logDate = clientSiteLogBook.Date;
             var guardDetailGroup = _guardLoginDetailService.GetGuardDetailsByLogBookId(clientSiteLogBook.Id);
-
-            /* A "Schedule PCAR" report lists the site's own guards only: any guard login that made a
-               PCAR entry in this log book - the patrol car guard's login, which the PCAR flow creates
-               on the visited site with no wand or position - is left out. Groups and their order are
-               kept; a group left with no guard is dropped. */
-            if (pcarFilter == PcarEntryFilter.OnlyPcar)
-            {
-                var pcarGuardLoginIds = _guardLogDataProvider.GetPcarGuardLoginIds(clientSiteLogBook.Id);
-                guardDetailGroup = guardDetailGroup
-                    .SelectMany(group => group)
-                    .Where(detail => !pcarGuardLoginIds.Contains(detail.GuardLoginId))
-                    .GroupBy(detail => detail.SmartWandOrPosition)
-                    .ToList();
-            }
 
             var guardDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 12, 9, 13, 9, 13, 9, 13, 9, 13 })).UseAllAvailableWidth();
 
@@ -1700,7 +1687,7 @@ namespace CityWatch.Web.Services
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
                 .SetMarginTop(5));
 
-            var guardDetails = CreateGuardDetails(clientsiteLogBook, pcarFilter);
+            var guardDetails = CreateGuardDetails(clientsiteLogBook);
             doc.Add(guardDetails);
 
             doc.Add(new Paragraph("Log Book")
@@ -1867,7 +1854,7 @@ namespace CityWatch.Web.Services
                 .SetFontSize(CELL_FONT_SIZE * 1.5f)
                 .SetMarginTop(5));
 
-            var guardDetails = CreateGuardDetails(clientsiteLogBook, pcarFilter);
+            var guardDetails = CreateGuardDetails(clientsiteLogBook);
             doc.Add(guardDetails);
 
             doc.Add(new Paragraph("Smart Wand Strike Logs")
