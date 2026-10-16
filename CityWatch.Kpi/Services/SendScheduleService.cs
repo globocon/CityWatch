@@ -56,8 +56,8 @@ namespace CityWatch.Kpi.Services
         byte[] ProcessDownloadKVSchedule(KpiSendKVSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
 
         //Kpi Custom Wand
-        Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, 
-            bool upload,bool isAutoRunFromScheduler, bool cleanUpFiles, bool sendMail);
+        Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients,
+            bool upload, bool isAutoRunFromScheduler, bool cleanUpFiles, bool sendMail);
     }
 
     public class SendScheduleService : ISendScheduleService
@@ -718,7 +718,7 @@ namespace CityWatch.Kpi.Services
 
             return string.Join(", ", schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
         }
-        
+
         private string CreateSummaryReportTimesheetNew(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate, string FileName)
         {
             var summaryFileName = FileName;
@@ -1214,7 +1214,7 @@ namespace CityWatch.Kpi.Services
 
 
         //Custom Wand Start
-        public async Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, 
+        public async Task<(string, List<string>)> ProcessCustomWandSchedule(KpiSendCustomWandSchedules schedule, DateTime reportStartDate, bool ignoreRecipients,
             bool upload, bool isAutoRunFromScheduler, bool cleanUpFiles, bool sendMail)
         {
             var statusLog = new StringBuilder();
@@ -1228,17 +1228,27 @@ namespace CityWatch.Kpi.Services
                 string filePath = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
 
                 if (schedule.Frequency == SendSchdeuleFrequency.Daily)
-                {                    
+                {
                     if (!isAutoRunFromScheduler)
                     {
                         reportEndDate = reportStartDate;
-                        //reportStartDate = reportStartDate.AddDays(-1);
+                        int diff = (7 + (reportStartDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+                        DateTime startOfWeek = reportStartDate.AddDays(-1 * diff).Date;
+                        reportStartDate = startOfWeek;
                     }
                     else
                     {
                         // Send yesterday's scan data in report
-                        reportStartDate = DateTime.Today.AddDays(-1);
-                        reportEndDate = reportStartDate; // DateTime.Today;
+                        //reportStartDate = DateTime.Today.AddDays(-1);
+                        //reportEndDate = reportStartDate; // DateTime.Today;
+
+                        // Send Monday to till yesterday's scan data in report
+                        reportEndDate = reportStartDate = DateTime.Today.AddDays(-1);
+                        //Find Monday of the week
+                        int diff = (7 + (reportStartDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+                        DateTime startOfWeek = reportStartDate.AddDays(-1 * diff).Date;
+                        reportStartDate = startOfWeek;
+
                     }
                 }
 
@@ -1275,7 +1285,7 @@ namespace CityWatch.Kpi.Services
                     if (!isAutoRunFromScheduler)
                     {
                         reportEndDate = reportStartDate;
-                        reportStartDate =  new DateTime(reportStartDate.Year, reportStartDate.Month, 1);
+                        reportStartDate = new DateTime(reportStartDate.Year, reportStartDate.Month, 1);
                     }
                     else
                     {
