@@ -1,0 +1,1 @@
+create table GeneralFeeds( Id int primary key identity(1,1),Brand nvarchar(max),APIStrings nvarchar(max),keys nvarchar(max))

@@ -11,6 +11,25 @@ namespace CityWatch.Data.Models
 
         [Display(Name = "Key & Vehicle Log")]
         VehicleAndKeyLog = 2,
+
+        [Display(Name = "Fusion Log")]
+        FusionLog = 3,
+
+        [Display(Name = "Smart Wand Log")]
+        SmartWandLog = 4,
+
+        /* The "Schedule PCAR" dumps: the patrol car entries of the guard log, smart wand log and
+           fusion log. Never written by guards - they exist only so the scheduler can record that a
+           PCAR dump was sent (a ClientSiteLogBooks row for the daily dump, a
+           ClientSitePeriodicLogUploads row for weekly/monthly) separately from the normal dump. */
+        [Display(Name = "Daily Guard Log (PCAR)")]
+        PcarGuardLog = 5,
+
+        [Display(Name = "Smart Wand Log (PCAR)")]
+        PcarSmartWandLog = 6,
+
+        [Display(Name = "Fusion Log (PCAR)")]
+        PcarFusionLog = 7,
     }
 
     public class ClientSiteLogBook

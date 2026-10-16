@@ -1,0 +1,2 @@
+alter table GuardTrainingAndAssessment add Attempts int
+update GuardTrainingAndAssessment set Attempts=0

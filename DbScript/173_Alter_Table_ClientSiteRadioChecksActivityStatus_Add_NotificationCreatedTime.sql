@@ -1,0 +1,2 @@
+ALTER TABLE  ClientSiteRadioChecksActivityStatus ADD NotificationCreatedTime datetime
+

@@ -1,0 +1,1 @@
+INSERT INTO dbo.AppConfigurations VALUES('LastUsedDocketSn', '0')
