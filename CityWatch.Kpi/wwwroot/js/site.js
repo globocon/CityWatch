@@ -428,14 +428,9 @@ $(function () {
     let sel_schedule_report_type = $('#sel_schedule').val();
     $('#sel_schedule').on('change', function () {
         sel_schedule_report_type = $(this).val(); // $('#sel_schedule').val();
-        if (sel_schedule_report_type === '2') {
-            $('#add_kpi_schedule').addClass('d-none');
-            $('#add_customwand_schedule').removeClass('d-none');
-        }
-        else {
-            $('#add_kpi_schedule').removeClass('d-none');
-            $('#add_customwand_schedule').addClass('d-none');
-        }
+        $('#add_kpi_schedule').toggleClass('d-none', sel_schedule_report_type === '2' || sel_schedule_report_type === '3');
+        $('#add_customwand_schedule').toggleClass('d-none', sel_schedule_report_type !== '2');
+        $('#add_taghistory_schedule').toggleClass('d-none', sel_schedule_report_type !== '3');
         gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
     });
 
@@ -445,6 +440,10 @@ $(function () {
 
         if (sel_schedule_report_type === '2') {
             return 'KpiCustomWandSendSchedules';
+        }
+
+        if (sel_schedule_report_type === '3') {
+            return 'KpiTagHistorySendSchedules';
         }
 
         return 'KpiSendSchedules';
@@ -495,6 +494,17 @@ $(function () {
 
     function scheduleRenderer(value, record) {
         let scheduleHtml = '';
+        if (sel_schedule_report_type === '3') {
+            scheduleHtml += '<span class="my-1 d-block">From: ' + renderScheduleDate(record.startDate, record, false) + ' </span>';
+            scheduleHtml += '<span class="my-1 d-block">To: ' + renderScheduleEndDate(record.endDate, record) + ' </span>';
+            scheduleHtml += '<span class="my-1 d-block">Weekly on ' + record.runDayName + ' @ ' + record.time + ' Hrs </span>';
+            scheduleHtml += '<span class="my-1 d-block">Status:' + renderIsPaused(record.isPaused) + '</span>';
+            if (record.lastRunOn) {
+                scheduleHtml += '<span class="my-1 d-block small text-muted">Last run ' + renderScheduleDate(record.lastRunOn, record, true) + ': ' +
+                    $('<div>').text(record.lastRunStatus || '').html() + '</span>';
+            }
+            return scheduleHtml;
+        }
         scheduleHtml += '<span class="my-1 d-block">From: ' + renderScheduleDate(record.startDate, record, false) + ' </span>';
         scheduleHtml += '<span class="my-1 d-block">To: ' + renderScheduleEndDate(record.endDate, record) + ' </span>';
         scheduleHtml += '<span class="my-1 d-block">' + renderScheduleFrequency(record.frequency, record) + ' @ ' + record.time + ' Hrs </span>';
@@ -511,6 +521,15 @@ $(function () {
     }
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
+        if (sel_schedule_report_type === '3') {
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-tagHistory-schedule-modal" data-sch-id="' + record.id + '"><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+            buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#tagHistory-schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="editScheduleTagHistory"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+            buttonHtml += '<button class="btn btn-outline-danger del-taghistory-schedule mr-2 mt-2" data-sch-id="' + record.id + '"><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+            buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#tagHistory-schedule-modal" data-sch-id="' + record.id + '" ';
+            buttonHtml += 'data-action="copyScheduleTagHistory"><i class="fa fa-copy fa-2x mr-2"></i></button>';
+            return buttonHtml;
+        }
         if (sel_schedule_report_type === '2') {
             buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-customWands-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
             buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#customWands-schedule-modal" data-sch-id="' + record.id + '" ';
@@ -2794,6 +2813,187 @@ $(function () {
             }
         });
     });
+
+    // Tag History schedule -- Start
+
+    function clearScheduleModalTagHistory() {
+        $('#TagHistoryscheduleId').val('0');
+        $('#nextRunOnTagHistory').val('');
+        $('#projectNameTagHistory').val('');
+        $('#startDateTagHistory').val('').removeAttr('min');
+        $('#endDateTagHistory').val('').removeAttr('min');
+        $('#runDayTagHistory').val('');
+        $('#timeTagHistory').val('');
+        $('#isPausedTagHistory').prop('checked', false);
+        $('#emailToTagHistory').val('');
+        $('#emailBccTagHistory').val('');
+        $('#sch-modal-validation-TagHistory').html('');
+    }
+
+    function fillScheduleModalTagHistory(data, isCopy) {
+        $('#projectNameTagHistory').val(data.projectName);
+        $('#runDayTagHistory').val(String(data.runDayOfWeek));
+        $('#timeTagHistory').val(data.time);
+        $('#isPausedTagHistory').prop('checked', data.isPaused === true);
+        $('#emailToTagHistory').val(data.emailTo);
+        $('#emailBccTagHistory').val(data.emailBcc);
+
+        if (isCopy) {
+            const dateToday = new Date().toISOString().split('T')[0];
+            $('#startDateTagHistory').val(dateToday).attr('min', dateToday);
+            $('#endDateTagHistory').val('2100-01-01');
+            return;
+        }
+
+        $('#TagHistoryscheduleId').val(data.id);
+        $('#nextRunOnTagHistory').val(data.nextRunOn);
+        $('#startDateTagHistory').val(data.startDate.split('T')[0]);
+        if (data.endDate)
+            $('#endDateTagHistory').val(data.endDate.split('T')[0]);
+        $('#endDateTagHistory').attr('min', new Date().toISOString().split('T')[0]);
+    }
+
+    $('#tagHistory-schedule-modal').on('shown.bs.modal', function (event) {
+        clearScheduleModalTagHistory();
+        const button = $(event.relatedTarget);
+        const action = button.data('action');
+        const schId = button.data('sch-id');
+
+        if (action === 'editScheduleTagHistory' || action === 'copyScheduleTagHistory') {
+            $('#loader').show();
+            $.ajax({
+                url: '/Admin/Settings?handler=KpiTagHistorySchedule&id=' + schId,
+                type: 'GET',
+                dataType: 'json',
+            }).done(function (data) {
+                fillScheduleModalTagHistory(data, action === 'copyScheduleTagHistory');
+            }).always(function () {
+                $('#loader').hide();
+            });
+        }
+        else {
+            const dateToday = new Date().toISOString().split('T')[0];
+            $('#startDateTagHistory').val(dateToday).attr('min', dateToday);
+            $('#endDateTagHistory').val('2100-01-01');
+            $('#runDayTagHistory').val('1');
+            $('#timeTagHistory').val('07:00');
+        }
+    });
+
+    $('#btnSaveTagHistorySchedule').on('click', function () {
+        const validation = $('#sch-modal-validation-TagHistory');
+        validation.html('');
+
+        const errors = [];
+        if (!$('#startDateTagHistory').val()) errors.push('Start Date is required');
+        if ($('#runDayTagHistory').val() === '') errors.push('Run Day is required');
+        if (!$('#timeTagHistory').val()) errors.push('Exec. Time is required');
+        if (!$('#emailToTagHistory').val().trim()) errors.push('Email Recipients is required');
+        if (errors.length > 0) {
+            errors.forEach(function (e) { validation.append($('<li></li>').text(e)); });
+            return;
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveKpiTagHistorySchedule',
+            type: 'POST',
+            data: $('#frm_kpi_TagHistorySchedule').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {
+                $('#tagHistory-schedule-modal').modal('hide');
+                gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
+            } else {
+                (result.message || 'Save failed').split(',').forEach(function (e) {
+                    validation.append($('<li></li>').text(e));
+                });
+            }
+        });
+    });
+
+    $('#kpi_send_schedules').on('click', '.del-taghistory-schedule', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this schedule?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteKpiTagHistorySchedule',
+                data: { id: idToDelete },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
+            });
+        }
+    });
+
+    function updateTagHistoryReportPeriod() {
+        const runDate = $('#reportRunDateTagHistory').val();
+        if (!runDate) {
+            $('#reportPeriodTagHistory').text('');
+            return;
+        }
+        // Mirrors KpiTagHistoryScheduleRunOnCalculator.GetReportPeriod: the 7 days before the run date.
+        const to = new Date(runDate + 'T00:00:00');
+        to.setDate(to.getDate() - 1);
+        const from = new Date(to);
+        from.setDate(from.getDate() - 6);
+        const fmt = function (d) { return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }); };
+        $('#reportPeriodTagHistory').text('Reports tag changes from ' + fmt(from) + ' to ' + fmt(to) + '.');
+    }
+
+    $('#reportRunDateTagHistory').on('change', updateTagHistoryReportPeriod);
+
+    $('#run-tagHistory-schedule-modal').on('shown.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        $('#sch-id-TagHistory').val(button.data('sch-id'));
+        $('#btnScheduleRunTagHistory').prop('disabled', false);
+        $('#schRunStatusTagHistory').html('');
+
+        const today = new Date();
+        const formattedDate = today.getFullYear() + '-' +
+            String(today.getMonth() + 1).padStart(2, '0') + '-' +
+            String(today.getDate()).padStart(2, '0');
+        $('#reportRunDateTagHistory').attr('max', formattedDate).val(formattedDate);
+        updateTagHistoryReportPeriod();
+    });
+
+    $('#btnScheduleRunTagHistory').on('click', function () {
+        if (!$('#reportRunDateTagHistory').val()) {
+            alert('Please select run date.');
+            return;
+        }
+
+        $('#btnScheduleRunTagHistory').prop('disabled', true);
+        $('#schRunStatusTagHistory').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Report. Please wait...');
+        $.ajax({
+            url: '/Admin/Settings?handler=RunScheduleTagHistory',
+            type: 'POST',
+            data: {
+                scheduleId: $('#sch-id-TagHistory').val(),
+                reportDate: $('#reportRunDateTagHistory').val(),
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            const icon = !result.success ? '<i class="fa fa-times-circle text-danger"></i> ' :
+                (result.emailSent ? '<i class="fa fa-check-circle-o text-success"></i> ' : '<i class="fa fa-info-circle text-info"></i> ');
+            $('#schRunStatusTagHistory').html(icon + $('<div>').text(result.message).html());
+            gridSchedules.reload({ handler: getScheduleUrl(), type: sel_schedule_report_type, searchTerm: $('#search_kw_client_site').val() });
+        }).fail(function () {
+            $('#schRunStatusTagHistory').html('<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details');
+        }).always(function () {
+            $('#btnScheduleRunTagHistory').prop('disabled', false);
+        });
+    });
+
+    $('#btnSchedulePreviewTagHistory').on('click', function () {
+        if (!$('#reportRunDateTagHistory').val()) {
+            alert('Please select run date.');
+            return;
+        }
+        window.open('/Admin/Settings?handler=PreviewTagHistory&scheduleId=' + encodeURIComponent($('#sch-id-TagHistory').val()) +
+            '&reportDate=' + encodeURIComponent($('#reportRunDateTagHistory').val()), '_blank');
+    });
+
+    // Tag History schedule -- End
 
     $('#kpi_send_schedules').on('click', '.del-customwand-schedule', function () {
         const idToDelete = $(this).attr('data-sch-id');

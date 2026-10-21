@@ -110,6 +110,7 @@ builder.Services.AddScoped<IMobileAppDataServices, MobileAppDataServices>();
 builder.Services.AddScoped<IAlertEmailServices, AlertEmailServices>();
 builder.Services.AddScoped<ISmartWandReportZipGenarator, SmartWandReportZipGenarator>();
 builder.Services.AddScoped<IWandStrikeReportDataService, WandStrikeReportDataService>();
+builder.Services.AddScoped<ITagHistoryReportGenerator, TagHistoryReportGenerator>();
 
 builder.Services.AddHostedService<ShiftCancellationEmailBackgroundService>();
 

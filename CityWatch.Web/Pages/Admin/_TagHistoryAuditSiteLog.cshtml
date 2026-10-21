@@ -1,0 +1,158 @@
+@using CityWatch.Data.Models;
+@using CityWatch.Web.Helpers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+@model CityWatch.Web.Pages.Admin.AuditSiteLogModel
+
+<form id="form_taghistory_auditlog_request" method="post" class="border-bottom">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label class="mx-1">Client Type</label>
+            <select class="form-control taghistorymultiselect" multiple="multiple" id="taghistoryClientType">
+                @{
+                    var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                    if (Model.ClientTypeId != 0)
+                        userClientTypes = userClientTypes.Where(x => x.Id == Model.ClientTypeId).ToList();
+                    foreach (var clientType in userClientTypes.OrderBy(clientType => clientType.Name))
+                    {
+                        var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                        if (Model.ClientTypeId != 0)
+                        {
+                            <option value="@clientType.Name" selected>@clientType.Name (@countClientType)</option>
+                        }
+                        else
+                        {
+                            <option value="@clientType.Name">@clientType.Name (@countClientType)</option>
+                        }
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group col-md-3">
+            <label class="mx-1">Client Site</label>
+            <select class="form-control mx-1 taghistorymultiselect" multiple="multiple" id="taghistoryClientSiteId"></select>
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1" for="taghistoryAuditFromDate">From Date</label>
+            <input type="date" class="form-control" id="taghistoryAuditFromDate" />
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1" for="taghistoryAuditToDate">To Date</label>
+            <input type="date" class="form-control" id="taghistoryAuditToDate">
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1" for="taghistorySortBy">Sort Order</label>
+            <div class="input-group">
+                <select class="form-control" id="taghistorySortBy" title="Order the report by this column. Defaults to Date Time.">
+                    @foreach (var option in TagHistorySortBy.Options)
+                    {
+                        <option value="@option.Key">@option.Value</option>
+                    }
+                </select>
+                <select class="form-control" id="taghistorySortDirection" style="max-width:80px" title="Sort direction">
+                    <option value="false">Asc</option>
+                    <option value="true">Desc</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" asp-for="@Model.TagHistoryReportRequest.ClientSiteId" />
+    <input type="hidden" asp-for="@Model.TagHistoryReportRequest.LogFromDate" />
+    <input type="hidden" asp-for="@Model.TagHistoryReportRequest.LogToDate" />
+    <input type="hidden" asp-for="@Model.TagHistoryReportRequest.TagUId" />
+    <input type="hidden" asp-for="@Model.TagHistoryReportRequest.TagTypeId" />
+    <input type="hidden" asp-for="@Model.TagHistoryReportRequest.SortBy" />
+    <input type="hidden" asp-for="@Model.TagHistoryReportRequest.SortDescending" />
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-12 mt-1">
+                    <label style="color:#0366d6">Tag Downselect</label>
+                    <hr class="mt-0" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>UID</label>
+                    <select class="form-control mx-1 taghistorymultiselect" multiple="multiple" id="taghistoryTagUId"></select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label>TYPE</label>
+                    <select class="form-control mx-1 taghistorymultiselect" multiple="multiple" id="taghistoryTagTypeId"></select>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="row">
+                <div class="col-md-12 mt-1">
+                    <label style="color:#0366d6">Guard Downselect</label>
+                    <hr class="mt-0" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label>Guard Name</label>
+                    <input type="text" class="form-control" asp-for="@Model.TagHistoryReportRequest.GuardName" />
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Guard Security No</label>
+                    <input type="text" class="form-control" asp-for="@Model.TagHistoryReportRequest.GuardSecurityNo" />
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-md-12 mt-1">
+                    <label style="color:#0366d6">User Downselect</label>
+                    <hr class="mt-0" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-12">
+                    <label>User Name</label>
+                    <input type="text" class="form-control" asp-for="@Model.TagHistoryReportRequest.UserName" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group col-auto ml-auto">
+            <div class="d-flex justify-content-end align-items-center flex-wrap">
+                <button type="button" class="btn btn-primary mr-5" id="btnGenerateTagHistoryReport">
+                    View Report
+                </button>
+                <img class="mr-2" src="../images/icons/Excel_2025.svg" height="32" />
+                <button type="button" class="btn btn-primary mr-4" id="btnDownloadTagHistoryExcel">
+                    <i class="fa fa-arrow-down mr-1"></i>Excel
+                </button>
+                <button type="button" class="btn btn-primary" id="btnDownloadTagHistoryPdf">
+                    <i class="fa fa-file-pdf-o mr-1"></i>PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="full-width">
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <table class="table table-bordered table-sm" width="100%" id="tbl_taghistory_site_log">
+                <thead>
+                    <tr>
+                        <th style="display:none"></th>
+                        <th>Action Date Time</th>
+                        <th>Site Name</th>
+                        <th>Tag Action</th>
+                        <th>Tag UID</th>
+                        <th>Tag Type</th>
+                        <th>User</th>
+                        <th>Guard</th>
+                        <th>Changed From</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>

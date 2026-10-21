@@ -69,6 +69,15 @@ namespace CityWatch.Data.Providers
         List<KpiSendCustomWandSchedules> GetAllCustomWandSchedulesUsingUserId(int userId);
         List<KpiSendKVSchedules> GetAllKVSchedulesUsingUserId(int userId);
         List<PcarRouteGridDto> GetPCARProfilesUsingUserId(int userId);
+
+        //Kpi Tag History (weekly, all client sites)
+        List<KpiSendTagHistorySchedules> GetAllTagHistorySchedules();
+        KpiSendTagHistorySchedules GetTagHistoryScheduleById(int scheduleId);
+        void SaveTagHistorySchedule(KpiSendTagHistorySchedules sendSchedule);
+        void DeleteTagHistorySchedule(int id);
+        int SaveSendScheduleJobTagHistory(KpiSendScheduleJobsTagHistory sendScheduleJob);
+        List<KpiSendScheduleJobsTagHistory> GetTagHistoryJobsInProgress(TimeSpan staleAfter);
+        Dictionary<int, KpiSendScheduleJobsTagHistory> GetLastTagHistoryJobs(int[] scheduleIds);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -707,6 +716,93 @@ namespace CityWatch.Data.Providers
 
             return sendScheduleJob.Id;
         }
+        public List<KpiSendTagHistorySchedules> GetAllTagHistorySchedules()
+        {
+            return _context.KpiSendTagHistorySchedules.AsNoTracking().ToList();
+        }
+
+        public KpiSendTagHistorySchedules GetTagHistoryScheduleById(int scheduleId)
+        {
+            return _context.KpiSendTagHistorySchedules.AsNoTracking().SingleOrDefault(z => z.Id == scheduleId);
+        }
+
+        public void SaveTagHistorySchedule(KpiSendTagHistorySchedules sendSchedule)
+        {
+            var schedule = _context.KpiSendTagHistorySchedules.SingleOrDefault(z => z.Id == sendSchedule.Id);
+            if (schedule == null)
+                _context.Add(sendSchedule);
+            else
+            {
+                schedule.StartDate = sendSchedule.StartDate;
+                schedule.EndDate = sendSchedule.EndDate;
+                schedule.RunDayOfWeek = sendSchedule.RunDayOfWeek;
+                schedule.Time = sendSchedule.Time;
+                schedule.EmailTo = sendSchedule.EmailTo;
+                schedule.EmailBcc = sendSchedule.EmailBcc;
+                schedule.NextRunOn = sendSchedule.NextRunOn;
+                schedule.ProjectName = sendSchedule.ProjectName;
+                schedule.IsPaused = sendSchedule.IsPaused;
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeleteTagHistorySchedule(int id)
+        {
+            var recordToDelete = _context.KpiSendTagHistorySchedules.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.KpiSendTagHistorySchedules.Remove(recordToDelete);
+            _context.SaveChanges();
+        }
+
+        public int SaveSendScheduleJobTagHistory(KpiSendScheduleJobsTagHistory sendScheduleJob)
+        {
+            var scheduleJob = _context.KpiSendScheduleJobsTagHistory.SingleOrDefault(z => z.Id == sendScheduleJob.Id);
+
+            if (scheduleJob == null)
+                _context.Add(sendScheduleJob);
+            else
+            {
+                scheduleJob.CompletedDate = sendScheduleJob.CompletedDate;
+                scheduleJob.ReportFromDate = sendScheduleJob.ReportFromDate;
+                scheduleJob.ReportToDate = sendScheduleJob.ReportToDate;
+                scheduleJob.RecordCount = sendScheduleJob.RecordCount;
+                scheduleJob.ReportGenerated = sendScheduleJob.ReportGenerated;
+                scheduleJob.ReportStatus = sendScheduleJob.ReportStatus;
+                scheduleJob.EmailSent = sendScheduleJob.EmailSent;
+                scheduleJob.EmailStatus = sendScheduleJob.EmailStatus;
+                scheduleJob.EmailTo = sendScheduleJob.EmailTo;
+                scheduleJob.Success = sendScheduleJob.Success;
+                scheduleJob.StatusMessage = sendScheduleJob.StatusMessage;
+            }
+            _context.SaveChanges();
+
+            return sendScheduleJob.Id;
+        }
+
+        /// <summary>
+        /// Scheduler-level rows (no ScheduleId) still running. Ones older than
+        /// <paramref name="staleAfter"/> are taken to have died with the app and do not block.
+        /// </summary>
+        public List<KpiSendScheduleJobsTagHistory> GetTagHistoryJobsInProgress(TimeSpan staleAfter)
+        {
+            var cutOff = DateTime.Now.Subtract(staleAfter);
+            return _context.KpiSendScheduleJobsTagHistory.AsNoTracking()
+                .Where(z => z.ScheduleId == null && !z.CompletedDate.HasValue && z.CreatedDate > cutOff)
+                .ToList();
+        }
+
+        public Dictionary<int, KpiSendScheduleJobsTagHistory> GetLastTagHistoryJobs(int[] scheduleIds)
+        {
+            return _context.KpiSendScheduleJobsTagHistory.AsNoTracking()
+                .Where(z => z.ScheduleId.HasValue && scheduleIds.Contains(z.ScheduleId.Value))
+                .GroupBy(z => z.ScheduleId.Value)
+                .Select(g => g.OrderByDescending(z => z.Id).First())
+                .ToList()
+                .ToDictionary(z => z.ScheduleId.Value);
+        }
+
         public List<KpiSendScheduleSummaryNote> GetKpiSendScheduleSummaryNotes(int scheduleId)
         {
             return _context.KpiSendScheduleSummaryNotes.Where(x => x.ScheduleId == scheduleId).ToList();

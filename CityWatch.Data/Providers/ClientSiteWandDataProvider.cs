@@ -44,6 +44,15 @@ namespace CityWatch.Data.Providers
         List<IncidentReportPosition> GetPatrolCars();
         List<IncidentReportPosition> GetPatrolCarsForSite(int[] clientsiteid);
 
+        /// <summary>
+        /// Tag History report: ClientSiteSmartWandTagsHist rows resolved to site, tag type, user and
+        /// guard names, filtered and sorted as the request asks. No sites in the request means all.
+        /// </summary>
+        List<TagHistoryReportViewModel> GetTagHistoryReport(TagHistoryReportRequest request);
+
+        /// <summary>Every tag UID that has history on the given sites, for the report's UID filter.</summary>
+        List<string> GetTagHistoryTagUIds(int[] clientSiteIds);
+
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -772,6 +781,126 @@ namespace CityWatch.Data.Providers
 
             return _dbContext.IncidentReportPositions.Where(x => PatrolCarIds.Contains(x.Id)).ToList();
 
+        }
+    
+        public List<TagHistoryReportViewModel> GetTagHistoryReport(TagHistoryReportRequest request)
+        {
+            var fromDate = request.LogFromDate.Date;
+            var toDate = request.LogToDate.Date.AddDays(1);
+            var clientSiteIds = request.ClientSiteIds;
+            var tagUIds = request.TagUIds;
+            var tagTypeIds = request.TagTypeIds;
+            var guardName = request.GuardName?.Trim();
+            var guardSecurityNo = request.GuardSecurityNo?.Trim();
+            var userName = request.UserName?.Trim();
+
+            // The tag's site, UID and type after the change; Old* only matters if New* is missing.
+            // Joined rather than navigated because the history deliberately has no foreign keys.
+            var query = from h in _dbContext.ClientSiteSmartWandTagsHist.AsNoTracking()
+                        where h.ChangedOn >= fromDate && h.ChangedOn < toDate
+                        join s in _dbContext.ClientSites on (h.NewClientSiteId ?? h.OldClientSiteId) equals (int?)s.Id into sj
+                        from s in sj.DefaultIfEmpty()
+                        join ct in _dbContext.ClientTypes on (int?)s.TypeId equals (int?)ct.Id into ctj
+                        from ct in ctj.DefaultIfEmpty()
+                        join t in _dbContext.SmartWandTagsType on (h.NewTagsTypeId ?? h.OldTagsTypeId) equals (int?)t.Id into tj
+                        from t in tj.DefaultIfEmpty()
+                        join u in _dbContext.Users on h.ChangedByUserId equals (int?)u.Id into uj
+                        from u in uj.DefaultIfEmpty()
+                        join g in _dbContext.Guards on h.ChangedByGuardId equals (int?)g.Id into gj
+                        from g in gj.DefaultIfEmpty()
+                        select new TagHistoryReportViewModel
+                        {
+                            Id = h.Id,
+                            TagId = h.TagId,
+                            ClientSiteId = h.NewClientSiteId ?? h.OldClientSiteId,
+                            SiteName = s.Name,
+                            ClientTypeName = ct.Name,
+                            Action = h.Action,
+                            Note = h.Note,
+                            TagUId = h.NewUId ?? h.OldUId,
+                            TagTypeId = h.NewTagsTypeId ?? h.OldTagsTypeId,
+                            TagType = t.value,
+                            LabelDescription = h.NewLabelDescription ?? h.OldLabelDescription,
+                            ChangedByUserId = h.ChangedByUserId,
+                            ChangedByGuardId = h.ChangedByGuardId,
+                            UserName = u.UserName,
+                            GuardName = g.Name,
+                            GuardInitial = g.Initial,
+                            GuardSecurityNo = g.SecurityNo,
+                            ChangedBy = h.ChangedBy,
+                            AppType = h.AppType,
+                            AppVersion = h.AppVersion,
+                            ChangedOn = h.ChangedOn
+                        };
+
+            if (clientSiteIds.Length > 0)
+                query = query.Where(x => x.ClientSiteId.HasValue && clientSiteIds.Contains(x.ClientSiteId.Value));
+
+            if (tagUIds.Length > 0)
+                query = query.Where(x => tagUIds.Contains(x.TagUId));
+
+            if (tagTypeIds.Length > 0)
+                query = query.Where(x => x.TagTypeId.HasValue && tagTypeIds.Contains(x.TagTypeId.Value));
+
+            if (!string.IsNullOrEmpty(guardName))
+                query = query.Where(x => x.GuardName.Contains(guardName));
+
+            if (!string.IsNullOrEmpty(guardSecurityNo))
+                query = query.Where(x => x.GuardSecurityNo.Contains(guardSecurityNo));
+
+            if (!string.IsNullOrEmpty(userName))
+                query = query.Where(x => x.UserName.Contains(userName) || (x.ChangedByUserId == null && x.ChangedByGuardId == null && x.ChangedBy.Contains(userName)));
+
+            return SortTagHistory(query.ToList(), request.SortBy, request.SortDescending);
+        }
+
+        /// <summary>
+        /// Orders the report by the chosen column, then by date/time and id so rows that tie on
+        /// the column stay in the order they happened. Unknown or blank sort keys mean Date Time.
+        /// </summary>
+        public static List<TagHistoryReportViewModel> SortTagHistory(List<TagHistoryReportViewModel> rows, string sortBy, bool descending)
+        {
+            Func<TagHistoryReportViewModel, string> key = sortBy switch
+            {
+                TagHistorySortBy.Site => x => x.SiteName ?? string.Empty,
+                TagHistorySortBy.TagUId => x => x.TagUId ?? string.Empty,
+                TagHistorySortBy.TagType => x => x.TagType ?? string.Empty,
+                TagHistorySortBy.Action => x => x.Action ?? string.Empty,
+                TagHistorySortBy.User => x => x.UserDisplay ?? string.Empty,
+                TagHistorySortBy.Guard => x => x.GuardName ?? string.Empty,
+                _ => null
+            };
+
+            IOrderedEnumerable<TagHistoryReportViewModel> ordered;
+            if (key == null)
+            {
+                ordered = descending
+                    ? rows.OrderByDescending(x => x.ChangedOn).ThenByDescending(x => x.Id)
+                    : rows.OrderBy(x => x.ChangedOn).ThenBy(x => x.Id);
+            }
+            else
+            {
+                ordered = (descending
+                        ? rows.OrderByDescending(key, StringComparer.OrdinalIgnoreCase)
+                        : rows.OrderBy(key, StringComparer.OrdinalIgnoreCase))
+                    .ThenBy(x => x.ChangedOn)
+                    .ThenBy(x => x.Id);
+            }
+
+            return ordered.ToList();
+        }
+
+        public List<string> GetTagHistoryTagUIds(int[] clientSiteIds)
+        {
+            var query = _dbContext.ClientSiteSmartWandTagsHist.AsNoTracking();
+            if (clientSiteIds != null && clientSiteIds.Length > 0)
+                query = query.Where(h => clientSiteIds.Contains(h.NewClientSiteId ?? h.OldClientSiteId ?? 0));
+
+            return query.Select(h => h.NewUId ?? h.OldUId)
+                .Where(x => x != null && x != "")
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
         }
     }
 }

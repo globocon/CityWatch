@@ -22,18 +22,21 @@ namespace CityWatch.Kpi.API
         private readonly ISendScheduleService _sendScheduleService;
         private readonly IReportUploadService _reportUploadService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ITagHistoryScheduleService _tagHistoryScheduleService;
 
         public KpiReportController(IKpiSchedulesDataProvider kpiSchedulesDataProvider,
             ILogger<KpiReportController> logger,
             IWebHostEnvironment webHostEnvironment,
             ISendScheduleService sendScheduleService,
-            IReportUploadService reportUploadService)
+            IReportUploadService reportUploadService,
+            ITagHistoryScheduleService tagHistoryScheduleService)
         {
             _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
             _sendScheduleService = sendScheduleService;
             _reportUploadService = reportUploadService;
+            _tagHistoryScheduleService = tagHistoryScheduleService;
         }
 
         [Route("[action]", Name = "Send")]
@@ -245,6 +248,68 @@ namespace CityWatch.Kpi.API
             sendScheduleJob.CompletedDate = DateTime.Now;
             sendScheduleJob.StatusMessage = statusLog.ToString();
             _kpiSchedulesDataProvider.SaveSendScheduleJobCustomWand(sendScheduleJob);
+
+            _logger.LogInformation(statusLog.ToString());
+            return success;
+        }
+
+        /// <summary>
+        /// Weekly Tag History emails. Call it on the same timer as the other send jobs; each
+        /// schedule only runs once its NextRunOn has passed. Every run - including a week with
+        /// no changes, which sends nothing - is recorded in KpiSendScheduleJobsTagHistory.
+        /// </summary>
+        [Route("[action]", Name = "SendTagHistory")]
+        [HttpGet]
+        public bool SendTagHistory()
+        {
+            // A job row left open by a crashed run stops blocking after two hours.
+            var prevJob = _kpiSchedulesDataProvider.GetTagHistoryJobsInProgress(TimeSpan.FromHours(2)).FirstOrDefault();
+            if (prevJob != null)
+            {
+                _logger.LogWarning($"KpiTagHistorySendJob: Another job ({prevJob.Id}) is in progress.");
+                return false;
+            }
+
+            var pendingSchedules = _kpiSchedulesDataProvider.GetAllTagHistorySchedules()
+                .Where(z => z.NextRunOn < DateTime.Now && !z.IsPaused)
+                .ToList();
+            if (!pendingSchedules.Any())
+            {
+                _logger.LogInformation("KpiTagHistorySendJob: No schedule to process.");
+                return true;
+            }
+
+            var sendScheduleJob = new KpiSendScheduleJobsTagHistory()
+            {
+                CreatedDate = DateTime.Now,
+                RunType = "Auto"
+            };
+            sendScheduleJob.Id = _kpiSchedulesDataProvider.SaveSendScheduleJobTagHistory(sendScheduleJob);
+
+            var success = true;
+            var statusLog = new StringBuilder();
+            statusLog.AppendLine($"KpiTagHistorySendJob: {sendScheduleJob.Id} - Starting. {pendingSchedules.Count} schedule(s).");
+            foreach (var schedule in pendingSchedules)
+            {
+                try
+                {
+                    // The week before the day it was due, even if the timer runs late.
+                    var result = _tagHistoryScheduleService.ProcessSchedule(schedule, schedule.NextRunOn, true);
+                    statusLog.AppendLine($"Schedule {schedule.Id}: {result.RecordCount} change(s). {result.Message}");
+                    success &= result.Success;
+                }
+                catch (Exception ex)
+                {
+                    success = false;
+                    statusLog.AppendLine($"Schedule {schedule.Id}: Exception - {ex.Message}.");
+                }
+            }
+            statusLog.AppendLine($"KpiTagHistorySendJob: {sendScheduleJob.Id} Completed. Status - {success}.");
+
+            sendScheduleJob.Success = success;
+            sendScheduleJob.CompletedDate = DateTime.Now;
+            sendScheduleJob.StatusMessage = statusLog.ToString();
+            _kpiSchedulesDataProvider.SaveSendScheduleJobTagHistory(sendScheduleJob);
 
             _logger.LogInformation(statusLog.ToString());
             return success;
