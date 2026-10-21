@@ -55,6 +55,9 @@
                     <li class="nav-item">
                         <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
                 </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tag-history-log-tab" data-toggle="tab" href="#tagHistoryLog" role="tab" aria-controls="tagHistoryLog" aria-selected="false">Tag History</a>
+                    </li>
         }
         else if (AuthUserHelper.IsAdminAuditor)
         {
@@ -118,6 +121,9 @@
                 <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
                     <partial name="_VisitorProfileAuditSiteLog"></partial>
                     </div>
+                <div class="tab-pane fade py-3" id="tagHistoryLog" role="tabpanel" aria-labelledby="tag-history-log-tab">
+                    <partial name="_TagHistoryAuditSiteLog" model="Model"></partial>
+                </div>
         }
         else
         {

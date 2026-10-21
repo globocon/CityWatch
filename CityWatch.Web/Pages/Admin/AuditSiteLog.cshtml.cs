@@ -29,6 +29,8 @@ namespace CityWatch.Web.Pages.Admin
         public readonly IConfigDataProvider _configDataProvider;
         public readonly ISmartWandReportZipGenarator _smartWandReportGenarator;
         public readonly IWandStrikeReportDataService _wandStrikeReportDataService;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
+        private readonly ITagHistoryReportGenerator _tagHistoryReportGenerator;
         public string ClientNameTitle { get; set; }
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
@@ -38,7 +40,9 @@ namespace CityWatch.Web.Pages.Admin
             ITimesheetReportGenerator TimesheetReportGenerator, 
             IConfigDataProvider configDataProvider,
             ISmartWandReportZipGenarator smartWandReportGenarator,
-            IWandStrikeReportDataService wandStrikeReportDataService)
+            IWandStrikeReportDataService wandStrikeReportDataService,
+            IClientSiteWandDataProvider clientSiteWandDataProvider,
+            ITagHistoryReportGenerator tagHistoryReportGenerator)
         {
             _viewDataService = viewDataService;
             _guardLogDataProvider = guardLogDataProvider;
@@ -49,10 +53,13 @@ namespace CityWatch.Web.Pages.Admin
             _configDataProvider = configDataProvider;
             _smartWandReportGenarator = smartWandReportGenarator;
             _wandStrikeReportDataService = wandStrikeReportDataService;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
+            _tagHistoryReportGenerator = tagHistoryReportGenerator;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
         public WandStrikeAuditLogRequest WandStrikeAuditLogRequest { get; set; }
+        public TagHistoryReportRequest TagHistoryReportRequest { get; set; }
         public string loggedInUserId { get; set; }
         public int GuardId { get; set; }
         public GuardViewModel Guard { get; set; }
@@ -816,6 +823,52 @@ namespace CityWatch.Web.Pages.Admin
             };
         }
         #endregion "Wand Strikes"
+
+        #region "Tag History"
+        /// <summary>
+        /// UID choices for the selected sites: every UID with history there, plus the site's
+        /// current tags, so a tag deleted since is still selectable. Tag types are the full list.
+        /// </summary>
+        public JsonResult OnGetTagHistoryFilterOptions(string clientSiteIds)
+        {
+            var arClientSiteIds = (clientSiteIds ?? string.Empty)
+                .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(z => int.Parse(z))
+                .ToArray();
+
+            var tagUIds = _clientSiteWandDataProvider.GetTagHistoryTagUIds(arClientSiteIds);
+            if (arClientSiteIds.Length > 0)
+                tagUIds.AddRange(_viewDataService.GetClientSiteTagIds(arClientSiteIds).Select(x => x.UId));
+
+            var tagIds = tagUIds
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x)
+                .Select(x => new SelectListItem { Value = x, Text = x })
+                .ToList();
+
+            var tagTypeIds = _clientSiteWandDataProvider.GetSmartWandTagsType()
+                .Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.value })
+                .OrderBy(x => x.Text)
+                .ToList();
+
+            return new JsonResult(new { tagIds, tagTypeIds });
+        }
+
+        public JsonResult OnPostTagHistoryAuditSiteLogs(TagHistoryReportRequest tagHistoryReportRequest)
+        {
+            var tagHistory = _clientSiteWandDataProvider.GetTagHistoryReport(tagHistoryReportRequest);
+            return new JsonResult(new { tagHistory });
+        }
+
+        public IActionResult OnPostDownloadTagHistoryPdf(TagHistoryReportRequest tagHistoryReportRequest)
+        {
+            var tagHistory = _clientSiteWandDataProvider.GetTagHistoryReport(tagHistoryReportRequest);
+            var pdf = _tagHistoryReportGenerator.GeneratePdf(tagHistory, tagHistoryReportRequest);
+            var fileName = $"Tag History - {tagHistoryReportRequest.LogFromDate:yyyy-MM-dd} to {tagHistoryReportRequest.LogToDate:yyyy-MM-dd}.pdf";
+            return File(pdf, "application/pdf", fileName);
+        }
+        #endregion "Tag History"
         public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, string startdate, string endDate)
         {
 

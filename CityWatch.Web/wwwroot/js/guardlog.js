@@ -9675,6 +9675,299 @@ $(function () {
 
     // WandStrike -- End
 
+    // TagHistory -- Start
+
+    const tagHistoryGroupColumn = 0;
+
+    function escapeTagHistoryHtml(value) {
+        return $('<div>').text(value === null || value === undefined ? '' : value).html();
+    }
+
+    function tagHistoryRenderText(value) {
+        return escapeTagHistoryHtml(value);
+    }
+
+    let tagHistoryLogReport = $('#tbl_taghistory_site_log').DataTable({
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        paging: true,
+        // Rows arrive in the order picked in "Sort Order"; sorting is done server side.
+        ordering: false,
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false },
+            { data: 'actionDateTimeText', width: "11%", render: tagHistoryRenderText },
+            { data: 'siteName', width: "15%", render: tagHistoryRenderText },
+            { data: 'tagAction', width: "27%", render: tagHistoryRenderText },
+            { data: 'tagUId', width: "10%", render: tagHistoryRenderText },
+            { data: 'tagType', width: "7%", render: tagHistoryRenderText },
+            { data: 'userDisplay', width: "10%", render: tagHistoryRenderText },
+            { data: 'guardDisplay', width: "15%", render: tagHistoryRenderText },
+            { data: 'appType', width: "5%", render: tagHistoryRenderText },
+        ],
+        drawCallback: function () {
+            // Day headings only when the rows are in date order.
+            if ($('#taghistorySortBy').val() !== 'DateTime')
+                return;
+
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(tagHistoryGroupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="8">' + escapeTagHistoryHtml(group) + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+
+    $('.taghistorymultiselect').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true
+    });
+
+    if ($('#taghistoryAuditFromDate').length) {
+        $('#taghistoryAuditFromDate').val(startDate.toISOString().substr(0, 10));
+        $('#taghistoryAuditToDate').val(systemDate);
+    }
+
+    function loadTagHistoryClientSites() {
+        const clientTypes = $('#taghistoryClientType').val() || [];
+        const clientSiteControl = $('#taghistoryClientSiteId');
+        tagHistoryLogReport.clear().draw();
+        clientSiteControl.html('');
+        clientSiteControl.multiselect('rebuild');
+        if (clientTypes.length === 0)
+            return;
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientTypes.join(';')),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                clientSiteControl.html('');
+                data.map(function (site) {
+                    clientSiteControl.append($('<option></option>').val(site.value).text(site.text));
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+    }
+
+    $('#taghistoryClientType').on('change', loadTagHistoryClientSites);
+
+    // A client type preselected by the page (single-type users) needs its sites loaded up front.
+    if ($('#taghistoryClientType').length && ($('#taghistoryClientType').val() || []).length > 0)
+        loadTagHistoryClientSites();
+
+    $('#taghistoryClientSiteId').on('change', function () {
+        const siteIds = $(this).val() || [];
+        const tagUIdControl = $('#taghistoryTagUId');
+        const tagTypeControl = $('#taghistoryTagTypeId');
+
+        if (siteIds.length === 0) {
+            tagUIdControl.html('').multiselect('rebuild');
+            return;
+        }
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=TagHistoryFilterOptions&clientSiteIds=' + siteIds.join(';'),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            const selectedTypes = tagTypeControl.val() || [];
+            tagUIdControl.html('');
+            tagTypeControl.html('');
+            data.tagIds.map(function (result) {
+                tagUIdControl.append($('<option></option>').val(result.value).text(result.text));
+            });
+            data.tagTypeIds.map(function (result) {
+                tagTypeControl.append($('<option></option>').val(result.value).text(result.text)
+                    .prop('selected', selectedTypes.indexOf(result.value) >= 0));
+            });
+            tagUIdControl.multiselect('rebuild');
+            tagTypeControl.multiselect('rebuild');
+        });
+    });
+
+    $('#taghistorySortBy, #taghistorySortDirection').on('change', function () {
+        // Re-run with the new order if a report is already showing.
+        if (tagHistoryLogReport.data().count() > 0)
+            $('#btnGenerateTagHistoryReport').trigger('click');
+    });
+
+    /** Copies the visible filters into the hidden request fields; false when they are not valid. */
+    function setTagHistoryRequest() {
+        if (($('#taghistoryClientSiteId').val() || []).length === 0) {
+            alert('Please select a client site');
+            return false;
+        }
+
+        const fromDate = $('#taghistoryAuditFromDate').val();
+        const toDate = $('#taghistoryAuditToDate').val();
+        if (!fromDate || !toDate) {
+            alert('Please select From Date and To Date');
+            return false;
+        }
+        if (new Date(fromDate) > new Date(toDate)) {
+            alert('From Date must be on or before To Date');
+            return false;
+        }
+        if (monthDiff(new Date(fromDate), new Date(toDate)) > 6) {
+            alert('Date Range is greater than 6 months');
+            return false;
+        }
+
+        $('#TagHistoryReportRequest_ClientSiteId').val(($('#taghistoryClientSiteId').val() || []).join(','));
+        $('#TagHistoryReportRequest_LogFromDate').val(fromDate);
+        $('#TagHistoryReportRequest_LogToDate').val(toDate);
+        $('#TagHistoryReportRequest_TagUId').val(($('#taghistoryTagUId').val() || []).join(','));
+        $('#TagHistoryReportRequest_TagTypeId').val(($('#taghistoryTagTypeId').val() || []).join(','));
+        $('#TagHistoryReportRequest_SortBy').val($('#taghistorySortBy').val() || 'DateTime');
+        $('#TagHistoryReportRequest_SortDescending').val($('#taghistorySortDirection').val());
+        return true;
+    }
+
+    function fetchTagHistory() {
+        return $.ajax({
+            url: '/Admin/AuditSiteLog?handler=TagHistoryAuditSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_taghistory_auditlog_request').serialize(),
+        });
+    }
+
+    $('#btnGenerateTagHistoryReport').on('click', function () {
+        if (!setTagHistoryRequest())
+            return;
+
+        $('#loader').show();
+        fetchTagHistory()
+            .done(function (response) {
+                tagHistoryLogReport.clear().rows.add(response.tagHistory).draw();
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                alert('Failed to load the tag history report.');
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+    $('#btnDownloadTagHistoryExcel').on('click', function () {
+        if (!setTagHistoryRequest())
+            return;
+
+        $('#loader').show();
+        fetchTagHistory()
+            .done(function (response) {
+                exportTagHistoryToExcel(response.tagHistory || []);
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                alert('Failed to generate the Excel file.');
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+    async function exportTagHistoryToExcel(rows) {
+        if (rows.length === 0) {
+            alert('No tag history found for the selected filters.');
+            return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Tag History');
+
+        worksheet.columns = [
+            { header: 'Action Date Time', key: 'actionDateTimeText' },
+            { header: 'Site Name', key: 'siteName' },
+            { header: 'Tag Action', key: 'action' },
+            { header: 'Note', key: 'note' },
+            { header: 'Tag UID', key: 'tagUId' },
+            { header: 'Tag Type', key: 'tagType' },
+            { header: 'Label', key: 'labelDescription' },
+            { header: 'User', key: 'userDisplay' },
+            { header: 'Guard', key: 'guardDisplay' },
+            { header: 'Changed From', key: 'appType' },
+            { header: 'App Version', key: 'appVersion' },
+        ];
+
+        rows.forEach(function (row) {
+            worksheet.addRow(row);
+        });
+
+        worksheet.getRow(1).eachCell(function (cell) {
+            cell.font = { bold: true };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF27C2F5' } };
+            cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+        });
+
+        worksheet.columns.forEach(function (column) {
+            let maxLength = column.header.length;
+            column.eachCell({ includeEmpty: true }, function (cell) {
+                const value = cell.value ? cell.value.toString() : '';
+                maxLength = Math.max(maxLength, value.length);
+            });
+            column.width = Math.min(maxLength + 2, 80);
+        });
+
+        worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const fileName = 'Tag History - ' + $('#taghistoryAuditFromDate').val() + ' to ' + $('#taghistoryAuditToDate').val() + '.xlsx';
+        saveAs(new Blob([buffer]), fileName);
+    }
+
+    $('#btnDownloadTagHistoryPdf').on('click', function () {
+        if (!setTagHistoryRequest())
+            return;
+
+        $('#loader').show();
+        fetch('/Admin/AuditSiteLog?handler=DownloadTagHistoryPdf', {
+            method: 'POST',
+            body: new URLSearchParams($('#form_taghistory_auditlog_request').serialize()),
+            headers: { 'RequestVerificationToken': $('#form_taghistory_auditlog_request input[name="__RequestVerificationToken"]').val() }
+        })
+            .then(function (response) {
+                if (!response.ok)
+                    throw new Error('HTTP ' + response.status);
+                return response.blob();
+            })
+            .then(function (blob) {
+                const fileName = 'Tag History - ' + $('#taghistoryAuditFromDate').val() + ' to ' + $('#taghistoryAuditToDate').val() + '.pdf';
+                saveAs(blob, fileName);
+            })
+            .catch(function (error) {
+                console.error('PDF download error:', error);
+                alert('Failed to generate the PDF file.');
+            })
+            .finally(function () {
+                $('#loader').hide();
+            });
+    });
+
+    // TagHistory -- End
+
     //p9-Issue 1-start
     $('#Rooster_ClientType').on('change', function () {
         populateClientSitesForRooster();

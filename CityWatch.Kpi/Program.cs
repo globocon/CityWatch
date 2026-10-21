@@ -51,6 +51,7 @@ builder.Services.AddScoped<IClientSiteViewDataService, ClientSiteViewDataService
 builder.Services.AddScoped<IKeyVehicleGenerator, KeyVehicleGenerator>();
 builder.Services.AddScoped<IWandStrikeReportDataService, WandStrikeReportDataService>();
 builder.Services.AddScoped<ICustomWandExcelReportGenerator, CustomWandExcelReportGenerator>();
+builder.Services.AddScoped<ITagHistoryScheduleService, TagHistoryScheduleService>();
 
 // ---------------------------------------------------------------------------
 // Fast report generator (parallel implementation - additive only).

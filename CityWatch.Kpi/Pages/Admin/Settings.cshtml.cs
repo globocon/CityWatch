@@ -51,6 +51,7 @@ namespace CityWatch.Kpi.Pages.Admin
         private readonly Settings _settings;
         private readonly IDropboxService _dropboxUploadService;
         private readonly IClientSiteViewDataService _clientViewDataService;
+        private readonly ITagHistoryScheduleService _tagHistoryScheduleService;
 
 
         [BindProperty]
@@ -83,7 +84,8 @@ namespace CityWatch.Kpi.Pages.Admin
              IConfigDataProvider configDataProvider,
              IOptions<Settings> settings,
              IDropboxService dropboxUploadService,
-             IClientSiteViewDataService clientViewDataService
+             IClientSiteViewDataService clientViewDataService,
+             ITagHistoryScheduleService tagHistoryScheduleService
              )
         {
             _webHostEnvironment = webHostEnvironment;
@@ -102,6 +104,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _settings = settings.Value;
             _dropboxUploadService = dropboxUploadService;
             _clientViewDataService = clientViewDataService;
+            _tagHistoryScheduleService = tagHistoryScheduleService;
 
         }
 
@@ -1014,6 +1017,124 @@ namespace CityWatch.Kpi.Pages.Admin
 
 
         // Custom Wand End
+
+        // Tag History Start - one weekly report covering every client site, so there is no
+        // per-user site filtering here as there is for the site-based schedules above.
+
+        public JsonResult OnGetKpiTagHistorySendSchedules(int type, string searchTerm)
+        {
+            var schedules = _kpiSchedulesDataProvider.GetAllTagHistorySchedules();
+            var lastJobs = _kpiSchedulesDataProvider.GetLastTagHistoryJobs(schedules.Select(x => x.Id).ToArray());
+
+            return new JsonResult(schedules
+                .Select(z => KpiTagHistoryScheduleViewModel.FromDataModel(z, lastJobs.GetValueOrDefault(z.Id)))
+                .Where(z => string.IsNullOrEmpty(searchTerm) ||
+                            (z.ProjectName ?? string.Empty).IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1 ||
+                            (z.EmailTo ?? string.Empty).IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1)
+                .OrderBy(x => x.ProjectName));
+        }
+
+        public JsonResult OnGetKpiTagHistorySchedule(int id)
+        {
+            return new JsonResult(_kpiSchedulesDataProvider.GetTagHistoryScheduleById(id));
+        }
+
+        public JsonResult OnPostSaveKpiTagHistorySchedule(KpiTagHistoryScheduleViewModel kpiTagHistoryScheduleViewModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(kpiTagHistoryScheduleViewModel, new ValidationContext(kpiTagHistoryScheduleViewModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var invalidEmails = (kpiTagHistoryScheduleViewModel.EmailTo ?? string.Empty).Split(',')
+                .Concat((kpiTagHistoryScheduleViewModel.EmailBcc ?? string.Empty).Split(','))
+                .Select(x => x.Trim())
+                .Where(x => x.Length > 0 && !CommonHelper.IsValidEmail(x))
+                .ToList();
+            if (invalidEmails.Any())
+                return new JsonResult(new { success = false, message = $"Invalid email address: {string.Join(", ", invalidEmails)}" });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var schedule = KpiTagHistoryScheduleViewModel.ToDataModel(kpiTagHistoryScheduleViewModel);
+                schedule.NextRunOn = KpiTagHistoryScheduleRunOnCalculator.GetNextRunOn(schedule);
+                _kpiSchedulesDataProvider.SaveTagHistorySchedule(schedule);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteKpiTagHistorySchedule(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _kpiSchedulesDataProvider.DeleteTagHistorySchedule(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        /// <summary>
+        /// Run Now: reports the seven days before <paramref name="reportDate"/>, as the scheduler
+        /// would on that day, and emails the schedule's recipients. Does not move the next run.
+        /// </summary>
+        public JsonResult OnPostRunScheduleTagHistory(int scheduleId, DateTime reportDate)
+        {
+            try
+            {
+                var schedule = _kpiSchedulesDataProvider.GetTagHistoryScheduleById(scheduleId);
+                if (schedule == null)
+                    throw new ArgumentException("Schedule not found");
+
+                var result = _tagHistoryScheduleService.ProcessSchedule(schedule, reportDate, false);
+                return new JsonResult(new
+                {
+                    success = result.Success,
+                    emailSent = result.EmailSent,
+                    recordCount = result.RecordCount,
+                    message = $"{result.FromDate:dd MMM yyyy} to {result.ToDate:dd MMM yyyy}: {result.RecordCount} change(s). {result.Message}"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Tag History Run Now failed for schedule {ScheduleId}", scheduleId);
+                return new JsonResult(new { success = false, emailSent = false, recordCount = 0, message = ex.Message });
+            }
+        }
+
+        /// <summary>The email body the schedule would send for that week, without sending it.</summary>
+        public IActionResult OnGetPreviewTagHistory(int scheduleId, DateTime reportDate)
+        {
+            var schedule = _kpiSchedulesDataProvider.GetTagHistoryScheduleById(scheduleId);
+            if (schedule == null)
+                return NotFound("Schedule not found");
+
+            var (fromDate, toDate) = KpiTagHistoryScheduleRunOnCalculator.GetReportPeriod(reportDate);
+            var rows = _clientSiteWandDataProvider.GetTagHistoryReport(new TagHistoryReportRequest
+            {
+                LogFromDate = fromDate,
+                LogToDate = toDate,
+                SortBy = TagHistorySortBy.DateTime
+            });
+            var html = _tagHistoryScheduleService.BuildEmailHtml(rows, fromDate, toDate,
+                string.IsNullOrWhiteSpace(schedule.ProjectName) ? "All Client Sites" : schedule.ProjectName);
+            return Content(html, "text/html");
+        }
+
+        // Tag History End
 
 
 

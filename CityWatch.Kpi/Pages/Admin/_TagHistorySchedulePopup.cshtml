@@ -1,0 +1,113 @@
+<!-- Tag History Schedule Modal: one weekly email covering every client site -->
+<div class="modal" tabindex="-1" role="dialog" id="tagHistory-schedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar" aria-hidden="true"></i> Manage Tag History Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <form id="frm_kpi_TagHistorySchedule">
+                    <input type="hidden" id="TagHistoryscheduleId" name="id" value="0">
+                    <input type="hidden" id="nextRunOnTagHistory" name="nextRunOn" value="">
+                    <div class="alert alert-info py-2">
+                        <i class="fa fa-info-circle mr-1"></i>
+                        Reports tag changes across <strong>all client sites</strong> for the 7 days before each run day.
+                        New sites and tags are included automatically. No email is sent for a week without changes.
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="projectNameTagHistory">Project Name</label>
+                                <input type="text" class="form-control" id="projectNameTagHistory" name="projectName" maxlength="50" />
+                            </div>
+                            <div class="form-group">
+                                <label for="startDateTagHistory">Start Date</label>
+                                <input type="date" class="form-control" id="startDateTagHistory" name="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="endDateTagHistory">End Date</label>
+                                <input type="date" class="form-control" id="endDateTagHistory" name="endDate">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="runDayTagHistory">Run Day (Weekly)</label>
+                                    <select class="form-control" id="runDayTagHistory" name="runDayOfWeek">
+                                        <option value="">Select</option>
+                                        <option value="1">Monday</option>
+                                        <option value="2">Tuesday</option>
+                                        <option value="3">Wednesday</option>
+                                        <option value="4">Thursday</option>
+                                        <option value="5">Friday</option>
+                                        <option value="6">Saturday</option>
+                                        <option value="0">Sunday</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="timeTagHistory">Exec. Time</label>
+                                    <input type="time" class="form-control" id="timeTagHistory" name="time">
+                                </div>
+                            </div>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="isPausedTagHistory" name="isPaused" value="true">
+                                <label class="form-check-label" for="isPausedTagHistory">Paused</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="emailToTagHistory">Email Recipients <i class="fa fa-info-circle text-info" title="Comma separated list of email recipients"></i></label>
+                                <textarea class="form-control" id="emailToTagHistory" name="emailTo" rows="4" placeholder="name@example.com, other@example.com"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="emailBccTagHistory">Email Recipients [BCC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in BCC"></i></label>
+                                <textarea class="form-control" id="emailBccTagHistory" name="emailBcc" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation-TagHistory" class="text-danger"></ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="button" id="btnSaveTagHistorySchedule" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Schedule</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="run-tagHistory-schedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Run Tag History Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group mb-0">
+                        <label for="reportRunDateTagHistory">Run Date</label>
+                        <input type="date" class="form-control" id="reportRunDateTagHistory" max="@DateTime.Now.ToString("yyyy-MM-dd")">
+                        <small class="form-text text-muted" id="reportPeriodTagHistory"></small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex flex-column align-items-start">
+                <input type="hidden" value="" id="sch-id-TagHistory" />
+                <div class="btn-toolbar">
+                    <button type="button" class="btn btn-primary mr-3" id="btnScheduleRunTagHistory">Run Now</button>
+                    <button type="button" class="btn btn-outline-primary" id="btnSchedulePreviewTagHistory"><i class="fa fa-eye mr-1"></i>Preview</button>
+                </div>
+                <span id="schRunStatusTagHistory" class="mt-2"></span>
+            </div>
+        </div>
+    </div>
+</div>
