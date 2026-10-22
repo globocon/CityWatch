@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-	<AssemblyVersion>2.39.2.0</AssemblyVersion>
+	<AssemblyVersion>2.39.3.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.104.2" />
-    <PackageReference Include="Dropbox.Api" Version="7.0.0" />
+    <PackageReference Include="Dropbox.Api" Version="6.25.0" />
     <PackageReference Include="itext7" Version="7.2.0" />
     <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.1" />
     <PackageReference Include="MailKit" Version="3.0.0" />
