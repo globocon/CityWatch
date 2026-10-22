@@ -1,0 +1,376 @@
+@page "/RoosterHub"
+@using CityWatch.Web.Helpers
+@model CityWatch.Web.Pages.Admin.RosterModel
+@{
+   
+    ViewData["Title"] = Model.ClientNameTitle + " | ROSTERS";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Roster;
+
+}
+<div class="row  text-center" style="padding-top:90px;">
+
+
+
+
+ 
+
+        <div class="col-sm-3">
+            <h3>BOOKING</h3>
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser)
+                {
+                    <a href="/roster/Booking" id="AnBooking">
+                        <img src="~/images/CalendarWithHand.png" class="center" />
+                    </a>
+                }
+                else
+                {
+                    <a href="javascript:void(0);" id="AnBookingAuth" data-toggle="modal" data-target="#mdlAuthBookingAccess">
+                        <img src="~/images/CalendarWithHand.png" class="center" />
+                    </a>
+                }
+            </div>
+            <div class="font-weight-bold text-muted" style="margin-top: -15px; font-size: 0.85rem;">(Admin Only)</div>
+        </div>
+
+        <!-- ROSTERS -->
+        <div class="col-sm-3">
+            <h3>ROSTERS</h3>
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                <a href="javascript:void(0);" id="BtnRosterAuthSelector" data-toggle="modal" data-target="#mdlAuthGuardForRosterSelector">
+                    <img src="~/images/calender.png" class="center" />
+                </a>
+            </div>
+        </div>
+
+        <!-- PCAR ROUTE -->
+        <div class="col-sm-3">
+            <h3>PCAR ROUTE</h3>
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto; text-align:center;">
+                <a href="javascript:void(0);" id="AnPcarCars">
+                    <i class="fa fa-car" style="font-size:48px;"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- TIMESHEETS -->
+        <div class="col-sm-3">
+            <h3>TIMESHEETS</h3>
+            <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto;">
+                <a href="javascript:void(0);" id="Ancompanysop2" data-toggle="modal" data-target="#mdlAuthGuardForSopDownload">
+                    <img src="~/images/Timesheet.jpg" class="center" />
+                </a>
+            </div>
+        </div>
+
+</div>
+
+    
+
+@* <div id="dvDownloadSelecterOuter">
+    <h3>Timesheet</h3> <!-- Heading outside the div -->
+    <div>
+        <div id="dvcompanysop" style="width:300px;border: 8px solid grey;padding: 50px;margin: 20px;">
+            <a href="/Incident/Downloads?type=1" id="Ancompanysop">
+                <img src="~/images/Timesheet.jpg" class="center" />
+            </a>
+        </div>
+    </div>
+
+    <div id="dvtraining"><a href="/Incident/Downloads?type=2" id="Antraining"><img src="~/images/c4itraining.png" class="center" /></a></div>
+    <div id="dvformsandtemplates"><a href="/Incident/Downloads?type=3" id="Anformsandtemplates"><img src="~/images/formsandtemplates.png" class="center" /></a></div>
+</div> *@
+@Html.AntiForgeryToken()
+<!----------------- Guard Roster Selector Modal -------------------->
+<div class="modal fade" id="mdlAuthGuardForRosterSelector" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthGuardForRosterSelectorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Roster Access Authentication</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser)
+                {
+                    <div class="alert alert-info py-3 mb-3 text-center">
+                        <i class="fa fa-shield fa-2x mb-2 opacity-50"></i>
+                        <h6 class="font-weight-bold">System Administrator Access</h6>
+                        <p class="small mb-0">You have elevated privileges. Please select a site to proceed.</p>
+                    </div>
+                    <input type="hidden" id="RosterAuth_LicenseNo" value="ADMIN" />
+                    <input type="hidden" id="RosterAuth_PIN" value="ADMIN" />
+                }
+                else
+                {
+                    <div class="form-row pb-3">
+                        <div class="form-group col-md-12">
+                            <label>Security License No.</label>
+                            <input class="form-control" id="RosterAuth_LicenseNo" placeholder="Enter License No">
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label>HR PIN</label>
+                            <input type="password" class="form-control" id="RosterAuth_PIN" placeholder="Enter PIN">
+                        </div>
+                    </div>
+                }
+                <hr />
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="RosterSelector_ClientType">Client Type</label>
+                        <select class="form-control" id="RosterSelector_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="RosterSelector_ClientSite">Client Site</label>
+                        <select class="form-control" id="RosterSelector_ClientSite">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col text-right">
+                        <button type="button" class="btn btn-primary" id="btnRosterViewConfirm">View Roster</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div id="RosterSelectorValidationSummary" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Guard Details Modal -------------------->
+<div class="modal fade" id="mdlAuthGuardForSopDownload" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthenticateGuardForSopDownload" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Select Individual Security License No</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser)
+                {
+                    <div class="alert alert-info py-3 mb-3 text-center">
+                        <i class="fa fa-shield fa-2x mb-2 opacity-50"></i>
+                        <h6 class="font-weight-bold">System Administrator Access</h6>
+                        <p class="small mb-0">You have elevated privileges. Please search by Guard or Site.</p>
+                    </div>
+                    <input type="hidden" id="GuardDownloadSop_SecurityNo" value="ADMIN" />
+                    <input type="hidden" id="GuardDownloadSop_PIN" value="ADMIN" />
+                }
+                else
+                {
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Security License No.</label>
+                            <input class="form-control" id="GuardDownloadSop_SecurityNo" placeholder="Enter License No">
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label>HR PIN</label>
+                            <input type="password" class="form-control" id="GuardDownloadSop_PIN" placeholder="Enter PIN">
+                        </div>
+                    </div>
+                }
+                <div class="form-row">
+                    <div class="form-group col-md-12 text-right">
+                        <button type="button" class="btn btn-primary" id="btnTimesheetConfirm" title="Authenticate guard">
+                            <i class="fa fa-key mr-2"></i>Verify Individual
+                        </button>
+                    </div>
+                </div>
+                <div class="form-row pb-2">
+                    <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
+                    </div>
+                </div>
+              
+            </div>
+            <div class="modal-header">
+                <h6 class="modal-title">Or Select Site (Bulk)</h6>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="Rooster_ClientType">Client Type</label>
+                        <select class="form-control" id="Rooster_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)"></select>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="Rooster_ClientSite">Client Site</label>
+                        <input type="hidden" id="Rooster_ClientSiteID" />
+                        <select class="form-control" id="Rooster_ClientSite">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col text-right">
+                        <button type="button" class="btn btn-primary" id="btnTimesheetSiteConfirm">Proceed with Site</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div id="AuthGuardForSopDwnldValidationSummary1" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+                </div>
+            </div>
+            <div>
+                <input type="hidden" id="sop_filename" />
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------- Booking Access Modal -------------------->
+<div class="modal fade" id="mdlAuthBookingAccess" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthenticateBookingAccess" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Enter Security License No for Booking Access</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminPowerUser)
+                {
+                    <div class="alert alert-info py-3 mb-3 text-center">
+                        <i class="fa fa-shield fa-2x mb-2 opacity-50"></i>
+                        <h6 class="font-weight-bold">System Administrator Access</h6>
+                        <p class="small mb-0">You have elevated privileges. Please verify to proceed.</p>
+                    </div>
+                    <input type="hidden" id="BookingAuth_SecurityNo" value="ADMIN" />
+                    <input type="hidden" id="BookingAuth_PIN" value="ADMIN" />
+                }
+                else
+                {
+                    <div class="form-row pb-3">
+                        <div class="form-group col-md-12">
+                            <label>Security License No.</label>
+                            <input class="form-control" id="BookingAuth_SecurityNo" placeholder="Enter License No">
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label>HR PIN</label>
+                            <input type="password" class="form-control" id="BookingAuth_PIN" placeholder="Enter PIN">
+                        </div>
+                    </div>
+                }
+                <div class="form-row">
+                    <div class="col text-right">
+                        <button type="button" class="btn btn-primary" id="btnBookingAuthConfirm" title="Verify access"><i class="fa fa-key mr-2"></i>Verify</button>
+                    </div>
+                </div>
+                <div class="form-row pb-2">
+                    <div id="bookingAuthValidationSummary" class="text-danger col-md-12" style="font-size:0.9rem">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------- Timesheet Modal -------------------->
+<div class="modal fade" id="timesheetModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar mr-2"></i>Timesheet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <input type="hidden" id="TimesheetGuard_Id1" />
+                        <input type="hidden" id="TimesheetSite_Id1" />
+                        <h>Instant Timesheet</h>
+                        <div class="form-group">
+                            <label for="frequency"></label>
+                            <select class="form-control" id="frequency" name="frequency">
+                                <option value="">Select</option>
+                                <option value="Today">Today</option>
+                                <option value="ThisWeek">This Week</option>
+                                <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                <option value="Last4weeks">Last 4 weeks(month)</option>
+                                <option value="Month">This Month(partial)</option>
+                                <option value="LastMonth">Last Month</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="button" id="btnDownloadTimesheetFrequencyRoster" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                            </div>
+                        </div><br />
+                        <h>Custom Timesheets</h><br />
+                        <div class="form-group">
+                        </div>
+                        <div class="form-group">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" class="form-control" id="startDateRoster" name="startDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" class="form-control" id="endDateRoster" name="endDate">
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="button" id="btnDownloadTimesheetRoster" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="loginRosterEditGuard" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="loginHrEditGuardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">HR Document PIN</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardRooster" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Enter your PIN</label><br />
+                                    <input class="form-control" type="password" id="txt_guardRosterKey" />
+                                </div>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <div class="text-start" style="flex-grow: 1;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="GuardRosterValidationSummary" class="pl-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageHeader {
+    <h3 class="text-center">ROSTERS</h3>
+}
+
+@section scripts {
+    @await Html.PartialAsync("../Guard/_GuardRosterModal")
+}
+

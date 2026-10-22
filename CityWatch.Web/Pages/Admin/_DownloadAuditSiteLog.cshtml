@@ -1,0 +1,31 @@
+﻿@using CityWatch.Web.Helpers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+<div class="row">
+    <div class="col-md-12">
+        <form id="frm-downloadLogAuditLogs" class="border-bottom">
+            <div class="form-row">                
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="dwnlogAuditFromDate">From Date</label>
+                    <input type="date" class="form-control" id="dwnlogAuditFromDate" />
+                </div>
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="dwnlogAuditToDate">To Date</label>                    
+                    <input type="date" class="form-control" id="dwnlogAuditToDate">
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="mx-1">&nbsp;</label>
+                    <div>
+                        <button type="button" class="btn btn-primary mx-1" id="btnGenerateDwnlog">View Logs</button>
+                        @* <button type="button" class="btn btn-primary" id="btnDwnlogExcel">Download Excel</button> *@
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 my-2">        
+        <table class="table table-bordered table-sm" width="100%" id="tbl_downloadlog_audit"></table>
+    </div>
+</div>

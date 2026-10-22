@@ -1,0 +1,101 @@
+﻿@page
+@model FortescueWebApp.Pages.Admin.AddUserDetailsModel
+@{
+    ViewData["Title"] = "Add User Details";
+    Layout = "/Pages/Shared/_LayoutDemo.cshtml";
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+        <strong>Error:</strong> @Model.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+
+<div class="container mt-5">
+    <!-- Upload User Details -->
+
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white border-0 rounded-0">
+            Upload User Details
+        </div>
+        <div class="card-body p-4">
+            <form enctype="multipart/form-data" method="post">
+                <div class="form-group mb-3">
+                    <label for="ExcelFile" class="form-label">Upload Excel File</label>
+                    <input type="file" class="form-control" id="ExcelFile" name="ExcelFile" accept=".xlsx,.xls" required>
+                    <div class="invalid-feedback">Please select a file to upload.</div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3" name="action" value="upload">Upload Excel</button>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Add User Details Form -->
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white border-0 rounded-0">
+            Add User Details
+        </div>
+        <div class="card-body p-4">
+            <form class="row g-3 needs-validation" method="POST" novalidate>
+                <div class="col-md-6">
+                    <label for="Name" class="form-label required">Name</label>
+                    <input type="text" class="form-control" id="Name" asp-for="Name" required>
+                    <div class="invalid-feedback">Please enter the name.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="Email" class="form-label required">Email</label>
+                    <input type="email" class="form-control" id="Email" asp-for="Email" required>
+                    <div class="invalid-feedback">Please enter a valid email.</div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-3 text-center col-12">
+                    <button type="submit" class="btn btn-primary" name="action" value="submit">Submit User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Display Users in Grid -->
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white border-0 rounded-0">
+            All Users
+        </div>
+        <div class="card-body p-4">
+            <h4>All Users</h4>
+            <table class="table table-bordered">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users != null)
+                    {
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>@user.Name</td>
+                                <td>@user.Email</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

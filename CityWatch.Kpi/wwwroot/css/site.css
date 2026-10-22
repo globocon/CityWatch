@@ -1,5 +1,32 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@media print {
+    .no-print {
+        display: none;
+    }
+}
+@media print {
+    .page-break {
+        page-break-before: always;
+    }
+}
+.form-control-new {
+    height: 25px;
+    width: 70px;
+    border: 1px solid #ced4da; /* Default Bootstrap border color */
+    border-radius: 0.25rem;
+    
+}
+.form-control-new {
+    font-size: 12px; 
+    font-weight:normal
+}
+.form-control-new:focus {
+    border-color: #80bdff; /* Example focus color */
+}
 
+.form-control-new:hover {
+    border-color: #b8daff; /* Example hover color */
+}
 a.navbar-brand {
   white-space: normal;
   text-align: center;
@@ -61,7 +88,9 @@ body {
     font-family: 'Inter', sans-serif;
     /* Margin bottom by footer height */
     margin-bottom: 60px;
+  
 }
+
 .footer {
   position: absolute;
   bottom: 0;

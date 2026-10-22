@@ -1,0 +1,2 @@
+ALTER TABLE ClientSiteKpiSettings
+ADD KoiosClientSiteIdB int;
