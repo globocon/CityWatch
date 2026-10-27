@@ -51,6 +51,7 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IUserDataProvider _userDataProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IGuardDocumentStorage _guardDocumentStorage;
         private readonly Settings _settings;
         private readonly string _reportRootDir;
         private readonly EmailOptions _EmailOptions;
@@ -67,9 +68,8 @@ namespace CityWatch.Web.Pages.Admin
              IWebHostEnvironment webHostEnvironment,
              IDropboxService dropboxUploadService,
              IOptions<Settings> settings,
-             IOptions<EmailOptions> emailOptions
-
-
+             IOptions<EmailOptions> emailOptions,
+             IGuardDocumentStorage guardDocumentStorage
              )
         {
             _viewDataService = viewDataService;
@@ -85,6 +85,7 @@ namespace CityWatch.Web.Pages.Admin
             _settings = settings.Value;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath);
             _EmailOptions = emailOptions.Value;
+            _guardDocumentStorage = guardDocumentStorage;
         }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
@@ -1351,20 +1352,8 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
-                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo);
-
-                    if (!Directory.Exists(guardUploadDir))
-                        Directory.CreateDirectory(guardUploadDir);
-
-                    string filePath = Path.Combine(guardUploadDir, fileName);
-                    if (System.IO.File.Exists(filePath))
-                    {
-
-                        System.IO.File.Delete(filePath);
-
-                    }
-                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
-                    file.CopyTo(stream);
+                    using var source = file.OpenReadStream();
+                    _guardDocumentStorage.Save(GuardDocumentStorage.RelativePath(LicenseNo, fileName), source);
 
 
 
@@ -1796,7 +1785,10 @@ namespace CityWatch.Web.Pages.Admin
                 return true;
 
 
-            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
+            // a temporary local copy when the document is only in Blob
+            using var localCopy = _guardDocumentStorage.OpenLocalCopy(
+                GuardDocumentStorage.RelativePath(guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName));
+            var fileToUpload = localCopy.Path;
             var DropboxDir = _guardDataProvider.GetDrobox();
             var dbxFilePath = "";
 
@@ -2789,20 +2781,8 @@ namespace CityWatch.Web.Pages.Admin
 
 
 
-                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo, "CertificateDocuments", coursename);
-
-                    if (!Directory.Exists(guardUploadDir))
-                        Directory.CreateDirectory(guardUploadDir);
-
-                    string filePath = Path.Combine(guardUploadDir, fileName);
-                    if (System.IO.File.Exists(filePath))
-                    {
-
-                        System.IO.File.Delete(filePath);
-
-                    }
-                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
-                    file.CopyTo(stream);
+                    using var source = file.OpenReadStream();
+                    _guardDocumentStorage.Save(GuardDocumentStorage.RelativePath(LicenseNo, "CertificateDocuments", coursename, fileName), source);
 
 
 
@@ -3075,25 +3055,15 @@ namespace CityWatch.Web.Pages.Admin
         /// </summary>
         private void StoreRplComplianceDocument(IFormFile file, string licenceNumber, string courseName)
         {
-            var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License",
-                licenceNumber, "RPLCertificateDocuments", courseName);
-
-            if (!Directory.Exists(guardUploadDir))
-                Directory.CreateDirectory(guardUploadDir);
-
-            var filePath = Path.Combine(guardUploadDir, file.FileName);
-            if (System.IO.File.Exists(filePath))
-                System.IO.File.Delete(filePath);
-
-            using var stream = System.IO.File.Create(filePath);
-
             /* A fresh stream per call, and rewound when it can be: the same IFormFile is written
                once per guard/course pairing, and a second read that started where the first
                finished would store an empty file. */
             using var source = file.OpenReadStream();
             if (source.CanSeek)
                 source.Position = 0;
-            source.CopyTo(stream);
+
+            _guardDocumentStorage.Save(
+                GuardDocumentStorage.RelativePath(licenceNumber, "RPLCertificateDocuments", courseName, file.FileName), source);
         }
         public JsonResult OnPostSaveEquipments(KPITelematicsField record)
         {
