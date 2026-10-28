@@ -208,7 +208,17 @@ $(function () {
 
     $('#Report_DateLocation_ClientArea').attr('placeholder', 'n/a')
 
-    $('#ddFeedbackTemplateType').on('change', function (e, colorCode) {
+    /* IR notes vs the colour code template.
+       data-from-template on #Report_Feedback is set when a template is put into the notes, and cleared
+       when the guard empties the field. A colour code only replaces the notes when they are blank or
+       still template text (typed into or not); notes the guard wrote themselves are left as they are.
+       Also read by onEventTypeSiteColourChange() in Incident/Register.cshtml. */
+    $('#Report_Feedback').on('input', function () {
+        if ($(this).val().trim() === '')
+            this.dataset.fromTemplate = 'false';
+    });
+
+    $('#ddFeedbackTemplateType').on('change', function (e, colorCode, keepNotes) {
         const type = $(this).val();
         if (type == '')
             return false;
@@ -226,12 +236,16 @@ $(function () {
 
             if (colorCode) {
                 $('#ddFeedbackTemplate').val(colorCode);
-                $('#ddFeedbackTemplate').trigger('change');
+                $('#ddFeedbackTemplate').trigger('change', [keepNotes]);
             }
         });
     });
 
-    $('#ddFeedbackTemplate').on('change', function () {
+    // keepNotes: passed by the colour code change when the guard's own notes must stay
+    $('#ddFeedbackTemplate').on('change', function (e, keepNotes) {
+        if (keepNotes)
+            return false;
+
         const option = $(this).val();
         $('#Report_Feedback').val('');
         if (option == '')
@@ -243,6 +257,7 @@ $(function () {
             dataType: 'json',
             success: function (data) {
                 $('#Report_Feedback').val(data.text);
+                $('#Report_Feedback')[0].dataset.fromTemplate = 'true';
             }
         });
     });
@@ -251,7 +266,11 @@ $(function () {
         const option = $(this).val();
         const optionText = $("option:selected", this).text();
         var filter = "Colour Codes";
-        $('#Report_Feedback').val('');
+        // notes typed by the guard (not a template) are never replaced by the colour code template
+        const notes = $('#Report_Feedback');
+        const keepNotes = notes.val().trim() !== '' && notes[0].dataset.fromTemplate !== 'true';
+        if (!keepNotes)
+            notes.val('');
         if (option == '')
             return false;
 
@@ -267,7 +286,7 @@ $(function () {
             dataType: 'json'
         }).done(function (data) {
             $('#ddFeedbackTemplateType').val(data.truckConfigText);
-            $('#ddFeedbackTemplateType').trigger('change', [option]);
+            $('#ddFeedbackTemplateType').trigger('change', [option, keepNotes]);
             $('#Report_SiteColourCode').val(optionText);
         });
         /*to get the colour code and its id into feedbacktype dropdown-end*/
