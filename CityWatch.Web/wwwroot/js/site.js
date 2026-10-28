@@ -241,9 +241,11 @@ $(function () {
         });
     });
 
-    // keepNotes: passed by the colour code change when the guard's own notes must stay
+    // keepNotes: passed by the colour code change when the guard's own notes must stay.
+    // Picking a template here directly follows the same rule: the guard's own notes are never replaced.
     $('#ddFeedbackTemplate').on('change', function (e, keepNotes) {
-        if (keepNotes)
+        const notes = $('#Report_Feedback');
+        if (keepNotes || (notes.val().trim() !== '' && notes[0].dataset.fromTemplate !== 'true'))
             return false;
 
         const option = $(this).val();
