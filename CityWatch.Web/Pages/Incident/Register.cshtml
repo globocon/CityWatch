@@ -956,7 +956,10 @@
         ddlSiteColourCodeId.style.backgroundColor = "#EBEBE4"; // rgb(235, 235, 228);
         ddlSiteColourCodeId.style.color = "black";
         document.getElementById("Report_SiteColourCode").value = '';
-        document.getElementById("Report_Feedback").value = '';
+        // only clear template text - notes the guard typed themselves stay (see site.js, #Report_Feedback)
+        var notes = document.getElementById("Report_Feedback");
+        if (notes.dataset.fromTemplate === 'true')
+            notes.value = '';
         document.getElementById("ddFeedbackTemplateType").value = 1;
         document.getElementById("ddFeedbackTemplateType").dispatchEvent(new Event('change'));
     }
