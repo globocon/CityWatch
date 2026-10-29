@@ -266,7 +266,10 @@ namespace CityWatch.Web.Tests
                 new Mock<IPatrolDataReportService>().Object,
                 null,                                   // CityWatchDbContext - not touched on this path
                 _guardDataProvider.Object,
-                _dropboxService.Object);
+                _dropboxService.Object,
+                new GuardDocumentStorage(Options.Create(new GuardDocumentStorageOptions()),
+                    new TestWebHostEnvironment(_webRoot), new ConfigurationBuilder().Build(),
+                    NullLogger<GuardDocumentStorage>.Instance));
         }
 
         private RPLCertificateGeneratorService CreateRplService(int guardId, bool guardHasRplRow)

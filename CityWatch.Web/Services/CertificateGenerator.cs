@@ -106,6 +106,7 @@ namespace CityWatch.Web.Services
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IGuardDocumentStorage _guardDocumentStorage;
         public CertificateGenerator(IWebHostEnvironment webHostEnvironment,
             IConfigDataProvider configDataProvider,
             IClientDataProvider clientDataProvider,
@@ -113,7 +114,8 @@ namespace CityWatch.Web.Services
             IConfiguration configuration,
             ILogger<IncidentReportGenerator> logger,
             IPatrolDataReportService irChartDataService,
-            CityWatchDbContext context, IGuardDataProvider guardDataProvider, IDropboxService dropboxUploadService)
+            CityWatchDbContext context, IGuardDataProvider guardDataProvider, IDropboxService dropboxUploadService,
+            IGuardDocumentStorage guardDocumentStorage)
         {
             _configDataProvider = configDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -138,6 +140,7 @@ namespace CityWatch.Web.Services
             //_irChartDataService = irChartDataService;
             //_graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
             _dropboxUploadService = dropboxUploadService;
+            _guardDocumentStorage = guardDocumentStorage;
         }
         public string GeneratePdf(int guardId, int hrSettingsId,string hashCode, bool isCertificateHold, bool isCertificatewithQADump, bool isCertificateExpiry)
 
@@ -328,7 +331,10 @@ namespace CityWatch.Web.Services
                 {
                     if (GetAttachmentType(IO.Path.GetExtension(practicalresult.FileName)) == AttachmentType.Pdf)
                     {
-                        var uploadPdfName = IO.Path.Combine(_UploadRootDir, "CertificateDocuments", jresult.FirstOrDefault().Description, practicalresult.FileName);
+                        // evidence may be only in Blob - read it through a temporary local copy
+                        using var evidence = _guardDocumentStorage.OpenLocalCopy(
+                            GuardDocumentStorage.RelativePath(licenseno, "CertificateDocuments", jresult.FirstOrDefault().Description, practicalresult.FileName));
+                        var uploadPdfName = evidence.Path;
                         var uploadDoc = new PdfDocument(new PdfReader(uploadPdfName));
                         uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages() + 1);
                         //var standardPageSize = pdfDocument.GetPage(1).GetPageSize();
@@ -343,8 +349,10 @@ namespace CityWatch.Web.Services
                     }
                     if (GetAttachmentType(IO.Path.GetExtension(practicalresult.FileName)) == AttachmentType.Image)
                     {
+                        using var evidence = _guardDocumentStorage.OpenLocalCopy(
+                            GuardDocumentStorage.RelativePath(licenseno, "CertificateDocuments", jresult.FirstOrDefault().Description, practicalresult.FileName));
                         var doc = new Document(pdfDocument);
-                        var image = AttachImageToPdf(pdfDocument, pdfDocument.GetNumberOfPages() + 1, IO.Path.Combine(_UploadRootDir, "CertificateDocuments", jresult.FirstOrDefault().Description, practicalresult.FileName));
+                        var image = AttachImageToPdf(pdfDocument, pdfDocument.GetNumberOfPages() + 1, evidence.Path);
                         //paraName.SetFixedPosition(index, 5, 0, 400);
                         doc.Add(image);
                     }
@@ -365,7 +373,9 @@ namespace CityWatch.Web.Services
                 {
                     if (GetAttachmentType(IO.Path.GetExtension(certificateRPL.LastOrDefault().FileName)) == AttachmentType.Pdf)
                     {
-                        var uploadPdfName = IO.Path.Combine(_UploadRootDir, "RPLCertificateDocuments", jresult.FirstOrDefault().Description, certificateRPL.LastOrDefault().FileName);
+                        using var evidence = _guardDocumentStorage.OpenLocalCopy(
+                            GuardDocumentStorage.RelativePath(licenseno, "RPLCertificateDocuments", jresult.FirstOrDefault().Description, certificateRPL.LastOrDefault().FileName));
+                        var uploadPdfName = evidence.Path;
                         var uploadDoc = new PdfDocument(new PdfReader(uploadPdfName));
                         uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages() + 1);
                         //var standardPageSize = pdfDocument.GetPage(1).GetPageSize();
@@ -380,8 +390,10 @@ namespace CityWatch.Web.Services
                     }
                     if (GetAttachmentType(IO.Path.GetExtension(certificateRPL.LastOrDefault().FileName)) == AttachmentType.Image)
                     {
+                        using var evidence = _guardDocumentStorage.OpenLocalCopy(
+                            GuardDocumentStorage.RelativePath(licenseno, "RPLCertificateDocuments", jresult.FirstOrDefault().Description, certificateRPL.LastOrDefault().FileName));
                         var doc = new Document(pdfDocument);
-                        var image = AttachImageToPdf(pdfDocument, pdfDocument.GetNumberOfPages() + 1, IO.Path.Combine(_UploadRootDir, "RPLCertificateDocuments", jresult.FirstOrDefault().Description, certificateRPL.LastOrDefault().FileName));
+                        var image = AttachImageToPdf(pdfDocument, pdfDocument.GetNumberOfPages() + 1, evidence.Path);
                         //paraName.SetFixedPosition(index, 5, 0, 400);
                         doc.Add(image);
                     }
@@ -459,6 +471,8 @@ namespace CityWatch.Web.Services
                 }
                 certificateName = fileName;
             }
+            // after the Dropbox copy, which reads the local file
+            _guardDocumentStorage.PublishLocalFile(GuardDocumentStorage.RelativePath(licenseno, certificateName));
             return certificateName;
         }
         private void AttachScoreCard(PdfDocument pdfDocument, int guardId, int hrSettingsId,string certificateName)

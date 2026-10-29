@@ -32,6 +32,9 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.Configure<Settings>(Configuration.GetSection(Settings.Name));
 builder.Services.Configure<EmailOptions>(Configuration.GetSection(EmailOptions.Email));
+// HR documents (Uploads/Guards/License) - local disk, or Azure Blob when GuardDocumentStorage:UseBlobStorage is on
+builder.Services.Configure<GuardDocumentStorageOptions>(Configuration.GetSection(GuardDocumentStorageOptions.Name));
+builder.Services.AddSingleton<IGuardDocumentStorage, GuardDocumentStorage>();
 builder.Services.AddCityWatchTracking(builder.Configuration); // Tracking feature pack (no-op unless Tracking:Enabled)
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
 builder.Services.AddScoped<IClientDataProvider, ClientDataProvider>();
@@ -189,6 +192,7 @@ app.UseResponseCompression();
 app.UseCors("AllowSpecificOrigin");
 AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 app.UseHttpsRedirection();
+app.UseGuardDocumentBlobFallback(); // before UseStaticFiles: HR documents no longer on disk come from Blob
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();

@@ -262,6 +262,7 @@ namespace CityWatch.Web.Services
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IDropboxService _dropboxUploadService;
+        private readonly IGuardDocumentStorage _guardDocumentStorage;
         private readonly Settings _settings;
         private readonly string _reportRootDir;
         private readonly IIrDataProvider _irDataProvider;
@@ -277,7 +278,8 @@ namespace CityWatch.Web.Services
             IAppConfigurationProvider appConfigurationProvider,
              IWebHostEnvironment webHostEnvironment,
              IDropboxService dropboxUploadService,
-             IOptions<Settings> settings, IIrDataProvider irDataProvider)
+             IOptions<Settings> settings, IIrDataProvider irDataProvider,
+             IGuardDocumentStorage guardDocumentStorage)
         {
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -293,6 +295,7 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath);
             _irDataProvider = irDataProvider;
+            _guardDocumentStorage = guardDocumentStorage;
         }
 
         public List<SelectListItem> Genders
@@ -3480,7 +3483,10 @@ namespace CityWatch.Web.Services
                 return true;
 
 
-            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
+            // a temporary local copy when the document is only in Blob
+            using var localCopy = _guardDocumentStorage.OpenLocalCopy(
+                GuardDocumentStorage.RelativePath(guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName));
+            var fileToUpload = localCopy.Path;
             var DropboxDir = _guardDataProvider.GetDrobox();
             //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolderNew(guardComplianceandlicense.Guard, DropboxDir.DropboxDir)}/{guardComplianceandlicense.FileName}");
@@ -3508,17 +3514,11 @@ namespace CityWatch.Web.Services
 
         public async Task<bool> UploadHrDocumentFileToServer(IFormFile Docfile, string LicenseNo, string uploadFileName)
         {
-            var PathToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", LicenseNo);
-            var fileToUpload = Path.Combine(PathToUpload, uploadFileName);
             try
             {
-                if (!Directory.Exists(PathToUpload))
+                using (var source = Docfile.OpenReadStream())
                 {
-                    Directory.CreateDirectory(PathToUpload);
-                }
-                using (var stream = new FileStream(fileToUpload, FileMode.Create))
-                {
-                    await Docfile.CopyToAsync(stream);
+                    await _guardDocumentStorage.SaveAsync(GuardDocumentStorage.RelativePath(LicenseNo, uploadFileName), source);
                 }
                 return true;
             }
