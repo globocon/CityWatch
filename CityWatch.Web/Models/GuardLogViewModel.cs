@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
+using Dropbox.Api.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,12 @@ namespace CityWatch.Web.Models
             GuardInitials = guardLog.GuardLogin?.Guard.Initial;
             IrEntryType = guardLog.IrEntryType;
             GuardId = guardLog.GuardLogin?.Guard.Id;
+            EventDateTimeLocal = guardLog.EventDateTimeLocal;
+            EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort;
+            IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry;
+            GpsCoordinates = guardLog.GpsCoordinates;
+            EventType = guardLog.EventType;
+
         }
 
         public GuardLogViewModel(IEnumerable<PatrolCarLog> patrolCarLogs)
@@ -66,12 +73,29 @@ namespace CityWatch.Web.Models
         public string Notes { get; set; }
 
         [JsonPropertyName("Date")]
-        public string Date { get { return EventDateTime.ToString("dd MMM yyyy"); } }
+        public string Date { get {
+                if (EventDateTimeLocal.HasValue)
+                    return EventDateTimeLocal.Value.ToString("dd MMM yyyy");
+                return EventDateTime.ToString("dd MMM yyyy");             
+            }
+        } // p6#73 timezone bug - Modified by binoy 29-01-2024
 
         public string GuardInitials { get; set; }
 
         public IrEntryType? IrEntryType { get; set; }
 
         public int? GuardId { get; set; }
+
+        public DateTime? EventDateTimeLocal { get; set; }
+
+        public string EventDateTimeZone { get; set; }
+
+        public string EventDateTimeZoneShort { get; set; }
+
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
+        public bool IsIRReportTypeEntry { get; set; }
+
+        public string GpsCoordinates  { get; set; }
+        public int EventType { get; set; }
     }
 }

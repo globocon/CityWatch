@@ -1,0 +1,79 @@
+﻿@*@page
+@model CityWatch.Kpi.Pages.Admin._KeySiteSettingsPopupModel
+@{
+}*@
+<div class="modal" role="dialog" id="anpr-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Manage ANPR Details</h5>
+                <button type="button" class="close" aria-label="Close" id="btnanprclose">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="font-size:12px">
+                <form id="frm_add_key1">
+                    <input hidden id="ANPR_ClientSiteId" name="ANPR.ClientSiteId" />
+                    <input hidden id="ANPR_Id" name="ANPR.Id" />
+                     <div class="form-group row">
+                        <label class="col-md-3 col-form-label">ANPR Type</label>
+                        <div class="col-md-9" style="display:inline-flex">
+                            <div class="form-check">
+                                <input type="checkbox" id="AnprKey_Disabled" class="form-check-input mb-2" name="ANPR.IsDisabled">
+                                <label class="form-check-label">Disabled</label>
+                            </div>&nbsp;&nbsp;&nbsp;&nbsp;
+                            <div class="form-check">
+                                <input type="checkbox" id="AnprKey_SingleLane" class="form-check-input mb-2" name="ANPR.IsSingleLane">
+                                <label class="form-check-label">Single Lane</label>
+                            </div>&nbsp;&nbsp;
+                            <div class="form-check">
+                                <input type="checkbox" id="AnprKey_SeperateEntryAndExit" class="form-check-input mb-2" name="ANPR.IsSeperateEntryAndExitLane">
+                                <label class="form-check-label">Separate Entry &amp; Exit lane</label>
+                            </div>
+                            </div>
+                         </div>
+                    <div class="form-group row">
+                        <label class="col-md-3 col-form-label">Profile</label>
+                        <div class="col-md-8">
+                           
+                            <select class="form-control" id="AnprKey_Profile" name="ANPR.profile">
+                               @*  <option value="">Select</option> *@
+                                <option value=""></option>
+                                <option value="VERKADA">VERKADA</option>
+                                
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-md-3 col-form-label">Api calls</label>
+                        <div class="col-md-8">
+                            @*<input type="text" class="form-control" id="ClientSiteKey_Description" name="ClientSiteKey.Description">*@
+                            <input type="text" class="form-control" id="AnprKey_ApiCalls" name="ANPR.Apicalls">
+                        </div>
+                    </div>
+                    @* p2-140 key photos  -start *@
+                    <div class="form-group row">
+                        <label class="col-md-3 col-form-label">Lane Label</label>
+                        <div class="col-md-8">
+                            <select class="form-control" id="AnprKey_LineLabel" name="ANPR.LaneLabel">
+                                @* <option value="">Select</option> *@
+                                <option value=""></option>
+                                <option value="Entry Lane 01">Entry Lane 01 </option>
+                                <option value="Entry Lane 02">Entry Lane 02 </option>
+
+                            </select>
+                        </div>
+                    </div>
+                  
+                   
+                    <div class="form-row">
+                        <div asp-validation-summary="All" id="csANPRValidationSummary"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_anpr_key">Save</button>
+            </div>
+        </div>
+    </div>
+</div>

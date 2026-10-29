@@ -1,0 +1,1 @@
+Create table DosAndDontsField(Id int primary key identity(1,1),TypeId int,Name nvarchar(max))
