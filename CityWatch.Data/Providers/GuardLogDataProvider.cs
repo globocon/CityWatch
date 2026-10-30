@@ -613,8 +613,10 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLog> GetGuardLogsNotAcknowledgedForNotificationSound(int logBookId)
         {
+            // Guard replies only. IR logbook entries are also IrEntryType.Normal, so without the
+            // IsIRReportTypeEntry check every IR popped up as a "New Message from Guard" for the other guards on site.
             return _context.GuardLogs
-                .Where(x => x.ClientSiteLogBookId == logBookId && x.PlayNotificationSound == true && x.IrEntryType == IrEntryType.Normal && x.GuardLoginId != null)
+                .Where(x => x.ClientSiteLogBookId == logBookId && x.PlayNotificationSound == true && x.IrEntryType == IrEntryType.Normal && !x.IsIRReportTypeEntry && x.GuardLoginId != null)
                 .Include(x => x.GuardLogin.Guard)
                 .ToList();
         }
