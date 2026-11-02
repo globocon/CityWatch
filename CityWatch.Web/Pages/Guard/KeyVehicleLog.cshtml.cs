@@ -1531,27 +1531,20 @@ namespace CityWatch.Web.Pages.Guard
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.StackTrace);
+                _logger.LogError(ex, "Manual docket for KVL {KvlId}: generating the pdf failed", id);
             }
 
             if (string.IsNullOrEmpty(fileName))
                 return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
 
             var statusCode = 0;
-            if (!string.IsNullOrEmpty(stakeholderEmails))
-            {
-                try
-                {
-                    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
-                    SendEmail(keyVehicleLog.VehicleRego, stakeholderEmails, fileName);
-                }
-                catch (Exception ex)
-                {
-                    statusCode += -2;
-                    _logger.LogError(ex.StackTrace);
-                }
-            }
+            var email = SendManualDocketEmail(
+                () => ManualDocketSubject(_guardLogDataProvider.GetKeyVehicleLogById(id).VehicleRego),
+                stakeholderEmails, ManualDocketOutputPath(fileName), ref statusCode);
 
+            // emailStatus / dropboxStatus tell the page which step failed and why; statusCode is kept as it was
+            string dropboxStatus;
+            string dropboxError = null;
             try
             {
                 var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
@@ -1562,14 +1555,24 @@ namespace CityWatch.Web.Pages.Guard
                         clientSiteLocation = keyVehicleLog.ClientSiteLocation.Name;
                 }
                 await UploadToDropbox(clientSiteId, fileName, clientSiteLocation);
+                dropboxStatus = "uploaded";
+            }
+            catch (DropboxNotConfiguredException ex)
+            {
+                statusCode += -3;
+                dropboxStatus = "notEnabled";
+                dropboxError = ex.Message;
+                _logger.LogWarning("Manual docket {FileName} for KVL {KvlId} not uploaded to Dropbox: {Reason} (client site {ClientSiteId})", fileName, id, ex.Message, clientSiteId);
             }
             catch (Exception ex)
             {
                 statusCode += -3;
-                _logger.LogError(ex.StackTrace);
+                dropboxStatus = "failed";
+                dropboxError = ex.Message;
+                _logger.LogError(ex, "Manual docket {FileName} for KVL {KvlId}: Dropbox upload failed (client site {ClientSiteId})", fileName, id, clientSiteId);
             }
 
-            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode, emailStatus = email.Status, emailError = email.Error, dropboxStatus, dropboxError });
         }
         //To Generate the Pdf In List start
         public async Task<JsonResult> OnPostGenerateManualDocketList(bool IsGlobal, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
@@ -1595,26 +1598,16 @@ namespace CityWatch.Web.Pages.Guard
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.StackTrace);
+                _logger.LogError(ex, "Manual docket (list): generating the pdf failed for KVLs {KvlIds}", ids);
             }
 
             if (string.IsNullOrEmpty(fileName))
                 return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
 
-
-            if (!string.IsNullOrEmpty(stakeholderEmails))
-            {
-                try
-                {
-                    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
-                    SendEmail(keyVehicleLog.VehicleRego, stakeholderEmails, fileName);
-                }
-                catch (Exception ex)
-                {
-                    statusCode += -2;
-                    _logger.LogError(ex.StackTrace);
-                }
-            }
+            // A POI list, not one vehicle: the subject used to carry the rego of KVL 1 (id is fixed at 1 above)
+            var email = SendManualDocketEmail(
+                () => IsGlobal ? "Manual Docket PrintOut: POI List (Global)" : "Manual Docket PrintOut: POI List",
+                stakeholderEmails, ManualDocketOutputPath(fileName), ref statusCode);
 
             //try
             //{
@@ -1636,7 +1629,7 @@ namespace CityWatch.Web.Pages.Guard
 
 
 
-            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode, emailStatus = email.Status, emailError = email.Error, dropboxStatus = "notUploaded" });
         }
         //To Generate the Pdf In List stop
 
@@ -1665,26 +1658,23 @@ namespace CityWatch.Web.Pages.Guard
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.StackTrace);
+                _logger.LogError(ex, "Manual docket (bulk): generating the pdf failed for KVLs {KvlIds}", ids);
             }
 
             if (string.IsNullOrEmpty(fileName))
                 return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
 
-
-            if (!string.IsNullOrEmpty(stakeholderEmails))
-            {
-                try
-                {
-                    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
-                    SendEmail(keyVehicleLog.VehicleRego, stakeholderEmails, fileName);
-                }
-                catch (Exception ex)
-                {
-                    statusCode += -2;
-                    _logger.LogError(ex.StackTrace);
-                }
-            }
+            // PDF Binder Off builds a ZIP, and the generator writes that to Pdf/FromDropbox, not Pdf/Output.
+            // The email used to attach from Pdf/Output, so it always failed with file not found.
+            var isZip = string.Equals(Path.GetExtension(fileName), ".zip", StringComparison.OrdinalIgnoreCase);
+            var attachmentPath = isZip
+                ? Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "FromDropbox", fileName)
+                : ManualDocketOutputPath(fileName);
+            // Subject names the selected vehicles; it used to carry the rego of KVL 1 (id is fixed at 1 above)
+            var email = SendManualDocketEmail(
+                () => ManualDocketSubject(string.Join(", ", _guardLogDataProvider.GetKeyVehicleLogByIds(ids.ToArray())
+                    .Select(z => z.VehicleRego).Where(z => !string.IsNullOrWhiteSpace(z)).Distinct())),
+                stakeholderEmails, attachmentPath, ref statusCode);
 
             //try
             //{
@@ -1704,10 +1694,10 @@ namespace CityWatch.Web.Pages.Guard
             //}
 
 
-            if (Path.GetExtension(fileName) == ".zip" || Path.GetExtension(fileName) == ".ZIP")
-                return new JsonResult(new { fileName = @Url.Content($"~/Pdf/FromDropbox/{fileName}"), statusCode });
+            if (isZip)
+                return new JsonResult(new { fileName = @Url.Content($"~/Pdf/FromDropbox/{fileName}"), statusCode, emailStatus = email.Status, emailError = email.Error, dropboxStatus = "notUploaded" });
 
-            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode, emailStatus = email.Status, emailError = email.Error, dropboxStatus = "notUploaded" });
         }
         //To Generate the Pdf In List stop
 
@@ -2045,13 +2035,13 @@ namespace CityWatch.Web.Pages.Guard
         private async Task UploadToDropbox(int clientSiteId, string fileName, string clientSiteLocation)
         {
             var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId) ??
-                throw new ArgumentException($"ClientSiteKpiSettings missing for this client site");
+                throw new DropboxNotConfiguredException("KPI settings are missing for this site");
 
             var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
             if (string.IsNullOrEmpty(siteBasePath))
-                throw new ArgumentException($"Dropbox directory missing for this client site");
+                throw new DropboxNotConfiguredException("no Dropbox folder is set for this site");
             if (!clientSiteKpiSettings.DropboxScheduleisActive)
-                throw new ArgumentException($"DropboxScheduleisActive:Disabled");
+                throw new DropboxNotConfiguredException("Dropbox upload is not enabled for this site");
             var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
             var folderPathToCreate = DocketDropboxHelper.GetManualDocketDbxFilePath(clientSiteKpiSettings, fileName, clientSiteLocation, DateTime.Today);
 
@@ -2061,7 +2051,42 @@ namespace CityWatch.Web.Pages.Guard
             await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, folderPathToCreate);
 
         }
-        private void SendEmail(string vehicleRego, string toAddresses, string fileName)
+        /// <summary>The site's KPI settings say not to upload (or cannot be uploaded to): not a fault, so the page says so plainly.</summary>
+        private sealed class DropboxNotConfiguredException : Exception
+        {
+            public DropboxNotConfiguredException(string message) : base(message) { }
+        }
+
+        /// <summary>
+        /// Emails a manual docket to the stakeholders, if any were given. Status is "notRequested", "sent" or
+        /// "failed" (Error then carries the reason for the page); a failure adds -2 to statusCode as before.
+        /// The subject is built inside the try, so a failed lookup is reported like any other email failure.
+        /// </summary>
+        private (string Status, string Error) SendManualDocketEmail(Func<string> subject, string stakeholderEmails, string attachmentPath, ref int statusCode)
+        {
+            if (string.IsNullOrEmpty(stakeholderEmails))
+                return ("notRequested", null);
+
+            try
+            {
+                SendEmail(subject(), stakeholderEmails, attachmentPath);
+                return ("sent", null);
+            }
+            catch (Exception ex)
+            {
+                statusCode += -2;
+                _logger.LogError(ex, "Manual docket {FileName}: sending email to {Recipients} failed", Path.GetFileName(attachmentPath), stakeholderEmails);
+                return ("failed", ex.Message);
+            }
+        }
+
+        private static string ManualDocketSubject(string vehicleRegos) =>
+            $"Manual Docket PrintOut for ID No / Car or Truck Rego: {vehicleRegos}";
+
+        private string ManualDocketOutputPath(string fileName) =>
+            Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+
+        private void SendEmail(string subject, string toAddresses, string attachmentPath)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
             var messageHtml = "Please find attached Manual Docket PrintOut";
@@ -2084,9 +2109,9 @@ namespace CityWatch.Web.Pages.Guard
             {
                 HtmlBody = messageHtml
             };
-            builder.Attachments.Add(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+            builder.Attachments.Add(attachmentPath);
             message.Body = builder.ToMessageBody();
-            message.Subject = $"Manual Docket PrintOut for ID No / Car or Truck Rego: {vehicleRego}";
+            message.Subject = subject;
 
             using (var client = new SmtpClient())
             {

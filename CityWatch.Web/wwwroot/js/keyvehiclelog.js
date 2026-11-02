@@ -2,6 +2,38 @@
 let kvlFieldPlateType = [];
 let kvlFieldCarsStockType = [];
 
+// Status line for the Print Manual Docket popup (KVL page and logbook POI list): says which of
+// email / Dropbox worked, and the reason when one did not. Uses emailStatus / dropboxStatus from the server.
+function manualDocketStatusHtml(response) {
+    const esc = function (text) { return $('<div>').text(text || 'unknown error').html(); };
+    const reason = function (text) { const t = esc(text); return /[.!?]$/.test(t) ? t : t + '.'; };
+    const parts = [];
+    let level = 'ok';
+
+    if (response.emailStatus === 'sent') {
+        parts.push('Emailed to the stakeholders.');
+    } else if (response.emailStatus === 'failed') {
+        parts.push('Sending the email failed: ' + reason(response.emailError));
+        level = 'warn';
+    }
+
+    if (response.dropboxStatus === 'uploaded') {
+        parts.push('A copy is on the Dropbox.');
+    } else if (response.dropboxStatus === 'notEnabled') {
+        parts.push('Not uploaded to Dropbox: ' + reason(response.dropboxError));
+        if (level === 'ok') level = 'info';
+    } else if (response.dropboxStatus === 'failed') {
+        parts.push('Uploading to Dropbox failed: ' + reason(response.dropboxError));
+        level = 'warn';
+    }
+    // 'notUploaded' (bulk / list dockets): these are not sent to Dropbox, so nothing is said about it
+
+    const icon = level === 'warn' ? 'fa-exclamation-triangle text-warning'
+        : level === 'info' ? 'fa-info-circle text-info'
+        : 'fa-check-circle-o text-success';
+    return '<i class="fa ' + icon + ' mr-2"></i>Docket created successfully. ' + parts.join(' ');
+}
+
 $(document).ready(function () {
     $(document).on('show.bs.modal', '.modal', function () {
         const zIndex = 1040 + 10 * $('.modal:visible').length;
@@ -9951,13 +9983,7 @@ $(function () {
                         /*for changing the button name - end*/
                         $('#download_kvl_docket').attr('href', response.fileName);
 
-                        let statusClass = 'fa-check-circle-o text-success mr-2';
-                        let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
-                        if (response.statusCode !== 0) {
-                            statusClass = 'fa-exclamation-triangle text-warning mr-2';
-                            statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
-                        }
-                        $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+                        $('#generate_kvl_docket_status').html(manualDocketStatusHtml(response)).show();
                     }
                 });
             }
@@ -10023,13 +10049,7 @@ $(function () {
                         $('#download_kvl_docket').show();
                         $('#download_kvl_docket').attr('href', response.fileName);
 
-                        let statusClass = 'fa-check-circle-o text-success mr-2';
-                        let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
-                        if (response.statusCode !== 0) {
-                            statusClass = 'fa-exclamation-triangle text-warning mr-2';
-                            statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
-                        }
-                        $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+                        $('#generate_kvl_docket_status').html(manualDocketStatusHtml(response)).show();
                     }
                 });
             }
@@ -10126,13 +10146,7 @@ $(function () {
                 $('#download_kvl_docket').show();
                 $('#download_kvl_docket').attr('href', response.fileName);
 
-                let statusClass = 'fa-check-circle-o text-success mr-2';
-                let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
-                if (response.statusCode !== 0) {
-                    statusClass = 'fa-exclamation-triangle text-warning mr-2';
-                    statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
-                }
-                $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+                $('#generate_kvl_docket_status').html(manualDocketStatusHtml(response)).show();
             }
         });
     });
