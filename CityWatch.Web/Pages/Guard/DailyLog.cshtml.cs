@@ -149,7 +149,12 @@ namespace CityWatch.Web.Pages.Guard
                             && !_guardLogDataProvider.IsRcControlRoomSite(clientSiteLogBook.ClientSiteId);
         }
 
-        public JsonResult OnGetGuardLogs(int logBookId, DateTime? logBookDate)
+        /// <summary>
+        /// The day's log entries, newest first. take 0 returns the whole day (the previous day grid). The daily
+        /// log grid asks for a page at a time, like the mobile app: take entries, and as the guard scrolls, the
+        /// next take after the last entry it shows (beforeLogId + beforeTime = that entry's Id and EventDateTimeLocal).
+        /// </summary>
+        public JsonResult OnGetGuardLogs(int logBookId, DateTime? logBookDate, int take = 0, int beforeLogId = 0, DateTime? beforeTime = null)
         {
             DateTime? logBook_Date = null;
             if (logBookId > 0)
@@ -165,15 +170,48 @@ namespace CityWatch.Web.Pages.Guard
                 logBookDate = DateTime.Today;
             }
 
+            if (logBookId <= 0)
+                return new JsonResult(new List<GuardLog>());
 
-            var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today).ToList();
+            if (take > MaxGuardLogsPageSize)
+                take = MaxGuardLogsPageSize;
 
+            // Linked (duress) sites: their normal entries when IsLB, their wand entries when IsSW
+            var clientSiteId = _guardDataProvider.GetClientSiteIdFromLogbook(logBookId);
+            var linkedSites = _guardLogDataProvider.getallClientSitesLinkedDuress(clientSiteId).Where(x => x.ClientSiteId != clientSiteId).ToList();
+            int[] linkedNormalSiteIds = Array.Empty<int>();
+            int[] linkedWandSiteIds = Array.Empty<int>();
+            if (linkedSites.Any())
+            {
+                var rcLinkedDetails = _clientDataProvider.GetRCLinkedDuressById(linkedSites.First().RCLinkedId);
+                var ids = linkedSites.Select(x => x.ClientSiteId).ToArray();
+                if (rcLinkedDetails?.IsLB == true)
+                    linkedNormalSiteIds = ids;
+                if (rcLinkedDetails?.IsSW == true)
+                    linkedWandSiteIds = ids;
+            }
+
+            var guardLogs = _guardLogDataProvider.GetGuardLogsPage(clientSiteId, linkedNormalSiteIds, linkedWandSiteIds, logBookDate.Value, take, beforeLogId, beforeTime);
+
+            // One query for the page's images, instead of one per entry
+            var images = _guardLogDataProvider.GetGuardLogDocumentImaes(guardLogs.Select(z => z.Id).ToArray()).ToLookup(z => z.GuardLogId);
+            var siteNames = new Dictionary<int, string>();
             foreach (var guardlog in guardLogs)
             {
-                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
                 guardlog.NotesNew = string.Empty;
-               
-                foreach (var guardLogImage in guardlogImages)
+
+                var logSiteId = guardlog.ClientSiteLogBook?.ClientSiteId ?? clientSiteId;
+                if (logSiteId != clientSiteId && guardlog.GuardLogin?.Guard != null)
+                {
+                    if (!siteNames.TryGetValue(logSiteId, out var siteName))
+                    {
+                        siteName = _clientDataProvider.GetClientSiteName(logSiteId)?.Name;
+                        siteNames[logSiteId] = siteName;
+                    }
+                    guardlog.Notes = guardlog.Notes + "-" + guardlog.GuardLogin.Guard.Name + "(" + siteName + ")";
+                }
+
+                foreach (var guardLogImage in images[guardlog.Id])
                 {
                     if (guardLogImage.IsRearfile == true)
                     {
@@ -182,12 +220,8 @@ namespace CityWatch.Web.Pages.Guard
                     }
                     if (guardLogImage.IsTwentyfivePercentfile == true)
                     {
-                        
-                            guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
-
-                            guardlog.NotesNew = guardlog.NotesNew + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
-
-                        
+                        guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
+                        guardlog.NotesNew = guardlog.NotesNew + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
                     }
                     else if (guardLogImage.IsVideo == true)
                     {
@@ -205,110 +239,11 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
             }
-            if (logBookId > 0)
-            {
-                var clientSiteId = _guardDataProvider.GetClientSiteIdFromLogbook(logBookId);
-                var clientSites = _guardLogDataProvider.getallClientSitesLinkedDuress(clientSiteId).Where(x => x.ClientSiteId != clientSiteId);
-                if (clientSites != null && clientSites.Any())
-                {
-                    var duressId = clientSites.FirstOrDefault().RCLinkedId;
 
-                    var rcLinkedDetails = _clientDataProvider.GetRCLinkedDuressById(duressId);
-                    if (rcLinkedDetails.IsLB == true)
-                    {
-                        int[] ids = clientSites.Select(x => x.ClientSiteId).ToArray();
-                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today).Where(x=> x.WAND_TAG_ENTRY_TYPE == ScanningType.Normal );
-                        foreach (var guardlog in otherguardlogs)
-                        {
-                            var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
-                            guardlog.NotesNew = string.Empty;
-                            if(guardlog.GuardLogin != null)
-                                 guardlog.Notes = guardlog.Notes + "-" + guardlog.GuardLogin.Guard.Name + "(" + guardlog.ClientSiteLogBook.ClientSite.Name + ")";
-                            foreach (var guardLogImage in guardlogImages)
-                            {
-                                if (guardLogImage.IsRearfile == true)
-                                {
-                                    guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
-                                    guardlog.NotesNew = guardlog.NotesNew + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
-                                }
-                                if (guardLogImage.IsTwentyfivePercentfile == true)
-                                {
-
-                                    guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
-
-                                    guardlog.NotesNew = guardlog.NotesNew + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
-
-
-                                }
-                                else if (guardLogImage.IsVideo == true)
-                                {
-                                    guardlog.Notes +=
-                                        "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
-                                        $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
-                                        "Your browser does not support the video tag." +
-                                        "</video>";
-
-                                    guardlog.NotesNew +=
-                                        "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
-                                        $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
-                                        "Your browser does not support the video tag." +
-                                        "</video>";
-                                }
-                            }
-                            guardLogs.Add(guardlog);
-                        }
-
-                    }
-                    if (rcLinkedDetails.IsSW == true)
-                    {
-                        int[] ids = clientSites.Select(x => x.ClientSiteId).ToArray();
-                        var otherguardlogs = _guardLogDataProvider.GetGuardLogswithClientSiteIds(ids, logBookDate ?? DateTime.Today).Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal).ToList();
-                        foreach (var guardlog in otherguardlogs)
-                        {
-                            var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
-                            guardlog.NotesNew = string.Empty;
-                            guardlog.Notes = guardlog.Notes + "-" + guardlog.GuardLogin.Guard.Name + "(" + guardlog.GuardLogin.ClientSiteLogBook.ClientSite.Name + ")";
-                            foreach (var guardLogImage in guardlogImages)
-                            {
-                                if (guardLogImage.IsRearfile == true)
-                                {
-                                    guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
-                                    guardlog.NotesNew = guardlog.NotesNew + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
-                                }
-                                if (guardLogImage.IsTwentyfivePercentfile == true)
-                                {
-
-                                    guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
-
-                                    guardlog.NotesNew = guardlog.NotesNew + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
-
-
-                                }
-                                else if (guardLogImage.IsVideo == true)
-                                {
-                                    guardlog.Notes +=
-                                        "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
-                                        $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
-                                        "Your browser does not support the video tag." +
-                                        "</video>";
-
-                                    guardlog.NotesNew +=
-                                        "</br><video width=\"320\" height=\"240\" controls class=\"mt-2\">" +
-                                        $"<source src=\"{guardLogImage.ImagePath}\" type=\"video/mp4\">" +
-                                        "Your browser does not support the video tag." +
-                                        "</video>";
-                                }
-                            }
-                            guardLogs.Add(guardlog);
-                        }
-
-                    }
-                }
-            }
-
-            return new JsonResult(guardLogs.OrderByDescending(z => z.EventDateTimeLocal).ThenByDescending(z => z.Id).ToList());
-
+            return new JsonResult(guardLogs);
         }
+
+        private const int MaxGuardLogsPageSize = 500;
 
         // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
         public JsonResult OnPostGuardLogsUpdateNotificationSoundStatus(List<int> logBookId, bool isControlRoomLogBook)

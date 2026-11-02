@@ -1366,9 +1366,18 @@ $(function () {
 
     let gridGuardLog;
 
+    // The daily log loads guardLogPageSize entries, then the next guardLogPageSize as the guard scrolls
+    // down (as the mobile app does). A reload asks for as many as are already shown (guardLogTake).
+    const guardLogPageSize = 20;
+    let guardLogTake = guardLogPageSize;
+    let guardLogLoadingMore = false;
+    let guardLogAllLoaded = false;
+    let guardLogAppending = false;
+    let guardLogLoadFailed = false;
+
     let gridGuardLogSettings = {
         dataSource: '/Guard/DailyLog?handler=GuardLogs',
-        params: { logBookId: $('#GuardLog_ClientSiteLogBookId').val() },
+        params: { logBookId: $('#GuardLog_ClientSiteLogBookId').val(), take: guardLogPageSize },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -1405,7 +1414,7 @@ $(function () {
 
         gridGuardLogSettings = {
             dataSource: '/Guard/DailyLog?handler=GuardLogs',
-            params: { logBookId: $('#GuardLog_ClientSiteLogBookId').val() },
+            params: { logBookId: $('#GuardLog_ClientSiteLogBookId').val(), take: guardLogPageSize },
             uiLibrary: 'bootstrap4',
             iconsLibrary: 'fontawesome',
             primaryKey: 'id',
@@ -1792,6 +1801,98 @@ $(function () {
     /*to display the popup to acknowledge the message-end*/
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
+    if ($('#guard_daily_log').length) {
+        // Every reload (after an add/edit/delete, the refresh timer in radiocheck.js) keeps the entries
+        // the guard has scrolled to, instead of dropping back to the first page
+        const gijgoReload = gridGuardLog.reload;
+        gridGuardLog.reload = function (params) {
+            return gijgoReload.call(this, $.extend({ take: guardLogTake }, params));
+        };
+
+        gridGuardLog.on('dataBound', function (e, records) {
+            if (guardLogAppending)
+                return;
+            guardLogLoadFailed = false;
+            guardLogAllLoaded = gridGuardLog.count() < guardLogTake;
+            renderGuardLogMore();
+            loadMoreGuardLogsIfNearBottom();
+        });
+
+        $('#guard_daily_log_more').on('click', 'button', function () {
+            guardLogLoadFailed = false;
+            loadMoreGuardLogs();
+        });
+
+        $(window).on('scroll resize', loadMoreGuardLogsIfNearBottom);
+    }
+
+    function loadMoreGuardLogsIfNearBottom() {
+        const $table = $('#guard_daily_log');
+        // After a failed load, wait for the button or the next reload instead of retrying on every scroll
+        if (guardLogLoadFailed || !$table.is(':visible'))
+            return;
+        const tableBottom = $table.offset().top + $table.outerHeight();
+        if (tableBottom - ($(window).scrollTop() + $(window).height()) < 300)
+            loadMoreGuardLogs();
+    }
+
+    function loadMoreGuardLogs() {
+        if (guardLogLoadingMore || guardLogAllLoaded || !gridGuardLog)
+            return;
+        const shown = gridGuardLog.getAll();
+        const last = shown[shown.length - 1];
+        if (!last)
+            return;
+
+        guardLogLoadingMore = true;
+        renderGuardLogMore();
+        $.ajax({
+            url: '/Guard/DailyLog?handler=GuardLogs',
+            data: {
+                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                take: guardLogPageSize,
+                beforeLogId: last.id,
+                beforeTime: last.eventDateTimeLocal || ''
+            },
+            type: 'GET'
+        }).done(function (records) {
+            // Skip anything already shown (a reload can overlap an in-flight page)
+            const shownIds = new Set(gridGuardLog.getAll().map(function (r) { return r.id; }));
+            const added = (records || []).filter(function (r) { return !shownIds.has(r.id); });
+
+            guardLogAppending = true;
+            try {
+                added.forEach(function (r) { gridGuardLog.addRow(r); });
+            } finally {
+                guardLogAppending = false;
+            }
+            guardLogTake = Math.max(guardLogPageSize, gridGuardLog.count());
+
+            // Same notification handling as a reload, once for the whole page
+            if (added.length > 0 && !isControlRoomLogBook)
+                gridGuardLog.triggerHandler('dataBound', [added, added.length]);
+
+            guardLogAllLoaded = !records || records.length < guardLogPageSize;
+        }).fail(function () {
+            guardLogLoadFailed = true;
+            console.log('Loading older log entries failed');
+        }).always(function () {
+            guardLogLoadingMore = false;
+            renderGuardLogMore();
+            loadMoreGuardLogsIfNearBottom();
+        });
+    }
+
+    function renderGuardLogMore() {
+        const $more = $('#guard_daily_log_more');
+        if (guardLogLoadingMore)
+            $more.html('<i class="fa fa-spinner fa-spin mr-2"></i>Loading older entries...').show();
+        else if (!guardLogAllLoaded)
+            $more.html('<button type="button" class="btn btn-link btn-sm">Load older entries</button>').show();
+        else
+            $more.empty().hide();
+    }
+
 
 
     if (gridGuardLog) {
@@ -1885,6 +1986,8 @@ $(function () {
 
         // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
         gridGuardLog.on('dataBound', function (e, records, totalRecords) {
+            if (guardLogAppending)
+                return;
             if (isControlRoomLogBook) {
                 // Get Is acknowledge from db
                 $.ajax({
