@@ -8020,13 +8020,7 @@ $(function () {
                 $('#download_kvl_docket').show();
                 $('#download_kvl_docket').attr('href', response.fileName);
 
-                let statusClass = 'fa-check-circle-o text-success mr-2';
-                let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
-                if (response.statusCode !== 0) {
-                    statusClass = 'fa-exclamation-triangle text-warning mr-2';
-                    statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
-                }
-                $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+                $('#generate_kvl_docket_status').html(manualDocketStatusHtml(response)).show();
             }
         });
     });
