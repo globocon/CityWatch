@@ -2,6 +2,7 @@ let nIntervId;
 const duration = 60 * 4;
 var isPaused = false;
 var playedMessageIds = []; // Track played messages to prevent looping sound
+var closedMessageIds = []; // Closed this page session: a poll already in flight must not bring them back
 
 window.onload = function () {
     updateLanguagesDropdown();
@@ -86,6 +87,12 @@ function showNotificationSlider(message, isFromGuard, id) {
         container = $('#notification-slider-container');
     }
 
+    // The 30s poll returns every unacknowledged message each time; show each one once only.
+    if (id) {
+        if (closedMessageIds.includes(id)) return;
+        if (container.children('.notification-slider').filter(function () { return $(this).data('id') === id; }).length > 0) return;
+    }
+
     var slider = $('<div class="notification-slider" style="background-color: #f44336; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 350px; display: none;">' +
         '<div style="display: flex; justify-content: space-between; align-items: start;">' +
         '<span><i class="fa fa-bell"></i> <strong>New Message from Guard</strong></span>' +
@@ -96,10 +103,12 @@ function showNotificationSlider(message, isFromGuard, id) {
         '<div style="margin-top: 10px; word-break: break-word;">' + message + '</div>' +
         '</div>');
 
+    slider.data('id', id);
     container.append(slider);
     slider.slideDown();
 
     slider.find('.close').on('click', function () {
+        if (id) closedMessageIds.push(id);
         slider.slideUp(function () {
             $(this).remove();
             // Ack message on close
