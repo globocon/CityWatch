@@ -211,6 +211,8 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
+        List<GuardLog> GetGuardLogsPage(int clientSiteId, int[] linkedNormalSiteIds, int[] linkedWandSiteIds, DateTime logDate, int take, int beforeLogId, DateTime? beforeTime);
+
         void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                     IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
@@ -326,6 +328,8 @@ namespace CityWatch.Data.Providers
 
 
         List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId);
+
+        List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int[] logIds);
 
         void GetGuardManningDetailsForPublicHolidays();
 
@@ -569,6 +573,66 @@ namespace CityWatch.Data.Providers
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// One page of the daily log: the site's own entries for the day (all logbook types, as
+        /// GetGuardLogswithKvLogData), plus linked sites' normal entries (linkedNormalSiteIds) and
+        /// wand entries (linkedWandSiteIds), in display order EventDateTimeLocal DESC, Id DESC.
+        /// take 0 returns the whole day. beforeLogId/beforeTime are the last entry the caller already
+        /// shows (its Id and EventDateTimeLocal); the page then starts after it. The cursor is by value,
+        /// so it still works if that entry has since been deleted.
+        /// </summary>
+        public List<GuardLog> GetGuardLogsPage(int clientSiteId, int[] linkedNormalSiteIds, int[] linkedWandSiteIds, DateTime logDate, int take, int beforeLogId, DateTime? beforeTime)
+        {
+            linkedNormalSiteIds ??= Array.Empty<int>();
+            linkedWandSiteIds ??= Array.Empty<int>();
+
+            var siteIds = linkedNormalSiteIds.Concat(linkedWandSiteIds).Append(clientSiteId).Distinct().ToArray();
+            var logBooks = _context.ClientSiteLogBooks
+                .Where(x => siteIds.Contains(x.ClientSiteId) && x.Date == logDate.Date)
+                .Select(x => new { x.Id, x.ClientSiteId })
+                .ToList();
+
+            var ownLogBookIds = logBooks.Where(x => x.ClientSiteId == clientSiteId).Select(x => x.Id).ToArray();
+            var normalLogBookIds = logBooks.Where(x => x.ClientSiteId != clientSiteId && linkedNormalSiteIds.Contains(x.ClientSiteId)).Select(x => x.Id).ToArray();
+            var wandLogBookIds = logBooks.Where(x => x.ClientSiteId != clientSiteId && linkedWandSiteIds.Contains(x.ClientSiteId)).Select(x => x.Id).ToArray();
+            if (ownLogBookIds.Length == 0 && normalLogBookIds.Length == 0 && wandLogBookIds.Length == 0)
+                return new List<GuardLog>();
+
+            var query = _context.GuardLogs
+                .Where(z => ownLogBookIds.Contains(z.ClientSiteLogBookId)
+                    || (normalLogBookIds.Contains(z.ClientSiteLogBookId) && z.WAND_TAG_ENTRY_TYPE == ScanningType.Normal)
+                    || (wandLogBookIds.Contains(z.ClientSiteLogBookId) && z.WAND_TAG_ENTRY_TYPE != ScanningType.Normal));
+
+            if (beforeLogId > 0)
+            {
+                // Entries without a local time sort last (as NULLs do in DESC order)
+                if (beforeTime.HasValue)
+                {
+                    // The column is SQL datetime (1/300 s steps) but comes back rounded to the millisecond,
+                    // e.g. 17.4666667 reads as 17.467, so "same time as the cursor" is a 1 ms window either
+                    // side; neighbouring datetime values are at least 3 ms apart.
+                    var cursorFrom = beforeTime.Value.AddMilliseconds(-1);
+                    var cursorTo = beforeTime.Value.AddMilliseconds(1);
+                    query = query.Where(z => z.EventDateTimeLocal < cursorFrom
+                        || (z.EventDateTimeLocal >= cursorFrom && z.EventDateTimeLocal <= cursorTo && z.Id < beforeLogId)
+                        || z.EventDateTimeLocal == null);
+                }
+                else
+                {
+                    query = query.Where(z => z.EventDateTimeLocal == null && z.Id < beforeLogId);
+                }
+            }
+
+            query = query.OrderByDescending(z => z.EventDateTimeLocal).ThenByDescending(z => z.Id);
+            if (take > 0)
+                query = query.Take(take);
+
+            return query
+                .Include(z => z.ClientSiteLogBook)
+                .Include(z => z.GuardLogin.Guard)
+                .ToList();
         }
 
 
@@ -7463,6 +7527,17 @@ WHERE f.ClientSiteId = @clientSiteId
 
 
             return result;
+        }
+
+        public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int[] logIds)
+        {
+            if (logIds == null || logIds.Length == 0)
+                return new List<GuardLogsDocumentImages>();
+
+            return _context.GuardLogsDocumentImages
+                .Where(z => z.GuardLogId != null && logIds.Contains(z.GuardLogId.Value))
+                .OrderBy(z => z.ImagePath)
+                .ToList();
         }
 
 
