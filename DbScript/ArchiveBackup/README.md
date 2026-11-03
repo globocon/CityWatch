@@ -53,41 +53,53 @@ The archive keeps everything; nothing is ever removed from it.
 - Measured on the dev copy while the first night's move was running: app-style logbook saves took
   27 ms on average (329 ms at worst), with no table locks.
 
-## Safety checks: the job does nothing if any of these fail
+## Connecting
 
-- **The archive database has no full backup in the last 7 days.** Once rows leave prod, the archive
-  is their only live copy. Include `prod_citywatch_backup` in the instance's nightly full backups,
-  scheduled after this job. Change the window with `-RequireArchiveBackupDays`; 0 turns the check off.
+Both scripts connect **only** through `-ConnectionString`, which points at the **source** database
+(its `Database` / `Initial Catalog`). The archive database is named with `-BackupDb` (default
+`prod_citywatch_backup`) and must be on the same instance.
+
+```
+-ConnectionString "Server=<server>;Database=prod-citywatch;User Id=<login>;Password=<password>;TrustServerCertificate=True;"
+```
+
+Keep the password out of the script files. Pass it from the scheduled task, or use
+`Integrated Security=True` in the string and run the task as a Windows account with the permissions
+below.
+
+## The job stops before moving anything if
+
 - **Prod is missing DbScript/385** (its `LBId` index). Without it, every log-entry delete scans the
   whole 3 GB history table.
-- The archive tables are missing: run the setup script.
+- The archive database or its tables are missing: run the setup script.
+
+Once rows leave prod, the archive is their only live copy. Include `prod_citywatch_backup` in the
+instance's regular backups.
 
 ## Set up (once)
 
 1. Apply `DbScript/385_Improve_Triggers_GuardLogs_RadioChecksActivityStatus.sql` to prod.
 2. Take a **full backup of prod-citywatch**: the old rows are about to leave it.
 3. Run `01_Create_prod_citywatch_backup.sql` in SSMS on the prod instance.
-4. Back up the new `prod_citywatch_backup` once, so the first run is allowed. Add it to the nightly
-   full backups, scheduled after the archive job.
+4. Add `prod_citywatch_backup` to the instance's regular backups.
 5. Copy the two `.ps1` files to the server, e.g. `D:\CityWatch\Archive\`.
-6. Give the Windows account that will run the job these permissions:
+6. Give the login in the connection string these permissions:
    - on `prod-citywatch`: `db_datareader`, `db_datawriter` and `VIEW DATABASE STATE`;
-   - on `prod_citywatch_backup`: `db_owner`;
-   - `msdb`: read on `dbo.backupset`.
+   - on `prod_citywatch_backup`: `db_owner`.
 
    The restore is run by a DBA and needs INSERT + ALTER on the three prod tables.
 7. See what the first run would move, then run it by hand, off-peak:
 
    ```powershell
-   powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\CityWatch\Archive\Backup-CityWatchArchive.ps1 -SqlServer localhost -ReportOnly
-   powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\CityWatch\Archive\Backup-CityWatchArchive.ps1 -SqlServer localhost
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\CityWatch\Archive\Backup-CityWatchArchive.ps1 -ConnectionString "<connection string>" -ReportOnly
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\CityWatch\Archive\Backup-CityWatchArchive.ps1 -ConnectionString "<connection string>"
    ```
 
 8. Schedule it daily (elevated PowerShell on the server; change the account / time):
 
    ```powershell
    $action  = New-ScheduledTaskAction -Execute 'powershell.exe' `
-       -Argument '-NoProfile -ExecutionPolicy Bypass -File "D:\CityWatch\Archive\Backup-CityWatchArchive.ps1" -SqlServer localhost'
+       -Argument '-NoProfile -ExecutionPolicy Bypass -File "D:\CityWatch\Archive\Backup-CityWatchArchive.ps1" -ConnectionString "<connection string>"'
    $trigger = New-ScheduledTaskTrigger -Daily -At 2:30am
    $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 5) -MultipleInstances IgnoreNew -StartWhenAvailable
    Register-ScheduledTask -TaskName 'CityWatch archive' -Action $action -Trigger $trigger -Settings $settings `
@@ -109,13 +121,13 @@ longer exists in prod).
 
 ```powershell
 # Report: site 887, 1-15 March 2025 (EventDateTime; ToDate is exclusive)
-.\Restore-CityWatchArchive.ps1 -SqlServer localhost -FromDate 2025-03-01 -ToDate 2025-03-16 -ClientSiteId 887
+.\Restore-CityWatchArchive.ps1 -ConnectionString "<connection string>" -FromDate 2025-03-01 -ToDate 2025-03-16 -ClientSiteId 887
 
 # Do it
-.\Restore-CityWatchArchive.ps1 -SqlServer localhost -FromDate 2025-03-01 -ToDate 2025-03-16 -ClientSiteId 887 -Execute
+.\Restore-CityWatchArchive.ps1 -ConnectionString "<connection string>" -FromDate 2025-03-01 -ToDate 2025-03-16 -ClientSiteId 887 -Execute
 
 # Specific log entries (with their photo records)
-.\Restore-CityWatchArchive.ps1 -SqlServer localhost -Table GuardLogs -Id 1234567,1234568 -Execute
+.\Restore-CityWatchArchive.ps1 -ConnectionString "<connection string>" -Table GuardLogs -Id 1234567,1234568 -Execute
 ```
 
 - It inserts only rows missing from prod and keeps their original Ids. It never updates or deletes

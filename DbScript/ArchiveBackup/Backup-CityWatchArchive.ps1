@@ -1,81 +1,61 @@
 <#
 .SYNOPSIS
     Nightly: move GuardLogs and ClientSiteRadioChecksActivityStatus_History rows older than 18 months
-    (and the log entries' GuardLogsDocumentImages photo records) from prod-citywatch into
-    prod_citywatch_backup, deleting from prod only what was archived.
+    (with the log entries' GuardLogsDocumentImages photo records) from the source database into the
+    archive database, deleting from the source only what was archived.
 
 .DESCRIPTION
-    Meant to run once a day from Windows Task Scheduler (see README.md). The first run moves the
-    whole backlog (stopping at MaxRunMinutes and carrying on the next night); after that each night
-    moves the one day that has just passed the 18-month mark.
+    -ConnectionString connects to the SOURCE database (its Database / Initial Catalog), e.g.
+        "Server=10.0.2.5;Database=prod-citywatch;User Id=...;Password=...;TrustServerCertificate=True;"
+    -BackupDb is the archive database, on the same SQL Server instance (default prod_citywatch_backup;
+    create it once with 01_Create_prod_citywatch_backup.sql).
 
-    For history first, then GuardLogs (history rows point at log entries), it works through the
-    old rows in batches of BatchSize ids. Each batch is ONE transaction across the two databases:
+    What it does:
+      1. Looks for rows older than ProdKeepMonths (18) months in the source: history first, then
+         GuardLogs (history rows point at log entries). If there are none, it stops.
+      2. Moves them in batches of BatchSize (1000). Each batch is ONE transaction:
+           - pick the batch's old rows and lock them;
+           - copy them into the archive (for GuardLogs also their photo records, which the source
+             would otherwise delete with them through ON DELETE CASCADE);
+           - delete them from the source - only rows whose archive copy now exists;
+           - if the picked / archived / deleted counts differ, roll the batch back and stop.
+         So a row is only deleted from the source after it has been archived, and a failure leaves
+         both databases as they were before that batch.
 
-      1. pick the batch's rows older than the cutoff, locking them against change (UPDLOCK);
-      2. copy exactly those rows into the archive (for GuardLogs, also their photo / attachment
-         records, which prod would otherwise delete with them through ON DELETE CASCADE);
-      3. delete them from prod - only rows whose archive copy now exists;
-      4. if the numbers picked, archived and deleted are not all equal, roll the whole batch back
-         and stop.
+    Left in the source: GuardLogs rows still referenced there (ClientSiteRadioChecksActivityStatus,
+    or a history row that is kept), and rows on hold after a restore (archive dbo.ProdDeleteHold).
 
-    So a row is never deleted from prod unless the same transaction put it in the archive, and a
-    failure at any point leaves both databases as they were before that batch.
+    Light on the source: 1000-row batches (no table locks), DelayMs pause between batches, gives way
+    to the app on lock waits, pauses while the source's transaction log is over MaxLogPercent full,
+    stops after MaxRunMinutes (the next run carries on).
 
-    Left in prod:
-      - GuardLogs rows still referenced from prod (ClientSiteRadioChecksActivityStatus, or a
-        history row that is not being archived);
-      - rows on hold in dbo.ProdDeleteHold (put there by Restore-CityWatchArchive.ps1, so a restore
-        is not undone the next night).
+    Needs DbScript/385 applied to the source (its LBId index): without it every GuardLogs delete
+    scans the whole history table, so the script stops if it is missing.
 
-    Keeping prod responsive:
-      - BatchSize 1000: each row also locks a key in every index, and SQL Server escalates to a
-        table lock at ~5000 locks; small batches never lock the app's tables as a whole.
-      - DelayMs pause between batches; LOCK_TIMEOUT 15 s and DEADLOCK_PRIORITY LOW (the job gives
-        way to the app and retries); MAXDOP 1.
-      - The deletes go through prod's transaction log: the job pauses while the log is over
-        MaxLogPercent full and stops for the night if it stays full.
-      - Stops at MaxRunMinutes; the next run carries on.
+    -ReportOnly: count what would be moved, change nothing.
 
-    Will not delete anything when:
-      - prod_citywatch_backup has no full backup in the last RequireArchiveBackupDays days - it
-        holds the only live copy of archived rows;
-      - prod lacks the IX_RadioChecksActivityStatus_History_LBId index from DbScript/385 - without
-        it every GuardLogs delete scans the whole history table.
+    The login needs on the source db_datareader, db_datawriter and VIEW DATABASE STATE, and on the
+    archive db_owner (or read / write on its tables).
 
-    -ReportOnly: count what would be archived, change nothing.
-
-    Both databases must be on the same SQL Server instance (the copy and delete share one
-    transaction). Run 01_Create_prod_citywatch_backup.sql once first. Windows authentication unless
-    -ConnectionString is given; the account needs on prod db_datareader + db_datawriter and VIEW
-    DATABASE STATE, db_owner on prod_citywatch_backup, and read on msdb.dbo.backupset.
-
-    Exit code 0 = finished or stopped at the time limit / log limit, 1 = failed.
+    Exit code 0 = finished (or stopped at the time / log limit, to carry on next run), 1 = failed.
 
 .EXAMPLE
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File Backup-CityWatchArchive.ps1 -SqlServer "localhost"
-
-.EXAMPLE
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File Backup-CityWatchArchive.ps1 -SqlServer "localhost" -ReportOnly
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File Backup-CityWatchArchive.ps1 -ConnectionString "Server=...;Database=prod-citywatch;..." -ReportOnly
 #>
 [CmdletBinding()]
 param(
-    [string]$SqlServer = 'localhost',
-    [string]$SourceDb = 'prod-citywatch',
+    # Connects to the source database (Database / Initial Catalog in the string)
+    [string]$ConnectionString,
     [string]$BackupDb = 'prod_citywatch_backup',
     [ValidateRange(1, 120)][int]$ProdKeepMonths = 18,
     [ValidateRange(100, 4000)][int]$BatchSize = 1000,
     [ValidateRange(0, 60000)][int]$DelayMs = 300,
     [ValidateRange(1, 1440)][int]$MaxRunMinutes = 240,
     [ValidateRange(10, 95)][int]$MaxLogPercent = 70,
-    # Nothing is deleted unless the archive database has a full backup at most this many days old
-    # (it holds the only live copy of archived rows). 0 = do not check.
-    [ValidateRange(0, 365)][int]$RequireArchiveBackupDays = 7,
     [switch]$ReportOnly,
-    [string]$LogDir = (Join-Path $PSScriptRoot 'logs'),
-    [ValidateRange(1, 3650)][int]$KeepLogDays = 30,
-    # Optional, e.g. for SQL authentication. Its Initial Catalog is ignored; BackupDb is used.
-    [string]$ConnectionString
+    # Default: a logs folder next to the script
+    [string]$LogDir,
+    [ValidateRange(1, 3650)][int]$KeepLogDays = 30
 )
 
 Set-StrictMode -Version 2.0
@@ -85,6 +65,14 @@ $runId = [guid]::NewGuid()
 $runStarted = Get-Date
 $deadline = $runStarted.AddMinutes($MaxRunMinutes)
 
+# Worked out here, not as the parameter default: Windows PowerShell 5.1 can leave $PSScriptRoot
+# empty while parameter defaults are evaluated
+if (-not $LogDir) {
+    $scriptDir = $PSScriptRoot
+    if (-not $scriptDir -and $MyInvocation.MyCommand.Path) { $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path }
+    if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+    $LogDir = Join-Path $scriptDir 'logs'
+}
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
 $logFile = Join-Path $LogDir ('Backup-CityWatchArchive_{0:yyyyMMdd_HHmmss}.log' -f $runStarted)
 Get-ChildItem -Path $LogDir -Filter 'Backup-CityWatchArchive_*.log' -ErrorAction SilentlyContinue |
@@ -99,21 +87,32 @@ function Write-Log([string]$Message, [string]$Level = 'INFO') {
 
 function Q([string]$Name) { '[' + $Name.Replace(']', ']]') + ']' }
 
-$src = Q $SourceDb
-
 $GL = 'GuardLogs'
 $HIST = 'ClientSiteRadioChecksActivityStatus_History'
 $IMG = 'GuardLogsDocumentImages'
 
 # ---------------------------------------------------------------------------------------------
-# SQL helpers: one connection for the whole run, in the backup database
+# Connection: the connection string, to the source database
 # ---------------------------------------------------------------------------------------------
-$builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
-if ($ConnectionString) { $builder.ConnectionString = $ConnectionString }
-else { $builder['Data Source'] = $SqlServer; $builder['Integrated Security'] = $true }
-$builder['Initial Catalog'] = $BackupDb
-$builder['Application Name'] = 'CityWatch archive backup'
-$conn = New-Object System.Data.SqlClient.SqlConnection $builder.ConnectionString
+if (-not $ConnectionString) {
+    Write-Log 'FAILED - give -ConnectionString (it connects to the source database)' 'ERROR'
+    exit 1
+}
+# Passed to the constructor: the builder is a dictionary, so in PowerShell
+# '$builder.ConnectionString = ...' would add a key called ConnectionString instead
+$builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder -ArgumentList $ConnectionString
+$SourceDb = $builder['Initial Catalog']
+if (-not $SourceDb) {
+    Write-Log 'FAILED - the connection string has no Database / Initial Catalog (the source database)' 'ERROR'
+    exit 1
+}
+$builder['Application Name'] = 'CityWatch archive'
+# No pooling: closing must end the SQL session, which releases the run lock (sp_getapplock)
+$builder['Pooling'] = $false
+$conn = New-Object System.Data.SqlClient.SqlConnection $builder.ToString()
+
+$src = Q $SourceDb
+$arc = Q $BackupDb
 
 function Invoke-Sql([string]$Sql, [hashtable]$Params = @{}, [int]$TimeoutSec = 600, [switch]$Scalar) {
     $cmd = $conn.CreateCommand()
@@ -155,18 +154,18 @@ function Invoke-WithRetry([scriptblock]$Action, [string]$What) {
 }
 
 function Start-RunLog([string]$Table) {
-    Invoke-Sql "INSERT INTO dbo.ArchiveRunLog (RunId, Operation, TableName, StartedAtUtc, Status)
+    Invoke-Sql "INSERT INTO $arc.dbo.ArchiveRunLog (RunId, Operation, TableName, StartedAtUtc, Status)
                 OUTPUT inserted.Id VALUES (@RunId, 'Archive', @Table, SYSUTCDATETIME(), 'Running');" @{ RunId = $runId; Table = $Table } -Scalar
 }
 
 function Complete-RunLog($LogId, [string]$Status, $FromId, $ToId, [long]$Moved, [string]$Message) {
-    [void](Invoke-Sql "UPDATE dbo.ArchiveRunLog SET FinishedAtUtc = SYSUTCDATETIME(), Status = @Status, FromId = @FromId, ToId = @ToId,
+    [void](Invoke-Sql "UPDATE $arc.dbo.ArchiveRunLog SET FinishedAtUtc = SYSUTCDATETIME(), Status = @Status, FromId = @FromId, ToId = @ToId,
                            RowsCopied = @Moved, RowsPurged = @Moved, Message = @Message WHERE Id = @LogId;" @{
         LogId = $LogId; Status = $Status; FromId = $FromId; ToId = $ToId; Moved = $Moved; Message = $Message })
 }
 
 # ---------------------------------------------------------------------------------------------
-# Archive table columns: add any column prod has gained since, return the shared column list
+# Archive table columns: add any column the source has gained since, return the shared column list
 # ---------------------------------------------------------------------------------------------
 $columnCache = @{}
 function Get-Columns([string]$Table) {
@@ -183,20 +182,22 @@ function Get-Columns([string]$Table) {
                     WHEN ty.name IN ('datetime2', 'datetimeoffset', 'time')
                         THEN ty.name + '(' + CAST(c.scale AS VARCHAR(3)) + ')'
                     ELSE ty.name END AS TypeSql
-        FROM $src.sys.columns c
-        JOIN $src.sys.types ty ON ty.user_type_id = c.user_type_id
-        WHERE c.object_id = OBJECT_ID(N'$src.dbo.$t') AND c.is_computed = 0
-          AND c.name COLLATE DATABASE_DEFAULT NOT IN (SELECT name FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.$t'))
+        FROM sys.columns c
+        JOIN sys.types ty ON ty.user_type_id = c.user_type_id
+        WHERE c.object_id = OBJECT_ID(N'dbo.$t') AND c.is_computed = 0
+          AND c.name COLLATE DATABASE_DEFAULT NOT IN
+              (SELECT a.name COLLATE DATABASE_DEFAULT FROM $arc.sys.columns a WHERE a.object_id = OBJECT_ID(N'$arc.dbo.$t'))
         ORDER BY c.column_id;"
     foreach ($row in $missing.Rows) {
-        Write-Log ("{0}: prod has a new column {1} {2}; adding it to the archive" -f $Table, $row.name, $row.TypeSql) 'WARN'
-        [void](Invoke-Sql ("ALTER TABLE dbo.$t ADD {0} {1} NULL;" -f (Q $row.name), $row.TypeSql))
+        Write-Log ("{0}: the source has a new column {1} {2}; adding it to the archive" -f $Table, $row.name, $row.TypeSql) 'WARN'
+        [void](Invoke-Sql ("ALTER TABLE $arc.dbo.$t ADD {0} {1} NULL;" -f (Q $row.name), $row.TypeSql))
     }
 
     $cols = Invoke-Sql "
-        SELECT c.name FROM $src.sys.columns c
-        WHERE c.object_id = OBJECT_ID(N'$src.dbo.$t') AND c.is_computed = 0
-          AND c.name COLLATE DATABASE_DEFAULT IN (SELECT name FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.$t'))
+        SELECT c.name FROM sys.columns c
+        WHERE c.object_id = OBJECT_ID(N'dbo.$t') AND c.is_computed = 0
+          AND c.name COLLATE DATABASE_DEFAULT IN
+              (SELECT a.name COLLATE DATABASE_DEFAULT FROM $arc.sys.columns a WHERE a.object_id = OBJECT_ID(N'$arc.dbo.$t'))
         ORDER BY c.column_id;"
     $names = @($cols.Rows | ForEach-Object { Q $_.name })
     if ($names -notcontains '[Id]') { throw "$Table has no Id column" }
@@ -205,20 +206,16 @@ function Get-Columns([string]$Table) {
     return $list
 }
 
-function Get-ProdLogPercent {
-    [double](Invoke-Sql "EXEC $src.sys.sp_executesql N'SELECT used_log_space_in_percent FROM sys.dm_db_log_space_usage';" -Scalar)
-}
-
-# $false when prod's log stays too full: stop for tonight
-function Wait-ForProdLog([string]$Table) {
+# $false when the source's log stays too full: stop for tonight
+function Wait-ForLogSpace([string]$Table) {
     for ($i = 0; $i -lt 10; $i++) {
-        $pct = Get-ProdLogPercent
+        $pct = [double](Invoke-Sql "SELECT used_log_space_in_percent FROM sys.dm_db_log_space_usage;" -Scalar)
         if ($pct -le $MaxLogPercent) { return $true }
-        if ($i -eq 0) { Write-Log ("{0}: prod transaction log is {1:N0}% full (limit {2}%) - waiting for a log backup / checkpoint" -f $Table, $pct, $MaxLogPercent) 'WARN' }
+        if ($i -eq 0) { Write-Log ("{0}: source transaction log is {1:N0}% full (limit {2}%) - waiting for a log backup / checkpoint" -f $Table, $pct, $MaxLogPercent) 'WARN' }
         if ((Get-Date) -gt $deadline) { break }
         Start-Sleep -Seconds 60
     }
-    Write-Log ("{0}: prod transaction log is still over {1}% - stopping for tonight" -f $Table, $MaxLogPercent) 'WARN'
+    Write-Log ("{0}: source transaction log is still over {1}% - stopping for tonight" -f $Table, $MaxLogPercent) 'WARN'
     return $false
 }
 
@@ -227,38 +224,38 @@ function Wait-ForProdLog([string]$Table) {
 # ---------------------------------------------------------------------------------------------
 function Move-OldRows([string]$Table, [datetime]$Cutoff) {
     $t = Q $Table
-    $hold = "NOT EXISTS (SELECT 1 FROM dbo.ProdDeleteHold h WHERE h.TableName = N'$Table' AND s.Id BETWEEN h.FromId AND h.ToId AND h.HoldUntilUtc > SYSUTCDATETIME())"
+    $hold = "NOT EXISTS (SELECT 1 FROM $arc.dbo.ProdDeleteHold h WHERE h.TableName = N'$Table' AND s.Id BETWEEN h.FromId AND h.ToId AND h.HoldUntilUtc > SYSUTCDATETIME())"
     if ($Table -eq $GL) {
         $eligible = "s.EventDateTime < @Cutoff AND $hold
-                  AND NOT EXISTS (SELECT 1 FROM $src.dbo.ClientSiteRadioChecksActivityStatus a WHERE a.LBId = s.Id)
-                  AND NOT EXISTS (SELECT 1 FROM $src.dbo.$(Q $HIST) x WHERE x.LBId = s.Id)"
+                  AND NOT EXISTS (SELECT 1 FROM dbo.ClientSiteRadioChecksActivityStatus a WHERE a.LBId = s.Id)
+                  AND NOT EXISTS (SELECT 1 FROM dbo.$(Q $HIST) x WHERE x.LBId = s.Id)"
     }
     else { $eligible = "s.EventDateTime < @Cutoff AND $hold" }
 
-    # Old rows sit at the start of the Id range (Ids follow time): from prod's first Id up to the
-    # first Id of the kept period, found by binary search on the clustered key. A late-synced row
-    # with an old time and a newer Id is picked up once the cutoff passes the rows around it.
+    # Old rows sit at the start of the Id range (Ids follow time): from the first Id up to the first
+    # Id of the kept period, found by binary search on the clustered key. A late-synced row with an
+    # old time and a newer Id is picked up once the cutoff passes the rows around it.
     $b = (Invoke-Sql "
         DECLARE @min INT, @lo INT, @hi INT, @mid INT, @t DATETIME;
-        SELECT @min = MIN(Id), @hi = MAX(Id) FROM $src.dbo.$t;
+        SELECT @min = MIN(Id), @hi = MAX(Id) FROM dbo.$t;
         SET @lo = @min;
         WHILE @lo < @hi
         BEGIN
             SET @mid = @lo + (@hi - @lo) / 2;
             SET @t = NULL;
-            SELECT TOP (1) @t = EventDateTime FROM $src.dbo.$t WHERE Id >= @mid ORDER BY Id;
+            SELECT TOP (1) @t = EventDateTime FROM dbo.$t WHERE Id >= @mid ORDER BY Id;
             IF @t >= @Cutoff SET @hi = @mid ELSE SET @lo = @mid + 1;
         END
         SELECT @min AS MinId, @lo AS FirstKeptId;" @{ Cutoff = $Cutoff }).Rows[0]
     if ($b.MinId -is [DBNull] -or [int]$b.MinId -ge [int]$b.FirstKeptId) {
-        Write-Log ("{0}: nothing in prod older than {1:yyyy-MM-dd}" -f $Table, $Cutoff)
+        Write-Log ("{0}: no data older than {1:yyyy-MM-dd} - nothing to move" -f $Table, $Cutoff)
         return 'Succeeded'
     }
     $lo = [int]$b.MinId; $last = [int]$b.FirstKeptId - 1
 
     if ($ReportOnly) {
-        $n = Invoke-Sql "SELECT COUNT_BIG(*) FROM $src.dbo.$t s WHERE s.Id BETWEEN @Lo AND @Hi AND $eligible;" @{ Lo = $lo; Hi = $last; Cutoff = $Cutoff } -Scalar
-        Write-Log ("{0}: {1:N0} rows older than {2:yyyy-MM-dd} would be archived and deleted (Id {3} to {4})" -f $Table, $n, $Cutoff, $lo, $last)
+        $n = Invoke-Sql "SELECT COUNT_BIG(*) FROM dbo.$t s WHERE s.Id BETWEEN @Lo AND @Hi AND $eligible;" @{ Lo = $lo; Hi = $last; Cutoff = $Cutoff } -Scalar
+        Write-Log ("{0}: {1:N0} rows older than {2:yyyy-MM-dd} would be moved to the archive (Id {3} to {4})" -f $Table, $n, $Cutoff, $lo, $last)
         return 'Succeeded'
     }
 
@@ -273,10 +270,10 @@ function Move-OldRows([string]$Table, [datetime]$Cutoff) {
             $imgCols = Get-Columns $IMG
             $siCols = ($imgCols -split ', ' | ForEach-Object { 'si.' + $_ }) -join ', '
             $extra = "
-                DELETE bi FROM dbo.$(Q $IMG) bi
-                WHERE EXISTS (SELECT 1 FROM $src.dbo.$(Q $IMG) si JOIN #ids i ON i.Id = si.GuardLogId WHERE si.Id = bi.Id);
-                INSERT INTO dbo.$(Q $IMG) ($imgCols)
-                SELECT $siCols FROM $src.dbo.$(Q $IMG) si JOIN #ids i ON i.Id = si.GuardLogId;"
+                DELETE bi FROM $arc.dbo.$(Q $IMG) bi
+                WHERE EXISTS (SELECT 1 FROM dbo.$(Q $IMG) si JOIN #ids i ON i.Id = si.GuardLogId WHERE si.Id = bi.Id);
+                INSERT INTO $arc.dbo.$(Q $IMG) ($imgCols)
+                SELECT $siCols FROM dbo.$(Q $IMG) si JOIN #ids i ON i.Id = si.GuardLogId;"
         }
 
         $batchSql = "
@@ -286,22 +283,22 @@ function Move-OldRows([string]$Table, [datetime]$Cutoff) {
             BEGIN TRAN;
             -- 1. the rows to move, locked against change until commit
             INSERT INTO #ids (Id)
-            SELECT s.Id FROM $src.dbo.$t s WITH (UPDLOCK, ROWLOCK)
+            SELECT s.Id FROM dbo.$t s WITH (UPDLOCK, ROWLOCK)
             WHERE s.Id BETWEEN @Lo AND @Hi AND $eligible
             OPTION (MAXDOP 1);
             DECLARE @picked INT = @@ROWCOUNT, @archived INT = 0, @deleted INT = 0;
             IF @picked > 0
             BEGIN
                 -- 2. archive exactly these rows (replacing any older copy from an earlier restore)
-                DELETE b FROM dbo.$t b JOIN #ids i ON i.Id = b.Id;
-                INSERT INTO dbo.$t ($columns)
-                SELECT $sCols FROM $src.dbo.$t s JOIN #ids i ON i.Id = s.Id;
+                DELETE b FROM $arc.dbo.$t b JOIN #ids i ON i.Id = b.Id;
+                INSERT INTO $arc.dbo.$t ($columns)
+                SELECT $sCols FROM dbo.$t s JOIN #ids i ON i.Id = s.Id;
                 SET @archived = @@ROWCOUNT;
                 $extra
-                -- 3. delete them from prod, only where the archive copy exists
-                DELETE s FROM $src.dbo.$t s
+                -- 3. delete them from the source, only where the archive copy exists
+                DELETE s FROM dbo.$t s
                 JOIN #ids i ON i.Id = s.Id
-                WHERE EXISTS (SELECT 1 FROM dbo.$t b WHERE b.Id = s.Id);
+                WHERE EXISTS (SELECT 1 FROM $arc.dbo.$t b WHERE b.Id = s.Id);
                 SET @deleted = @@ROWCOUNT;
                 -- 4. all or nothing
                 IF @archived <> @picked OR @deleted <> @picked
@@ -311,7 +308,7 @@ function Move-OldRows([string]$Table, [datetime]$Cutoff) {
             DROP TABLE #ids;
             SELECT @picked;"
 
-        Write-Log ("{0}: archiving rows older than {1:yyyy-MM-dd} (Id {2} to {3})" -f $Table, $Cutoff, $lo, $last)
+        Write-Log ("{0}: moving rows older than {1:yyyy-MM-dd} to the archive (Id {2} to {3})" -f $Table, $Cutoff, $lo, $last)
         $fromId = $lo
         $status = 'Succeeded'
         $batches = 0
@@ -321,19 +318,19 @@ function Move-OldRows([string]$Table, [datetime]$Cutoff) {
                 Write-Log ("{0}: reached the {1} minute limit at Id {2}; the next run continues" -f $Table, $MaxRunMinutes, $lo) 'WARN'
                 break
             }
-            if ($batches % 25 -eq 0 -and -not (Wait-ForProdLog $Table)) { $status = 'Stopped'; break }
+            if ($batches % 25 -eq 0 -and -not (Wait-ForLogSpace $Table)) { $status = 'Stopped'; break }
             $hi = [int][math]::Min([long]$lo + $BatchSize - 1, [long]$last)
             $n = Invoke-WithRetry { Invoke-Sql $batchSql @{ Lo = $lo; Hi = $hi; Cutoff = $Cutoff } -Scalar } "$Table batch $lo-$hi"
             $moved += [long]$n
             $toId = $hi
             $batches++
-            if ($batches % 50 -eq 0) { Write-Log ("{0}: up to Id {1}, {2:N0} rows archived and deleted" -f $Table, $hi, $moved) }
+            if ($batches % 50 -eq 0) { Write-Log ("{0}: up to Id {1}, {2:N0} rows moved" -f $Table, $hi, $moved) }
             $lo = $hi + 1
             if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
         }
 
-        Complete-RunLog $logId $status $fromId $toId $moved ("rows older than {0:yyyy-MM-dd} archived and deleted from prod" -f $Cutoff)
-        Write-Log ("{0}: {1}: {2:N0} rows archived and deleted from prod" -f $Table, $status, $moved)
+        Complete-RunLog $logId $status $fromId $toId $moved ("rows older than {0:yyyy-MM-dd} moved to the archive" -f $Cutoff)
+        Write-Log ("{0}: {1}: {2:N0} rows archived and deleted from the source" -f $Table, $status, $moved)
         return $status
     }
     catch {
@@ -349,7 +346,7 @@ function Move-OldRows([string]$Table, [datetime]$Cutoff) {
 # ---------------------------------------------------------------------------------------------
 $ok = $true
 try {
-    Write-Log ("Archive run {0}: {1} -> {2} on {3}; keep {4} months in prod; batch {5}, delay {6} ms, limit {7} min{8}" -f `
+    Write-Log ("Archive run {0}: {1} -> {2} on {3}; keep {4} months; batch {5}, delay {6} ms, limit {7} min{8}" -f `
         $runId, $SourceDb, $BackupDb, $builder['Data Source'], $ProdKeepMonths, $BatchSize, $DelayMs, $MaxRunMinutes,
         $(if ($ReportOnly) { '; REPORT ONLY' } else { '' }))
     $conn.Open()
@@ -358,20 +355,16 @@ try {
     $lock = Invoke-Sql "DECLARE @r INT; EXEC @r = sp_getapplock @Resource = N'CityWatchArchive', @LockMode = 'Exclusive', @LockOwner = 'Session', @LockTimeout = 0; SELECT @r;" -Scalar
     if ($lock -lt 0) { throw 'Another archive or restore run is going' }
 
+    if ($null -eq (Invoke-Sql "SELECT DB_ID(@Db);" @{ Db = $BackupDb } -Scalar)) {
+        throw "Archive database $BackupDb not found on this instance - run 01_Create_prod_citywatch_backup.sql"
+    }
     foreach ($required in @($GL, $HIST, $IMG, 'ProdDeleteHold', 'ArchiveRunLog')) {
-        if ($null -eq (Invoke-Sql "SELECT OBJECT_ID(N'dbo.$(Q $required)');" -Scalar)) {
-            throw "dbo.$required does not exist in $BackupDb - run 01_Create_prod_citywatch_backup.sql"
+        if ($null -eq (Invoke-Sql "SELECT OBJECT_ID(N'$arc.dbo.$(Q $required)');" -Scalar)) {
+            throw "$BackupDb.dbo.$required does not exist - run 01_Create_prod_citywatch_backup.sql"
         }
     }
-    if ($null -eq (Invoke-Sql "SELECT 1 FROM $src.sys.indexes WHERE name = N'IX_RadioChecksActivityStatus_History_LBId' AND object_id = OBJECT_ID(N'$src.dbo.$(Q $HIST)');" -Scalar)) {
-        throw 'Apply DbScript/385 to prod first: without its IX_RadioChecksActivityStatus_History_LBId index every GuardLogs delete scans the whole history table'
-    }
-    if (-not $ReportOnly -and $RequireArchiveBackupDays -gt 0 -and $null -eq (Invoke-Sql "
-            SELECT TOP (1) 1 FROM msdb.dbo.backupset bs
-            WHERE bs.database_name = @Db AND bs.type = 'D' AND bs.backup_finish_date >= DATEADD(DAY, -@Days, GETDATE())
-              -- this database, not an earlier one with the same name (msdb keeps history by name)
-              AND bs.database_guid = (SELECT database_guid FROM sys.database_recovery_status WHERE database_id = DB_ID(@Db));" @{ Db = $BackupDb; Days = $RequireArchiveBackupDays } -Scalar)) {
-        throw ("{0} has no full backup in the last {1} days. It holds the only live copy of archived rows - back it up, then run again" -f $BackupDb, $RequireArchiveBackupDays)
+    if ($null -eq (Invoke-Sql "SELECT 1 FROM sys.indexes WHERE name = N'IX_RadioChecksActivityStatus_History_LBId' AND object_id = OBJECT_ID(N'dbo.$(Q $HIST)');" -Scalar)) {
+        throw 'Apply DbScript/385 to the source first: without its IX_RadioChecksActivityStatus_History_LBId index every GuardLogs delete scans the whole history table'
     }
 
     $cutoff = Invoke-Sql "SELECT DATEADD(MONTH, -@Months, CAST(CAST(GETDATE() AS DATE) AS DATETIME));" @{ Months = $ProdKeepMonths } -Scalar
@@ -388,7 +381,8 @@ catch {
     Write-Log ("FAILED - {0}" -f $_.Exception.Message) 'ERROR'
 }
 finally {
-    if ($conn.State -eq 'Open') { $conn.Close() }
+    # Whatever state it is in (Open, Broken, never opened): Dispose closes it and ends the session
+    if ($conn) { $conn.Dispose() }
     Write-Log ("Finished in {0:N1} minutes" -f ((Get-Date) - $runStarted).TotalMinutes)
 }
 

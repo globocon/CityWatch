@@ -2,8 +2,8 @@
 
    Backup-CityWatchArchive.ps1 moves rows older than 18 months here each night (archive + delete
    from prod-citywatch in one transaction per batch), so for those rows THIS DATABASE IS THE ONLY
-   LIVE COPY. Include it in the instance's regular full backups: the script will not run until it
-   has a full backup less than 7 days old. It keeps everything; nothing is ever purged from it.
+   LIVE COPY. Include it in the instance's regular backups. It keeps everything; nothing is ever
+   purged from it.
 
    Run once, on the same SQL Server instance as prod-citywatch (the backup / restore scripts copy
    between the two databases with three-part names, so both must be on one instance).
