@@ -14,8 +14,8 @@ namespace CityWatch.Data.Models
     {
         [Key]
         public int Id { get; set; }
-        public int UserID { get; set; }
-        public int GuardID { get; set; }
+        public int? UserID { get; set; }
+        public int? GuardID { get; set; }
         public string IPAddress { get; set; }
         public string DwnlCatagory { get; set; }
         public string DwnlFileName { get; set; }

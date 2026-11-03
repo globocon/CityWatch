@@ -8730,9 +8730,10 @@ $(function () {
         data: [],
         columns: [
             { data: 'id', title: 'Event ID', visible: false },
-            { data: 'user.userName', title: 'User', width: "10%" },
-            { data: 'guard.name', title: 'Guard Name', width: "15%" },
-            { data: 'guard.securityNo', title: 'Security Number', width: "10%" },
+            /* p1-373 downloads from direct links (Site/Alarm SOP, Settings etc) may have no user or guard */
+            { data: 'user.userName', title: 'User', width: "10%", defaultContent: '-' },
+            { data: 'guard.name', title: 'Guard Name', width: "15%", defaultContent: '-' },
+            { data: 'guard.securityNo', title: 'Security Number', width: "10%", defaultContent: '-' },
             { data: 'ipAddress', title: 'IP Address', width: "10%" },
             { data: 'dwnlCatagory', title: 'Categories', width: "15%" },
             { data: 'dwnlFileName', title: 'File Name', width: "20%" },
