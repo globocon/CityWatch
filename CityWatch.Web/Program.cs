@@ -193,6 +193,7 @@ app.UseCors("AllowSpecificOrigin");
 AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 app.UseHttpsRedirection();
 app.UseGuardDocumentBlobFallback(); // before UseStaticFiles: HR documents no longer on disk come from Blob
+app.UseStaffDocsDownloadAudit(); // before UseStaticFiles: every SOP / staff document download goes into the Download Logs
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();

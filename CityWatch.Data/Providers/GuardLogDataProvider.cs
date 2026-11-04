@@ -1,4 +1,4 @@
-using CityWatch.Data.Enums;
+﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Models.DTO;
@@ -324,6 +324,8 @@ namespace CityWatch.Data.Providers
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate);
 
         void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal);
+        bool HasRecentDownloadAuditLog(string fileName, string ipAddress, DateTime since);
+        string GetStaffDocumentAuditCategory(string fileName);
         void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages);
 
 
@@ -7179,7 +7181,7 @@ WHERE f.ClientSiteId = @clientSiteId
 
         public List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate)
         {
-            var r = _context.FileDownloadAuditLogs.Where(x => x.EventDateTime.Date >= logFromDate.Date && x.EventDateTime.Date <= logToDate.Date)
+            var r = _context.FileDownloadAuditLogs.Where(x => x.EventDateTime >= logFromDate.Date && x.EventDateTime < logToDate.Date.AddDays(1))
                 .Include(u => u.User)
                 .Include(g => g.Guard)
                 .OrderByDescending(x => x.EventDateTime)  // Sort by latest EventDateTime
@@ -7194,6 +7196,37 @@ WHERE f.ClientSiteId = @clientSiteId
                 _context.Add(fdal);
                 _context.SaveChanges();
             }
+        }
+
+        /* p1-373 a page that logs the download itself (eg Downloads with the guard licence no) has already written a row - don't add a second one */
+        public bool HasRecentDownloadAuditLog(string fileName, string ipAddress, DateTime since)
+        {
+            return _context.FileDownloadAuditLogs
+                .Any(x => x.EventDateTime >= since && x.IPAddress == ipAddress && x.DwnlFileName == fileName);
+        }
+
+        /* p1-373 category shown in the Download Logs report for a file under /StaffDocs, eg "Client (Site) SOP - <site>" */
+        public string GetStaffDocumentAuditCategory(string fileName)
+        {
+            var doc = _context.StaffDocuments
+                .Where(x => x.FileName == fileName)
+                .OrderByDescending(x => x.LastUpdated)
+                .Select(x => new { x.DocumentType, x.ClientSite, x.CategoryId })
+                .FirstOrDefault();
+            if (doc == null)
+                return "Staff Document";
+
+            var category = Enum.IsDefined(typeof(StaffDocumentType), doc.DocumentType)
+                ? ((StaffDocumentType)doc.DocumentType).ToDisplayName()
+                : "Staff Document";
+
+            string detail = null;
+            if (doc.ClientSite.HasValue)
+                detail = _context.ClientSites.Where(x => x.Id == doc.ClientSite.Value).Select(x => x.Name).FirstOrDefault();
+            else if (doc.CategoryId.HasValue)
+                detail = _context.StaffDocumentCategories.Where(x => x.Id == doc.CategoryId.Value).Select(x => x.Name).FirstOrDefault();
+
+            return string.IsNullOrEmpty(detail) ? category : $"{category} - {detail}";
         }
 
 
