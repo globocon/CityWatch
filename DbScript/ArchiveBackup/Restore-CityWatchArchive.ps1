@@ -1,9 +1,12 @@
 <#
 .SYNOPSIS
     Puts GuardLogs (with their photo / attachment records) and ClientSiteRadioChecksActivityStatus_History
-    rows back into prod-citywatch from prod_citywatch_backup. Run by hand.
+    rows back into the source database from the archive. Run by hand.
 
 .DESCRIPTION
+    -ConnectionString connects to the SOURCE database (its Database / Initial Catalog), the same
+    string as Backup-CityWatchArchive.ps1. -BackupDb is the archive database on the same instance.
+
     Only rows that are MISSING from prod are inserted (matched on Id, which is kept), so running it
     twice, or over a range where most rows still exist, is harmless. Nothing in prod is updated or
     deleted.
@@ -25,23 +28,25 @@
     Insert_GuardLogs trigger from DbScript/385 checks, and refuses to run if that trigger is not in
     place (the old trigger would credit the newest entry in prod instead of the restored ones).
 
-    Needs: INSERT and ALTER on the three prod tables (IDENTITY_INSERT), and on the archive read +
+    Needs: INSERT and ALTER on the three source tables (IDENTITY_INSERT), and on the archive read +
     INSERT on dbo.ProdDeleteHold / dbo.ArchiveRunLog.
 
 .EXAMPLE
     # What would come back for 1-15 March 2026, site 887
-    .\Restore-CityWatchArchive.ps1 -FromDate 2026-03-01 -ToDate 2026-03-16 -ClientSiteId 887
+    .\Restore-CityWatchArchive.ps1 -ConnectionString "Server=...;Database=prod-citywatch;..." -FromDate 2025-03-01 -ToDate 2025-03-16 -ClientSiteId 887
 
 .EXAMPLE
     # Do it
-    .\Restore-CityWatchArchive.ps1 -FromDate 2026-03-01 -ToDate 2026-03-16 -ClientSiteId 887 -Execute
+    .\Restore-CityWatchArchive.ps1 -ConnectionString "Server=...;Database=prod-citywatch;..." -FromDate 2025-03-01 -ToDate 2025-03-16 -ClientSiteId 887 -Execute
 
 .EXAMPLE
     # Particular log entries only
-    .\Restore-CityWatchArchive.ps1 -Table GuardLogs -Id 4388966,4388967 -Execute
+    .\Restore-CityWatchArchive.ps1 -ConnectionString "Server=...;Database=prod-citywatch;..." -Table GuardLogs -Id 1234567,1234568 -Execute
 #>
 [CmdletBinding()]
 param(
+    # Connects to the source database (Database / Initial Catalog in the string)
+    [string]$ConnectionString,
     [ValidateSet('GuardLogs', 'ClientSiteRadioChecksActivityStatus_History', 'Both')]
     [string]$Table = 'Both',
     # EventDateTime range: from (inclusive) .. to (exclusive)
@@ -55,13 +60,11 @@ param(
     [switch]$Execute,
     # Days the nightly job must not delete the restored rows from prod again (0 = no hold)
     [ValidateRange(0, 3650)][int]$HoldDays = 30,
-    [string]$SqlServer = 'localhost',
-    [string]$SourceDb = 'prod-citywatch',
     [string]$BackupDb = 'prod_citywatch_backup',
     [ValidateRange(100, 100000)][int]$BatchSize = 5000,
     [ValidateRange(0, 60000)][int]$DelayMs = 200,
-    [string]$LogDir = (Join-Path $PSScriptRoot 'logs'),
-    [string]$ConnectionString
+    # Default: a logs folder next to the script
+    [string]$LogDir
 )
 
 Set-StrictMode -Version 2.0
@@ -87,6 +90,14 @@ if (-not $All -and -not $PSBoundParameters.ContainsKey('FromDate') -and -not $Id
 
 $runId = [guid]::NewGuid()
 $runStarted = Get-Date
+# Worked out here, not as the parameter default: Windows PowerShell 5.1 can leave $PSScriptRoot
+# empty while parameter defaults are evaluated
+if (-not $LogDir) {
+    $scriptDir = $PSScriptRoot
+    if (-not $scriptDir -and $MyInvocation.MyCommand.Path) { $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path }
+    if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+    $LogDir = Join-Path $scriptDir 'logs'
+}
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
 $logFile = Join-Path $LogDir ('Restore-CityWatchArchive_{0:yyyyMMdd_HHmmss}.log' -f $runStarted)
 
@@ -98,14 +109,27 @@ function Write-Log([string]$Message, [string]$Level = 'INFO') {
 
 function Q([string]$Name) { '[' + $Name.Replace(']', ']]') + ']' }
 
-$src = Q $SourceDb
-
-$builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
-if ($ConnectionString) { $builder.ConnectionString = $ConnectionString }
-else { $builder['Data Source'] = $SqlServer; $builder['Integrated Security'] = $true }
-$builder['Initial Catalog'] = $BackupDb
+# Connection: the connection string, to the source database
+if (-not $ConnectionString) {
+    Write-Log 'FAILED - give -ConnectionString (it connects to the source database)' 'ERROR'
+    exit 1
+}
+# Passed to the constructor: the builder is a dictionary, so in PowerShell
+# '$builder.ConnectionString = ...' would add a key called ConnectionString instead
+$builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder -ArgumentList $ConnectionString
+$SourceDb = $builder['Initial Catalog']
+if (-not $SourceDb) {
+    Write-Log 'FAILED - the connection string has no Database / Initial Catalog (the source database)' 'ERROR'
+    exit 1
+}
 $builder['Application Name'] = 'CityWatch archive restore'
-$conn = New-Object System.Data.SqlClient.SqlConnection $builder.ConnectionString
+# No pooling: closing must end the SQL session, which releases everything held by it (the run
+# lock from sp_getapplock, session flags)
+$builder['Pooling'] = $false
+$conn = New-Object System.Data.SqlClient.SqlConnection $builder.ToString()
+
+$src = Q $SourceDb
+$arc = Q $BackupDb
 
 function Invoke-Sql([string]$Sql, [hashtable]$Params = @{}, [int]$TimeoutSec = 600, [switch]$Scalar) {
     $cmd = $conn.CreateCommand()
@@ -136,7 +160,8 @@ function Get-Columns([string]$TableName) {
     $cols = Invoke-Sql "
         SELECT c.name FROM $src.sys.columns c
         WHERE c.object_id = OBJECT_ID(N'$src.dbo.$t') AND c.is_computed = 0
-          AND c.name COLLATE DATABASE_DEFAULT IN (SELECT name FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.$t'))
+          AND c.name COLLATE DATABASE_DEFAULT IN
+              (SELECT a.name COLLATE DATABASE_DEFAULT FROM $arc.sys.columns a WHERE a.object_id = OBJECT_ID(N'$arc.dbo.$t'))
         ORDER BY c.column_id;"
     return (@($cols.Rows | ForEach-Object { Q $_.name }) -join ', ')
 }
@@ -169,7 +194,7 @@ function Get-ParentChecks([string]$TableName) {
 function Get-Filter([string]$TableName, [string]$A = 'b') {
     # Photo records: those of the archived log entries the filter picks (-Id means log entry ids)
     if ($TableName -eq 'GuardLogsDocumentImages') {
-        return "$A.GuardLogId IN (SELECT g.Id FROM dbo.GuardLogs g WHERE $(Get-Filter 'GuardLogs' 'g'))"
+        return "$A.GuardLogId IN (SELECT g.Id FROM $arc.dbo.GuardLogs g WHERE $(Get-Filter 'GuardLogs' 'g'))"
     }
     $parts = @()
     if ($script:FromGiven) { $parts += "$A.EventDateTime >= @FromDate AND $A.EventDateTime < @ToDate" }
@@ -197,12 +222,12 @@ function Restore-Table([string]$TableName) {
     $counts = Invoke-Sql "
         SELECT COUNT_BIG(*) AS Matching, SUM(x.InProd) AS InProd, MIN(x.Id) AS MinId, MAX(x.Id) AS MaxId
         FROM (SELECT b.Id, CASE WHEN EXISTS (SELECT 1 FROM $src.dbo.$t p WHERE p.Id = b.Id) THEN 1 ELSE 0 END AS InProd
-              FROM dbo.$t b
+              FROM $arc.dbo.$t b
               WHERE $filter) x;" $dateParams
     $missing = Invoke-Sql "
         SELECT COUNT_BIG(*) AS Missing, SUM(x.Restorable) AS Restorable
         FROM (SELECT CASE WHEN $parents THEN 1 ELSE 0 END AS Restorable
-              FROM dbo.$t b
+              FROM $arc.dbo.$t b
               WHERE $filter AND NOT EXISTS (SELECT 1 FROM $src.dbo.$t p WHERE p.Id = b.Id)) x;" $dateParams
 
     $c = $counts.Rows[0]; $m = $missing.Rows[0]
@@ -211,12 +236,12 @@ function Restore-Table([string]$TableName) {
     $missingCount = [long]$m.Missing
     $restorable = if ($m.Restorable -is [DBNull]) { 0 } else { [long]$m.Restorable }
     $skipped = $missingCount - $restorable
-    Write-Log ("{0}: {1:N0} archived rows match; {2:N0} already in prod; {3:N0} to restore; {4:N0} cannot be restored (parent row gone from prod)" -f `
+    Write-Log ("{0}: {1:N0} archived rows match; {2:N0} already in the source; {3:N0} to restore; {4:N0} cannot be restored (parent row gone from the source)" -f `
         $TableName, $matching, $inProd, $restorable, $skipped)
 
     if (-not $Execute -or $restorable -eq 0) { return }
 
-    $logId = Invoke-Sql "INSERT INTO dbo.ArchiveRunLog (RunId, Operation, TableName, StartedAtUtc, FromId, ToId, Status, Message)
+    $logId = Invoke-Sql "INSERT INTO $arc.dbo.ArchiveRunLog (RunId, Operation, TableName, StartedAtUtc, FromId, ToId, Status, Message)
                          OUTPUT inserted.Id VALUES (@RunId, 'Restore', @Table, SYSUTCDATETIME(), @MinId, @MaxId, 'Running', @Filter);" @{
         RunId = $runId; Table = $TableName; MinId = $c.MinId; MaxId = $c.MaxId; Filter = $filter } -Scalar
 
@@ -229,7 +254,7 @@ function Restore-Table([string]$TableName) {
             $batchSql = "
                 SET XACT_ABORT ON; SET LOCK_TIMEOUT 15000;
                 INSERT INTO $src.dbo.$t ($columns)
-                SELECT $columns FROM dbo.$t b
+                SELECT $columns FROM $arc.dbo.$t b
                 WHERE b.Id BETWEEN @Lo AND @Hi AND $filter
                   AND NOT EXISTS (SELECT 1 FROM $src.dbo.$t p WHERE p.Id = b.Id)
                   AND $parents
@@ -249,22 +274,22 @@ function Restore-Table([string]$TableName) {
         finally {
             [void](Invoke-Sql "SET IDENTITY_INSERT $src.dbo.$t OFF;")
         }
-        [void](Invoke-Sql "UPDATE dbo.ArchiveRunLog SET FinishedAtUtc = SYSUTCDATETIME(), Status = 'Succeeded', RowsCopied = @N, RowsSkipped = @Skipped WHERE Id = @LogId;" @{
+        [void](Invoke-Sql "UPDATE $arc.dbo.ArchiveRunLog SET FinishedAtUtc = SYSUTCDATETIME(), Status = 'Succeeded', RowsCopied = @N, RowsSkipped = @Skipped WHERE Id = @LogId;" @{
             N = $restored; Skipped = $skipped; LogId = $logId })
         Write-Log ("{0}: restored {1:N0} rows" -f $TableName, $restored)
 
         # Keep the nightly job from deleting them again (photo records go with their log entries)
         if ($HoldDays -gt 0 -and $restored -gt 0 -and $TableName -ne 'GuardLogsDocumentImages') {
-            [void](Invoke-Sql "INSERT INTO dbo.ProdDeleteHold (TableName, FromId, ToId, HoldUntilUtc, RestoreRunId)
+            [void](Invoke-Sql "INSERT INTO $arc.dbo.ProdDeleteHold (TableName, FromId, ToId, HoldUntilUtc, RestoreRunId)
                                VALUES (@Table, @MinId, @MaxId, DATEADD(DAY, @Days, SYSUTCDATETIME()), @RunId);" @{
                 Table = $TableName; MinId = $c.MinId; MaxId = $c.MaxId; Days = $HoldDays; RunId = $runId })
-            Write-Log ("{0}: Id {1} to {2} held from the nightly prod delete for {3} days" -f $TableName, $c.MinId, $c.MaxId, $HoldDays)
+            Write-Log ("{0}: Id {1} to {2} held from the nightly archive run for {3} days" -f $TableName, $c.MinId, $c.MaxId, $HoldDays)
         }
     }
     catch {
         $msg = $_.Exception.Message
         try {
-            [void](Invoke-Sql "UPDATE dbo.ArchiveRunLog SET FinishedAtUtc = SYSUTCDATETIME(), Status = 'Failed', RowsCopied = @N, Message = @Msg WHERE Id = @LogId;" @{
+            [void](Invoke-Sql "UPDATE $arc.dbo.ArchiveRunLog SET FinishedAtUtc = SYSUTCDATETIME(), Status = 'Failed', RowsCopied = @N, Message = @Msg WHERE Id = @LogId;" @{
                 N = $restored; Msg = $msg; LogId = $logId })
         } catch { }
         throw ("{0}: failed after restoring {1:N0} rows - {2}" -f $TableName, $restored, $msg)
@@ -277,8 +302,12 @@ try {
     Write-Log ("Archive restore {0}: {1} -> {2} on {3}; {4}" -f $runId, $BackupDb, $SourceDb, $builder['Data Source'], $mode)
     $conn.Open()
 
+    if ($null -eq (Invoke-Sql "SELECT DB_ID(@Db);" @{ Db = $BackupDb } -Scalar)) {
+        throw "Archive database $BackupDb not found on this instance"
+    }
+
     $lock = Invoke-Sql "DECLARE @r INT; EXEC @r = sp_getapplock @Resource = N'CityWatchArchive', @LockMode = 'Exclusive', @LockOwner = 'Session', @LockTimeout = 0; SELECT @r;" -Scalar
-    if ($lock -lt 0) { throw 'An archive backup or restore is running; try again when it has finished' }
+    if ($lock -lt 0) { throw 'An archive or restore run is going; try again when it has finished' }
 
     $tablesToDo = switch ($Table) {
         'Both' { @('GuardLogs', 'GuardLogsDocumentImages', 'ClientSiteRadioChecksActivityStatus_History') }
@@ -289,7 +318,7 @@ try {
     if ($Execute -and $tablesToDo -contains 'GuardLogs') {
         $trigger = Invoke-Sql "SELECT m.definition FROM $src.sys.sql_modules m WHERE m.object_id = OBJECT_ID(N'$src.dbo.Insert_GuardLogs');" -Scalar
         if ($trigger -and $trigger -notlike '*CityWatch.SkipActivityTriggers*') {
-            throw 'Insert_GuardLogs in prod is the old version - apply DbScript/385 first, or restored entries would be credited to the newest log entry as guard activity'
+            throw 'Insert_GuardLogs in the source is the old version - apply DbScript/385 first, or restored entries would be credited to the newest log entry as guard activity'
         }
     }
 
@@ -300,7 +329,8 @@ catch {
     Write-Log ("FAILED - {0}" -f $_.Exception.Message) 'ERROR'
 }
 finally {
-    if ($conn.State -eq 'Open') { $conn.Close() }
+    # Whatever state it is in (Open, Broken, never opened): Dispose closes it
+    if ($conn) { $conn.Dispose() }
     Write-Log ("Finished in {0:N1} minutes" -f ((Get-Date) - $runStarted).TotalMinutes)
 }
 
