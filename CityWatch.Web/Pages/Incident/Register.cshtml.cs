@@ -1392,7 +1392,12 @@ namespace CityWatch.Web.Pages.Incident
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientType);
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
-            
+
+            // Bill To is only filled client-side when the site is picked from the dropdown;
+            // fall back to the site's configured Billing so the IR (PDF + IR Statistics) is never blank.
+            if (Report.Officer != null && string.IsNullOrWhiteSpace(Report.Officer.Billing) && !string.IsNullOrWhiteSpace(clientSite?.Billing))
+                Report.Officer.Billing = clientSite.Billing;
+
             var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report.Officer.Position);
             //To get the clientType oF position stop
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
