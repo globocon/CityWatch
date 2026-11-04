@@ -4514,10 +4514,15 @@ namespace CityWatch.Web.API
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
 
+            // The mobile app does not send Bill To; fall back to the site's configured Billing
+            // so the IR (PDF + IR Statistics) is never blank.
+            if (string.IsNullOrWhiteSpace(Report.Officer.Billing) && !string.IsNullOrWhiteSpace(clientSite?.Billing))
+                Report.Officer.Billing = clientSite.Billing;
+
             var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report?.Officer?.Position);
 
 
-            //live map settings 
+            //live map settings
             if (Report?.DateLocation?.ShowIncidentLocationAddress == true && !string.IsNullOrWhiteSpace(Report.DateLocation.ClientAddress))
             {
                 var result = GetCoordinatesFromAddress(Report.DateLocation.ClientAddress);
