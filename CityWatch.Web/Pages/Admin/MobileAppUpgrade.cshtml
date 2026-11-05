@@ -1,0 +1,145 @@
+﻿@page
+@model CityWatch.Web.Pages.Admin.MobileAppUpgradeModel
+@{
+    ViewData["Title"] = "Mobile App Upgrade";
+}
+@Html.AntiForgeryToken()
+<div id="loader" style="z-index: 99999"></div>
+
+<div class="row">
+    <div class="col-md-12 mt-2 text-left">
+        <button class="btn btn-success mb-3" id="btn_add_newappversion"><i class="fa fa-plus mr-2"></i>New Version</button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="text-primary">Active Version</h2>
+    </div>
+    <div class="col-md-12">
+        <table id="tbl_app_active_version" class="table table-bordered" style="width:100%">                        
+        </table>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="text-primary">Version History</h2>
+    </div>
+    <div class="col-md-12">
+        <table id="tbl_app_version_history" class="table table-bordered" style="width:100%">                        
+        </table>
+    </div>
+</div>
+
+@* ##### App Reactivate Modal ##### *@
+<div class="modal fade" id="reactivateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reactivate App Version</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p id="reactivateMessage"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmReactivate">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ##### App Delete Modal ##### *@
+<div class="modal fade" id="deleteAppVersionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete App Version</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p id="deleteAppVersionMessage"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmDeleteAppVersion">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ##### App Upgrade Modal ##### *@
+<div class="modal fade" id="upgradeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Mobile App Upgrade</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="upgradeForm" enctype="multipart/form-data">  
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">App Type</label>
+                            <input type="text" class="form-control" id="AppType" name="AppType" value="Android" required  readonly />
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Major</label>
+                            <input type="number" class="form-control" id="AppVersionMajor" name="AppVersionMajor" required />
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Minor</label>
+                            <input type="number" class="form-control" id="AppVersionMinor" name="AppVersionMinor" required />
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Patch</label>
+                            <input type="number" class="form-control" id="AppVersionPatch" name="AppVersionPatch" required />
+                        </div>
+
+                        <div class="col-md-12 mt-2">
+                            <label class="form-label">Version Notes</label>
+                            <textarea class="form-control" id="AppVersionNotes" name="AppVersionNotes"></textarea>
+                        </div>
+
+                        <div class="col-md-12 mt-2">
+                            <label class="form-label mb-2">APK File</label>
+                            <input type="file" class="form-control" id="AppVersionFileUpload" name="AppVersionFileUpload" accept=".apk" />
+                            <small class="text-muted">Upload Android APK file.</small>
+                        </div>                       
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="btnSaveUpgrade">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="progress mt-2 d-none" id="uploadProgressContainer" style="height: 22px;">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+         id="uploadProgressBar" 
+         role="progressbar" 
+         style="width:0%">
+        0%
+    </div>
+</div>

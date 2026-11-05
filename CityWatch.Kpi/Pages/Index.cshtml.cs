@@ -19,7 +19,8 @@ namespace CityWatch.Kpi.Pages
 
 		public ActionResult OnGet()
 		{
-			return Redirect("/Dashboard");
-		}
+            //return Redirect("/Dashboard");
+            return Redirect("/admin/Settings");
+        }
 	}
 }

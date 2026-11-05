@@ -1,0 +1,2 @@
+ALTER TABLE CriticalDocuments
+ADD IsCriticalDocumentDownselect bit;
