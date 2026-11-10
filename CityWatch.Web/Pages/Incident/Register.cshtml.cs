@@ -508,6 +508,8 @@ namespace CityWatch.Web.Pages.Incident
             if (Report == null)
                 throw new ArgumentNullException("Incident Report");
 
+            ValidateOfficerPositionAndCallSign();
+
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -527,6 +529,48 @@ namespace CityWatch.Web.Pages.Incident
             ProcessIrSubmit();
 
             return new JsonResult(new { success = true });
+        }
+
+        /// <summary>
+        /// Position is required on every incident report, and once the report is for a Patrol
+        /// Car the callsign is required too.
+        ///
+        /// Written out here rather than as [Required] on Officer because that type is also the
+        /// body the mobile app posts to GuardSecurityNumberController, which is an
+        /// [ApiController]: a model error there becomes an automatic 400 that the app cannot
+        /// explain to the guard. The same two rules are applied in that controller in code, so
+        /// both routes refuse the same reports for the same stated reason.
+        ///
+        /// The keys match the asp-validation-for spans on the page, so each message lands
+        /// against its own field as well as in the validation summary.
+        /// </summary>
+        private void ValidateOfficerPositionAndCallSign()
+        {
+            var position = Report.Officer?.Position;
+
+            if (string.IsNullOrWhiteSpace(position))
+                ModelState.AddModelError("Report.Officer.Position", "Please select \"position\"");
+
+            if (IsPatrolCarReport(position) && string.IsNullOrWhiteSpace(Report.Officer?.CallSign))
+                ModelState.AddModelError("Report.Officer.CallSign",
+                    "Please select \"your callsign\" - it is required for a Patrol Car");
+        }
+
+        /// <summary>
+        /// Whether this report is a Patrol Car one. Decided from the chosen position's own
+        /// IsPatrolCar flag first, because that is the same flag the page filters the Patrol Car
+        /// list by and it cannot drift: the "Patrol Car" switch only reloads that list, and
+        /// replacing a select's options raises no change event, so Report.IsPositionPatrolCar is
+        /// left holding whatever it held before. It is still honoured as a fallback.
+        /// </summary>
+        private bool IsPatrolCarReport(string position)
+        {
+            if (!string.IsNullOrWhiteSpace(position) &&
+                _configDataProvider.GetPositions().Any(z => z.IsPatrolCar &&
+                    string.Equals(z.Name, position, StringComparison.OrdinalIgnoreCase)))
+                return true;
+
+            return Report.IsPositionPatrolCar || Request.Form["positionfilter"].Count > 0;
         }
 
         public async Task<JsonResult> OnPostUpload()

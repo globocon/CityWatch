@@ -262,6 +262,7 @@
                                 </div>
                             </div>
                             <select asp-for="@Model.Report.Officer.Position" asp-items="@Model.OfficerPosition" class="form-control"></select>
+                            <span asp-validation-for="@Model.Report.Officer.Position"></span>
                             <input type="hidden" asp-for="@Model.Report.IsPositionPatrolCar" value="false" />
                         </div>
                         <div class="form-group col-md-3">
@@ -281,11 +282,16 @@
                         <div class="form-group col-md-3">
                             <label asp-for="@Model.Report.Officer.CallSign"></label>
                             <select asp-for="@Model.Report.Officer.CallSign" class="form-control">
+                                @* Without a blank first option the browser pre-selects a real
+                                   callsign, so an untouched form records one the guard never
+                                   chose - and "callsign is required" could never fail. *@
+                                <option value="">Select</option>
                                 @foreach (var item in @Model.ViewDataService.CallSign)
                                 {
                                     <option value="@item.Value">@item.Text</option>
                                 }
                             </select>
+                            <span asp-validation-for="@Model.Report.Officer.CallSign"></span>
                         </div>
                         <div class="form-group col-md-3">
                             <label asp-for="@Model.Report.Officer.GuardMonth"></label>
@@ -1117,6 +1123,25 @@
         return true;
     }
 
+    function positionIsValid() {
+        return document.getElementById('Report_Officer_Position').value.trim() !== '';
+    }
+
+    // Is this a Patrol Car report? Read the switch itself, not Report_IsPositionPatrolCar:
+    // toggling the switch only reloads the Position list, and replacing those options fires
+    // no change event, so the hidden field still holds whatever it held before.
+    function isPatrolCarSelected() {
+        return document.getElementById('positionfilter').checked ||
+            document.getElementById('Report_IsPositionPatrolCar').value === 'true';
+    }
+
+    function callSignIsValid() {
+        if (!isPatrolCarSelected())
+            return true;
+
+        return document.getElementById('Report_Officer_CallSign').value.trim() !== '';
+    }
+
     function patrolOffsiteDateIsValid() {
         const incidentdate = document.getElementById("Report_DateLocation_IncidentDate").value;
         const reportdate = document.getElementById("Report_DateLocation_ReportDate").value;
@@ -1236,6 +1261,11 @@
                 } else {
                     result.errors.forEach(function (item) {
                         const span = document.querySelector("span[data-valmsg-for='" + item.propertyName + "']");
+                        // Not every field has a validation span. Without this guard the throw
+                        // lands in the catch below and the operator is shown nothing at all -
+                        // no inline message and no summary, because the summary comes after.
+                        if (!span)
+                            return;
                         span.innerText = item.errorList[0];
                         span.className = "field-validation-error";
                     });
@@ -1309,6 +1339,22 @@
 
         if (!jobNumberIsValid()) {
             errors.push({ field: 'Job Number', errorList: ['Please fill "job number"'] });
+        }
+
+        if (!positionIsValid()) {
+            errors.push({
+                field: 'Position',
+                propertyName: 'Report.Officer.Position',
+                errorList: ['Please select "position"']
+            });
+        }
+
+        if (!callSignIsValid()) {
+            errors.push({
+                field: 'Callsign',
+                propertyName: 'Report.Officer.CallSign',
+                errorList: ['Please select "your callsign" - it is required for a Patrol Car']
+            });
         }
 
         if (!patrolOffsiteDateIsValid()) {

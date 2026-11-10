@@ -2103,6 +2103,29 @@ namespace CityWatch.Web.API
         public IActionResult ProcessIrSubmit([FromQuery] string gps, [FromQuery] int UserId, [FromQuery] int IRguardId,
             [FromQuery] int IRclientSiteId, [FromBody] IncidentRequest Report, [FromQuery] string RequestDeviceType = "")
         {
+            /* Position is required on every incident report, and the callsign too once the
+               report is for a Patrol Car - the same two rules the Register page applies.
+
+               In code rather than [Required] on Officer, because this is an [ApiController]:
+               a model error there becomes an automatic 400 with a body the app has no way to
+               explain to the guard, where these come back through the Errors list it already
+               reads and shows.
+
+               Checked here and not inside CreateAndSaveIr so that SyncOfflineIrRecords is left
+               alone: those reports were captured on the device hours earlier and nobody can go
+               back and fill the field in, so refusing one would simply lose it. */
+            var positionAndCallSignFailures = ValidateOfficerPositionAndCallSign(Report);
+            if (positionAndCallSignFailures.Count > 0)
+            {
+                return Ok(new
+                {
+                    Success = false,
+                    FileName = string.Empty,
+                    Domin = string.Empty,
+                    Errors = positionAndCallSignFailures.Select(p => new { Code = p.Key, Message = p.Value.ErrorMessage })
+                });
+            }
+
             var (processResult, domain, fileName) = CreateAndSaveIr(gps, UserId, IRguardId, IRclientSiteId, Report, RequestDeviceType);
 
             return Ok(new
@@ -4441,6 +4464,35 @@ namespace CityWatch.Web.API
                     Data = new NewGuard()
                 });
             }
+        }
+
+        /// <summary>
+        /// Position is required on every incident report; the callsign is required as well once
+        /// the report is for a Patrol Car. Returns one failure per broken rule, empty when the
+        /// report is acceptable.
+        ///
+        /// Patrol Car is decided from the chosen position's own IsPatrolCar flag first, since
+        /// that is the flag the position list is filtered by and it cannot drift out of step
+        /// with the position actually chosen; IsPositionPatrolCar from the request is honoured
+        /// as a fallback for apps that send it instead.
+        /// </summary>
+        private SortedDictionary<int, IrProcessFailure> ValidateOfficerPositionAndCallSign(IncidentRequest Report)
+        {
+            var failures = new SortedDictionary<int, IrProcessFailure>();
+            var position = Report?.Officer?.Position;
+
+            if (string.IsNullOrWhiteSpace(position))
+                failures.Add(9010, new IrProcessFailure("Position is required.", string.Empty));
+
+            var isPatrolCar = (!string.IsNullOrWhiteSpace(position) &&
+                    _configDataProvider.GetPositions().Any(z => z.IsPatrolCar &&
+                        string.Equals(z.Name, position, StringComparison.OrdinalIgnoreCase)))
+                || (Report?.IsPositionPatrolCar ?? false);
+
+            if (isPatrolCar && string.IsNullOrWhiteSpace(Report?.Officer?.CallSign))
+                failures.Add(9011, new IrProcessFailure("Callsign is required for a Patrol Car.", string.Empty));
+
+            return failures;
         }
 
         public (SortedDictionary<int, IrProcessFailure> _processResult, SubDomain _domain, string _fileName) CreateAndSaveIr(string gps, int UserId,
