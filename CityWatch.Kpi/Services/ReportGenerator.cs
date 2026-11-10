@@ -145,7 +145,7 @@ namespace CityWatch.Kpi.Services
 
             var monthlyData = _viewDataService.GetKpiReportData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
             var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults, isHrTimerPaused);
-            CreateReportDataSummary(tableData, monthlyData);
+            CreateReportDataSummary(tableData, monthlyData, isHrTimerPaused);
             var clientsiteLogBook = _viewDataService.GetTagStatusPendingForSpecificClientSite(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
 
             var tableSitemartwands = CreateGuardWandScanDetails(clientsiteLogBook);
@@ -331,7 +331,13 @@ namespace CityWatch.Kpi.Services
 
             return guardWandScanDetailsTable;
         }
-        private Table CreateReportDataSummary(Table table, MonthlyKpiResult monthlyKpiResult)
+        /// <param name="isHrTimerPaused">
+        /// Pausing the 2 hr log book blanks the DAILY LOG 2HR TIMER cells in the daily rows
+        /// above, so the totals cell in that same column has to go with them - a count of days
+        /// over 2 hr left sitting under a column of dashes is the whole measure the site asked
+        /// not to be reported on, and reads as the pause having done nothing.
+        /// </param>
+        private Table CreateReportDataSummary(Table table, MonthlyKpiResult monthlyKpiResult, bool isHrTimerPaused)
         {
             //row 1
             table.AddCell(new Cell(1, 2)
@@ -416,11 +422,12 @@ namespace CityWatch.Kpi.Services
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
               .Add(new Paragraph($"{monthlyKpiResult.WandFqAverage:0.00}"))); // *** Fq Column Added Here ***
 
+            // DAILY LOG 2HR TIMER total - "-" when paused, matching the daily rows above.
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
               .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
-              .Add(new Paragraph($"{monthlyKpiResult.NotInAcceptableLogFreqCount}")));
+              .Add(new Paragraph(isHrTimerPaused ? "-" : $"{monthlyKpiResult.NotInAcceptableLogFreqCount}")));
             table.AddCell(new Cell(1, 1)
               .SetFontSize(CELL_FONT_SIZE)
               .SetTextAlignment(TextAlignment.LEFT)
