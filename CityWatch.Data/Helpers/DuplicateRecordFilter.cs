@@ -9,9 +9,10 @@ namespace CityWatch.Data.Helpers
     /// Read-time removal of duplicate activity rows before they are shown or put in a report.
     ///
     /// Why it is needed: the mobile app can send the same NFC/BLE scan to the server twice (or three
-    /// times) within a few milliseconds. The server's "already scanned within 60 seconds" check in
-    /// MobileAppDataServices.CreateSmartWandScannerHitLogRecord reads the last hit and then inserts,
-    /// so concurrent requests all pass it. Each request writes its own ClientSiteSmartWandTagsHitLogs
+    /// times) within a few milliseconds. The server's rescan-window check in
+    /// MobileAppDataServices.CreateSmartWandScannerHitLogRecord (P1#375: 5 minutes, was 60 seconds)
+    /// reads the last hit and then inserts, so concurrent requests all pass it however long the
+    /// window is - widening it does not help here. Each request writes its own ClientSiteSmartWandTagsHitLogs
     /// row and its own GuardLogs row, and the Insert_GuardLogs / Trigger_RcHistory triggers then write
     /// one ClientSiteRadioChecksActivityStatus_History row per GuardLogs row - which is what Fusion
     /// reads. Seen on VISY-Coolaroo [VR] (FSO) for one guard's device: identical HitUtcDateTime to the
