@@ -417,14 +417,10 @@ namespace CityWatch.Kpi.Services
         /// </summary>
         public static IReadOnlyList<string> GetTestModeRedirectAddresses(EmailOptions emailOptions)
         {
-            if (string.IsNullOrWhiteSpace(emailOptions?.TestModeRedirectTo))
-                return Array.Empty<string>();
-
-            return emailOptions.TestModeRedirectTo
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(z => z.Trim())
-                .Where(z => CommonHelper.IsValidEmail(z))
-                .ToList();
+            /* P1#375: the parsing moved to EmailRecipientHelper so Web's alert mails read the
+               same setting the same way. Same semantics as before, plus semicolons and
+               de-duplication. Kept as a method here because callers refer to it by this name. */
+            return EmailRecipientHelper.GetTestModeRedirectAddresses(emailOptions);
         }
 
         /// <summary>

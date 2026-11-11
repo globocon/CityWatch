@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CityWatch.Data.Models;
 using CityWatch.Web.Models;
+using Microsoft.Extensions.Logging;
 
 namespace CityWatch.Web.Services
 {
@@ -32,11 +33,14 @@ namespace CityWatch.Web.Services
         private readonly IConfigDataProvider _configDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly CityWatch.Data.CityWatchDbContext _context;
+        private readonly ILogger<AlertEmailServices> _logger;
         public AlertEmailServices(IClientDataProvider clientDataProvider,
             IGuardDataProvider guardDataProvider, IGuardLogDataProvider guardLogDataProvider,
             IConfigDataProvider configDataProvider, IOptions<EmailOptions> emailOptions,
-            CityWatch.Data.CityWatchDbContext context)
+            CityWatch.Data.CityWatchDbContext context,
+            ILogger<AlertEmailServices> logger = null)
         {
+            _logger = logger;
             _clientDataProvider = clientDataProvider;
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
@@ -364,8 +368,26 @@ namespace CityWatch.Web.Services
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var FromAddress = new MailboxAddress(fromAddress[1], fromAddress[0]);
 
-            var toAddress = _EmailOptions.ToAddress.Split('|');
-            var _toAddressList = GetToEmailAddressList(new[] { toAddress[0] });
+            /* Recipients come from Email:WandStrikeAlertToAddress - one or more addresses.
+               Blank or absent, the flag falls back to the IR desk (Email:ToAddress), so an
+               environment nobody has configured still sends it somewhere sensible rather than
+               silently dropping it. */
+            var configured = EmailRecipientHelper.ParseAddressList(_EmailOptions.WandStrikeAlertToAddress);
+            if (configured.Count == 0)
+            {
+                var fallback = EmailRecipientHelper.AddressOnly(_EmailOptions.ToAddress);
+                if (!string.IsNullOrWhiteSpace(fallback))
+                    configured = new List<string> { fallback };
+            }
+
+            if (configured.Count == 0)
+            {
+                _logger?.LogWarning("Wand strike manipulation flag for {Site} has no recipient: " +
+                                    "set Email:WandStrikeAlertToAddress or Email:ToAddress.", alert.ClientSiteName);
+                return false;
+            }
+
+            var _toAddressList = GetToEmailAddressList(configured.ToArray());
 
             await SendEmail(mailBodyHtml, subject, _toAddressList, FromAddress);
             return true;
@@ -393,6 +415,10 @@ namespace CityWatch.Web.Services
                 HtmlBody = mailBodyHtml
             };
             message.Body = builder.ToMessageBody();
+
+            // No-op unless Email:TestModeRedirectTo is set. Must come after the standing BCC
+            // above, or test mode would leave that recipient in place.
+            ApplyTestModeRedirect(message);
             using var client = new SmtpClient();
             client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
             if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
@@ -400,6 +426,46 @@ namespace CityWatch.Web.Services
                 client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
             await client.SendAsync(message);
             client.Disconnect(true);
+        }
+
+        /// <summary>
+        /// Test-mode safety valve, the same one the Kpi scheduled send uses: when
+        /// <c>Email:TestModeRedirectTo</c> is set, every recipient this service assembled is
+        /// thrown away and replaced with the configured test addresses, so nothing can reach a
+        /// client or the IR desk while a change is being verified. "[TEST]" is prefixed to the
+        /// subject so a redirected mail is obvious in the test inbox.
+        ///
+        /// Deliberately blunt - it clears To, CC *and* BCC, including the standing
+        /// globoconsoftware BCC - because a partial redirect is worse than none: it reads as
+        /// safe while still delivering. Clearing rather than filtering also means a recipient
+        /// added here in future is covered without anyone remembering to update this method.
+        ///
+        /// It covers every mail this service sends, not just the wand strike flag: a test mode
+        /// that let other alerts through to real people would not be a test mode.
+        ///
+        /// To go back to live sending, set the value to "" in appsettings.json and restart.
+        /// </summary>
+        private void ApplyTestModeRedirect(MimeMessage message)
+        {
+            var redirectTo = EmailRecipientHelper.GetTestModeRedirectAddresses(_EmailOptions);
+            if (redirectTo.Count == 0)
+                return;
+
+            var suppressed = message.To.Count + message.Cc.Count + message.Bcc.Count;
+
+            message.To.Clear();
+            message.Cc.Clear();
+            message.Bcc.Clear();
+
+            foreach (var address in redirectTo)
+                message.To.Add(new MailboxAddress(string.Empty, address));
+
+            message.Subject = "[TEST] " + message.Subject;
+
+            _logger?.LogWarning(
+                "Email TEST MODE is active: '{Subject}' redirected to {Redirect}. {Count} real recipient(s) suppressed. " +
+                "Clear Email:TestModeRedirectTo in appsettings.json to resume live sending.",
+                message.Subject, string.Join(", ", redirectTo), suppressed);
         }
 
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)

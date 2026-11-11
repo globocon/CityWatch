@@ -486,6 +486,13 @@ namespace CityWatch.Web.Services
                     string.Equals(recentHits[WandStrikeManipulationHitCount].TagUId, currentHit.TagUId, StringComparison.OrdinalIgnoreCase))
                     return;
 
+                /* A site with a single NFC checkpoint hits the same tag on every patrol, so a
+                   run of three is just the site working normally - flagging it would email the
+                   IR desk forever and teach them to ignore the alert. Needs at least two tags
+                   for "no other checkpoint in between" to mean anything. */
+                if (_clientSiteWandDataProvider.GetRegisteredTagCountForSite(siteId, tagsTypeId.Value) < 2)
+                    return;
+
                 var site = _clientDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
                 var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
 

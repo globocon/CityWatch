@@ -37,6 +37,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
         ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid);
         List<ClientSiteSmartWandTagsHitLog> GetRecentTagHitsForGuardAtSite(int siteId, int guardId, int tagsTypeId, int take, DateTime notBeforeUtc);
+        int GetRegisteredTagCountForSite(int siteId, int tagsTypeId);
         List<SiteEquipmentsDetails> GetClientSiteEquipments();
         void SaveClientSiteEquipments(SiteEquipmentsDetails siteEquipmentsDetails);
         void DeleteClientSiteEquipments(int id);
@@ -697,6 +698,22 @@ namespace CityWatch.Data.Providers
                 .ThenByDescending(x => x.Id)
                 .Take(take)
                 .ToList();
+        }
+
+        /// <summary>
+        /// P1#375: how many live tags of one type the site has registered. The wand strike
+        /// manipulation flag uses it to stay quiet at a site with a single checkpoint, where
+        /// every patrol necessarily hits the same tag and a run of three means nothing.
+        /// Deleted tags do not count - they are no longer checkpoints a guard can walk to.
+        /// </summary>
+        public int GetRegisteredTagCountForSite(int siteId, int tagsTypeId)
+        {
+            return _dbContext.ClientSiteSmartWandTags
+                .AsNoTracking()
+                .Where(x => x.ClientSiteId == siteId && x.TagsTypeId == tagsTypeId && !x.IsDeleted)
+                .Select(x => x.UId)
+                .Distinct()
+                .Count();
         }
         public List<SiteEquipmentsDetails> GetClientSiteEquipments()
         {
