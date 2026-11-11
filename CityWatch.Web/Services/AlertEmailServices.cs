@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CityWatch.Data.Models;
+using CityWatch.Web.Models;
 
 namespace CityWatch.Web.Services
 {
@@ -21,6 +22,7 @@ namespace CityWatch.Web.Services
         Task<bool> QueueReliefGuardAssigned(RosterSchedule shift, string assignedByAdminName);
         Task<bool> RemoveFromQueue(RosterSchedule shift);
         Task<bool> SendAggregatedShiftCancelledAlertMail(Guard guard, string licenseNo, string cancelledBy, string source, List<ShiftCancellationEmailQueue> cancellations);
+        Task<bool> SendWandStrikeManipulationAlertMail(WandStrikeManipulationAlert alert);
     }
     public class AlertEmailServices : IAlertEmailServices
     {
@@ -306,6 +308,68 @@ namespace CityWatch.Web.Services
         }
 
 
+
+        /// <summary>
+        /// P1#375: tells the IR desk that one guard hit the same NFC checkpoint several times in
+        /// a row - the pattern you get when a tag has been removed from its post and is being
+        /// struck by hand rather than walked to. It is a flag for a human to investigate, not a
+        /// finding, so the wording asks for exactly that.
+        ///
+        /// Goes to the same mailbox as an IR (EmailOptions.ToAddress), so the address stays
+        /// configurable per environment instead of being compiled in.
+        /// </summary>
+        public async Task<bool> SendWandStrikeManipulationAlertMail(WandStrikeManipulationAlert alert)
+        {
+            if (alert == null)
+                return false;
+
+            var subject = $"Potential Wand Strike Manipulation - {alert.ClientSiteName} - {alert.GuardName}";
+
+            var tagLabel = string.IsNullOrWhiteSpace(alert.TagLabelDescription)
+                ? "(no label - tag not registered)"
+                : alert.TagLabelDescription;
+
+            var offset = string.IsNullOrWhiteSpace(alert.SiteUtcOffset) ? string.Empty : $" (UTC{alert.SiteUtcOffset})";
+
+            var runTimes = alert.RunSiteLocalDateTimes != null && alert.RunSiteLocalDateTimes.Any()
+                ? string.Join(", ", alert.RunSiteLocalDateTimes.Select(x => x.ToString("HH:mm:ss")))
+                : alert.HitSiteLocalDateTime.ToString("HH:mm:ss");
+
+            var mailBodyHtml =
+                "<h2>Potential Wand Strike Manipulation - Please investigate</h2>" +
+                $"<p>The same NFC tag was scanned <strong>{alert.ConsecutiveHitCount} times in a row</strong> by one guard, " +
+                "with no other checkpoint scanned in between. This can mean the tag is no longer at its post.</p>" +
+                "<table style='border-collapse: collapse;'>" +
+                $"<tr><td style='padding-right:12px;'><strong>Site:</strong></td><td>{alert.ClientSiteName}</td></tr>" +
+                $"<tr><td style='padding-right:12px;'><strong>Guard:</strong></td><td>{alert.GuardName}</td></tr>" +
+                $"<tr><td style='padding-right:12px;'><strong>Date:</strong></td><td>{alert.HitSiteLocalDateTime:dd-MM-yyyy}</td></tr>" +
+                $"<tr><td style='padding-right:12px;'><strong>Time:</strong></td><td>{alert.HitSiteLocalDateTime:HH:mm:ss} site local{offset}</td></tr>" +
+                $"<tr><td style='padding-right:12px;'><strong>Scan times:</strong></td><td>{runTimes}</td></tr>" +
+                $"<tr><td style='padding-right:12px;'><strong>Tag label:</strong></td><td>{tagLabel}</td></tr>" +
+                $"<tr><td style='padding-right:12px;'><strong>Tag UID:</strong></td><td>{alert.TagUId}</td></tr>" +
+                $"<tr><td style='padding-right:12px;'><strong>Scan type:</strong></td><td>NFC</td></tr>" +
+                "</table>";
+
+            if (alert.IsOfflineRecord)
+            {
+                /* The run was found while syncing a backlog, so the times above are when the
+                   scans happened, not when this email was raised - say so, or the reader will
+                   read them as current. */
+                mailBodyHtml += "<p><em>These scans were cached on the handset while it was offline and " +
+                                "synced later. The times shown are when the scans were made.</em></p>";
+            }
+
+            mailBodyHtml += $"<p>Raised automatically on {DateTime.UtcNow:dd-MM-yyyy HH:mm:ss} UTC.</p>";
+
+            var fromAddress = _EmailOptions.FromAddress.Split('|');
+            var FromAddress = new MailboxAddress(fromAddress[1], fromAddress[0]);
+
+            var toAddress = _EmailOptions.ToAddress.Split('|');
+            var _toAddressList = GetToEmailAddressList(new[] { toAddress[0] });
+
+            await SendEmail(mailBodyHtml, subject, _toAddressList, FromAddress);
+            return true;
+        }
 
         private async Task SendEmail(string mailBodyHtml, string subject, List<MailboxAddress> ToAddress, MailboxAddress FromAddress)
         {

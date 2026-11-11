@@ -36,6 +36,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteSmartWandTags> GetClientSiteWandTagsForClientSitesFromLogs(int[] clientSiteIds);
         List<ClientSiteSmartWandTagsHitLog> GetClientSiteSmartWandTagsHitLogs(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
         ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId, string tagUid);
+        List<ClientSiteSmartWandTagsHitLog> GetRecentTagHitsForGuardAtSite(int siteId, int guardId, int tagsTypeId, int take, DateTime notBeforeUtc);
         List<SiteEquipmentsDetails> GetClientSiteEquipments();
         void SaveClientSiteEquipments(SiteEquipmentsDetails siteEquipmentsDetails);
         void DeleteClientSiteEquipments(int id);
@@ -672,6 +673,30 @@ namespace CityWatch.Data.Providers
                 .OrderByDescending(x => x.HitUtcDateTime)
                 .Take(1)
                 .SingleOrDefault();
+        }
+
+        /// <summary>
+        /// P1#375: the guard's most recent hits at one site, newest first, for the wand strike
+        /// manipulation check. Restricted to a single tag type (NFC) on purpose - BLE scans
+        /// continuously, so its hits would sit between every pair of NFC hits and no run of the
+        /// same tag would ever be visible.
+        /// </summary>
+        /// <param name="notBeforeUtc">Floor on HitUtcDateTime, so a run cannot span shifts.</param>
+        public List<ClientSiteSmartWandTagsHitLog> GetRecentTagHitsForGuardAtSite(int siteId, int guardId, int tagsTypeId, int take, DateTime notBeforeUtc)
+        {
+            if (take <= 0)
+                return new List<ClientSiteSmartWandTagsHitLog>();
+
+            return _dbContext.ClientSiteSmartWandTagsHitLogs
+                .AsNoTracking()
+                .Where(x => x.LoggedInClientSiteId == siteId
+                            && x.LoggedInGuardId == guardId
+                            && x.TagsTypeId == tagsTypeId
+                            && x.HitUtcDateTime >= notBeforeUtc)
+                .OrderByDescending(x => x.HitUtcDateTime)
+                .ThenByDescending(x => x.Id)
+                .Take(take)
+                .ToList();
         }
         public List<SiteEquipmentsDetails> GetClientSiteEquipments()
         {
