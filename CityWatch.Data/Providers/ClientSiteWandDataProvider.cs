@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Utilities;
 using System;
@@ -660,7 +661,8 @@ namespace CityWatch.Data.Providers
                 matchingLogs.AddRange(logsWithLocal);
             }
 
-            return matchingLogs;
+            // A scan sent twice by the app is two hit-log rows; report it once.
+            return DuplicateRecordFilter.RemoveDuplicateTagHits(matchingLogs);
         }
 
         public ClientSiteSmartWandTagsHitLog GetLastScannedTagDateTime(int siteId,string tagUid)
