@@ -40,6 +40,12 @@ namespace CityWatch.Web.Services
            the bus. See CityWatch.Events.NullDomainEventPublisher. */
         private readonly CityWatch.Events.IDomainEventPublisher _events;
 
+        /* P1#375: how long the same tag at the same site is refused after a hit. Raised from
+           1 minute to 5. The mobile app holds the same 5 minutes in its own
+           ScanDuplicateGuard, which is now the first line of defence - this check backs it up
+           for handsets that have not been updated, and for anything else posting to the API. */
+        private static readonly TimeSpan TagRescanWindow = TimeSpan.FromMinutes(5);
+
         public MobileAppDataServices(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
             ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext,
@@ -74,10 +80,13 @@ namespace CityWatch.Web.Services
                 var _smartWandTagsTypes = _clientSiteWandDataProvider.GetSmartWandTagsType();
                 var _lastTagScannedRecord = _clientSiteWandDataProvider.GetLastScannedTagDateTime(siteId, TagUid);
 
-                //Check if scanned tag recently with in a minute from the same site
+                /* Check if the tag was scanned recently (TagRescanWindow) from the same site.
+                   Offline records are exempt on purpose: they are synced long after the fact,
+                   so comparing their stored hit time against UtcNow would refuse every one of
+                   them. The handset applies the window to offline scans before caching them. */
                 if (!IsOfflineRecord)
                 {
-                    if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime).TotalSeconds < 60)
+                    if (_lastTagScannedRecord != null && _lastTagScannedRecord.LoggedInClientSiteId == siteId && (DateTime.UtcNow - _lastTagScannedRecord.HitUtcDateTime) < TagRescanWindow)
                     {
                         if (scanningType == ScanningType.NFC) { message = "Tag already scanned !!!"; }
                         else if (scanningType == ScanningType.BLUETOOTH) { message = "iBeacon already scanned !!!"; }
