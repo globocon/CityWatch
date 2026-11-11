@@ -7265,7 +7265,8 @@ WHERE f.ClientSiteId = @clientSiteId
             var returnData = data.OrderBy(z => z.EventDateTime)
             .ToList();
 
-            return returnData;
+            // One scan can be stored more than once (same guard, tag, minute); show it once.
+            return DuplicateRecordFilter.RemoveDuplicateFusionLogs(returnData);
         }
 
 
@@ -7475,7 +7476,9 @@ WHERE f.ClientSiteId = @clientSiteId
             // Combine LB and SW logs
             var combinedData = data.OrderBy(z => z.EventDateTime).ToList();
 
-            return combinedData;
+            // After the time/notes adjustments above, so rows compare as they are displayed.
+            // One scan can be stored more than once (same guard, tag, minute); show it once.
+            return DuplicateRecordFilter.RemoveDuplicateFusionLogs(combinedData);
         }
 
         //p6-102 Add Photo -start
@@ -7646,7 +7649,7 @@ WHERE f.ClientSiteId = @clientSiteId
             var returnData = data.OrderBy(z => z.EventDateTime)
                 .ToList();
 
-            return returnData;
+            return DuplicateRecordFilter.RemoveDuplicateFusionLogs(returnData);
         }
         public List<ClientSiteRadioCheck> GetClientSiteRadioChecksWithDate(DateTime FromDate, DateTime ToDate)
         {
@@ -8771,7 +8774,8 @@ WHERE f.ClientSiteId = @clientSiteId
             //    .ThenBy(z => z.Id)
             //    .ToList();
 
-            return data;
+            // A scan sent twice by the app is two hit-log rows; count it once.
+            return DuplicateRecordFilter.RemoveDuplicateTagHits(data);
         }
 
 
