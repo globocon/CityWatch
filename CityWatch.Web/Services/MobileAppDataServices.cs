@@ -35,6 +35,7 @@ namespace CityWatch.Web.Services
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         public readonly IClientDataProvider _clientDataProvider;
         private readonly IHubContext<MobileAppSignalRHub> _hubContext;
+        private readonly IAlertEmailServices _alertEmailServices;
 
         /* Tracking feature pack: optional publisher, no-op unless a subscriber activated
            the bus. See CityWatch.Events.NullDomainEventPublisher. */
@@ -46,11 +47,21 @@ namespace CityWatch.Web.Services
            for handsets that have not been updated, and for anything else posting to the API. */
         private static readonly TimeSpan TagRescanWindow = TimeSpan.FromMinutes(5);
 
+        /* P1#375 wand strike manipulation flag: how many hits of the same NFC tag, one after
+           another by the same guard at the same site, raise the alert. */
+        private const int WandStrikeManipulationHitCount = 3;
+
+        /* How far back a run may reach. Keeps a run from spanning shifts or days - the last
+           scan of one night and the first two of the next are not "three in a row". */
+        private static readonly TimeSpan WandStrikeManipulationLookback = TimeSpan.FromHours(12);
+
         public MobileAppDataServices(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
             ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext,
+            IAlertEmailServices alertEmailServices,
             CityWatch.Events.IDomainEventPublisher events = null)
         {
+            _alertEmailServices = alertEmailServices;
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -311,6 +322,15 @@ namespace CityWatch.Web.Services
                     _clientSiteWandDataProvider.SaveSmartWandTagLog(_clientSiteSmartWandTagsHitLog);
                     RowIdInServer = _clientSiteSmartWandTagsHitLog.Id;
 
+                    /* P1#375: flag the same NFC checkpoint being struck over and over. Runs
+                       after the hit is committed and never fails the scan - a guard must not
+                       be blocked by a mail server. NFC only: see CheckForWandStrikeManipulation. */
+                    if (scanningType == ScanningType.NFC)
+                    {
+                        await CheckForWandStrikeManipulation(siteId, GuardId, tagtypeid,
+                            _clientSiteSmartWandTagsHitLog, IsOfflineRecord);
+                    }
+
                     /* Tracking feature pack: the scan is committed above; publish is fire-and-
                        forget and cannot fail this workflow (D17). LoggedInClientSiteId lets
                        tracking tell an in-car tag (belongs to the officer's own fleet site)
@@ -417,7 +437,108 @@ namespace CityWatch.Web.Services
             return (IsSuccess, TagFound, message, TagInfoLabel, ScanFromLinkedSiteId, RowIdInServer, TagSiteId, TagSiteName);
         }
 
-        
+        /// <summary>
+        /// P1#375: raise a flag when one guard hits the same NFC checkpoint
+        /// <see cref="WandStrikeManipulationHitCount"/> times in a row at one site, with no
+        /// other checkpoint in between - the pattern you get when a tag has been taken off its
+        /// post and is being struck by hand instead of walked to.
+        ///
+        /// NFC only, by design. BLE scans continuously, so its hits would land between every
+        /// pair of NFC hits and no run would ever be visible; a beacon merely in range also
+        /// says nothing about where the guard walked.
+        ///
+        /// Fires once per run, at the hit that reaches the count: the run is read as exactly
+        /// <see cref="WandStrikeManipulationHitCount"/> long when the hit before it is a
+        /// different tag (or there is none in the lookback). A 4th and 5th strike are already
+        /// covered by the mail the 3rd sent, so they stay quiet; scanning a different tag ends
+        /// the run, and a fresh run of three alerts again.
+        ///
+        /// Never throws into the scan path. The strike is already committed when this runs, and
+        /// a guard on patrol must not be held up - or turned away - by a mail server.
+        /// </summary>
+        private async Task CheckForWandStrikeManipulation(int siteId, int guardId, int? tagsTypeId,
+            ClientSiteSmartWandTagsHitLog currentHit, bool isOfflineRecord)
+        {
+            try
+            {
+                if (_alertEmailServices == null || !tagsTypeId.HasValue || currentHit == null)
+                    return;
+
+                if (string.IsNullOrWhiteSpace(currentHit.TagUId))
+                    return;
+
+                /* One more than the trigger count: the extra row is what tells a run that has
+                   just reached three from one that was already longer and has alerted. */
+                var recentHits = _clientSiteWandDataProvider.GetRecentTagHitsForGuardAtSite(
+                    siteId, guardId, tagsTypeId.Value,
+                    WandStrikeManipulationHitCount + 1,
+                    DateTime.UtcNow - WandStrikeManipulationLookback);
+
+                if (recentHits == null || recentHits.Count < WandStrikeManipulationHitCount)
+                    return;
+
+                var run = recentHits.Take(WandStrikeManipulationHitCount).ToList();
+                if (!run.All(x => string.Equals(x.TagUId, currentHit.TagUId, StringComparison.OrdinalIgnoreCase)))
+                    return;
+
+                // Already longer than the trigger count - the mail went out on the third strike.
+                if (recentHits.Count > WandStrikeManipulationHitCount &&
+                    string.Equals(recentHits[WandStrikeManipulationHitCount].TagUId, currentHit.TagUId, StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                /* A site with a single NFC checkpoint hits the same tag on every patrol, so a
+                   run of three is just the site working normally - flagging it would email the
+                   IR desk forever and teach them to ignore the alert. Needs at least two tags
+                   for "no other checkpoint in between" to mean anything. */
+                if (_clientSiteWandDataProvider.GetRegisteredTagCountForSite(siteId, tagsTypeId.Value) < 2)
+                    return;
+
+                var site = _clientDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+
+                /* Sites span AU timezones, so the server's clock is not the site's. Derive the
+                   site's local time the same way the Wand Strikes report does: the site's
+                   configured UTC offset, falling back to +10:00 when it has none. */
+                var siteUtcOffset = "+10:00";
+                try
+                {
+                    var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+                    if (kpiSetting != null && !string.IsNullOrWhiteSpace(kpiSetting.UTC))
+                        siteUtcOffset = kpiSetting.UTC;
+                }
+                catch { }
+
+                if (!TimeSpan.TryParse(siteUtcOffset.Replace("+", ""), out var offset))
+                    offset = TimeSpan.Zero;
+
+                var alert = new WandStrikeManipulationAlert
+                {
+                    ClientSiteId = siteId,
+                    ClientSiteName = site?.Name ?? $"Site {siteId}",
+                    GuardId = guardId,
+                    GuardName = guard?.Name ?? $"Guard {guardId}",
+                    TagUId = currentHit.TagUId,
+                    TagLabelDescription = currentHit.LabelDescription,
+                    ConsecutiveHitCount = WandStrikeManipulationHitCount,
+                    HitUtcDateTime = currentHit.HitUtcDateTime,
+                    HitSiteLocalDateTime = currentHit.HitUtcDateTime + offset,
+                    SiteUtcOffset = siteUtcOffset,
+                    // Oldest first, so the email reads in the order the strikes happened.
+                    RunSiteLocalDateTimes = run.OrderBy(x => x.HitUtcDateTime)
+                                               .Select(x => x.HitUtcDateTime + offset)
+                                               .ToArray(),
+                    IsOfflineRecord = isOfflineRecord
+                };
+
+                await _alertEmailServices.SendWandStrikeManipulationAlertMail(alert);
+            }
+            catch (Exception ex)
+            {
+                // Swallowed on purpose: a failed flag must never cost the guard their scan.
+                Console.WriteLine($"Wand strike manipulation check failed for site {siteId}, guard {guardId}: {ex.Message}");
+            }
+        }
+
         public (bool IsSuccess, string msg, int guardLoginId) PostMobileLogActivity(PostActivityRequest request, string IPAddress)
         {
             bool IsSuccess = false;

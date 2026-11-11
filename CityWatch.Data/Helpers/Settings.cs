@@ -28,6 +28,18 @@ namespace CityWatch.Data.Helpers
         /// production cannot start redirecting by accident.
         /// </summary>
         public string TestModeRedirectTo { get; set; }
+
+        /// <summary>
+        /// P1#375: who receives the "Potential Wand Strike Manipulation" flag. One or more
+        /// addresses, comma or semicolon separated.
+        ///
+        /// Left blank or absent, the flag goes to <see cref="ToAddress"/> - the IR desk - so
+        /// an environment that has not been told otherwise still behaves sensibly.
+        ///
+        /// <see cref="TestModeRedirectTo"/> still overrides this, as it overrides every other
+        /// recipient: while it is set, nothing reaches these addresses.
+        /// </summary>
+        public string WandStrikeAlertToAddress { get; set; }
     }
 
     public class GoogleMapSettings
