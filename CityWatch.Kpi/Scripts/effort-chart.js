@@ -1,7 +1,32 @@
 ﻿const d3 = require("d3");
 const jsdom = require("jsdom");
-const { convert } = require('convert-svg-to-png');
+const { createConverter } = require('convert-svg-to-png');
 const fs = require('fs');
+
+/****************************************************************************************
+*  Shared SVG->PNG converter - copy of the helper in ir-chart.js, keep the two in step.
+*  The one-shot convert() launches and destroys a whole headless Chromium per call;
+*  this reuses one browser for every chart. Calls are queued (a Converter is not safe
+*  for concurrent use) and a dead converter is replaced and retried once per call.
+*****************************************************************************************/
+let sharedConverter = null;
+let convertQueue = Promise.resolve();
+
+function convertSvgToPng(html) {
+    const result = convertQueue.then(async () => {
+        if (!sharedConverter || sharedConverter.destroyed)
+            sharedConverter = createConverter();
+        try {
+            return await sharedConverter.convert(html);
+        } catch (e) {
+            try { await sharedConverter.destroy(); } catch (ignored) { }
+            sharedConverter = createConverter();
+            return await sharedConverter.convert(html);
+        }
+    });
+    convertQueue = result.catch(() => { });
+    return result;
+}
 
 module.exports = function (callback, options, data) {
 
@@ -122,7 +147,7 @@ module.exports = function (callback, options, data) {
         .attr("transform", `translate(220 ,${margin.right, margin.top - 10})`)
         .call(yAxisRight);
 
-    convert(body.node().innerHTML)
+    convertSvgToPng(body.node().innerHTML)
         .then(buffer => fs.writeFile(options.fileName, buffer, () => callback(null, "OK")))
         .catch(e => console.error(e));
 }

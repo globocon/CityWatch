@@ -1,0 +1,2 @@
+ALTER TABLE KeyVehicleLogVisitorPersonalDetails
+ADD DiverPersonalPhoneNumber VARCHAR(20) NULL;

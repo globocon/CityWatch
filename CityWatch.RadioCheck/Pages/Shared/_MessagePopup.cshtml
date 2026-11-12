@@ -1,0 +1,83 @@
+﻿@{
+}
+
+<!-- Message Popup Modal -->
+<div class="modal fade" id="message-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Message Body
+            </div>
+            <div class="modal-footer">                
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmation-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Message Body
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" name="btn-confirmation-modal-yes">Yes</button>
+                <button type="button" class="btn btn-outline-primary" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    class MessageModal {
+        constructor(options) {
+            this.title = options.title;
+            this.message = options.message;
+        }
+        
+        showError() {
+            $('#message-modal .modal-title').html('<i class="fa fa-times-circle text-danger mr-2"></i>' + (this.title || 'Error'));
+            $('#message-modal .modal-body').html(this.message);
+            $('#message-modal').modal();
+        }
+
+        showWarning() {
+            $('#message-modal .modal-title').html('<i class="fa fa-exclamation-circle text-warning mr-2"></i>' + (this.title || 'Warning'));
+            $('#message-modal .modal-body').html(this.message);
+            $('#message-modal').modal();
+        }
+    }
+
+    class ConfirmationModal {
+        constructor(id, options) {
+            this.id = id;
+            this.title = options.title;
+            this.message = options.message;
+            $('#confirmation-modal').on('click', '#btn-confirmation-modal-yes-' + this.id, function () {
+                $('#confirmation-modal').modal('hide');
+                if (options.onYes)
+                    options.onYes();
+            });
+        }
+
+        showConfirmation() {
+            $('#confirmation-modal .modal-title').html('<i class="fa fa-exclamation-circle text-warning mr-2"></i>' + (this.title || 'Warning'));
+            $('#confirmation-modal .modal-body').html(this.message);
+            $('#confirmation-modal .modal-footer').find('button[name="btn-confirmation-modal-yes"]').attr('id', 'btn-confirmation-modal-yes-' + this.id);
+            $('#confirmation-modal').modal();
+        }
+    }
+</script>

@@ -1,0 +1,86 @@
+﻿@using CityWatch.RadioCheck.Helpers;
+@using CityWatch.RadioCheck.Services;
+@using CityWatch.Data.Providers;
+@using CityWatch.Data.Helpers;
+@inject IViewDataService viewDataService
+@inject IGuardLogDataProvider _guardLogDataProvider
+<div class="row mt-3">
+    
+        
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Week (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerWeek"><span id="count_by_numberofduressperweek" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+            <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_forweek"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Month (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerMonth"><span id="count_by_numberofduresspermonth" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+            <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_formonth"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Year (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerYear"><span id="count_by_numberofduressperyear" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+            <div class="card-body" style="height: 235px; width: 400px;">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_foryear"></canvas>
+                        </div>
+                    </div>
+                </div>
+           
+    
+</div>
+<div class="row mt-2">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                Number of Times Radio Check Pushed By CRO (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberoftimesrcpushedbycro"><span id="count_by_numberoftimesrcpushedbycro" class="p-0 b-0"></span></a>)
+                @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+            </div>
+            <div class="card-body" style="height: 235px; width: 400px;">
+                @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                <canvas id="bar_chart_by_rc_pushedby_cro"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                Number of Guards Went To PRE-ALARM (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofguardswnenttoprealarm"><span id="count_by_numberofguardswnenttoprealarm" class="p-0 b-0"></span></a>)
+                @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+            </div>
+            <div class="card-body" style="height: 235px; width: 400px;">
+                @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                <canvas id="bar_chart_by_rc_guards_wenttoprealarm"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                Number of Guards Pushed to OffDuty By CRO (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofguardswnentfromprealarmorangetored"><span id="count_by_numberofguardswnentfromprealarmorangetored" class="p-0 b-0"></span></a>)
+                @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+            </div>
+            <div class="card-body" style="height: 235px; width: 400px;">
+                @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                <canvas id="bar_chart_by_rc_guards_wentfromprealarmorangetored"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
