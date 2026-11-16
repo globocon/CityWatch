@@ -335,6 +335,22 @@ namespace CityWatch.Web.Services
 
             var offset = string.IsNullOrWhiteSpace(alert.SiteUtcOffset) ? string.Empty : $" (UTC{alert.SiteUtcOffset})";
 
+            /* P1#375: the handset build, so the reader can tell a real pattern from something an
+               old app is doing. "Not reported" is meaningful in itself - it means a build from
+               before the app began reporting its version at login.
+
+               This is the guard's most recent report, not necessarily the handset that made the
+               strike - nothing in the hit log records the device - so the device type is shown
+               with it. */
+            var appVersion = "Not reported (build predates version reporting)";
+            if (!string.IsNullOrWhiteSpace(alert.MobileAppVersion))
+            {
+                appVersion = alert.MobileAppVersion.Trim();
+
+                if (!string.IsNullOrWhiteSpace(alert.MobileAppPlatform))
+                    appVersion += $" ({alert.MobileAppPlatform.Trim()})";
+            }
+
             var runTimes = alert.RunSiteLocalDateTimes != null && alert.RunSiteLocalDateTimes.Any()
                 ? string.Join(", ", alert.RunSiteLocalDateTimes.Select(x => x.ToString("HH:mm:ss")))
                 : alert.HitSiteLocalDateTime.ToString("HH:mm:ss");
@@ -352,6 +368,7 @@ namespace CityWatch.Web.Services
                 $"<tr><td style='padding-right:12px;'><strong>Tag label:</strong></td><td>{tagLabel}</td></tr>" +
                 $"<tr><td style='padding-right:12px;'><strong>Tag UID:</strong></td><td>{alert.TagUId}</td></tr>" +
                 $"<tr><td style='padding-right:12px;'><strong>Scan type:</strong></td><td>NFC</td></tr>" +
+                $"<tr><td style='padding-right:12px; vertical-align:top;'><strong>App version:</strong></td><td>{appVersion}</td></tr>" +
                 "</table>";
 
             if (alert.IsOfflineRecord)

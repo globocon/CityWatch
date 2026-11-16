@@ -1,4 +1,4 @@
-using CityWatch.Data.Enums;
+﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -30,6 +30,7 @@ namespace CityWatch.Data.Providers
         int SaveGuardLogin(GuardLogin guardLogin);
         void UpdateGuardOffDuty(int guardLoginId, DateTime offDuty);
         void SaveGuardMobileAppVersion(int guardId, string appVersion, string platform, string deviceInfo);
+        GuardMobileAppVersion GetGuardMobileAppVersion(int guardId);
         List<GuardLicense> GetAllGuardLicenses();
         List<GuardComplianceAndLicense> GetAllGuardLicensesAndCompliances();
         List<GuardLicense> GetGuardLicenses(int guardId);
@@ -686,6 +687,30 @@ namespace CityWatch.Data.Providers
                 existing.LastSeen = DateTime.Now;
             }
             _context.SaveChanges();
+        }
+
+        /// <summary>
+        /// P1#375: the most recently reported mobile build for this guard - the newest row by
+        /// LastSeen, whichever platform reported it.
+        ///
+        /// Note the hit log records no device, so this is the guard's latest report rather than
+        /// the handset that made any particular strike. A guard who carries two devices may
+        /// therefore be shown the build of the other one; the platform and device are returned
+        /// alongside so the reader can see which report it came from.
+        ///
+        /// Null when the guard has never reported - itself the useful signal, since it means a
+        /// build from before the app started reporting. Read-only and tolerant by design: a
+        /// missing row must cost the flag its version line, not the flag itself.
+        /// </summary>
+        public GuardMobileAppVersion GetGuardMobileAppVersion(int guardId)
+        {
+            if (guardId <= 0)
+                return null;
+
+            return _context.GuardMobileAppVersions.AsNoTracking()
+                .Where(x => x.GuardId == guardId)
+                .OrderByDescending(x => x.LastSeen)
+                .FirstOrDefault();
         }
 
         private string MakeGuardInitials(string initial)

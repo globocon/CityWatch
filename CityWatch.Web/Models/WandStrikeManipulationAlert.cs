@@ -1,4 +1,6 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
+using CityWatch.Data.Models;
 
 namespace CityWatch.Web.Models
 {
@@ -45,5 +47,22 @@ namespace CityWatch.Web.Models
 
         /// <summary>True when the run was found while syncing scans the handset had cached offline.</summary>
         public bool IsOfflineRecord { get; set; }
+
+        /// <summary>
+        /// P1#375: the mobile build this guard's app reported most recently, e.g. "1.55.7".
+        ///
+        /// Taken from GuardMobileAppVersion (what the app reports at login) rather than from
+        /// the scan request, so no app change is needed and builds released before this are
+        /// still attributed. The hit log records no device, so for a guard who carries two this
+        /// is their latest report rather than necessarily the handset that made the strike -
+        /// which is why <see cref="MobileAppPlatform"/> is shown with it.
+        ///
+        /// Null when the guard has never reported - itself worth seeing, since it means a build
+        /// from before the app began reporting its version.
+        /// </summary>
+        public string MobileAppVersion { get; set; }
+
+        /// <summary>Device type that report came from ("android" / "ios"), when known.</summary>
+        public string MobileAppPlatform { get; set; }
     }
 }
