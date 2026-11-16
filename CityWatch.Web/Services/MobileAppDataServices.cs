@@ -498,18 +498,17 @@ namespace CityWatch.Web.Services
 
                 /* Sites span AU timezones, so the server's clock is not the site's. Derive the
                    site's local time the same way the Wand Strikes report does: the site's
-                   configured UTC offset, falling back to +10:00 when it has none. */
-                var siteUtcOffset = "+10:00";
+                   time zone (TimezoneString), which follows daylight saving, falling back to
+                   AUS Eastern. The fixed UTC offset ("+10:00") put every alert time an hour
+                   early from October to April. */
+                string siteTimezoneString = null;
                 try
                 {
-                    var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
-                    if (kpiSetting != null && !string.IsNullOrWhiteSpace(kpiSetting.UTC))
-                        siteUtcOffset = kpiSetting.UTC;
+                    siteTimezoneString = _clientDataProvider.GetClientSiteKpiSetting(siteId)?.TimezoneString;
                 }
                 catch { }
-
-                if (!TimeSpan.TryParse(siteUtcOffset.Replace("+", ""), out var offset))
-                    offset = TimeSpan.Zero;
+                var siteZone = SiteTimeZoneHelper.Resolve(siteTimezoneString);
+                var siteUtcOffset = SiteTimeZoneHelper.FormatOffset(currentHit.HitUtcDateTime, siteZone);
 
                 var alert = new WandStrikeManipulationAlert
                 {
@@ -521,11 +520,11 @@ namespace CityWatch.Web.Services
                     TagLabelDescription = currentHit.LabelDescription,
                     ConsecutiveHitCount = WandStrikeManipulationHitCount,
                     HitUtcDateTime = currentHit.HitUtcDateTime,
-                    HitSiteLocalDateTime = currentHit.HitUtcDateTime + offset,
+                    HitSiteLocalDateTime = SiteTimeZoneHelper.UtcToSiteLocal(currentHit.HitUtcDateTime, siteZone),
                     SiteUtcOffset = siteUtcOffset,
                     // Oldest first, so the email reads in the order the strikes happened.
                     RunSiteLocalDateTimes = run.OrderBy(x => x.HitUtcDateTime)
-                                               .Select(x => x.HitUtcDateTime + offset)
+                                               .Select(x => SiteTimeZoneHelper.UtcToSiteLocal(x.HitUtcDateTime, siteZone))
                                                .ToArray(),
                     IsOfflineRecord = isOfflineRecord
                 };
