@@ -1,0 +1,13 @@
+
+
+CREATE INDEX IX_ClientSiteRadioChecksActivityStatus_History_EventDateTime
+ON ClientSiteRadioChecksActivityStatus_History ([EventDateTime]);
+
+CREATE INDEX IX_RadioChecksActivityStatus_History_ClientSiteId
+ON ClientSiteRadioChecksActivityStatus_History ([ClientSiteId])
+
+
+CREATE INDEX IX_RadioChecksActivityStatus_History_EventDateTime_ClientSiteId
+ON ClientSiteRadioChecksActivityStatus_History ([EventDateTime])
+INCLUDE ([ClientSiteId]);
+

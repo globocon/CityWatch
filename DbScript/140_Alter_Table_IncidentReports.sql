@@ -1,0 +1,1 @@
+alter table IncidentReports add IsPlateLoaded bit default 0

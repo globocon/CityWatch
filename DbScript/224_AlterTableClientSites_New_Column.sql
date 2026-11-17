@@ -1,0 +1,2 @@
+ALTER TABLE ClientSites 
+ADD UploadFusionLog BIT DEFAULT 0 NOT NULL;

@@ -1,0 +1,1 @@
+alter table incidentreportfields add ClientTypeIds nvarchar(max)

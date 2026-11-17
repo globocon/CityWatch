@@ -2,6 +2,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
@@ -21,6 +22,7 @@ namespace CityWatch.Kpi.Pages.Account
 
         public void OnGet()
         {
+            HttpContext.Session.SetInt32("GuardId", 0);
             LoginUser = new User();
         }
 
@@ -41,6 +43,13 @@ namespace CityWatch.Kpi.Pages.Account
             else
             {
                 SignInUser(user);
+                HttpContext.Session.SetInt32("GuardId", 0);
+
+                /* The real signed-in user id, kept separate from loginUserId. That one is set to 0
+                   for an Administrator on purpose and other code reads the 0 as meaning "admin",
+                   so it cannot also answer "who did this". */
+                HttpContext.Session.SetInt32("SignedInUserId", user.Id);
+
                 return Redirect(Url.Page(returnUrl));
             }
             return Page();
