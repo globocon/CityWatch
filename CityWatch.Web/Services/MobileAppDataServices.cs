@@ -55,6 +55,18 @@ namespace CityWatch.Web.Services
            scan of one night and the first two of the next are not "three in a row". */
         private static readonly TimeSpan WandStrikeManipulationLookback = TimeSpan.FromHours(12);
 
+        /* The least time that may separate two strikes for them to count as separate visits to
+           the checkpoint. Anything tighter reads as one scan recorded twice rather than a guard
+           striking the tag again, and must not raise a flag against a real person.
+
+           Note this only has teeth where the 5 minute rescan window does not apply - offline
+           scans, which keep their original hit time and are exempt from that window. */
+        private static readonly TimeSpan WandStrikeMinimumGap = TimeSpan.FromMinutes(2);
+
+        /* Checkpoint labels starting with this are exempt from the flag entirely. "PTX-1234"
+           and "PTX 1234" both match, since the prefix alone is what marks them. */
+        private const string WandStrikeExemptLabelPrefix = "PTX";
+
         public MobileAppDataServices(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
             ILogbookDataService logbookDataService, IGuardLogDataProvider guardLogDataProvider, IHubContext<MobileAppSignalRHub> hubContext,
@@ -456,6 +468,18 @@ namespace CityWatch.Web.Services
         /// Never throws into the scan path. The strike is already committed when this runs, and
         /// a guard on patrol must not be held up - or turned away - by a mail server.
         /// </summary>
+        /// <summary>
+        /// P1#375: whether a checkpoint's label exempts it from the wand strike flag. Labels
+        /// beginning "PTX" - with or without the dash, in any case - are exempt, so "PTX-07",
+        /// "PTX 07" and "ptx07" all qualify. Leading whitespace is ignored, since a label typed
+        /// with a stray space in front is the same checkpoint.
+        /// </summary>
+        private static bool IsAlertExemptTagLabel(string labelDescription)
+        {
+            return !string.IsNullOrWhiteSpace(labelDescription)
+                   && labelDescription.TrimStart().StartsWith(WandStrikeExemptLabelPrefix, StringComparison.OrdinalIgnoreCase);
+        }
+
         private async Task CheckForWandStrikeManipulation(int siteId, int guardId, int? tagsTypeId,
             ClientSiteSmartWandTagsHitLog currentHit, bool isOfflineRecord)
         {
@@ -465,6 +489,12 @@ namespace CityWatch.Web.Services
                     return;
 
                 if (string.IsNullOrWhiteSpace(currentHit.TagUId))
+                    return;
+
+                /* PTX checkpoints are exempt. Checked first because it needs nothing but the
+                   label already in hand, and because it is an outright bypass - no amount of
+                   repetition on one of these should raise the flag. */
+                if (IsAlertExemptTagLabel(currentHit.LabelDescription))
                     return;
 
                 /* One more than the trigger count: the extra row is what tells a run that has
@@ -486,6 +516,19 @@ namespace CityWatch.Web.Services
                     string.Equals(recentHits[WandStrikeManipulationHitCount].TagUId, currentHit.TagUId, StringComparison.OrdinalIgnoreCase))
                     return;
 
+                /* Strikes closer together than WandStrikeMinimumGap are not treated as three
+                   separate visits to the checkpoint. Hits that near each other are far more
+                   likely to be one scan recorded more than once - a sync artefact, a retried
+                   request - than a guard standing there striking a tag, and a flag raised on
+                   those would be a false alarm against a real person.
+
+                   The run is newest first, so each pair is [newer] - [older]. */
+                for (var i = 0; i < run.Count - 1; i++)
+                {
+                    if ((run[i].HitUtcDateTime - run[i + 1].HitUtcDateTime) < WandStrikeMinimumGap)
+                        return;
+                }
+
                 /* A site with a single NFC checkpoint hits the same tag on every patrol, so a
                    run of three is just the site working normally - flagging it would email the
                    IR desk forever and teach them to ignore the alert. Needs at least two tags
@@ -495,6 +538,14 @@ namespace CityWatch.Web.Services
 
                 var site = _clientDataProvider.GetClientSiteDetailsWithId(siteId).FirstOrDefault();
                 var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId).FirstOrDefault();
+
+                /* The handset build, so the reader can tell a genuine pattern from something an
+                   old app is doing. Read from what the app reported at login rather than the
+                   scan request, so no mobile change is needed. Its own try: a missing table or
+                   row must cost the flag its version line, not the flag itself. */
+                GuardMobileAppVersion appVersion = null;
+                try { appVersion = _guardDataProvider.GetGuardMobileAppVersion(guardId); }
+                catch { }
 
                 /* Sites span AU timezones, so the server's clock is not the site's. Derive the
                    site's local time the same way the Wand Strikes report does: the site's
@@ -527,7 +578,9 @@ namespace CityWatch.Web.Services
                     RunSiteLocalDateTimes = run.OrderBy(x => x.HitUtcDateTime)
                                                .Select(x => x.HitUtcDateTime + offset)
                                                .ToArray(),
-                    IsOfflineRecord = isOfflineRecord
+                    IsOfflineRecord = isOfflineRecord,
+                    MobileAppVersion = appVersion?.AppVersion,
+                    MobileAppPlatform = appVersion?.Platform
                 };
 
                 await _alertEmailServices.SendWandStrikeManipulationAlertMail(alert);
