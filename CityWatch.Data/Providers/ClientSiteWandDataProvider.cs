@@ -590,38 +590,37 @@ namespace CityWatch.Data.Providers
         {
             toDate = toDate.AddDays(1); // Include the entire 'toDate' day
 
-            // Step 1: Get UTC offsets per client site
+            // Step 1: Get each client site's time zone
             /* Looked up per site rather than used as the loop itself. While this drove the
                foreach, a site with no ClientSiteKpiSettings row produced no iteration at all,
                so its hit logs were never queried and the Wand Strikes report came back empty
                with no error - VISY-Yatala [VB] had 975 strikes hidden this way.
-               Sites that do have a settings row behave exactly as before: the "+10:00"
-               fallback below is what the old "?? +10:00" already yielded for a null UTC. */
-            var siteUtcById = _dbContext.ClientSiteKpiSettings
+
+               The zone comes from TimezoneString (e.g. "AUS Eastern Standard Time"), not the
+               fixed UTC offset ("+10:00"): the fixed offset ignored daylight saving, so from
+               October to April every strike showed an hour early and 00:00-00:59 scans fell on
+               the previous day (VISY-Coolaroo [VR] (FSO): a 14-Nov 00:51 scan showed as 13-Nov
+               23:51 while Fusion, correctly, showed 00:51). A site with no row or no zone gets
+               AUS Eastern, which equals the old "+10:00" outside daylight saving. */
+            var siteZoneById = _dbContext.ClientSiteKpiSettings
                 .Where(x => clientSiteIds.Contains(x.ClientSiteId))
-                .Select(x => new { x.ClientSiteId, x.UTC })
+                .Select(x => new { x.ClientSiteId, x.TimezoneString })
                 .ToList()
-                .GroupBy(x => x.ClientSiteId)                  // GroupBy rather than ToDictionary:
-                .ToDictionary(g => g.Key, g => g.First().UTC); // a duplicated site must not throw
+                .GroupBy(x => x.ClientSiteId)                             // GroupBy rather than ToDictionary:
+                .ToDictionary(g => g.Key, g => g.First().TimezoneString); // a duplicated site must not throw
 
             // Prepare a list to accumulate matching logs
             var matchingLogs = new List<ClientSiteSmartWandTagsHitLog>();
 
             foreach (var clientSiteId in clientSiteIds.Distinct())
             {
-                // Step 2: Parse UTC offset like "+05:30" or "-04:00"
-                var siteUtc = siteUtcById.TryGetValue(clientSiteId, out var utc) && !string.IsNullOrWhiteSpace(utc)
-                    ? utc
-                    : "+10:00"; // no settings row for this site, or the row has no UTC set
-                if (!TimeSpan.TryParse(siteUtc.Replace("+", ""), out TimeSpan offset))
-                {
-                    // Default offset if parsing fails (you can customize this)
-                    offset = TimeSpan.Zero;
-                }
+                // Step 2: The site's zone, with its daylight saving rules
+                var siteZone = SiteTimeZoneHelper.Resolve(siteZoneById.TryGetValue(clientSiteId, out var tz) ? tz : null);
 
-                // Step 3: Convert the local from/to to UTC for this site
-                var fromUtc = fromDate - offset;
-                var toUtc = toDate - offset;
+                // Step 3: Convert the local from/to to UTC for this site, each at the offset in
+                // force on that date (a range can span a DST change)
+                var fromUtc = SiteTimeZoneHelper.SiteLocalToUtc(fromDate.Date, siteZone);
+                var toUtc = SiteTimeZoneHelper.SiteLocalToUtc(toDate.Date, siteZone);
 
                 // Step 4: Get logs for this client site in the adjusted range
                 var logs = _dbContext.ClientSiteSmartWandTagsHitLogs
@@ -629,7 +628,7 @@ namespace CityWatch.Data.Providers
                         (x.LoggedInClientSiteId == clientSiteId ||
                          (x.TagLinkedClientSiteId.HasValue && x.TagLinkedClientSiteId.Value == clientSiteId)) &&
                         x.HitUtcDateTime >= fromUtc &&
-                        x.HitUtcDateTime <= toUtc)
+                        x.HitUtcDateTime < toUtc)
                     .AsNoTracking()
                     .Include(x => x.SmartWandTagsType)
                     .Include(x => x.LoggedInClientSite)
@@ -649,7 +648,7 @@ namespace CityWatch.Data.Providers
                     LabelDescription = log.LabelDescription,
                     TagLinkedClientSiteId = log.TagLinkedClientSiteId,
                     HitUtcDateTime = log.HitUtcDateTime,
-                    HitLocalDateTime = log.HitUtcDateTime + offset, // Add local time conversion
+                    HitLocalDateTime = SiteTimeZoneHelper.UtcToSiteLocal(log.HitUtcDateTime, siteZone), // DST-aware local time
                     LoggedInClientSite = log.LoggedInClientSite,
                     LinkedClientSite = log.LinkedClientSite,
                     SmartWandTagsType = log.SmartWandTagsType,
