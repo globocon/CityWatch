@@ -83,6 +83,7 @@ builder.Services.AddScoped<IRPLCertificateGeneratorService, RPLCertificateGenera
 builder.Services.AddSingleton<IBulkCertificateJobStore, BulkCertificateJobStore>();
 builder.Services.AddSingleton<IBulkCertificateReleaseService, BulkCertificateReleaseService>();
 builder.Services.AddScoped<IMobileAppDataServices, MobileAppDataServices>();
+builder.Services.AddScoped<IPatrolRandomisationService, PatrolRandomisationService>();
 
 /* AI Assistance on /Incident/Register.
 

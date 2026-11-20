@@ -12,6 +12,7 @@
 @inject IClientDataProvider clientDataProvider
 @inject IGuardLogDataProvider guardLogDataProvider
 @inject IConfigDataProvider configDataProvider
+@inject IClientSiteWandDataProvider clientSiteWandDataProvider
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
@@ -2617,14 +2618,76 @@
                     <div class="row m-0 pt-5">
                         <div class="col-md-12">                            
                             <input type="hidden" id="clientSiteIdPatrolTourMode" name="clientSiteIdPatrolTourMode" value="@Model.ClientSiteId" />
+                            @{
+                                /* Patrol Randomisation (DbScript/387). Mon-Sun columns like Contracted Manning;
+                                   any number of days, max 2 hours a day, STND mode only (PatrolRandomisationHelper). */
+                                var patrolRandomisation = clientSiteWandDataProvider.GetPatrolRandomisationSetting(Model.ClientSiteId);
+                                var isStndMode = Model.ClientSite.PatrolTourMode == PatrolTouringMode.STND;
+                                var randomisationOn = isStndMode && patrolRandomisation != null && patrolRandomisation.IsEnabled;
+                                var randomisationDays = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+                            }
                             <div class="form-group row">
-                                <label class="col-md-3 col-form-label mt-0">Partol Touring Mode</label>
-                                <div class="col-md-6">                                    
+                                <label class="col-md-3 col-form-label mt-0 font-weight-bold">Patrol Touring Mode</label>
+                                <div class="col-md-6">
                                     <select asp-for="@Model.ClientSite.PatrolTourMode" asp-items="Html.GetEnumSelectList<PatrolTouringMode>()" class="form-control">
                                     </select>
                                 </div>
                             </div>
+
+                            <div class="form-group row align-items-center mt-4">
+                                <label class="col-md-3 col-form-label mt-0 font-weight-bold" for="chkPatrolRandomisation">Patrol Randomisation</label>
+                                <div class="col-md-6">
+                                    <div class="custom-control custom-switch" id="divPatrolRandomisationSwitch"
+                                         title="@(isStndMode ? "Randomise the patrol route during the window below" : "Only available in Standard (STND) touring mode")">
+                                        <input type="checkbox" class="custom-control-input" id="chkPatrolRandomisation"
+                                               checked="@randomisationOn" disabled="@(!isStndMode)">
+                                        <label class="custom-control-label" for="chkPatrolRandomisation"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-borderless table-sm mb-1" id="tblPatrolRandomisation" style="max-width:900px;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:80px;"></th>
+                                            @foreach (var d in randomisationDays)
+                                            {
+                                                <th class="text-center font-weight-normal">@d.ToString().Substring(0, 3)</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var row in new[] { "Start", "End" })
+                                        {
+                                            <tr>
+                                                <td class="align-middle">@row</td>
+                                                @foreach (var d in randomisationDays)
+                                                {
+                                                    TimeSpan? value = null;
+                                                    var daySchedule = patrolRandomisation?.Schedules?.FirstOrDefault(s => s.DayOfWeek == d);
+                                                    if (daySchedule != null)
+                                                    {
+                                                        value = row == "Start" ? daySchedule.StartTime : daySchedule.EndTime;
+                                                    }
+                                                    <td>
+                                                        <input type="time" class="form-control form-control-sm pr-time pr-time-@(row.ToLower())"
+                                                               data-day="@((int)d)" data-row="@row.ToLower()"
+                                                               value="@(value.HasValue ? value.Value.ToString(@"hh\:mm") : "")"
+                                                               disabled="@(!randomisationOn)" />
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <small class="form-text text-muted ml-1" id="lblPatrolRandomisationHint">
+                                    Standard (STND) mode only. Any days of the week, a maximum of 2 hours a day, in the site's local time. After each wand strike in the window the guard is sent to a random next checkpoint.
+                                </small>
+                            </div>
+
                             <div class="form-row mt-3">
+                                <button type="button" class="btn btn-outline-danger mr-2" id="btnDeletePatrolRandomisation"><i class="fa fa-trash mr-2"></i>Delete</button>
                                 <button type="button" class="btn btn-success" id="btnSavePatrolTouringModeSettings"><i class="fa fa-save mr-2"></i>Save Settings</button>
                             </div>
                         </div>

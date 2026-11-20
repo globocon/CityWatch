@@ -58,6 +58,9 @@
                     <li class="nav-item">
                         <a class="nav-link" id="tag-history-log-tab" data-toggle="tab" href="#tagHistoryLog" role="tab" aria-controls="tagHistoryLog" aria-selected="false">Tag History</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="randomisation-log-tab" data-toggle="tab" href="#randomisationLog" role="tab" aria-controls="randomisationLog" aria-selected="false">Randomisation</a>
+                    </li>
         }
         else if (AuthUserHelper.IsAdminAuditor)
         {
@@ -123,6 +126,9 @@
                     </div>
                 <div class="tab-pane fade py-3" id="tagHistoryLog" role="tabpanel" aria-labelledby="tag-history-log-tab">
                     <partial name="_TagHistoryAuditSiteLog" model="Model"></partial>
+                </div>
+                <div class="tab-pane fade py-3" id="randomisationLog" role="tabpanel" aria-labelledby="randomisation-log-tab">
+                    <partial name="_RandomisationAuditSiteLog" model="Model"></partial>
                 </div>
         }
         else

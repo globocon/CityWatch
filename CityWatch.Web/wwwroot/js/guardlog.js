@@ -10066,6 +10066,266 @@ $(function () {
 
     // TagHistory -- End
 
+    // Randomisation -- Start
+    // Patrol Randomisation scan log (ClientSitePatrolRandomisationLogs). Rows come grouped by site
+    // and business day, already ordered by the server.
+
+    const randomisationStatusClass = {
+        Completed: 'badge-success',
+        Skipped: 'badge-warning',
+        Missed: 'badge-danger',
+        Pending: 'badge-info',
+        Unguided: 'badge-secondary',
+        Cancelled: 'badge-light',
+        Bypassed: 'badge-dark'
+    };
+
+    function randomisationText(value) {
+        return escapeTagHistoryHtml(value);
+    }
+
+    function randomisationTagText(label, uid) {
+        if (!label && !uid) return '';
+        if (!label || label === uid) return escapeTagHistoryHtml(uid);
+        return escapeTagHistoryHtml(label) + '<br/><small class="text-muted">' + escapeTagHistoryHtml(uid) + '</small>';
+    }
+
+    let randomisationLogReport = $('#tbl_randomisation_site_log').DataTable({
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        paging: true,
+        ordering: false,
+        info: false,
+        searching: true,
+        scrollX: true,
+        data: [],
+        columns: [
+            // A data function (not render) so column(0).data() gives the heading text for drawCallback.
+            { data: function (row) { return row.siteName + ' | ' + row.dayName + ' ' + row.businessDateText; }, visible: false },
+            { data: 'dayName', render: randomisationText },
+            { data: 'windowText', render: randomisationText },
+            { data: 'guardDisplay', render: randomisationText },
+            { data: 'userName', render: randomisationText },
+            { data: null, render: function (row) { return randomisationTagText(row.fromTagLabel, row.fromTagUId); } },
+            { data: 'fromScanLocalText', render: randomisationText },
+            { data: null, render: function (row) { return randomisationTagText(row.assignedTagLabel, row.assignedTagUId); } },
+            { data: 'assignedLocalText', render: randomisationText },
+            { data: 'scannedTagLabel', render: randomisationText },
+            { data: 'scannedTagUId', render: randomisationText },
+            { data: 'scannedLocalText', render: randomisationText },
+            { data: 'scanMode', render: randomisationText },
+            { data: 'responseText', render: randomisationText },
+            {
+                data: 'statusText', render: function (value) {
+                    return '<span class="badge ' + (randomisationStatusClass[value] || 'badge-light') + '">' + escapeTagHistoryHtml(value) + '</span>';
+                }
+            },
+        ],
+        drawCallback: function () {
+            // Site | day headings.
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+            api.column(0, { page: 'current' }).data().each(function (group, i) {
+                if (last !== group) {
+                    $(rows).eq(i).before('<tr class="group bg-light text-dark"><td colspan="14">' + escapeTagHistoryHtml(group) + '</td></tr>');
+                    last = group;
+                }
+            });
+        },
+    });
+
+    $('.randomisationmultiselect').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+        enableFiltering: true,
+        enableCaseInsensitiveFiltering: true
+    });
+
+    if ($('#randomisationAuditFromDate').length) {
+        $('#randomisationAuditFromDate').val(startDate.toISOString().substr(0, 10));
+        $('#randomisationAuditToDate').val(systemDate);
+    }
+
+    function loadRandomisationClientSites() {
+        const clientTypes = $('#randomisationClientType').val() || [];
+        const clientSiteControl = $('#randomisationClientSiteId');
+        randomisationLogReport.clear().draw();
+        clientSiteControl.html('');
+        clientSiteControl.multiselect('rebuild');
+        if (clientTypes.length === 0)
+            return;
+
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=ClientSites&types=' + encodeURIComponent(clientTypes.join(';')),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                clientSiteControl.html('');
+                data.map(function (site) {
+                    clientSiteControl.append($('<option></option>').val(site.value).text(site.text));
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+    }
+
+    $('#randomisationClientType').on('change', loadRandomisationClientSites);
+    if ($('#randomisationClientType').length && ($('#randomisationClientType').val() || []).length > 0)
+        loadRandomisationClientSites();
+
+    function setRandomisationRequest() {
+        if (($('#randomisationClientSiteId').val() || []).length === 0) {
+            alert('Please select a client site');
+            return false;
+        }
+        const fromDate = $('#randomisationAuditFromDate').val();
+        const toDate = $('#randomisationAuditToDate').val();
+        if (!fromDate || !toDate) {
+            alert('Please select From Date and To Date');
+            return false;
+        }
+        if (new Date(fromDate) > new Date(toDate)) {
+            alert('From Date must be on or before To Date');
+            return false;
+        }
+        if (monthDiff(new Date(fromDate), new Date(toDate)) > 6) {
+            alert('Date Range is greater than 6 months');
+            return false;
+        }
+        $('#PatrolRandomisationReportRequest_ClientSiteId').val(($('#randomisationClientSiteId').val() || []).join(','));
+        $('#PatrolRandomisationReportRequest_LogFromDate').val(fromDate);
+        $('#PatrolRandomisationReportRequest_LogToDate').val(toDate);
+        $('#PatrolRandomisationReportRequest_Status').val(($('#randomisationStatus').val() || []).join(','));
+        return true;
+    }
+
+    function fetchRandomisation() {
+        return $.ajax({
+            url: '/Admin/AuditSiteLog?handler=PatrolRandomisationAuditSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_randomisation_auditlog_request').serialize(),
+        });
+    }
+
+    /** Count per result plus compliance: Completed out of instructions that were answered or missed.
+        Bypassed (point missing, faulty or blocked) is shown but not held against the guard. */
+    function showRandomisationSummary(rows) {
+        const counts = {};
+        rows.forEach(function (r) { counts[r.statusText] = (counts[r.statusText] || 0) + 1; });
+        const judged = (counts.Completed || 0) + (counts.Skipped || 0) + (counts.Missed || 0);
+        const compliance = judged > 0 ? Math.round(100 * (counts.Completed || 0) / judged) + '%' : '-';
+        const offline = rows.filter(function (r) { return r.scannedIsOffline === true; }).length;
+
+        let html = '<span class="badge badge-primary p-2">Compliance ' + compliance + '</span>';
+        ['Completed', 'Skipped', 'Missed', 'Bypassed', 'Pending', 'Unguided', 'Cancelled'].forEach(function (s) {
+            if (counts[s])
+                html += '<span class="badge ' + randomisationStatusClass[s] + ' p-2">' + s + ' ' + counts[s] + '</span>';
+        });
+        html += '<span class="badge badge-secondary p-2">Offline scans ' + offline + '</span>';
+        $('#randomisationSummary').html(html).css('gap', '.5rem').removeClass('d-none').addClass('d-flex');
+    }
+
+    $('#btnGenerateRandomisationReport').on('click', function () {
+        if (!setRandomisationRequest())
+            return;
+
+        $('#loader').show();
+        fetchRandomisation()
+            .done(function (response) {
+                if (!response.success) {
+                    alert(response.message);
+                    return;
+                }
+                randomisationLogReport.clear().rows.add(response.rows).draw();
+                showRandomisationSummary(response.rows);
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                alert('Failed to load the randomisation report.');
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+    $('#btnDownloadRandomisationExcel').on('click', function () {
+        if (!setRandomisationRequest())
+            return;
+
+        $('#loader').show();
+        fetchRandomisation()
+            .done(function (response) {
+                exportRandomisationToExcel(response.rows || []);
+            })
+            .fail(function (xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                alert('Failed to generate the Excel file.');
+            })
+            .always(function () {
+                $('#loader').hide();
+            });
+    });
+
+    async function exportRandomisationToExcel(rows) {
+        if (rows.length === 0) {
+            alert('No randomisation scans found for the selected filters.');
+            return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Randomisation');
+        worksheet.columns = [
+            { header: 'Site', key: 'siteName' },
+            { header: 'Date', key: 'businessDateText' },
+            { header: 'Day', key: 'dayName' },
+            { header: 'Window', key: 'windowText' },
+            { header: 'Guard', key: 'guardDisplay' },
+            { header: 'User', key: 'userName' },
+            { header: 'Smart Wand', key: 'smartWandId' },
+            { header: 'From Tag', key: 'fromTagLabel' },
+            { header: 'From UID', key: 'fromTagUId' },
+            { header: 'From Time', key: 'fromScanLocalText' },
+            { header: 'Assigned Tag', key: 'assignedTagLabel' },
+            { header: 'Assigned UID', key: 'assignedTagUId' },
+            { header: 'Assigned Time', key: 'assignedLocalText' },
+            { header: 'Scanned Tag', key: 'scannedTagLabel' },
+            { header: 'Scanned UID', key: 'scannedTagUId' },
+            { header: 'Scanned Time', key: 'scannedLocalText' },
+            { header: 'Online / Offline', key: 'scanMode' },
+            { header: 'Response (hh:mm:ss)', key: 'responseText' },
+            { header: 'Result', key: 'statusText' },
+            { header: 'UTC Offset', key: 'siteUtcOffset' },
+        ];
+        rows.forEach(function (row) { worksheet.addRow(row); });
+
+        worksheet.getRow(1).eachCell(function (cell) {
+            cell.font = { bold: true };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF27C2F5' } };
+            cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+        });
+        worksheet.columns.forEach(function (column) {
+            let maxLength = column.header.length;
+            column.eachCell({ includeEmpty: true }, function (cell) {
+                const value = cell.value ? cell.value.toString() : '';
+                maxLength = Math.max(maxLength, value.length);
+            });
+            column.width = Math.min(maxLength + 2, 60);
+        });
+        worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const fileName = 'Patrol Randomisation - ' + $('#randomisationAuditFromDate').val() + ' to ' + $('#randomisationAuditToDate').val() + '.xlsx';
+        saveAs(new Blob([buffer]), fileName);
+    }
+
+    // Randomisation -- End
+
     //p9-Issue 1-start
     $('#Rooster_ClientType').on('change', function () {
         populateClientSitesForRooster();

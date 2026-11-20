@@ -5112,10 +5112,97 @@ $('#div_site_settings').on('click', '#btnSaveCrowdControlSettings', function () 
     }).always(function () { $('#loader').hide(); });
 });
 
+/* Patrol Randomisation (Wand Strikes tab). Rules mirror PatrolRandomisationHelper on the server:
+   STND only (PCAR/INSP switch it off), off by default, one day, max 2 hours, start before end. */
+var PATROL_TOURING_MODE_STND = 0;
+var PATROL_RANDOMISATION_MAX_MINUTES = 120;
+
+function patrolRandomisationToMinutes(hhmm) {
+    if (!hhmm) return null;
+    var parts = hhmm.split(':');
+    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+function patrolRandomisationRefreshState() {
+    var isStnd = parseInt($('#ClientSite_PatrolTourMode').val()) === PATROL_TOURING_MODE_STND;
+    var $toggle = $('#chkPatrolRandomisation');
+    if (!isStnd) {
+        $toggle.prop('checked', false);
+    }
+    $toggle.prop('disabled', !isStnd);
+    $('#divPatrolRandomisationSwitch').attr('title', isStnd
+        ? 'Randomise the patrol route during the window below'
+        : 'Only available in Standard (STND) touring mode');
+    $('#tblPatrolRandomisation .pr-time').prop('disabled', !(isStnd && $toggle.is(':checked')));
+}
+
+function patrolRandomisationCollectDays() {
+    var days = {};
+    $('#tblPatrolRandomisation .pr-time').each(function () {
+        var day = $(this).data('day');
+        days[day] = days[day] || { Day: day, Start: '', End: '' };
+        if ($(this).data('row') === 'start') days[day].Start = $(this).val();
+        else days[day].End = $(this).val();
+    });
+    return Object.keys(days).map(function (k) { return days[k]; })
+        .filter(function (d) { return d.Start || d.End; });
+}
+
+var PATROL_RANDOMISATION_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/* Client-side check for a quick message; the server validates again. Any number of days,
+   each with one window of at most 2 hours. */
+function patrolRandomisationValidate(enabled, days) {
+    if (days.length === 0) return enabled ? 'Enter a start and end time for at least one day.' : null;
+    for (var i = 0; i < days.length; i++) {
+        var d = days[i], name = PATROL_RANDOMISATION_DAY_NAMES[d.Day];
+        if (!d.Start || !d.End) return 'Enter both a start and an end time for ' + name + '.';
+        var start = patrolRandomisationToMinutes(d.Start), end = patrolRandomisationToMinutes(d.End);
+        if (end <= start) return name + ': end time must be after the start time (the window cannot cross midnight).';
+        if (end - start > PATROL_RANDOMISATION_MAX_MINUTES) return name + ': Patrol Randomisation can run for a maximum of 2 hours a day.';
+    }
+    return null;
+}
+
+$('#div_site_settings').on('change', '#ClientSite_PatrolTourMode', patrolRandomisationRefreshState);
+$('#div_site_settings').on('change', '#chkPatrolRandomisation', patrolRandomisationRefreshState);
+
+$('#div_site_settings').on('click', '#btnDeletePatrolRandomisation', function () {
+    if (!confirm('Delete the Patrol Randomisation schedule for this site?')) return;
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=DeletePatrolRandomisation',
+        type: 'POST',
+        dataType: 'json',
+        data: { clientSiteId: parseInt($('#clientSiteIdPatrolTourMode').val()) },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (response.success) {
+            $('#tblPatrolRandomisation .pr-time').val('');
+            $('#chkPatrolRandomisation').prop('checked', false);
+            patrolRandomisationRefreshState();
+        }
+        alert(response.message);
+    }).fail(function () {
+        alert('An error occured while deleting the settings. Please try again.');
+    }).always(function () { $('#loader').hide(); });
+});
+
 $('#div_site_settings').on('click', '#btnSavePatrolTouringModeSettings', function () {
+    var isStnd = parseInt($('#ClientSite_PatrolTourMode').val()) === PATROL_TOURING_MODE_STND;
+    var enabled = isStnd && $('#chkPatrolRandomisation').is(':checked');
+    var days = patrolRandomisationCollectDays();
+    var error = patrolRandomisationValidate(enabled, days);
+    if (error) {
+        alert(error);
+        return;
+    }
+
     var data = {
         clientSiteId: parseInt($('#clientSiteIdPatrolTourMode').val()),
-        PatrolTourMode: parseInt($('#ClientSite_PatrolTourMode').val())
+        PatrolTourMode: parseInt($('#ClientSite_PatrolTourMode').val()),
+        isRandomisationEnabled: enabled,
+        randomisationDays: days
     };
 
     $('#loader').show();
