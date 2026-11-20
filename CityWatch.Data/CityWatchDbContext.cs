@@ -536,6 +536,10 @@ namespace CityWatch.Data
         public DbSet<ClientSiteMobileCrowdControlGuardsHistory> ClientSiteMobileCrowdControlGuardsHistory { get; set; }
         public DbSet<ClientSiteMobileCrowdControlAuditLog> ClientSiteMobileCrowdControlAuditLog { get; set; }
         public DbSet<ClientSiteSmartWandTags> ClientSiteSmartWandTags { get; set; }
+        /// <summary>Patrol Randomisation (DbScript/387).</summary>
+        public DbSet<ClientSitePatrolRandomisationSetting> ClientSitePatrolRandomisationSettings { get; set; }
+        public DbSet<ClientSitePatrolRandomisationSchedule> ClientSitePatrolRandomisationSchedules { get; set; }
+        public DbSet<ClientSitePatrolRandomisationLog> ClientSitePatrolRandomisationLogs { get; set; }
 
         /// <summary>Change history for the tags above. Written by a trigger; never inserted from code.</summary>
         public DbSet<ClientSiteSmartWandTagsHist> ClientSiteSmartWandTagsHist { get; set; }

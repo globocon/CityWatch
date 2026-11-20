@@ -26,11 +26,16 @@ namespace CityWatch.Web.API
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IMobileAppDataServices _mobileAppDataServices;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IPatrolRandomisationService _patrolRandomisationService;
+        private readonly IHubContext<MobileAppSignalRHub> _mobileAppHub;
 
         public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider,
-            IMobileAppDataServices mobileAppDataServices, IGuardLogDataProvider guardLogDataProvider)
+            IMobileAppDataServices mobileAppDataServices, IGuardLogDataProvider guardLogDataProvider,
+            IPatrolRandomisationService patrolRandomisationService, IHubContext<MobileAppSignalRHub> mobileAppHub)
         {
+            _patrolRandomisationService = patrolRandomisationService;
+            _mobileAppHub = mobileAppHub;
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientSitesDataProvider = clientSitesDataProvider;
@@ -76,6 +81,7 @@ namespace CityWatch.Web.API
             int rowIdInServer = 0;
             int tagSiteId = 0;
             string tagSiteName = string.Empty;
+            PatrolRandomisationInstruction patrolRandomisation = null;
             if (!string.IsNullOrEmpty(gpsCoordinates))
             {
                 gpsCoordinates = Uri.UnescapeDataString(gpsCoordinates.Trim());
@@ -95,19 +101,74 @@ namespace CityWatch.Web.API
                 tagSiteId = TagSiteIdR;
                 tagSiteName = TagSiteNameR;
 
+                /* Patrol Randomisation: a strike of one of this site's own tags is answered with the
+                   next checkpoint. Its own try - randomisation must never cost the guard the strike,
+                   which is already saved by now. Offline syncs (SyncOfflineSmartWandTagHitData)
+                   are logged too, but get no next checkpoint: they arrive after the fact and
+                   nobody is waiting for one. */
+                if (IsSuccess && TagFound && tagSiteId == siteId && GuardId > 0)
+                {
+                    try
+                    {
+                        patrolRandomisation = _patrolRandomisationService.OnWandStrike(new PatrolRandomisationStrike
+                        {
+                            ClientSiteId = siteId,
+                            GuardId = GuardId,
+                            UserId = UserId,
+                            SmartWandId = SmartWandId,
+                            TagUId = TagUid,
+                            HitLogId = rowIdInServer,
+                            HitUtc = DateTime.UtcNow,
+                            IsOffline = false
+                        });
+                        if (patrolRandomisation?.NextCheckpoint != null)
+                        {
+                            await _mobileAppHub.Clients.Group(MobileAppSignalRHub.PatrolRandomisationGroupName(siteId, GuardId))
+                                .SendAsync("PatrolRandomisationNextCheckpoint", patrolRandomisation);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        patrolRandomisation = null;
+                    }
+                }
+
             }
             catch (Exception ex)
             {
                 message = ex.Message;
             }
 
-            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite, RowIdInServer = rowIdInServer, TagSiteId = tagSiteId, TagSiteName = tagSiteName });
+            // PatrolRandomisation is additive: handsets that do not know it ignore the field.
+            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite, RowIdInServer = rowIdInServer, TagSiteId = tagSiteId, TagSiteName = tagSiteName, PatrolRandomisation = patrolRandomisation });
+        }
+
+        /// <summary>
+        /// Patrol Randomisation state for the logged-in guard: is the window open, when does it
+        /// end, and which checkpoint to go to. The handset calls it on login/resume and when the
+        /// window opens; startIfNone=true hands out a first checkpoint straight away instead of
+        /// waiting for the guard's first strike.
+        /// </summary>
+        [HttpGet("GetPatrolRandomisationStatus")]
+        public IActionResult GetPatrolRandomisationStatus(int siteId, int guardId, bool startIfNone = false)
+        {
+            try
+            {
+                var status = _patrolRandomisationService.GetStatus(siteId, guardId, DateTime.UtcNow, startIfNone);
+                return Ok(status);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
         }
 
         [HttpPost("SyncOfflineSmartWandTagHitData")]
         public async Task<IActionResult> SyncOfflineSmartWandTagHitData([FromBody] List<ClientSiteSmartWandTagsHitLogCacheOffline> offlineRecords)
         {
             var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            // Patrol Randomisation scan log: offline strikes are recorded after the loop, oldest first.
+            var randomisationStrikes = new List<PatrolRandomisationStrike>();
             if (offlineRecords != null && offlineRecords.Count > 0)
             {
                 foreach (var offlineRecord in offlineRecords)
@@ -120,6 +181,21 @@ namespace CityWatch.Web.API
                             offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.GPScoordinates, offlineRecord.SmartWandId);
 
                         int postToClientSiteId = ScanFromLinkedSiteId > 0 ? ScanFromLinkedSiteId : offlineRecord.LoggedInClientSiteId;
+
+                        if (IsSuccessR && TagFoundR && TagSiteIdR == offlineRecord.LoggedInClientSiteId && offlineRecord.LoggedInGuardId > 0)
+                        {
+                            randomisationStrikes.Add(new PatrolRandomisationStrike
+                            {
+                                ClientSiteId = offlineRecord.LoggedInClientSiteId,
+                                GuardId = offlineRecord.LoggedInGuardId,
+                                UserId = offlineRecord.LoggedInUserId,
+                                SmartWandId = offlineRecord.SmartWandId,
+                                TagUId = offlineRecord.TagUId,
+                                HitLogId = RowIdInServerR,
+                                HitUtc = offlineRecord.HitUtcDateTime,
+                                IsOffline = true
+                            });
+                        }
 
                         if (IsSuccessR)
                         {
@@ -168,6 +244,13 @@ namespace CityWatch.Web.API
                         offlineRecord.IsSynced = true;
                     }
                 }
+            }
+
+            foreach (var strike in randomisationStrikes.OrderBy(x => x.HitUtc))
+            {
+                // Never lets the scan log cost the guard the sync, which is already done.
+                try { _patrolRandomisationService.OnWandStrike(strike); }
+                catch (Exception) { }
             }
 
             return Ok(offlineRecords);
