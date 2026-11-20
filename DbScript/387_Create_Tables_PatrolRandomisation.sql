@@ -23,6 +23,8 @@
               4 Cancelled  - randomisation was switched off / deleted for the site
               5 Unguided   - a strike made in the window with no instruction to follow (e.g. an
                              offline scan synced later); AssignedTag* is empty on these rows
+              6 Bypassed   - the guard tapped "Tour: RNDM" to skip the checkpoint (missing,
+                             faulty or blocked); a logbook entry records it too
        Times are kept twice, UTC and site local (with the offset in force), per the house rule.
 
    Safe to re-run. */
@@ -123,7 +125,7 @@ BEGIN
         [CreatedUtc]         DATETIME2(0) NOT NULL CONSTRAINT [DF_ClientSitePatrolRandomisationLogs_CreatedUtc] DEFAULT (SYSUTCDATETIME()),
         CONSTRAINT [PK_ClientSitePatrolRandomisationLogs] PRIMARY KEY CLUSTERED ([Id]),
         CONSTRAINT [FK_ClientSitePatrolRandomisationLogs_ClientSites] FOREIGN KEY ([ClientSiteId]) REFERENCES [dbo].[ClientSites] ([Id]),
-        CONSTRAINT [CK_ClientSitePatrolRandomisationLogs_Status] CHECK ([Status] BETWEEN 0 AND 5)
+        CONSTRAINT [CK_ClientSitePatrolRandomisationLogs_Status] CHECK ([Status] BETWEEN 0 AND 6)
     )
 END
 GO

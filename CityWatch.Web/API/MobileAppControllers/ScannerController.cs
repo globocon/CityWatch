@@ -71,7 +71,8 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetScannerTagInfoData")]
-        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId, int TagsTypeId, int? SmartWandId = null, string gpsCoordinates = null)
+        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId, int TagsTypeId, int? SmartWandId = null, string gpsCoordinates = null,
+            string rndmExpectedTagUId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
@@ -119,7 +120,9 @@ namespace CityWatch.Web.API
                             TagUId = TagUid,
                             HitLogId = rowIdInServer,
                             HitUtc = DateTime.UtcNow,
-                            IsOffline = false
+                            IsOffline = false,
+                            // The GoTo on the handset's screen; lets the server judge the strike even if a response was lost.
+                            ExpectedTagUId = string.IsNullOrWhiteSpace(rndmExpectedTagUId) ? null : rndmExpectedTagUId
                         });
                         if (patrolRandomisation?.NextCheckpoint != null)
                         {
@@ -163,6 +166,76 @@ namespace CityWatch.Web.API
             }
         }
 
+        /// <summary>
+        /// Patrol Randomisation bypass: the guard tapped "Tour: RNDM" because the checkpoint on screen
+        /// is missing, faulty or blocked. Recorded as Bypassed, written to the site's logbook
+        /// ("RNDM Bypass hit by guard X.X"), and - when live - answered with another checkpoint.
+        /// The handset replays offline bypasses with their original time; a resend is recognised and
+        /// does not write a second logbook entry.
+        /// </summary>
+        [HttpPost("PatrolRandomisationBypass")]
+        public IActionResult PatrolRandomisationBypass([FromBody] PatrolRandomisationBypassRequest request)
+        {
+            if (request == null || request.ClientSiteId <= 0 || request.GuardId <= 0 || string.IsNullOrWhiteSpace(request.TagUId))
+                return BadRequest(new { IsSuccess = false, message = "Site, guard and checkpoint are required." });
+
+            try
+            {
+                var result = _patrolRandomisationService.Bypass(request);
+                string logbookError = null;
+
+                if (!result.AlreadyRecorded)
+                {
+                    var guard = _guardDataProvider.GetGuardDetailsUsingId(request.GuardId).FirstOrDefault();
+                    var who = !string.IsNullOrWhiteSpace(guard?.Initial) ? guard.Initial.Trim() : (guard?.Name ?? $"#{request.GuardId}");
+                    var bypassUtc = request.BypassUtc == default ? DateTime.UtcNow : DateTime.SpecifyKind(request.BypassUtc, DateTimeKind.Utc);
+
+                    var entry = new PostActivityRequest
+                    {
+                        guardId = request.GuardId,
+                        clientsiteId = request.ClientSiteId,
+                        userId = request.UserId,
+                        activityString = $"RNDM Bypass hit by guard {who} - {result.BypassedTagLabel ?? request.TagUId}",
+                        gps = request.Gps,
+                        systemEntry = true,
+                        scanningType = 0,
+                        tagUID = "NA",
+                        EventDateTimeLocal = request.EventDateTimeLocal ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                        EventDateTimeLocalWithOffset = request.EventDateTimeLocalWithOffset ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                        EventDateTimeZone = request.EventDateTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
+                        EventDateTimeZoneShort = request.EventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                        EventDateTimeUtcOffsetMinute = request.EventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                        IsOfflineRecord = request.IsOffline,
+                        OfflineRecordSyncDateTime = request.IsOffline ? DateTime.Now : null,
+                        EventMobileUtcDateTime = bypassUtc
+                    };
+                    var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                    try
+                    {
+                        var (logged, logMsg, _) = _mobileAppDataServices.PostMobileLogActivity(entry, ip);
+                        if (!logged) logbookError = logMsg;
+                    }
+                    catch (Exception ex)
+                    {
+                        // The bypass is already recorded and the guard has the next point; do not lose that over the logbook.
+                        logbookError = ex.GetBaseException().Message;
+                    }
+                }
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    message = result.Instruction?.Message ?? "Bypass recorded.",
+                    LogbookError = logbookError,
+                    PatrolRandomisation = result.Instruction
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { IsSuccess = false, message = "An error occurred", error = ex.Message });
+            }
+        }
+
         [HttpPost("SyncOfflineSmartWandTagHitData")]
         public async Task<IActionResult> SyncOfflineSmartWandTagHitData([FromBody] List<ClientSiteSmartWandTagsHitLogCacheOffline> offlineRecords)
         {
@@ -193,7 +266,11 @@ namespace CityWatch.Web.API
                                 TagUId = offlineRecord.TagUId,
                                 HitLogId = RowIdInServerR,
                                 HitUtc = offlineRecord.HitUtcDateTime,
-                                IsOffline = true
+                                IsOffline = true,
+                                ExpectedTagUId = offlineRecord.RndmExpectedTagUId,
+                                ExpectedAssignedUtc = offlineRecord.RndmExpectedAssignedUtc,
+                                NextTagUId = offlineRecord.RndmNextTagUId,
+                                NextAssignedUtc = offlineRecord.RndmNextAssignedUtc
                             });
                         }
 

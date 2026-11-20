@@ -10076,7 +10076,8 @@ $(function () {
         Missed: 'badge-danger',
         Pending: 'badge-info',
         Unguided: 'badge-secondary',
-        Cancelled: 'badge-light'
+        Cancelled: 'badge-light',
+        Bypassed: 'badge-dark'
     };
 
     function randomisationText(value) {
@@ -10211,7 +10212,8 @@ $(function () {
         });
     }
 
-    /** Count per result plus compliance: Completed out of instructions that were answered or missed. */
+    /** Count per result plus compliance: Completed out of instructions that were answered or missed.
+        Bypassed (point missing, faulty or blocked) is shown but not held against the guard. */
     function showRandomisationSummary(rows) {
         const counts = {};
         rows.forEach(function (r) { counts[r.statusText] = (counts[r.statusText] || 0) + 1; });
@@ -10220,11 +10222,11 @@ $(function () {
         const offline = rows.filter(function (r) { return r.scannedIsOffline === true; }).length;
 
         let html = '<span class="badge badge-primary p-2">Compliance ' + compliance + '</span>';
-        ['Completed', 'Skipped', 'Missed', 'Pending', 'Unguided', 'Cancelled'].forEach(function (s) {
+        ['Completed', 'Skipped', 'Missed', 'Bypassed', 'Pending', 'Unguided', 'Cancelled'].forEach(function (s) {
             if (counts[s])
                 html += '<span class="badge ' + randomisationStatusClass[s] + ' p-2">' + s + ' ' + counts[s] + '</span>';
         });
-        html += '<span class="badge badge-dark p-2">Offline scans ' + offline + '</span>';
+        html += '<span class="badge badge-secondary p-2">Offline scans ' + offline + '</span>';
         $('#randomisationSummary').html(html).css('gap', '.5rem').removeClass('d-none').addClass('d-flex');
     }
 

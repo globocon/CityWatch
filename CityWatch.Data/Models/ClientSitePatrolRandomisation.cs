@@ -53,7 +53,9 @@ namespace CityWatch.Data.Models
         /// <summary>Randomisation was switched off or deleted for the site.</summary>
         Cancelled = 4,
         /// <summary>A strike in the window with no instruction to follow (e.g. an offline scan synced later).</summary>
-        Unguided = 5
+        Unguided = 5,
+        /// <summary>The guard tapped "Tour: RNDM" to skip a checkpoint that is missing, faulty or blocked.</summary>
+        Bypassed = 6
     }
 
     /// <summary>
@@ -115,6 +117,42 @@ namespace CityWatch.Data.Models
         public int? HitLogId { get; set; }
         public DateTime HitUtc { get; set; }
         public bool IsOffline { get; set; }
+
+        /// <summary>The "GoTo" checkpoint the handset showed when this tag was struck (null from older builds).</summary>
+        public string ExpectedTagUId { get; set; }
+        public DateTime? ExpectedAssignedUtc { get; set; }
+
+        /// <summary>Offline only: the checkpoint the handset picked itself after this strike.</summary>
+        public string NextTagUId { get; set; }
+        public DateTime? NextAssignedUtc { get; set; }
+    }
+
+    /// <summary>
+    /// The guard tapped "Tour: RNDM" to bypass the checkpoint on screen (missing, faulty or blocked).
+    /// Posted live, or replayed by the handset after an offline spell with the original time.
+    /// </summary>
+    public class PatrolRandomisationBypassRequest
+    {
+        public int ClientSiteId { get; set; }
+        public int GuardId { get; set; }
+        public int UserId { get; set; }
+        public int? SmartWandId { get; set; }
+        /// <summary>The checkpoint being bypassed.</summary>
+        public string TagUId { get; set; }
+        public DateTime? TagAssignedUtc { get; set; }
+        public DateTime BypassUtc { get; set; }
+        public bool IsOffline { get; set; }
+        public string Gps { get; set; }
+        /// <summary>Offline replay: the checkpoint the handset moved on to.</summary>
+        public string NextTagUId { get; set; }
+        public DateTime? NextAssignedUtc { get; set; }
+
+        // Handset time, for the logbook entry (same fields the scan posts carry).
+        public DateTime? EventDateTimeLocal { get; set; }
+        public DateTimeOffset? EventDateTimeLocalWithOffset { get; set; }
+        public string EventDateTimeZone { get; set; }
+        public string EventDateTimeZoneShort { get; set; }
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
     }
 
     /// <summary>Filters for the Randomisation report (Audit Site Log > Randomisation). Multi-values are comma separated.</summary>

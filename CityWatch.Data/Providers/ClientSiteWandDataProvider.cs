@@ -70,8 +70,16 @@ namespace CityWatch.Data.Providers
         /// <summary>Tag UIDs handed to this guard on this site since fromUtc (the current window).</summary>
         List<string> GetPatrolRandomisationAssignedTagUIds(int clientSiteId, int guardId, DateTime fromUtc);
         void AddPatrolRandomisationLog(ClientSitePatrolRandomisationLog log);
-        /// <summary>Copies Status, Scanned* and ResolvedUtc onto a still-pending row; false if it was already resolved.</summary>
-        bool ResolvePatrolRandomisationLog(ClientSitePatrolRandomisationLog resolved);
+        /// <summary>Copies Status, Scanned* and ResolvedUtc onto the row; with onlyIfPending (the default) only a still-pending row is changed.</summary>
+        bool ResolvePatrolRandomisationLog(ClientSitePatrolRandomisationLog resolved, bool onlyIfPending = true);
+        /// <summary>This guard's randomisation rows on the site created since fromUtc, oldest first.</summary>
+        List<ClientSitePatrolRandomisationLog> GetPatrolRandomisationLogsForGuard(int clientSiteId, int guardId, DateTime fromUtc);
+        /// <summary>
+        /// Checkpoints "missed in the last 72 hours" for weighting the random pick: the site's tags
+        /// nobody has struck since sinceUtc, plus tags skipped or missed under randomisation since
+        /// then and not struck afterwards. Aggregated in SQL.
+        /// </summary>
+        List<string> GetPatrolRandomisationPriorityTagUIds(int clientSiteId, DateTime sinceUtc);
         /// <summary>Audit Site Log > Randomisation.</summary>
         List<PatrolRandomisationReportViewModel> GetPatrolRandomisationReport(PatrolRandomisationReportRequest request);
 
@@ -1107,13 +1115,13 @@ namespace CityWatch.Data.Providers
             _dbContext.SaveChanges();
         }
 
-        public bool ResolvePatrolRandomisationLog(ClientSitePatrolRandomisationLog resolved)
+        public bool ResolvePatrolRandomisationLog(ClientSitePatrolRandomisationLog resolved, bool onlyIfPending = true)
         {
             if (resolved == null)
                 throw new ArgumentNullException(nameof(resolved));
 
             var row = _dbContext.ClientSitePatrolRandomisationLogs.FirstOrDefault(x => x.Id == resolved.Id);
-            if (row == null || row.Status != PatrolRandomisationLogStatus.Pending)
+            if (row == null || (onlyIfPending && row.Status != PatrolRandomisationLogStatus.Pending))
                 return false;
 
             row.Status = resolved.Status;
@@ -1127,6 +1135,53 @@ namespace CityWatch.Data.Providers
             row.ResolvedUtc = resolved.ResolvedUtc ?? DateTime.UtcNow;
             _dbContext.SaveChanges();
             return true;
+        }
+
+        public List<ClientSitePatrolRandomisationLog> GetPatrolRandomisationLogsForGuard(int clientSiteId, int guardId, DateTime fromUtc)
+        {
+            return _dbContext.ClientSitePatrolRandomisationLogs
+                .AsNoTracking()
+                .Where(x => x.ClientSiteId == clientSiteId && x.GuardId == guardId && x.CreatedUtc >= fromUtc)
+                .OrderBy(x => x.Id)
+                .ToList();
+        }
+
+        public List<string> GetPatrolRandomisationPriorityTagUIds(int clientSiteId, DateTime sinceUtc)
+        {
+            var siteTagUIds = _dbContext.ClientSiteSmartWandTags
+                .Where(x => x.ClientSiteId == clientSiteId && !x.IsDeleted && x.UId != null && x.UId != "")
+                .Select(x => x.UId)
+                .Distinct()
+                .ToList();
+            if (siteTagUIds.Count == 0)
+                return new List<string>();
+
+            // Last strike of each tag at this site since sinceUtc (one row per tag, grouped in SQL).
+            var lastHit = _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(h => h.LoggedInClientSiteId == clientSiteId && h.HitUtcDateTime >= sinceUtc && h.TagUId != null)
+                .GroupBy(h => h.TagUId)
+                .Select(g => new { TagUId = g.Key, LastUtc = g.Max(h => h.HitUtcDateTime) })
+                .ToList()
+                .ToDictionary(x => x.TagUId, x => x.LastUtc, StringComparer.OrdinalIgnoreCase);
+
+            // Last time each tag was skipped or missed under randomisation (bypassed tags are faulty or
+            // blocked - pushing guards back to them sooner would not help).
+            var lastMiss = _dbContext.ClientSitePatrolRandomisationLogs
+                .Where(l => l.ClientSiteId == clientSiteId && l.AssignedTagUId != null && l.WindowEndUtc >= sinceUtc
+                            && (l.Status == PatrolRandomisationLogStatus.Skipped || l.Status == PatrolRandomisationLogStatus.Missed
+                                || (l.Status == PatrolRandomisationLogStatus.Pending && l.WindowEndUtc < DateTime.UtcNow)))
+                .GroupBy(l => l.AssignedTagUId)
+                .Select(g => new { TagUId = g.Key, LastUtc = g.Max(l => l.ResolvedUtc ?? l.WindowEndUtc) })
+                .ToList()
+                .ToDictionary(x => x.TagUId, x => x.LastUtc, StringComparer.OrdinalIgnoreCase);
+
+            return siteTagUIds.Where(uid =>
+            {
+                var hasHit = lastHit.TryGetValue(uid, out var hitUtc);
+                if (!hasHit)
+                    return true;
+                return lastMiss.TryGetValue(uid, out var missUtc) && missUtc > hitUtc;
+            }).ToList();
         }
 
         public List<PatrolRandomisationReportViewModel> GetPatrolRandomisationReport(PatrolRandomisationReportRequest request)

@@ -182,6 +182,17 @@ namespace CityWatch.Data.Tests.UnitTests.Services
         }
 
         [TestMethod]
+        public void PickNextTag_WeightsPointsMissedInLast72Hours()
+        {
+            // Pool B, C, D (A was just struck); C is a priority point with weight 3: rolls 0 = B, 1-3 = C, 4 = D.
+            var tags = Tags("A", "B", "C", "D");
+            var picks = Enumerable.Range(0, 5)
+                .Select(roll => PatrolRandomisationHelper.PickNextTag(tags, "A", null, total => { Assert.AreEqual(5, total); return roll; }, new[] { "C" }).UId)
+                .ToArray();
+            CollectionAssert.AreEqual(new[] { "B", "C", "C", "C", "D" }, picks);
+        }
+
+        [TestMethod]
         public void PickNextTag_SingleOrNoTag_ReturnsNull()
         {
             Assert.IsNull(PatrolRandomisationHelper.PickNextTag(Tags("A"), "A", null));

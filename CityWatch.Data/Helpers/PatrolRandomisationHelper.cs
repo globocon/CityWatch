@@ -101,10 +101,15 @@ namespace CityWatch.Data.Helpers
         /// is still covered but the order cannot be learned. The tag just struck is never
         /// returned (unless the site has only one tag, in which case there is nothing to pick
         /// and null is returned).
+        ///
+        /// Within the deck the pick is weighted: checkpoints missed in the last 72 hours
+        /// (<paramref name="priorityTagUIds"/>) are <see cref="PriorityWeight"/> times as likely as the
+        /// rest, so neglected points get visited sooner while the route stays unpredictable.
         /// </summary>
-        /// <param name="randomIndex">For tests; defaults to a cryptographic RNG.</param>
+        /// <param name="randomIndex">For tests; defaults to a cryptographic RNG. Called with the total weight.</param>
         public static ClientSiteSmartWandTags PickNextTag(IReadOnlyList<ClientSiteSmartWandTags> siteTags,
-            string currentTagUId, IEnumerable<string> alreadyAssignedThisWindow, Func<int, int> randomIndex = null)
+            string currentTagUId, IEnumerable<string> alreadyAssignedThisWindow, Func<int, int> randomIndex = null,
+            IEnumerable<string> priorityTagUIds = null)
         {
             if (siteTags == null || siteTags.Count == 0)
                 return null;
@@ -124,7 +129,22 @@ namespace CityWatch.Data.Helpers
             var fresh = notCurrent.Where(t => !used.Contains(t.UId)).ToList();
             var pool = fresh.Count > 0 ? fresh : notCurrent;
 
-            return pool[randomIndex(pool.Count)];
+            var priority = new HashSet<string>(priorityTagUIds ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            var weights = pool.Select(t => priority.Contains(t.UId) ? PriorityWeight : 1).ToList();
+            var roll = randomIndex(weights.Sum());
+            for (var i = 0; i < pool.Count; i++)
+            {
+                if (roll < weights[i])
+                    return pool[i];
+                roll -= weights[i];
+            }
+            return pool[pool.Count - 1];
         }
+
+        /// <summary>How much more likely a checkpoint missed in the last 72 hours is to be picked.</summary>
+        public const int PriorityWeight = 3;
+
+        /// <summary>How far back "missed" looks when weighting the pick.</summary>
+        public static readonly TimeSpan PriorityLookback = TimeSpan.FromHours(72);
     }
 }

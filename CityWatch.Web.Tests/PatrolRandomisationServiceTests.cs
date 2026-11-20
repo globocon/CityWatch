@@ -33,12 +33,14 @@ namespace CityWatch.Web.Tests
 
         private List<ClientSitePatrolRandomisationLog> _added;
         private List<ClientSitePatrolRandomisationLog> _resolved;
+        private List<ClientSitePatrolRandomisationLog> _guardLogs;
 
         private PatrolRandomisationService Create(ClientSitePatrolRandomisationLog pending = null,
             PatrolTouringMode mode = PatrolTouringMode.STND)
         {
             _added = new();
             _resolved = new();
+            _guardLogs ??= new();
             var wand = new Mock<IClientSiteWandDataProvider>();
             wand.Setup(x => x.GetPatrolRandomisationSetting(SiteId)).Returns(new ClientSitePatrolRandomisationSetting
             {
@@ -61,9 +63,11 @@ namespace CityWatch.Web.Tests
             wand.Setup(x => x.GetPendingPatrolRandomisationLog(SiteId, GuardId)).Returns(pending);
             wand.Setup(x => x.AddPatrolRandomisationLog(It.IsAny<ClientSitePatrolRandomisationLog>()))
                 .Callback<ClientSitePatrolRandomisationLog>(a => { a.Id = 100 + _added.Count; _added.Add(a); });
-            wand.Setup(x => x.ResolvePatrolRandomisationLog(It.IsAny<ClientSitePatrolRandomisationLog>()))
+            wand.Setup(x => x.ResolvePatrolRandomisationLog(It.IsAny<ClientSitePatrolRandomisationLog>(), It.IsAny<bool>()))
                 .Returns(true)
-                .Callback<ClientSitePatrolRandomisationLog>(r => _resolved.Add(r));
+                .Callback<ClientSitePatrolRandomisationLog, bool>((r, _) => _resolved.Add(r));
+            wand.Setup(x => x.GetPatrolRandomisationPriorityTagUIds(SiteId, It.IsAny<DateTime>())).Returns(new List<string> { "C" });
+            wand.Setup(x => x.GetPatrolRandomisationLogsForGuard(SiteId, GuardId, It.IsAny<DateTime>())).Returns(() => _guardLogs);
 
             var client = new Mock<IClientDataProvider>();
             client.Setup(x => x.GetClientSiteDetailsWithId(SiteId)).Returns(new List<ClientSite> { new() { Id = SiteId, PatrolTourMode = mode } });
@@ -196,6 +200,92 @@ namespace CityWatch.Web.Tests
 
             Assert.IsNull(result);
             Assert.AreEqual(0, _added.Count);
+        }
+    
+
+        [TestMethod]
+        public void LiveBypass_RecordsBypassedAndSendsAnotherPoint()
+        {
+            var result = Create(Pending("B")).Bypass(new PatrolRandomisationBypassRequest
+            {
+                ClientSiteId = SiteId, GuardId = GuardId, UserId = UserId, TagUId = "B", BypassUtc = InWindowUtc
+            });
+
+            Assert.IsFalse(result.AlreadyRecorded);
+            Assert.AreEqual("Dock", result.BypassedTagLabel);
+            Assert.AreEqual(PatrolRandomisationLogStatus.Bypassed, _resolved.Single().Status);
+            Assert.AreEqual("Bypassed", result.Instruction.PreviousCheckpointResult);
+            Assert.IsNotNull(result.Instruction.NextCheckpoint);
+            Assert.AreNotEqual("B", result.Instruction.NextCheckpoint.TagUId);
+        }
+
+        [TestMethod]
+        public void BypassResend_IsRecognisedAndChangesNothing()
+        {
+            _guardLogs = new List<ClientSitePatrolRandomisationLog>
+            {
+                new() { Id = 7, AssignedTagUId = "B", Status = PatrolRandomisationLogStatus.Bypassed, ScannedUtc = InWindowUtc }
+            };
+            var result = Create().Bypass(new PatrolRandomisationBypassRequest
+            {
+                ClientSiteId = SiteId, GuardId = GuardId, TagUId = "B", BypassUtc = InWindowUtc, IsOffline = true
+            });
+            _guardLogs = null;
+
+            Assert.IsTrue(result.AlreadyRecorded);
+            Assert.AreEqual(0, _added.Count);
+            Assert.AreEqual(0, _resolved.Count);
+        }
+
+        [TestMethod]
+        public void OfflineStrike_WhenHandsetShowedOtherPoint_InfersBypassAndJudgesAgainstIt()
+        {
+            var strike = Strike("C", InWindowUtc, offline: true);
+            strike.ExpectedTagUId = "C";
+            strike.ExpectedAssignedUtc = InWindowUtc.AddMinutes(-3);
+            Create(Pending("B")).OnWandStrike(strike);
+
+            Assert.AreEqual(PatrolRandomisationLogStatus.Bypassed, _resolved.Single().Status);
+            var row = _added.Single();
+            Assert.AreEqual("C", row.AssignedTagUId);
+            Assert.AreEqual(PatrolRandomisationLogStatus.Completed, row.Status);
+            Assert.AreEqual(true, row.ScannedIsOffline);
+        }
+
+        [TestMethod]
+        public void LiveStrike_WhenHandsetMissedAnInstruction_CancelsIt()
+        {
+            var strike = Strike("C", InWindowUtc);
+            strike.ExpectedTagUId = "C";
+            Create(Pending("B")).OnWandStrike(strike);
+
+            Assert.AreEqual(PatrolRandomisationLogStatus.Cancelled, _resolved.Single().Status);
+        }
+
+        [TestMethod]
+        public void OfflineStrike_WithHandsetPickedNext_LeavesItPending()
+        {
+            var strike = Strike("B", InWindowUtc, offline: true);
+            strike.NextTagUId = "A";
+            strike.NextAssignedUtc = InWindowUtc;
+            Create(Pending("B")).OnWandStrike(strike);
+
+            Assert.AreEqual(PatrolRandomisationLogStatus.Completed, _resolved.Single().Status);
+            var next = _added.Single();
+            Assert.AreEqual(PatrolRandomisationLogStatus.Pending, next.Status);
+            Assert.AreEqual("A", next.AssignedTagUId);
+            Assert.AreEqual("B", next.FromTagUId);
+            Assert.AreEqual(true, next.FromIsOffline);
+        }
+
+        [TestMethod]
+        public void Instruction_CarriesWindowsAndPriorityForOfflineUse()
+        {
+            var result = Create().GetStatus(SiteId, GuardId, InWindowUtc);
+
+            CollectionAssert.AreEqual(new[] { "C" }, result.PriorityTagUIds);
+            Assert.IsTrue(result.UpcomingWindowsUtc.Count >= 2);
+            Assert.IsTrue(result.UpcomingWindowsUtc.All(w => w.EndUtc > w.StartUtc));
         }
     }
 }
