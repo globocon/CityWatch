@@ -9444,12 +9444,12 @@ $(function () {
             '<th>Type</th>' +
             '</tr>' +
             '<tr>' +
-            '<td>' + convertDbString(d.detail.trailer1Rego) + '</td>' +
-            '<td>' + convertDbString(d.detail.trailer2Rego) + '</td>' +
-            '<td>' + convertDbString(d.detail.trailer3Rego) + '</td>' +
-            '<td>' + convertDbString(d.detail.trailer4Rego) + '</td>' +
-            '<td>' + convertDbString(d.detail.personName) + '</td>' +
-            '<td>' + convertDbString(d.detail.mobileNumber) + '</td>' +
+            '<td>' + convertDbString(d.trailer1Rego) + '</td>' +
+            '<td>' + convertDbString(d.trailer2Rego) + '</td>' +
+            '<td>' + convertDbString(d.trailer3Rego) + '</td>' +
+            '<td>' + convertDbString(d.trailer4Rego) + '</td>' +
+            '<td>' + convertDbString(d.personName) + '</td>' +
+            '<td>' + convertDbString(d.mobileNumber) + '</td>' +
             '<td>' + convertDbString(d.personTypeText) + '</td>' +
             '<td>' + convertDbString(d.purposeOfEntry) + '</td>' +
             '</tr>' +
@@ -9457,7 +9457,7 @@ $(function () {
             '<th colspan="8">Notes</th>' +
             '</tr>' +
             '<tr>' +
-            '<td colspan="8" rowspan="2">' + convertDbString(d.detail.notes) + '</td>' +
+            '<td colspan="8" rowspan="2">' + convertDbString(d.notes) + '</td>' +
             '</tr>' +
             '</table>'
         );
@@ -9473,13 +9473,19 @@ $(function () {
         info: false,
         scrollX: false,
         autoWidth: false,
+        /* Paged, sorted and searched on the server (~57k profiles). Loading them all here made
+           every visit to Audit Site Log download ~300 MB and hang the browser.
+           deferLoading: nothing is fetched until the Visitor Profiles tab is first opened. */
+        serverSide: true,
+        processing: true,
+        deferLoading: 0,
+        searchDelay: 500,
         ajax: {
             url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
             data: function (d) {
                 d.truckRego = $('#kvlProfileRegos').find(':selected').val();
                 d.poi = $('#kvlProfileIsPOIBDMSupplier').find(':selected').val();
-            },
-            dataSrc: ''
+            }
         },
         columns: [
             {
@@ -9489,12 +9495,13 @@ $(function () {
                 width: '2%',
                 defaultContent: '',
             },
-            { data: 'detail.keyVehicleLogProfile.vehicleRego', width: '8%' },
+            // Server sorts by rego / POI / company only (see OnGetKeyVehicleLogProfiles)
+            { data: 'vehicleRego', width: '8%' },
             { data: 'plate', orderable: false, width: '4%' },
 
-            { data: 'detail.poiOrBDM', width: '2%' },
-            { data: 'detail.companyName', width: '8%' },
-            { data: 'detail.personName', orderable: false, width: '8%' },
+            { data: 'poiOrBdm', width: '2%' },
+            { data: 'companyName', width: '8%' },
+            { data: 'personName', orderable: false, width: '8%' },
             { data: 'clientSite', orderable: false, width: '8%' },
             { data: 'truckConfigText', orderable: false, width: '8%' },
             { data: 'trailerTypeText', orderable: false, width: '8%' },
@@ -9507,6 +9514,14 @@ $(function () {
                     '<button id="btnDeleteKvlProfile" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
             },
         ],
+    });
+
+    let kvlProfilesLoaded = false;
+    $('#key-vehicle-log-profile-tab').on('shown.bs.tab', function () {
+        if (!kvlProfilesLoaded) {
+            kvlProfilesLoaded = true;
+            gridKeyVehicleLogProfiles.ajax.reload();
+        }
     });
 
     $('#tbl-audit-kvl-profiles tbody').on('click', 'td.dt-control', function () {
@@ -9524,7 +9539,7 @@ $(function () {
 
     $('#tbl-audit-kvl-profiles tbody').on('click', '#btnEditKvlProfile', function () {
         var data = gridKeyVehicleLogProfiles.row($(this).parents('tr')).data();
-        loadKvlProfilePopup(data.detail.id);
+        loadKvlProfilePopup(data.id);
     });
 
     $('#tbl-audit-kvl-profiles tbody').on('click', '#btnDeleteKvlProfile', function () {
@@ -9532,7 +9547,7 @@ $(function () {
             var data = gridKeyVehicleLogProfiles.row($(this).parents('tr')).data();
             $.ajax({
                 url: '/Admin/AuditSiteLog?handler=DeleteKeyVehicleLogProfile',
-                data: { 'id': data.detail.id },
+                data: { 'id': data.id },
                 type: 'POST',
                 dataType: 'json',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },

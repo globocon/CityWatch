@@ -64,7 +64,6 @@ namespace CityWatch.Data.Providers
         KeyVehicleLog GetKeyVehicleLogById(int id);
         KeyVehcileLogField GetIndividualType(int PersonType);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
-        List<KeyVehicleLog> GetKeyVehicleLogsForVisitorProfiles(string truckRego);
         List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
         void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog);
@@ -85,6 +84,9 @@ namespace CityWatch.Data.Providers
         void EnsureCustomFieldLogsExist(int clientSiteLogBookId, int clientSiteId);
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetVehicleRegosForKVL(string regoStart = null);
+        List<string> SearchVehicleRegos(string searchTerm, int maxResults);
+        List<KeyVehicleLogVisitorProfileRow> GetKeyVehicleLogVisitorProfilesPage(string truckRego, string poi, string searchTerm,
+            string sortBy, bool sortDescending, int start, int length, out int totalCount, out int filteredCount);
         List<string> GetClientSiteSearch(string clientSiteNew = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
@@ -1190,29 +1192,6 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
-        /* Same result as GetKeyVehicleLogByIds, but the CreatedLogId set is left as an
-           IQueryable so it translates to a WHERE EXISTS subquery instead of being pulled
-           into memory and re-sent as an IN list.
-
-           The Fusion tab on Admin/AuditSiteLog loads with no rego filter, which matched
-           every visitor profile row - 56,069 ids. EF Core 7 inlines Contains() over an
-           in-memory array as literal constants, producing a single 438,721 character
-           statement, and SQL Server answered with error 8623 (cannot produce a query
-           plan). Measured limit for this query shape is between 25,000 and 40,000 ids,
-           so the unfiltered load had no way to succeed and got worse as data grew.
-           As a subquery the statement is ~3,000 characters whatever the row count. */
-        public List<KeyVehicleLog> GetKeyVehicleLogsForVisitorProfiles(string truckRego)
-        {
-            var createdLogIds = _context.KeyVehicleLogVisitorPersonalDetails
-                .Where(z => string.IsNullOrEmpty(truckRego) || string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego))
-                .Select(z => z.KeyVehicleLogProfile.CreatedLogId)
-                .Where(z => z > 0);
-
-            return _context.KeyVehicleLogs.Where(z => createdLogIds.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive == true)
-                .Include(z => z.ClientSiteLogBook)
-                .ThenInclude(z => z.ClientSite)
-                .ToList();
-        }
         public List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype)
         {
             //return _context.KeyVehicleLogs.Where(z =>  z.CompanyName==companyname && z.PersonName==individualname && z.PersonType==individualtype && z.IsPOIAlert==true)
@@ -1732,6 +1711,137 @@ WHERE f.ClientSiteId = @clientSiteId
                 .OrderBy(z => z)
                 .ToList();
         }
+        /// <summary>
+        /// Distinct visitor-profile regos containing <paramref name="searchTerm"/>, capped in SQL.
+        /// Used by the Audit Site Log rego filter, which used to receive all ~40k regos.
+        /// </summary>
+        public List<string> SearchVehicleRegos(string searchTerm, int maxResults)
+        {
+            return _context.KeyVehicleLogVisitorProfiles
+                .Where(z => !string.IsNullOrEmpty(z.VehicleRego) &&
+                            (string.IsNullOrEmpty(searchTerm) || z.VehicleRego.Contains(searchTerm)))
+                .Select(z => z.VehicleRego)
+                .Distinct()
+                .OrderBy(z => z)
+                .Take(maxResults)
+                .ToList();
+        }
+
+        /// <summary>
+        /// One page of visitor profiles for the Audit Site Log grid (DataTables server-side mode).
+        /// Filtering, sorting and paging all run in SQL. Previously every profile (~57k, with the
+        /// full KeyVehicleLog attached) was loaded and sent to the browser on each page load.
+        /// </summary>
+        public List<KeyVehicleLogVisitorProfileRow> GetKeyVehicleLogVisitorProfilesPage(string truckRego, string poi, string searchTerm,
+            string sortBy, bool sortDescending, int start, int length, out int totalCount, out int filteredCount)
+        {
+            var details = _context.KeyVehicleLogVisitorPersonalDetails.AsNoTracking();
+            totalCount = details.Count();
+
+            if (!string.IsNullOrEmpty(truckRego))
+                details = details.Where(z => z.KeyVehicleLogProfile.VehicleRego == truckRego);
+
+            // Same rules the grid used to compute in memory: POI wins, then BDM (needs a BDM list), then Supplier
+            switch (poi)
+            {
+                case "POI":
+                    details = details.Where(z => z.PersonOfInterest != null);
+                    break;
+                case "BDM":
+                    details = details.Where(z => z.PersonOfInterest == null && z.IsBDM && z.BDMList != null);
+                    break;
+                case "Supplier":
+                    details = details.Where(z => z.PersonOfInterest == null && !z.IsBDM);
+                    break;
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                details = details.Where(z => z.KeyVehicleLogProfile.VehicleRego.Contains(term) ||
+                                             z.CompanyName.Contains(term) ||
+                                             z.PersonName.Contains(term) ||
+                                             _context.KeyVehicleLogs.Any(k => k.Id == z.KeyVehicleLogProfile.CreatedLogId &&
+                                                                              k.ClientSiteLogBook.ClientSite.IsActive &&
+                                                                              k.ClientSiteLogBook.ClientSite.Name.Contains(term)));
+            }
+
+            filteredCount = details.Count();
+
+            /* Step 1: sort and page over narrow key columns only. Sorting the full row (Notes is
+               varchar(4096), plus trailers/product) made SQL Server ask for a memory grant big
+               enough that the query sat in RESOURCE_SEMAPHORE waiting for it. */
+            var keys = details.Select(z => new
+            {
+                z.Id,
+                z.KeyVehicleLogProfile.VehicleRego,
+                z.CompanyName,
+                PoiOrBdm = z.PersonOfInterest != null ? "POI"
+                    : (z.IsBDM && z.BDMList != null) ? "BDM"
+                    : !z.IsBDM ? "Supplier"
+                    : null,
+            });
+
+            var orderedIds = ((sortBy, sortDescending) switch
+            {
+                ("poi", false) => keys.OrderBy(z => z.PoiOrBdm).ThenBy(z => z.Id),
+                ("poi", true) => keys.OrderByDescending(z => z.PoiOrBdm).ThenBy(z => z.Id),
+                ("company", false) => keys.OrderBy(z => z.CompanyName).ThenBy(z => z.Id),
+                ("company", true) => keys.OrderByDescending(z => z.CompanyName).ThenBy(z => z.Id),
+                (_, true) => keys.OrderByDescending(z => z.VehicleRego).ThenBy(z => z.Id),
+                _ => keys.OrderBy(z => z.VehicleRego).ThenBy(z => z.Id),
+            }).Select(z => z.Id).Skip(Math.Max(start, 0));
+
+            if (length > 0)
+                orderedIds = orderedIds.Take(length);
+
+            var pageIds = orderedIds.ToList();
+            if (pageIds.Count == 0)
+                return new List<KeyVehicleLogVisitorProfileRow>();
+
+            // Step 2: the display columns for just this page's ids
+            var rowsById = _context.KeyVehicleLogVisitorPersonalDetails.AsNoTracking()
+                .Where(z => pageIds.Contains(z.Id))
+                .Select(z => new KeyVehicleLogVisitorProfileRow
+                {
+                    Id = z.Id,
+                    VehicleRego = z.KeyVehicleLogProfile.VehicleRego,
+                    PlateId = z.KeyVehicleLogProfile.PlateId,
+                    PoiOrBdm = z.PersonOfInterest != null ? "POI"
+                        : (z.IsBDM && z.BDMList != null) ? "BDM"
+                        : !z.IsBDM ? "Supplier"
+                        : null,
+                    CompanyName = z.CompanyName,
+                    PersonName = z.PersonName,
+                    PersonType = z.PersonType,
+                    CreatedLogId = z.KeyVehicleLogProfile.CreatedLogId,
+                    TruckConfig = z.KeyVehicleLogProfile.TruckConfig,
+                    TrailerType = z.KeyVehicleLogProfile.TrailerType,
+                    Trailer1Rego = z.KeyVehicleLogProfile.Trailer1Rego,
+                    Trailer2Rego = z.KeyVehicleLogProfile.Trailer2Rego,
+                    Trailer3Rego = z.KeyVehicleLogProfile.Trailer3Rego,
+                    Trailer4Rego = z.KeyVehicleLogProfile.Trailer4Rego,
+                    MobileNumber = z.KeyVehicleLogProfile.MobileNumber,
+                    Product = z.KeyVehicleLogProfile.Product,
+                    EntryReason = z.KeyVehicleLogProfile.EntryReason,
+                    Notes = z.KeyVehicleLogProfile.Notes,
+                })
+                .ToDictionary(z => z.Id);
+
+            /* Site name via a separate lookup: CreatedLogId is a required FK in the model, so
+               navigating through it inner-joins KeyVehicleLogs and silently drops profiles whose
+               creating log no longer exists. Only active sites are shown, as before. */
+            var logIds = rowsById.Values.Select(z => z.CreatedLogId).Where(z => z > 0).Distinct().ToList();
+            var siteByLogId = _context.KeyVehicleLogs.AsNoTracking()
+                .Where(k => logIds.Contains(k.Id) && k.ClientSiteLogBook.ClientSite.IsActive)
+                .Select(k => new { k.Id, k.ClientSiteLogBook.ClientSite.Name })
+                .ToDictionary(k => k.Id, k => k.Name);
+            foreach (var row in rowsById.Values)
+                row.ClientSite = siteByLogId.TryGetValue(row.CreatedLogId, out var siteName) ? siteName : null;
+
+            return pageIds.Where(rowsById.ContainsKey).Select(id => rowsById[id]).ToList();
+        }
+
         public List<string> GetVehicleRegosForKVL(string regoStart = null)
         {
             return _context.KeyVehicleLogVisitorProfiles

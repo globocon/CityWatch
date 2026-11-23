@@ -367,9 +367,24 @@ namespace CityWatch.Web.Pages.Admin
         //}
 
         //to check with bdm-start
-        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi)
+        // DataTables server-side mode: one page per request instead of every profile at once
+        public JsonResult OnGetKeyVehicleLogProfiles(int draw, int start, int length, string truckRego, string poi)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
+            var searchTerm = Request.Query["search[value]"].ToString();
+            var orderColumn = Request.Query["order[0][column]"].ToString();
+            var sortDescending = string.Equals(Request.Query["order[0][dir]"], "desc", StringComparison.OrdinalIgnoreCase);
+            // Column indexes in #tbl-audit-kvl-profiles; only these three are orderable
+            var sortBy = orderColumn switch
+            {
+                "3" => "poi",
+                "4" => "company",
+                _ => "rego",
+            };
+
+            var data = _viewDataService.GetKeyVehicleLogProfilesPage(truckRego, poi, searchTerm, sortBy, sortDescending,
+                start, length, out var totalCount, out var filteredCount);
+
+            return new JsonResult(new { draw, recordsTotal = totalCount, recordsFiltered = filteredCount, data });
         }
         //to check with bdm-end
         public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
@@ -420,7 +435,10 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetVehicleRegos(string q)
         {
-            return new JsonResult(_viewDataService.VehicleRegos.Where(z => string.IsNullOrEmpty(q) || z.Value.Contains(q, StringComparison.OrdinalIgnoreCase)));
+            // Filtered and capped in SQL - there are ~40k regos, type to narrow the list
+            var items = new List<SelectListItem> { new SelectListItem("All", string.Empty, true) };
+            items.AddRange(_guardLogDataProvider.SearchVehicleRegos(q, 200).Select(z => new SelectListItem(z, z)));
+            return new JsonResult(items);
         }
         public JsonResult OnGetPOIBDMSupplier(string q)
         {

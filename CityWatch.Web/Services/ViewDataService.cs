@@ -107,7 +107,8 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsForIds(int logBookId);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
-        List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego, string poi);
+        List<KeyVehicleLogVisitorProfileRow> GetKeyVehicleLogProfilesPage(string truckRego, string poi, string searchTerm,
+            string sortBy, bool sortDescending, int start, int length, out int totalCount, out int filteredCount);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string ImagePath);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         IEnumerable<ClientSiteKey> GetKeyVehicleLogKeys(KeyVehicleLog keyVehicleLog);
@@ -1338,62 +1339,36 @@ namespace CityWatch.Web.Services
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
 
-        //to check with bdm also-start
-        public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego, string poi)
+        /// <summary>
+        /// One page of the Audit Site Log "Visitor Profiles" grid. Filtering, sorting and paging run
+        /// in SQL; only the page's rows come back. This replaced an overload that returned every
+        /// profile (~57k, each with its full KeyVehicleLog) - ~300 MB of JSON on every page load.
+        /// </summary>
+        public List<KeyVehicleLogVisitorProfileRow> GetKeyVehicleLogProfilesPage(string truckRego, string poi, string searchTerm,
+            string sortBy, bool sortDescending, int start, int length, out int totalCount, out int filteredCount)
         {
-            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+            var rows = _guardLogDataProvider.GetKeyVehicleLogVisitorProfilesPage(truckRego, poi, searchTerm, sortBy, sortDescending,
+                start, length, out totalCount, out filteredCount);
 
-            /* Was: collect every CreatedLogId here and pass the array to GetKeyVehicleLogByIds.
-               With no rego filter that is 56,069 ids, which EF inlines as constants and SQL
-               Server refuses to plan (error 8623). The provider now resolves the same set with
-               a subquery, so nothing depends on the size of the id list. */
-            var kvls = _guardLogDataProvider.GetKeyVehicleLogsForVisitorProfiles(truckRego);
-            /* Id is the primary key, so there is at most one log per id - this returns exactly
-               what the SingleOrDefault below it used to, without rescanning kvls per profile
-               (57,539 profiles over 33,884 logs is ~2 billion comparisons). */
-            var kvlsById = kvls.ToDictionary(z => z.Id);
-            foreach (var profile in profiles)
+            var fieldNames = _guardLogDataProvider.GetKeyVehicleLogFields()
+                .GroupBy(z => z.Id)
+                .ToDictionary(g => g.Key, g => g.First().Name);
+            string FieldName(int? id) => id.HasValue && fieldNames.TryGetValue(id.Value, out var name) ? name : null;
+
+            foreach (var row in rows)
             {
-                //if LOGID=0-START
-                //if (profile.KeyVehicleLogProfile.CreatedLogId == 0)
-                //{
-                //    var list = _guardLogDataProvider.GetKeyVehicleLogs(profile.KeyVehicleLogProfile.VehicleRego);
-                //    //if (list.Count != 0)
-                //    //{
-                //    //    profile.KeyVehicleLogProfile.CreatedLogId = list.Max(x => x.Id);
-                //    //}
-                //}
-                //if LOGID=0-end
-                profile.KeyVehicleLogProfile.KeyVehicleLog = kvlsById.TryGetValue(profile.KeyVehicleLogProfile.CreatedLogId, out var kvl) ? kvl : null;
+                row.Plate = FieldName(row.PlateId);
+                row.TruckConfigText = FieldName(row.TruckConfig);
+                row.TrailerTypeText = FieldName(row.TrailerType);
+                row.PersonTypeText = FieldName(row.PersonType);
 
-                //for checking whether the entry is  either POI,BDM OR SUPPLIER-start
-                if (profile.PersonOfInterest != null)
-                {
-                    profile.POIOrBDM = "POI";
-                }
-                else if (profile.IsBDM == true && profile.BDMList != null)
-                {
-                    profile.POIOrBDM = "BDM";
-                }
-                else if (profile.IsBDM == false)
-                {
-                    profile.POIOrBDM = "Supplier";
-                }
-                else
-                {
-                    profile.POIOrBDM = null;
-                }
-                //for checking whether the entry is  either POI,BDM OR SUPPLIER-end
-
+                // Same text KeyVehicleLogProfileViewModel.PurposeOfEntry builds
+                var entryReasonText = FieldName(row.EntryReason);
+                row.PurposeOfEntry = string.Join(", ", new[] { row.Product, entryReasonText }.Where(z => !string.IsNullOrEmpty(z)));
             }
 
-            var kvlIds = kvls.Select(z => z.Id).ToArray();
-
-            // return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) || (z.KeyVehicleLogProfile.CreatedLogId == 0 || kvlIds.Contains(z.KeyVehicleLogProfile.CreatedLogId))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
-            return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+            return rows;
         }
-        //to check with bdm also-end
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string Image)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
