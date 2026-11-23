@@ -1159,8 +1159,8 @@ namespace CityWatch.Web.Pages.Incident
                 }
             }
 
-            var positionEmailTo = GetFieldEmailAddress(fields, ReportFieldType.Position, Report.Officer.Position);
-            AddIfValid(positionEmailTo);
+            /* Position email comes from IncidentReportPositions (Settings > C4i Fields > Position), added as Cc in the send methods.
+               The old Position rows in IncidentReportFields are not shown anywhere in Settings, so they are no longer used. */
             AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.NotifiedBy, Report.Officer.NotifiedBy));
             AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report.Officer.CallSign));
             AddIfValid(GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report.DateLocation.ClientArea));
