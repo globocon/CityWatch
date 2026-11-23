@@ -9485,6 +9485,10 @@ $(function () {
             data: function (d) {
                 d.truckRego = $('#kvlProfileRegos').find(':selected').val();
                 d.poi = $('#kvlProfileIsPOIBDMSupplier').find(':selected').val();
+                /* The server only reads start/length/order/search. DataTables also sends every
+                   column's settings, ~2,300 chars, and IIS rejects query strings over 2,048
+                   with a 404.15 before the request reaches the app. */
+                delete d.columns;
             }
         },
         columns: [
