@@ -56,6 +56,33 @@ namespace CityWatch.Data.Providers
         /// <summary>Every tag UID that has history on the given sites, for the report's UID filter.</summary>
         List<string> GetTagHistoryTagUIds(int[] clientSiteIds);
 
+        // Patrol Randomisation (DbScript/387)
+        /// <summary>The site's switch with its day windows (Schedules); null when never set up.</summary>
+        ClientSitePatrolRandomisationSetting GetPatrolRandomisationSetting(int clientSiteId);
+        /// <summary>Upserts the switch and replaces the week's windows with setting.Schedules.</summary>
+        void SavePatrolRandomisationSetting(ClientSitePatrolRandomisationSetting setting);
+        void DeletePatrolRandomisationSetting(int clientSiteId);
+        /// <summary>The site's TimezoneString (ClientSiteKpiSettings), for SiteTimeZoneHelper.Resolve.</summary>
+        string GetClientSiteTimezoneString(int clientSiteId);
+        /// <summary>Registered (not deleted) tags of the site, any tag type.</summary>
+        List<ClientSiteSmartWandTags> GetActiveSmartWandTagsForSite(int clientSiteId);
+        ClientSitePatrolRandomisationLog GetPendingPatrolRandomisationLog(int clientSiteId, int guardId);
+        /// <summary>Tag UIDs handed to this guard on this site since fromUtc (the current window).</summary>
+        List<string> GetPatrolRandomisationAssignedTagUIds(int clientSiteId, int guardId, DateTime fromUtc);
+        void AddPatrolRandomisationLog(ClientSitePatrolRandomisationLog log);
+        /// <summary>Copies Status, Scanned* and ResolvedUtc onto the row; with onlyIfPending (the default) only a still-pending row is changed.</summary>
+        bool ResolvePatrolRandomisationLog(ClientSitePatrolRandomisationLog resolved, bool onlyIfPending = true);
+        /// <summary>This guard's randomisation rows on the site created since fromUtc, oldest first.</summary>
+        List<ClientSitePatrolRandomisationLog> GetPatrolRandomisationLogsForGuard(int clientSiteId, int guardId, DateTime fromUtc);
+        /// <summary>
+        /// Checkpoints "missed in the last 72 hours" for weighting the random pick: the site's tags
+        /// nobody has struck since sinceUtc, plus tags skipped or missed under randomisation since
+        /// then and not struck afterwards. Aggregated in SQL.
+        /// </summary>
+        List<string> GetPatrolRandomisationPriorityTagUIds(int clientSiteId, DateTime sinceUtc);
+        /// <summary>Audit Site Log > Randomisation.</summary>
+        List<PatrolRandomisationReportViewModel> GetPatrolRandomisationReport(PatrolRandomisationReportRequest request);
+
     }
 
     public class ClientSiteWandDataProvider : IClientSiteWandDataProvider
@@ -945,5 +972,298 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x)
                 .ToList();
         }
+    
+
+        #region Patrol Randomisation
+
+        public ClientSitePatrolRandomisationSetting GetPatrolRandomisationSetting(int clientSiteId)
+        {
+            return _dbContext.ClientSitePatrolRandomisationSettings
+                .AsNoTracking()
+                .Include(x => x.Schedules)
+                .FirstOrDefault(x => x.ClientSiteId == clientSiteId);
+        }
+
+        public void SavePatrolRandomisationSetting(ClientSitePatrolRandomisationSetting setting)
+        {
+            if (setting == null)
+                throw new ArgumentNullException(nameof(setting));
+
+            var row = _dbContext.ClientSitePatrolRandomisationSettings
+                .Include(x => x.Schedules)
+                .FirstOrDefault(x => x.ClientSiteId == setting.ClientSiteId);
+            if (row == null)
+            {
+                row = new ClientSitePatrolRandomisationSetting { ClientSiteId = setting.ClientSiteId };
+                _dbContext.ClientSitePatrolRandomisationSettings.Add(row);
+            }
+
+            row.IsEnabled = setting.IsEnabled;
+            row.LastUpdatedUtc = DateTime.UtcNow;
+            row.LastUpdatedByUserId = setting.LastUpdatedByUserId;
+            row.LastUpdatedByGuardId = setting.LastUpdatedByGuardId;
+
+            // Replace the week: update days kept, add new ones, remove cleared ones.
+            var incoming = (setting.Schedules ?? new List<ClientSitePatrolRandomisationSchedule>())
+                .GroupBy(s => s.DayOfWeek).Select(g => g.First()).ToList();
+            foreach (var existing in row.Schedules.ToList())
+            {
+                var match = incoming.FirstOrDefault(s => s.DayOfWeek == existing.DayOfWeek);
+                if (match == null)
+                {
+                    _dbContext.ClientSitePatrolRandomisationSchedules.Remove(existing);
+                    row.Schedules.Remove(existing);
+                }
+                else
+                {
+                    existing.StartTime = match.StartTime;
+                    existing.EndTime = match.EndTime;
+                }
+            }
+            foreach (var s in incoming.Where(s => row.Schedules.All(e => e.DayOfWeek != s.DayOfWeek)))
+            {
+                row.Schedules.Add(new ClientSitePatrolRandomisationSchedule
+                {
+                    DayOfWeek = s.DayOfWeek,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime
+                });
+            }
+
+            _dbContext.SaveChanges();
+            setting.Id = row.Id;
+
+            if (!row.IsEnabled)
+                CancelPendingPatrolRandomisationLogs(row.ClientSiteId);
+        }
+
+        public void DeletePatrolRandomisationSetting(int clientSiteId)
+        {
+            var row = _dbContext.ClientSitePatrolRandomisationSettings
+                .Include(x => x.Schedules)
+                .FirstOrDefault(x => x.ClientSiteId == clientSiteId);
+            if (row != null)
+            {
+                _dbContext.ClientSitePatrolRandomisationSettings.Remove(row);
+                _dbContext.SaveChanges();
+            }
+            CancelPendingPatrolRandomisationLogs(clientSiteId);
+        }
+
+        /// <summary>Closes open instructions once randomisation is turned off for the site.</summary>
+        private void CancelPendingPatrolRandomisationLogs(int clientSiteId)
+        {
+            var pending = _dbContext.ClientSitePatrolRandomisationLogs
+                .Where(x => x.ClientSiteId == clientSiteId && x.Status == PatrolRandomisationLogStatus.Pending)
+                .ToList();
+            if (pending.Count == 0)
+                return;
+            var now = DateTime.UtcNow;
+            foreach (var log in pending)
+            {
+                // An instruction whose window had already ended was missed, not cancelled.
+                log.Status = log.WindowEndUtc <= now ? PatrolRandomisationLogStatus.Missed : PatrolRandomisationLogStatus.Cancelled;
+                log.ResolvedUtc = now;
+            }
+            _dbContext.SaveChanges();
+        }
+
+        public string GetClientSiteTimezoneString(int clientSiteId)
+        {
+            return _dbContext.ClientSiteKpiSettings
+                .Where(x => x.ClientSiteId == clientSiteId)
+                .Select(x => x.TimezoneString)
+                .FirstOrDefault();
+        }
+
+        public List<ClientSiteSmartWandTags> GetActiveSmartWandTagsForSite(int clientSiteId)
+        {
+            return _dbContext.ClientSiteSmartWandTags
+                .AsNoTracking()
+                .Where(x => x.ClientSiteId == clientSiteId && !x.IsDeleted && x.UId != null && x.UId != "")
+                .ToList();
+        }
+
+        public ClientSitePatrolRandomisationLog GetPendingPatrolRandomisationLog(int clientSiteId, int guardId)
+        {
+            return _dbContext.ClientSitePatrolRandomisationLogs
+                .AsNoTracking()
+                .Where(x => x.ClientSiteId == clientSiteId && x.GuardId == guardId
+                            && x.Status == PatrolRandomisationLogStatus.Pending)
+                .OrderByDescending(x => x.AssignedUtc)
+                .ThenByDescending(x => x.Id)
+                .FirstOrDefault();
+        }
+
+        public List<string> GetPatrolRandomisationAssignedTagUIds(int clientSiteId, int guardId, DateTime fromUtc)
+        {
+            return _dbContext.ClientSitePatrolRandomisationLogs
+                .Where(x => x.ClientSiteId == clientSiteId && x.GuardId == guardId
+                            && x.AssignedUtc >= fromUtc && x.AssignedTagUId != null)
+                .Select(x => x.AssignedTagUId)
+                .Distinct()
+                .ToList();
+        }
+
+        public void AddPatrolRandomisationLog(ClientSitePatrolRandomisationLog log)
+        {
+            if (log == null)
+                throw new ArgumentNullException(nameof(log));
+            if (log.CreatedUtc == default)
+                log.CreatedUtc = DateTime.UtcNow;
+            _dbContext.ClientSitePatrolRandomisationLogs.Add(log);
+            _dbContext.SaveChanges();
+        }
+
+        public bool ResolvePatrolRandomisationLog(ClientSitePatrolRandomisationLog resolved, bool onlyIfPending = true)
+        {
+            if (resolved == null)
+                throw new ArgumentNullException(nameof(resolved));
+
+            var row = _dbContext.ClientSitePatrolRandomisationLogs.FirstOrDefault(x => x.Id == resolved.Id);
+            if (row == null || (onlyIfPending && row.Status != PatrolRandomisationLogStatus.Pending))
+                return false;
+
+            row.Status = resolved.Status;
+            row.ScannedTagUId = resolved.ScannedTagUId;
+            row.ScannedTagLabel = resolved.ScannedTagLabel;
+            row.ScannedHitLogId = resolved.ScannedHitLogId;
+            row.ScannedUtc = resolved.ScannedUtc;
+            row.ScannedLocal = resolved.ScannedLocal;
+            row.ScannedIsOffline = resolved.ScannedIsOffline;
+            row.ScannedUserId = resolved.ScannedUserId;
+            row.ResolvedUtc = resolved.ResolvedUtc ?? DateTime.UtcNow;
+            _dbContext.SaveChanges();
+            return true;
+        }
+
+        public List<ClientSitePatrolRandomisationLog> GetPatrolRandomisationLogsForGuard(int clientSiteId, int guardId, DateTime fromUtc)
+        {
+            return _dbContext.ClientSitePatrolRandomisationLogs
+                .AsNoTracking()
+                .Where(x => x.ClientSiteId == clientSiteId && x.GuardId == guardId && x.CreatedUtc >= fromUtc)
+                .OrderBy(x => x.Id)
+                .ToList();
+        }
+
+        public List<string> GetPatrolRandomisationPriorityTagUIds(int clientSiteId, DateTime sinceUtc)
+        {
+            var siteTagUIds = _dbContext.ClientSiteSmartWandTags
+                .Where(x => x.ClientSiteId == clientSiteId && !x.IsDeleted && x.UId != null && x.UId != "")
+                .Select(x => x.UId)
+                .Distinct()
+                .ToList();
+            if (siteTagUIds.Count == 0)
+                return new List<string>();
+
+            // Last strike of each tag at this site since sinceUtc (one row per tag, grouped in SQL).
+            var lastHit = _dbContext.ClientSiteSmartWandTagsHitLogs
+                .Where(h => h.LoggedInClientSiteId == clientSiteId && h.HitUtcDateTime >= sinceUtc && h.TagUId != null)
+                .GroupBy(h => h.TagUId)
+                .Select(g => new { TagUId = g.Key, LastUtc = g.Max(h => h.HitUtcDateTime) })
+                .ToList()
+                .ToDictionary(x => x.TagUId, x => x.LastUtc, StringComparer.OrdinalIgnoreCase);
+
+            // Last time each tag was skipped or missed under randomisation (bypassed tags are faulty or
+            // blocked - pushing guards back to them sooner would not help).
+            var lastMiss = _dbContext.ClientSitePatrolRandomisationLogs
+                .Where(l => l.ClientSiteId == clientSiteId && l.AssignedTagUId != null && l.WindowEndUtc >= sinceUtc
+                            && (l.Status == PatrolRandomisationLogStatus.Skipped || l.Status == PatrolRandomisationLogStatus.Missed
+                                || (l.Status == PatrolRandomisationLogStatus.Pending && l.WindowEndUtc < DateTime.UtcNow)))
+                .GroupBy(l => l.AssignedTagUId)
+                .Select(g => new { TagUId = g.Key, LastUtc = g.Max(l => l.ResolvedUtc ?? l.WindowEndUtc) })
+                .ToList()
+                .ToDictionary(x => x.TagUId, x => x.LastUtc, StringComparer.OrdinalIgnoreCase);
+
+            return siteTagUIds.Where(uid =>
+            {
+                var hasHit = lastHit.TryGetValue(uid, out var hitUtc);
+                if (!hasHit)
+                    return true;
+                return lastMiss.TryGetValue(uid, out var missUtc) && missUtc > hitUtc;
+            }).ToList();
+        }
+
+        public List<PatrolRandomisationReportViewModel> GetPatrolRandomisationReport(PatrolRandomisationReportRequest request)
+        {
+            var fromDate = request.LogFromDate.Date;
+            var toDate = request.LogToDate.Date;
+            var clientSiteIds = request.ClientSiteIds;
+            var guardName = request.GuardName?.Trim();
+            var guardSecurityNo = request.GuardSecurityNo?.Trim();
+            var nowUtc = DateTime.UtcNow;
+
+            // Joined rather than navigated: the log keeps guard/user ids without foreign keys.
+            var query = from l in _dbContext.ClientSitePatrolRandomisationLogs.AsNoTracking()
+                        where l.BusinessDate >= fromDate && l.BusinessDate <= toDate
+                        join s in _dbContext.ClientSites on l.ClientSiteId equals s.Id
+                        join g in _dbContext.Guards on l.GuardId equals g.Id into gj
+                        from g in gj.DefaultIfEmpty()
+                        join u in _dbContext.Users on (l.ScannedUserId ?? l.UserId) equals (int?)u.Id into uj
+                        from u in uj.DefaultIfEmpty()
+                        select new { l, SiteName = s.Name, GuardName = g.Name, GuardSecurityNo = g.SecurityNo, UserName = u.UserName };
+
+            if (clientSiteIds.Length > 0)
+                query = query.Where(x => clientSiteIds.Contains(x.l.ClientSiteId));
+            if (!string.IsNullOrEmpty(guardName))
+                query = query.Where(x => x.GuardName.Contains(guardName));
+            if (!string.IsNullOrEmpty(guardSecurityNo))
+                query = query.Where(x => x.GuardSecurityNo.Contains(guardSecurityNo));
+            if (string.Equals(request.ScanMode, "online", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(x => x.l.ScannedIsOffline == false);
+            else if (string.Equals(request.ScanMode, "offline", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(x => x.l.ScannedIsOffline == true);
+
+            var rows = query.ToList().Select(x =>
+            {
+                var l = x.l;
+                // A pending instruction whose window has closed was missed, even before the guard's next strike records it.
+                var status = l.Status == PatrolRandomisationLogStatus.Pending && l.WindowEndUtc <= nowUtc
+                    ? PatrolRandomisationLogStatus.Missed
+                    : l.Status;
+                return new PatrolRandomisationReportViewModel
+                {
+                    Id = l.Id,
+                    ClientSiteId = l.ClientSiteId,
+                    SiteName = x.SiteName,
+                    BusinessDate = l.BusinessDate,
+                    DayName = l.DayOfWeek.ToString(),
+                    WindowText = $"{l.WindowStartLocal:HH:mm}-{l.WindowEndLocal:HH:mm}",
+                    GuardName = x.GuardName,
+                    GuardSecurityNo = x.GuardSecurityNo,
+                    UserName = x.UserName,
+                    SmartWandId = l.SmartWandId,
+                    FromTagUId = l.FromTagUId,
+                    FromTagLabel = l.FromTagLabel,
+                    FromScanLocal = l.FromScanLocal,
+                    AssignedTagUId = l.AssignedTagUId,
+                    AssignedTagLabel = l.AssignedTagLabel,
+                    AssignedLocal = l.AssignedLocal,
+                    ScannedTagUId = l.ScannedTagUId,
+                    ScannedTagLabel = l.ScannedTagLabel,
+                    ScannedLocal = l.ScannedLocal,
+                    ScannedIsOffline = l.ScannedIsOffline,
+                    ResponseMinutes = l.AssignedUtc.HasValue && l.ScannedUtc.HasValue && l.ScannedUtc >= l.AssignedUtc
+                        ? Math.Round((l.ScannedUtc.Value - l.AssignedUtc.Value).TotalMinutes, 2)
+                        : null,
+                    Status = status,
+                    SiteUtcOffset = l.SiteUtcOffset,
+                    SortKey = l.AssignedLocal ?? l.ScannedLocal ?? l.WindowStartLocal
+                };
+            });
+
+            var statuses = request.Statuses;
+            if (statuses.Length > 0)
+                rows = rows.Where(r => statuses.Contains((int)r.Status));
+
+            return rows.OrderBy(r => r.SiteName)
+                       .ThenBy(r => r.BusinessDate)
+                       .ThenBy(r => r.GuardName)
+                       .ThenBy(r => r.SortKey)
+                       .ThenBy(r => r.Id)
+                       .ToList();
+        }
+
+        #endregion Patrol Randomisation
     }
 }

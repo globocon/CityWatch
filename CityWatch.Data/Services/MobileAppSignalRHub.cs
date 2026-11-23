@@ -34,6 +34,25 @@ namespace CityWatch.Data.Services
             await Groups.AddToGroupAsync(Context.ConnectionId, JoinGaurd.ClientSiteId.ToString());
             return "Joined successfully";
         }
+
+        /// <summary>
+        /// Patrol Randomisation: the handset joins this once logged in to a site, and receives
+        /// "PatrolRandomisationNextCheckpoint" (a PatrolRandomisationInstruction) whenever the
+        /// server hands this guard a new checkpoint. Per guard and site so one guard's route is
+        /// never sent to another guard's phone.
+        /// </summary>
+        public async Task<string> JoinPatrolRandomisationGroup(int clientSiteId, int guardId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, PatrolRandomisationGroupName(clientSiteId, guardId));
+            return "Joined successfully";
+        }
+
+        public async Task LeavePatrolRandomisationGroup(int clientSiteId, int guardId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, PatrolRandomisationGroupName(clientSiteId, guardId));
+        }
+
+        public static string PatrolRandomisationGroupName(int clientSiteId, int guardId) => $"PatrolRandomisation_{clientSiteId}_{guardId}";
         #endregion "SignalRHubCommon"
 
         #region "MobileCrowdControl"       

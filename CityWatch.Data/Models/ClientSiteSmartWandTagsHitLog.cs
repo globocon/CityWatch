@@ -71,6 +71,15 @@ namespace CityWatch.Data.Models
         public string DeviceId { get; set; }
         public string DeviceName { get; set; }
         public bool IsScanFromLinkedSite { get; set; }
+
+        /* Patrol Randomisation, offline (DbScript/387). Sent only by handsets that know the
+           feature; older builds leave them null and nothing changes for them.
+           Expected = the "GoTo" checkpoint on screen when this tag was struck.
+           Next     = the checkpoint the handset picked itself after this strike, while offline. */
+        public string RndmExpectedTagUId { get; set; }
+        public DateTime? RndmExpectedAssignedUtc { get; set; }
+        public string RndmNextTagUId { get; set; }
+        public DateTime? RndmNextAssignedUtc { get; set; }
     }
 
     public class ClientSiteSmartWandTagsHitLogViewModel

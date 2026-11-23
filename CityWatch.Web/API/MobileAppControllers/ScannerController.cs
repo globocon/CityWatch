@@ -26,11 +26,16 @@ namespace CityWatch.Web.API
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IMobileAppDataServices _mobileAppDataServices;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IPatrolRandomisationService _patrolRandomisationService;
+        private readonly IHubContext<MobileAppSignalRHub> _mobileAppHub;
 
         public ScannerController(IViewDataService viewDataService, IClientSiteWandDataProvider clientSiteWandDataProvider,
             IClientDataProvider clientSitesDataProvider, IGuardDataProvider guardDataProvider,
-            IMobileAppDataServices mobileAppDataServices, IGuardLogDataProvider guardLogDataProvider)
+            IMobileAppDataServices mobileAppDataServices, IGuardLogDataProvider guardLogDataProvider,
+            IPatrolRandomisationService patrolRandomisationService, IHubContext<MobileAppSignalRHub> mobileAppHub)
         {
+            _patrolRandomisationService = patrolRandomisationService;
+            _mobileAppHub = mobileAppHub;
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _clientSitesDataProvider = clientSitesDataProvider;
@@ -66,7 +71,8 @@ namespace CityWatch.Web.API
         }
 
         [HttpGet("GetScannerTagInfoData")]
-        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId, int TagsTypeId, int? SmartWandId = null, string gpsCoordinates = null)
+        public async Task<IActionResult> GetScannerTagInfoData(int siteId, string TagUid, int GuardId, int UserId, int TagsTypeId, int? SmartWandId = null, string gpsCoordinates = null,
+            string rndmExpectedTagUId = null)
         {
             bool IsSuccess = false;
             string message = "An error occurred.";
@@ -76,6 +82,7 @@ namespace CityWatch.Web.API
             int rowIdInServer = 0;
             int tagSiteId = 0;
             string tagSiteName = string.Empty;
+            PatrolRandomisationInstruction patrolRandomisation = null;
             if (!string.IsNullOrEmpty(gpsCoordinates))
             {
                 gpsCoordinates = Uri.UnescapeDataString(gpsCoordinates.Trim());
@@ -95,19 +102,146 @@ namespace CityWatch.Web.API
                 tagSiteId = TagSiteIdR;
                 tagSiteName = TagSiteNameR;
 
+                /* Patrol Randomisation: a strike of one of this site's own tags is answered with the
+                   next checkpoint. Its own try - randomisation must never cost the guard the strike,
+                   which is already saved by now. Offline syncs (SyncOfflineSmartWandTagHitData)
+                   are logged too, but get no next checkpoint: they arrive after the fact and
+                   nobody is waiting for one. */
+                if (IsSuccess && TagFound && tagSiteId == siteId && GuardId > 0)
+                {
+                    try
+                    {
+                        patrolRandomisation = _patrolRandomisationService.OnWandStrike(new PatrolRandomisationStrike
+                        {
+                            ClientSiteId = siteId,
+                            GuardId = GuardId,
+                            UserId = UserId,
+                            SmartWandId = SmartWandId,
+                            TagUId = TagUid,
+                            HitLogId = rowIdInServer,
+                            HitUtc = DateTime.UtcNow,
+                            IsOffline = false,
+                            // The GoTo on the handset's screen; lets the server judge the strike even if a response was lost.
+                            ExpectedTagUId = string.IsNullOrWhiteSpace(rndmExpectedTagUId) ? null : rndmExpectedTagUId
+                        });
+                        if (patrolRandomisation?.NextCheckpoint != null)
+                        {
+                            await _mobileAppHub.Clients.Group(MobileAppSignalRHub.PatrolRandomisationGroupName(siteId, GuardId))
+                                .SendAsync("PatrolRandomisationNextCheckpoint", patrolRandomisation);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        patrolRandomisation = null;
+                    }
+                }
+
             }
             catch (Exception ex)
             {
                 message = ex.Message;
             }
 
-            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite, RowIdInServer = rowIdInServer, TagSiteId = tagSiteId, TagSiteName = tagSiteName });
+            // PatrolRandomisation is additive: handsets that do not know it ignore the field.
+            return Ok(new { IsSuccess = IsSuccess, tagFound = TagFound, message = message, tagInfoLabel = TagInfoLabel, ScannedFromLinkedSite, RowIdInServer = rowIdInServer, TagSiteId = tagSiteId, TagSiteName = tagSiteName, PatrolRandomisation = patrolRandomisation });
+        }
+
+        /// <summary>
+        /// Patrol Randomisation state for the logged-in guard: is the window open, when does it
+        /// end, and which checkpoint to go to. The handset calls it on login/resume and when the
+        /// window opens; startIfNone=true hands out a first checkpoint straight away instead of
+        /// waiting for the guard's first strike.
+        /// </summary>
+        [HttpGet("GetPatrolRandomisationStatus")]
+        public IActionResult GetPatrolRandomisationStatus(int siteId, int guardId, bool startIfNone = false)
+        {
+            try
+            {
+                var status = _patrolRandomisationService.GetStatus(siteId, guardId, DateTime.UtcNow, startIfNone);
+                return Ok(status);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Patrol Randomisation bypass: the guard tapped "Tour: RNDM" because the checkpoint on screen
+        /// is missing, faulty or blocked. Recorded as Bypassed, written to the site's logbook
+        /// ("RNDM Bypass hit by guard X.X"), and - when live - answered with another checkpoint.
+        /// The handset replays offline bypasses with their original time; a resend is recognised and
+        /// does not write a second logbook entry.
+        /// </summary>
+        [HttpPost("PatrolRandomisationBypass")]
+        public IActionResult PatrolRandomisationBypass([FromBody] PatrolRandomisationBypassRequest request)
+        {
+            if (request == null || request.ClientSiteId <= 0 || request.GuardId <= 0 || string.IsNullOrWhiteSpace(request.TagUId))
+                return BadRequest(new { IsSuccess = false, message = "Site, guard and checkpoint are required." });
+
+            try
+            {
+                var result = _patrolRandomisationService.Bypass(request);
+                string logbookError = null;
+
+                if (!result.AlreadyRecorded)
+                {
+                    var guard = _guardDataProvider.GetGuardDetailsUsingId(request.GuardId).FirstOrDefault();
+                    var who = !string.IsNullOrWhiteSpace(guard?.Initial) ? guard.Initial.Trim() : (guard?.Name ?? $"#{request.GuardId}");
+                    var bypassUtc = request.BypassUtc == default ? DateTime.UtcNow : DateTime.SpecifyKind(request.BypassUtc, DateTimeKind.Utc);
+
+                    var entry = new PostActivityRequest
+                    {
+                        guardId = request.GuardId,
+                        clientsiteId = request.ClientSiteId,
+                        userId = request.UserId,
+                        activityString = $"RNDM Bypass hit by guard {who} - {result.BypassedTagLabel ?? request.TagUId}",
+                        gps = request.Gps,
+                        systemEntry = true,
+                        scanningType = 0,
+                        tagUID = "NA",
+                        EventDateTimeLocal = request.EventDateTimeLocal ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                        EventDateTimeLocalWithOffset = request.EventDateTimeLocalWithOffset ?? TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                        EventDateTimeZone = request.EventDateTimeZone ?? TimeZoneHelper.GetCurrentTimeZone(),
+                        EventDateTimeZoneShort = request.EventDateTimeZoneShort ?? TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                        EventDateTimeUtcOffsetMinute = request.EventDateTimeUtcOffsetMinute ?? TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                        IsOfflineRecord = request.IsOffline,
+                        OfflineRecordSyncDateTime = request.IsOffline ? DateTime.Now : null,
+                        EventMobileUtcDateTime = bypassUtc
+                    };
+                    var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                    try
+                    {
+                        var (logged, logMsg, _) = _mobileAppDataServices.PostMobileLogActivity(entry, ip);
+                        if (!logged) logbookError = logMsg;
+                    }
+                    catch (Exception ex)
+                    {
+                        // The bypass is already recorded and the guard has the next point; do not lose that over the logbook.
+                        logbookError = ex.GetBaseException().Message;
+                    }
+                }
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    message = result.Instruction?.Message ?? "Bypass recorded.",
+                    LogbookError = logbookError,
+                    PatrolRandomisation = result.Instruction
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { IsSuccess = false, message = "An error occurred", error = ex.Message });
+            }
         }
 
         [HttpPost("SyncOfflineSmartWandTagHitData")]
         public async Task<IActionResult> SyncOfflineSmartWandTagHitData([FromBody] List<ClientSiteSmartWandTagsHitLogCacheOffline> offlineRecords)
         {
             var IPAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            // Patrol Randomisation scan log: offline strikes are recorded after the loop, oldest first.
+            var randomisationStrikes = new List<PatrolRandomisationStrike>();
             if (offlineRecords != null && offlineRecords.Count > 0)
             {
                 foreach (var offlineRecord in offlineRecords)
@@ -120,6 +254,25 @@ namespace CityWatch.Web.API
                             offlineRecord.HitUtcDateTime, (ScanningType)offlineRecord.TagsTypeId, offlineRecord.GPScoordinates, offlineRecord.SmartWandId);
 
                         int postToClientSiteId = ScanFromLinkedSiteId > 0 ? ScanFromLinkedSiteId : offlineRecord.LoggedInClientSiteId;
+
+                        if (IsSuccessR && TagFoundR && TagSiteIdR == offlineRecord.LoggedInClientSiteId && offlineRecord.LoggedInGuardId > 0)
+                        {
+                            randomisationStrikes.Add(new PatrolRandomisationStrike
+                            {
+                                ClientSiteId = offlineRecord.LoggedInClientSiteId,
+                                GuardId = offlineRecord.LoggedInGuardId,
+                                UserId = offlineRecord.LoggedInUserId,
+                                SmartWandId = offlineRecord.SmartWandId,
+                                TagUId = offlineRecord.TagUId,
+                                HitLogId = RowIdInServerR,
+                                HitUtc = offlineRecord.HitUtcDateTime,
+                                IsOffline = true,
+                                ExpectedTagUId = offlineRecord.RndmExpectedTagUId,
+                                ExpectedAssignedUtc = offlineRecord.RndmExpectedAssignedUtc,
+                                NextTagUId = offlineRecord.RndmNextTagUId,
+                                NextAssignedUtc = offlineRecord.RndmNextAssignedUtc
+                            });
+                        }
 
                         if (IsSuccessR)
                         {
@@ -168,6 +321,13 @@ namespace CityWatch.Web.API
                         offlineRecord.IsSynced = true;
                     }
                 }
+            }
+
+            foreach (var strike in randomisationStrikes.OrderBy(x => x.HitUtc))
+            {
+                // Never lets the scan log cost the guard the sync, which is already done.
+                try { _patrolRandomisationService.OnWandStrike(strike); }
+                catch (Exception) { }
             }
 
             return Ok(offlineRecords);

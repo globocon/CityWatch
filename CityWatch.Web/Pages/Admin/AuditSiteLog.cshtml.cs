@@ -60,6 +60,7 @@ namespace CityWatch.Web.Pages.Admin
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
         public WandStrikeAuditLogRequest WandStrikeAuditLogRequest { get; set; }
         public TagHistoryReportRequest TagHistoryReportRequest { get; set; }
+        public PatrolRandomisationReportRequest PatrolRandomisationReportRequest { get; set; }
         public string loggedInUserId { get; set; }
         public int GuardId { get; set; }
         public GuardViewModel Guard { get; set; }
@@ -869,6 +870,21 @@ namespace CityWatch.Web.Pages.Admin
             return File(pdf, "application/pdf", fileName);
         }
         #endregion "Tag History"
+
+        #region "Randomisation"
+        /// <summary>
+        /// Patrol Randomisation scan log (ClientSitePatrolRandomisationLogs): every checkpoint handed
+        /// to a guard during a randomisation window and the strike that answered it.
+        /// </summary>
+        public JsonResult OnPostPatrolRandomisationAuditSiteLogs(PatrolRandomisationReportRequest patrolRandomisationReportRequest)
+        {
+            if (patrolRandomisationReportRequest == null || patrolRandomisationReportRequest.ClientSiteIds.Length == 0)
+                return new JsonResult(new { success = false, message = "Please select a client site", rows = new List<PatrolRandomisationReportViewModel>() });
+
+            var rows = _clientSiteWandDataProvider.GetPatrolRandomisationReport(patrolRandomisationReportRequest);
+            return new JsonResult(new { success = true, rows });
+        }
+        #endregion "Randomisation"
         public IActionResult OnGetClientSiteSWTagsDetails(int clientSiteId, string startdate, string endDate)
         {
 

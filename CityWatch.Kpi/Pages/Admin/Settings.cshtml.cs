@@ -2897,14 +2897,76 @@ namespace CityWatch.Kpi.Pages.Admin
                 System.Reflection.Assembly.GetExecutingAssembly());
         }
 
-        public JsonResult OnPostSaveClientSiteMobileAppPatrolTouringModeSettings(int clientSiteId, PatrolTouringMode PatrolTourMode)
+        /// <summary>One column of the Patrol Randomisation grid (Day = System.DayOfWeek, times "HH:mm").</summary>
+        public class PatrolRandomisationDayInput
+        {
+            public int Day { get; set; }
+            public string Start { get; set; }
+            public string End { get; set; }
+        }
+
+        /// <summary>
+        /// Saves the Wand Strikes tab: Patrol Touring Mode and Patrol Randomisation together.
+        /// isRandomisationEnabled/randomisationDays are optional so an older cached site.js that
+        /// posts only the mode still works (randomisation is then left as it was, except that a
+        /// non-STND mode always switches it off).
+        /// </summary>
+        public JsonResult OnPostSaveClientSiteMobileAppPatrolTouringModeSettings(int clientSiteId, PatrolTouringMode PatrolTourMode,
+            bool? isRandomisationEnabled = null, List<PatrolRandomisationDayInput> randomisationDays = null)
         {
             try
             {
 
                 if (clientSiteId != 0)
                 {
+                    ClientSitePatrolRandomisationSetting randomisation = null;
+                    if (isRandomisationEnabled.HasValue)
+                    {
+                        var days = new List<PatrolRandomisationHelper.DayWindow>();
+                        foreach (var d in randomisationDays ?? new List<PatrolRandomisationDayInput>())
+                        {
+                            if (d == null || d.Day < 0 || d.Day > 6)
+                                continue;
+                            if (!TryParseHhMm(d.Start, out var start) || !TryParseHhMm(d.End, out var end))
+                                return new JsonResult(new { success = false, message = "Enter times as HH:mm." });
+                            days.Add(new PatrolRandomisationHelper.DayWindow { Day = (DayOfWeek)d.Day, Start = start, End = end });
+                        }
+
+                        // PCAR / INSP: randomisation does not apply, so it is switched off rather than refused.
+                        var enabled = isRandomisationEnabled.Value && PatrolTourMode == PatrolTouringMode.STND;
+                        var error = PatrolRandomisationHelper.Validate(PatrolTourMode, enabled, days, out var windows);
+                        if (error != null)
+                            return new JsonResult(new { success = false, message = error });
+
+                        randomisation = new ClientSitePatrolRandomisationSetting
+                        {
+                            ClientSiteId = clientSiteId,
+                            IsEnabled = enabled,
+                            Schedules = windows.Select(w => new ClientSitePatrolRandomisationSchedule
+                            {
+                                DayOfWeek = w.Day,
+                                StartTime = w.Start.Value,
+                                EndTime = w.End.Value
+                            }).ToList()
+                        };
+                    }
+                    else if (PatrolTourMode != PatrolTouringMode.STND)
+                    {
+                        var existing = _clientSiteWandDataProvider.GetPatrolRandomisationSetting(clientSiteId);
+                        if (existing != null && existing.IsEnabled)
+                        {
+                            existing.IsEnabled = false;
+                            randomisation = existing;
+                        }
+                    }
+
                     _clientDataProvider.SaveClientSitePatrolTourSettings(clientSiteId, PatrolTourMode);
+                    if (randomisation != null)
+                    {
+                        randomisation.LastUpdatedByUserId = HttpContext.Session.GetInt32("SignedInUserId");
+                        randomisation.LastUpdatedByGuardId = HttpContext.Session.GetInt32("GuardId");
+                        _clientSiteWandDataProvider.SavePatrolRandomisationSetting(randomisation);
+                    }
                     return new JsonResult(new { success = true, message = "Settings saved successfully." });
                 }
                 else
@@ -2922,6 +2984,39 @@ namespace CityWatch.Kpi.Pages.Admin
                 // Return an error message
                 return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
             }
+        }
+
+        /// <summary>Removes the site's Patrol Randomisation schedule (touring mode is left as it is).</summary>
+        public JsonResult OnPostDeletePatrolRandomisation(int clientSiteId)
+        {
+            try
+            {
+                if (clientSiteId == 0)
+                    return new JsonResult(new { success = false, message = "No client site found with the specified ID." });
+
+                _clientSiteWandDataProvider.DeletePatrolRandomisationSetting(clientSiteId);
+                return new JsonResult(new { success = true, message = "Patrol Randomisation deleted." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting the Patrol Randomisation setting.");
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request. Please try again later." });
+            }
+        }
+
+        /// <summary>Blank is a valid "no time"; anything else must be HH:mm (as sent by input type=time).</summary>
+        private static bool TryParseHhMm(string value, out TimeSpan? time)
+        {
+            time = null;
+            if (string.IsNullOrWhiteSpace(value))
+                return true;
+            if (TimeSpan.TryParseExact(value.Trim(), new[] { @"hh\:mm", @"h\:mm", @"hh\:mm\:ss" },
+                    System.Globalization.CultureInfo.InvariantCulture, out var t) && t >= TimeSpan.Zero && t < TimeSpan.FromDays(1))
+            {
+                time = t;
+                return true;
+            }
+            return false;
         }
         //wand tags-end
         //kv-scheudle-start
