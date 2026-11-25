@@ -14,7 +14,7 @@
                 <form id="frm_pcar_route" onsubmit="return false;">
                     <input type="hidden" id="pcarRouteId" name="id" value="0">
 
-                    <!-- Route name and smart wand: the route profile -->
+                    <!-- Route name, patrol car and smart wand: the route profile -->
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group mb-1">
@@ -22,11 +22,31 @@
                                 <input type="text" class="form-control form-control-sm" id="pcarRouteName" name="pcarroutename" maxlength="50" />
                             </div>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-3">
+                            @* Not saved: the Smart Wand list shows only this car's wands. The route's car is its wand's PatrolCarId.
+                               Add starts on the tab's PCAR filter; Edit on the route's car. *@
+                            <div class="form-group mb-1">
+                                <label class="small mb-0" for="pcarPatrolCar">PCAR</label>
+                                <select class="form-control form-control-sm" id="pcarPatrolCar">
+                                    <option value="">Select</option>
+                                    @foreach (var car in Model.PcarPatrolCarOptions)
+                                    {
+                                        <option value="@car.Value">@car.Text</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-5 d-flex align-items-end">
                             <div class="flex-grow-1">
                                 <div class="form-group mb-1">
                                     <label class="small mb-0" for="pcarSmartWandAllocation">PCAR Smart Wand Allocation</label>
-                                    <select class="form-control form-control-sm" id="pcarSmartWandAllocation" name="smartwandallocation" asp-items="@Model.PcarSmartWandOptions"></select>
+                                    <select class="form-control form-control-sm" id="pcarSmartWandAllocation" name="smartwandallocation">
+                                        <option value="">Select</option>
+                                        @foreach (var wand in Model.PcarSmartWandOptions)
+                                        {
+                                            <option value="@wand.Id" data-patrol-car-id="@wand.PatrolCarId">@wand.Text</option>
+                                        }
+                                    </select>
                                 </div>
                             </div>
                             <button type="button" id="btnCreatePcarProfile" class="btn btn-sm btn-success mb-1 ml-2">
