@@ -18,20 +18,25 @@ $(function () {
 
     /* ---------- Routes grid ---------- */
 
+    // Same look as the Booking > Settings grids: a right-aligned group of small outline tiles, icon above label.
     function pcarActionsRenderer(value, record) {
-        return '<button class="btn btn-outline-primary mr-2 edit-pcar-route" data-route-id="' + record.id + '" ' +
-            'data-toggle="modal" data-target="#pcarRouteModal"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-            '<button class="btn btn-outline-danger del-pcar-route mr-2" data-route-id="' + record.id + '">' +
-            '<i class="fa fa-trash mr-2"></i>Delete</button>';
+        return '<div class="btn-group">' +
+            '<button type="button" class="btn btn-outline-primary btn-sm edit-pcar-route" style="min-width: 58px;" data-route-id="' + record.id + '" ' +
+            'data-toggle="modal" data-target="#pcarRouteModal" title="Edit route"><i class="fa fa-pencil d-block mb-1"></i>Edit</button>' +
+            '<button type="button" class="btn btn-outline-danger btn-sm del-pcar-route" style="min-width: 58px;" data-route-id="' + record.id + '" ' +
+            'title="Delete route"><i class="fa fa-trash d-block mb-1"></i>Delete</button>' +
+            '</div>';
     }
 
     const gridPcarRoutes = $('#pcar_routes_grid').grid({
         dataSource: PCAR_URL + 'PcarProfiles',
+        params: { patrolCarId: $('#pcarFilterPatrolCar').val() || '' },
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
             { field: 'pcarroutename', title: 'Route Name', width: 150 },
+            { field: 'patrolCarName', title: 'PCAR', width: 150 },
             {
                 field: 'smartwandallocation', title: 'Smart Wand', width: 150,
                 renderer: function (value, record) {
@@ -49,11 +54,43 @@ $(function () {
                         .join(' ');
                 }
             },
-            { width: 150, renderer: pcarActionsRenderer }
-        ],
-        initialized: function (e) {
-            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-        }
+            { title: 'Actions', width: 160, align: 'right', renderer: pcarActionsRenderer }
+        ]
+    });
+
+    // PCAR filter: routes whose smart wand belongs to the chosen patrol car. Later reloads keep the filter.
+    $('#pcarFilterPatrolCar').on('change', function () {
+        gridPcarRoutes.reload({ patrolCarId: $(this).val() || '' });
+    });
+
+    /* ---------- PCAR -> Smart Wand (modal) ---------- */
+
+    // Every smart wand as rendered, with its patrol car (ClientSiteSmartWands.PatrolCarId).
+    const pcarAllWands = $('#pcarSmartWandAllocation option').filter(function () { return $(this).val() !== ''; })
+        .map(function () {
+            return { id: $(this).val(), text: $(this).text(), patrolCarId: String($(this).data('patrol-car-id') || '') };
+        }).get();
+
+    // Rebuilds the Smart Wand list with only the chosen car's wands - none until a PCAR is chosen.
+    // Selects selectedWandId when it is in the list; otherwise a car's only wand. keepWandId is always
+    // listed, so editing a route whose wand has no car does not lose its wand.
+    function fillPcarSmartWands(patrolCarId, selectedWandId, keepWandId) {
+        const wands = pcarAllWands.filter(w =>
+            (patrolCarId && w.patrolCarId === String(patrolCarId)) || (keepWandId && w.id === String(keepWandId)));
+        const $select = $('#pcarSmartWandAllocation').empty()
+            .append($('<option>').val('').text(patrolCarId || wands.length ? 'Select' : 'Select a PCAR first'));
+        wands.forEach(w => $select.append($('<option>').val(w.id).text(w.text).attr('data-patrol-car-id', w.patrolCarId)));
+
+        if (selectedWandId && wands.some(w => w.id === String(selectedWandId)))
+            $select.val(String(selectedWandId));
+        else if (patrolCarId && wands.length === 1)
+            $select.val(wands[0].id);
+        else
+            $select.val('');
+    }
+
+    $('#pcarPatrolCar').on('change', function () {
+        fillPcarSmartWands($(this).val(), $('#pcarSmartWandAllocation').val());
     });
 
     /* ---------- Modal state ---------- */
@@ -73,10 +110,14 @@ $(function () {
         }
     }
 
-    // Bootstrap opens the modal before the Add / Edit click handlers below run, so this reset comes first.
+    // Bootstrap fires this before the Edit click handler below runs, so this reset comes first.
+    // The popup's PCAR starts on the tab's PCAR filter (Add); Edit then sets it to the route's car.
     $('#pcarRouteModal').on('show.bs.modal', function (e) {
         if (e.target !== this) return; // ignore the collapse inside the modal
         $(this).find('input, select').val('');
+        const tabPatrolCarId = $('#pcarFilterPatrolCar').val() || '';
+        $('#pcarPatrolCar').val(tabPatrolCarId);
+        fillPcarSmartWands(tabPatrolCarId, '');
         $('#pcarRouteId').val(0);
         $('#pcarClientSite').html('');
         $('#pcarSitesContainer').empty();
@@ -113,7 +154,11 @@ $(function () {
             const routeDetails = data.routeDetails || [];
 
             $('#pcarRouteName').val(data.pcarroutename);
-            $('#pcarSmartWandAllocation').val(data.smartwandallocation);
+            // The route's patrol car is its smart wand's car; show it and list that car's wands.
+            const wand = pcarAllWands.find(w => w.id === String(data.smartwandallocation));
+            const patrolCarId = wand ? wand.patrolCarId : '';
+            $('#pcarPatrolCar').val(patrolCarId);
+            fillPcarSmartWands(patrolCarId, data.smartwandallocation, data.smartwandallocation);
 
             $.each(routeDetails, function (index, rd) {
                 $('#pcarSitesContainer').append(createPcarSiteBlock(rd.clientSiteId, rd.clientSiteName, rd, index + 1));

@@ -927,6 +927,7 @@ namespace CityWatch.Data.Providers
          Pcarroutename = r.Pcarroutename,
          Smartwandallocation = r.Smartwandallocation,
          SmartWandId = r.SmartWand.SmartWandId,
+         PatrolCarId = r.SmartWand.PatrolCarId,
          PhoneNumber = Regex.Replace(r.SmartWand.PhoneNumber, pattern, "").Trim() ,
          Sites = string.Join(", ", r.RouteDetails.Select(d => d.ClientSite.Name))
      })
@@ -1115,6 +1116,7 @@ namespace CityWatch.Data.Providers
                    Pcarroutename = r.Pcarroutename,
                    Smartwandallocation = r.Smartwandallocation,
                    SmartWandId = r.SmartWand.SmartWandId,
+                   PatrolCarId = r.SmartWand.PatrolCarId,
                    PhoneNumber = Regex.Replace(r.SmartWand.PhoneNumber, pattern, "").Trim(),
                    Sites = string.Join(", ", r.RouteDetails.Select(d => d.ClientSite.Name))
                })
@@ -1133,6 +1135,10 @@ namespace CityWatch.Data.Providers
         public string SmartWandId { get; set; }
         public string PhoneNumber { get; set; }
         public string Sites { get; set; }
+        /// <summary>Patrol car of the route's smart wand (ClientSiteSmartWands.PatrolCarId = IncidentReportPositions.Id).</summary>
+        public int? PatrolCarId { get; set; }
+        /// <summary>Patrol car (position) name; filled in by the caller, not by the query.</summary>
+        public string PatrolCarName { get; set; }
     }
 
 

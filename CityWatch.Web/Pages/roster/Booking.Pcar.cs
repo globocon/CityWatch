@@ -16,19 +16,44 @@ namespace CityWatch.Web.Pages.roster
     /// </summary>
     public partial class BookingModel
     {
-        public List<SelectListItem> PcarSmartWandOptions { get; set; } = new();
+        public List<PcarSmartWandOption> PcarSmartWandOptions { get; set; } = new();
         public List<SelectListItem> PcarClientTypeOptions { get; set; } = new();
+        /// <summary>
+        /// The PCAR dropdowns (grid filter and modal): Admin/Settings > C4i Fields, module IR, field type
+        /// Position, with "Patrol Cars ?" ticked - i.e. IncidentReportPositions where IsPatrolCar.
+        /// </summary>
+        public List<SelectListItem> PcarPatrolCarOptions { get; set; } = new();
+
+        /// <summary>A smart wand of the modal's dropdown, with the patrol car it belongs to (ClientSiteSmartWands.PatrolCarId).</summary>
+        public class PcarSmartWandOption
+        {
+            public int Id { get; set; }
+            public string Text { get; set; }
+            public int? PatrolCarId { get; set; }
+        }
 
         private void PopulatePcarDropdowns()
         {
             // Smart wand text is "<SmartWandId> <phone>", with any "[R<n>]" marker stripped from the phone (as in Kpi).
-            PcarSmartWandOptions = new List<SelectListItem> { new SelectListItem("Select", "", true) };
-            PcarSmartWandOptions.AddRange(_configDataProvider.GetSmartWandList().Select(sw => new SelectListItem(
-                sw.SmartWandId + " " + Regex.Replace(sw.PhoneNumber ?? "", @"\[R\d+\]", "").Trim(),
-                sw.Id.ToString())));
+            PcarSmartWandOptions = _configDataProvider.GetSmartWandList().Select(sw => new PcarSmartWandOption
+            {
+                Id = sw.Id,
+                Text = sw.SmartWandId + " " + Regex.Replace(sw.PhoneNumber ?? "", @"\[R\d+\]", "").Trim(),
+                PatrolCarId = sw.PatrolCarId
+            }).ToList();
+
+            PcarPatrolCarOptions = GetPcarPatrolCars()
+                .Select(p => new SelectListItem(p.Name, p.Id.ToString()))
+                .ToList();
 
             PcarClientTypeOptions = _viewDataService.GetUserClientTypesCount(PcarScopeUserId());
         }
+
+        private List<IncidentReportPosition> GetPcarPatrolCars() =>
+            _context.IncidentReportPositions
+                .Where(p => p.IsPatrolCar)
+                .OrderBy(p => p.Name)
+                .ToList();
 
         /// <summary>
         /// The user whose site access limits what the PCAR tab lists: a "User" login sees only its own sites,
@@ -49,15 +74,29 @@ namespace CityWatch.Web.Pages.roster
         private static JsonResult PcarAccessDeniedResult() =>
             new JsonResult(new { success = false, message = "You do not have access to PCAR routes." });
 
-        public JsonResult OnGetPcarProfiles()
+        /// <param name="patrolCarId">Grid's PCAR filter: only routes whose smart wand belongs to this patrol car. Empty = all.</param>
+        public JsonResult OnGetPcarProfiles(int? patrolCarId)
         {
             if (IsPcarAccessDenied)
                 return new JsonResult(new List<object>());
 
             var userId = PcarScopeUserId();
-            return new JsonResult(userId.HasValue
+            var routes = userId.HasValue
                 ? _kpiSchedulesDataProvider.GetPCARProfilesUsingUserId(userId.Value)
-                : _kpiSchedulesDataProvider.GetPCARProfilesAll());
+                : _kpiSchedulesDataProvider.GetPCARProfilesAll();
+
+            if (patrolCarId.HasValue)
+                routes = routes.Where(r => r.PatrolCarId == patrolCarId).ToList();
+
+            // Name by any position (not only ticked ones), so a route whose car has since been unticked still shows it.
+            var carIds = routes.Where(r => r.PatrolCarId.HasValue).Select(r => r.PatrolCarId.Value).Distinct().ToList();
+            var carNames = _context.IncidentReportPositions
+                .Where(p => carIds.Contains(p.Id))
+                .ToDictionary(p => p.Id, p => p.Name);
+            foreach (var route in routes)
+                route.PatrolCarName = route.PatrolCarId.HasValue && carNames.TryGetValue(route.PatrolCarId.Value, out var name) ? name : "";
+
+            return new JsonResult(routes);
         }
 
         public JsonResult OnGetPcarRouteDetails(int id)

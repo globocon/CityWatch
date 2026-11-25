@@ -10,6 +10,23 @@
                     <i class="fa fa-plus mr-2"></i>Add PCAR Routes
                 </button>
             </div>
+
+            @* Grid filter. Patrol cars = C4i Fields > IR > Position with "Patrol Cars ?" ticked; a route's car is its
+               smart wand's car. Add PCAR Routes starts the popup on the car chosen here. *@
+            <div class="form-row align-items-center mb-2">
+                <div class="col-auto">
+                    <label class="mb-0 font-weight-bold" for="pcarFilterPatrolCar">PCAR</label>
+                </div>
+                <div class="col-auto">
+                    <select class="form-control form-control-sm" id="pcarFilterPatrolCar" style="width: 260px;">
+                        <option value="">All</option>
+                        @foreach (var car in Model.PcarPatrolCarOptions)
+                        {
+                            <option value="@car.Value">@car.Text</option>
+                        }
+                    </select>
+                </div>
+            </div>
             <table class="table" id="pcar_routes_grid"></table>
         </div>
     </div>
