@@ -304,7 +304,9 @@ $(function () {
         // footer row 1 - averages
         $('#report_footer_1').find('th:eq(6)').text(parseFloat(response.data.wandFqAverage).toFixed(2));
 
-        $('#report_footer_1').find('th:eq(7)').text(parseInt(response.data.notInAcceptableLogFreqCount));
+        // Same verification as the daily cells and the PDF: a site that asked not to be measured
+        // on the 2 hr timer must not have the count of days over 2 hr totalled up for it either.
+        $('#report_footer_1').find('th:eq(7)').text(kpiHrTimerPaused ? '-' : parseInt(response.data.notInAcceptableLogFreqCount));
         $('#report_footer_1').find('th:eq(8)').text(parseInt(response.data.irCountTotal));
         $('#report_footer_1').find('th:eq(9)').text(parseInt(response.data.alarmCountTotal));
 
