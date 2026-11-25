@@ -2554,8 +2554,18 @@ $(function () {
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-        }
+        },
+        dataBinding: clearGridRowsBeforeRebind
     });
+
+    /* On reload gijgo reuses the existing <tr>s and finds each column's cell with
+       row.find('td:eq(n)'), which also searches inside the Activity column's nested <table>.
+       Every column after Activity then updates the wrong element, so after a search (or a
+       delete/activate) "Deleted?" kept the value of whichever user used to be in that row.
+       Emptying the body before binding makes gijgo build every row fresh. */
+    function clearGridRowsBeforeRebind(e) {
+        $(e.target).children('tbody').empty();
+    }
 
 
     /*p1-248 search users grid*/
@@ -6849,6 +6859,12 @@ gridHrSettingswithOnboardingHRWelcomePack = $('#tbl_hr_settings_with_OnboardingH
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+    /* Same as the C4i Users grid: the nested <table> in the Activity column breaks gijgo's
+       row reuse on reload (it finds cells with row.find('td:eq(n)')), so the Deleted? column
+       showed stale values. Build the rows fresh on every bind. */
+    dataBinding: function (e) {
+        $(e.target).children('tbody').empty();
     },
     dataBound: function (e,records) {
         
