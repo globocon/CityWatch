@@ -306,9 +306,9 @@ $(function () {
 
         // Same verification as the daily cells and the PDF: a site that asked not to be measured
         // on the 2 hr timer must not have the count of days over 2 hr totalled up for it either.
-        $('#report_footer_1').find('th:eq(7)').text(kpiHrTimerPaused ? '-' : parseInt(response.data.notInAcceptableLogFreqCount));
-        $('#report_footer_1').find('th:eq(8)').text(parseInt(response.data.irCountTotal));
-        $('#report_footer_1').find('th:eq(9)').text(parseInt(response.data.alarmCountTotal));
+        $('#report_footer_1').find('th:eq(8)').text(kpiHrTimerPaused ? '-' : parseInt(response.data.notInAcceptableLogFreqCount));
+        $('#report_footer_1').find('th:eq(9)').text(parseInt(response.data.irCountTotal));
+        $('#report_footer_1').find('th:eq(10)').text(parseInt(response.data.alarmCountTotal));
 
         //p2-48 adhoc shift expexted vs actual hrs-start
         $('#report_footer_3').find('th:eq(1)').text(parseFloat(response.data.totalExpectedEmployeeHours).toFixed(2));
@@ -343,10 +343,10 @@ $(function () {
 
         const siteScorePercentage = response.data.siteScorePercentage ? parseFloat(response.data.siteScorePercentage).toFixed(2) : 0;
         if (siteScorePercentage >= 100)
-            $('#report_footer_2').find('th:eq(7)').removeClass().addClass('cell-avg-above-limit');
+            $('#report_footer_2').find('th:eq(8)').removeClass().addClass('cell-avg-above-limit');
         else
-            $('#report_footer_2').find('th:eq(7)').removeClass().addClass('cell-avg-below-limit');
-        $('#report_footer_2').find('th:eq(7)').text(siteScorePercentage + ' %');
+            $('#report_footer_2').find('th:eq(8)').removeClass().addClass('cell-avg-below-limit');
+        $('#report_footer_2').find('th:eq(8)').text(siteScorePercentage + ' %');
     }
 
     function clearKpiResults() {
@@ -360,15 +360,15 @@ $(function () {
         $('#report_footer_1').find('th:eq(2)').text('');
         $('#report_footer_1').find('th:eq(4)').text('');
         $('#report_footer_1').find('th:eq(5)').text('');
-        $('#report_footer_1').find('th:eq(7)').text('');
+        $('#report_footer_1').find('th:eq(8)').text('');
 
         $('#report_footer_2').find('th:eq(2)').removeClass();
         $('#report_footer_2').find('th:eq(2)').text('');
         $('#report_footer_2').find('th:eq(4)').removeClass();
         $('#report_footer_2').find('th:eq(4)').text('');
         $('#report_footer_2').find('th:eq(5)').text('');
-        $('#report_footer_2').find('th:eq(7)').removeClass();
-        $('#report_footer_2').find('th:eq(7)').text('');
+        $('#report_footer_2').find('th:eq(8)').removeClass();
+        $('#report_footer_2').find('th:eq(8)').text('');
     }
 
     $('#btnExportPdf').on('click', function () {
