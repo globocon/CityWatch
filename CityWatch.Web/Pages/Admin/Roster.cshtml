@@ -47,7 +47,7 @@
         <div class="col-sm-3">
             <h3>PCAR ROUTE</h3>
             <div style="width:149px;border:3px solid grey;padding:50px;margin:20px auto; text-align:center;">
-                <a href="javascript:void(0);" id="AnPcarCars">
+                <a href="javascript:void(0);" id="AnPcarCars" data-toggle="modal" data-target="#mdlAuthPcarRouteAccess" title="View PCAR routes">
                     <i class="fa fa-car" style="font-size:48px;"></i>
                 </a>
             </div>
@@ -370,7 +370,10 @@
     <h3 class="text-center">ROSTERS</h3>
 }
 
+<partial name="_PcarRouteViewer" />
+
 @section scripts {
     @await Html.PartialAsync("../Guard/_GuardRosterModal")
+    <script src="~/js/pcarrouteviewer.js" asp-append-version="true"></script>
 }
 

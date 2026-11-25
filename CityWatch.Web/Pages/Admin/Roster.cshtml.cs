@@ -13,24 +13,27 @@ using System.Threading.Tasks;
 
 namespace CityWatch.Web.Pages.Admin
 {
-    public class RosterModel : PageModel
+    public partial class RosterModel : PageModel
     {
         private readonly IViewDataService _viewDataService;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly ILogger<RosterModel> _logger;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
+        private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
         public string ClientNameTitle { get; set; }
 
         public RosterModel(ILogger<RosterModel> logger,
             IGuardDataProvider guardDataProvider,
-            IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider,IViewDataService viewDataService)
+            IGuardLogDataProvider guardLogDataProvider, IConfigDataProvider configDataProvider,IViewDataService viewDataService,
+            IKpiSchedulesDataProvider kpiSchedulesDataProvider)
         {
             _logger = logger;
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _configDataProvider = configDataProvider;
             _viewDataService = viewDataService;
+            _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
         }
         public IViewDataService ViewDataService { get { return _viewDataService; } }
         public void OnGet()
