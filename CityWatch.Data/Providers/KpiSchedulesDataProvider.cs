@@ -14,6 +14,7 @@ namespace CityWatch.Data.Providers
         //KpiSendSchedule
         List<KpiSendSchedule> GetAllSendSchedules();
         KpiSendSchedule GetSendScheduleById(int scheduleId);
+        bool IsHrTimerPausedForClientSite(int clientSiteId);
         List<KpiSendSchedule> GetAllSendSchedulesUisngGuardId(int GuardId);
         KpiSendSchedule GetSendScheduleByIdandGuardId(int scheduleId, int GuardId);
        
@@ -226,6 +227,28 @@ namespace CityWatch.Data.Providers
             }
 
             return selectedSiteSchedule;
+        }
+
+        /// <summary>
+        /// Has the "2 Hr Log Book Paused" switch been turned on for this site, on any schedule
+        /// it belongs to?
+        ///
+        /// Asked of the site rather than of a schedule on purpose. The pause is configured per
+        /// schedule, but the DAILY LOG 2HR TIMER column is written in places that have no
+        /// schedule in hand at all - the Dropbox upload job walks every site with a Dropbox
+        /// folder, and the Dashboard renders one site the operator picked - and those were
+        /// reporting the measure for sites that had asked not to be reported on. A site can
+        /// also sit in two schedules that disagree, which is exactly how Martha Cove Marina -
+        /// All Areas kept showing 2 hr results while its own schedule had the switch on.
+        ///
+        /// So: paused anywhere means paused everywhere for that site. Turning the switch on is
+        /// a request not to be measured on it, and honouring it only on the schedule that
+        /// happens to be running leaks the measure through every other route.
+        /// </summary>
+        public bool IsHrTimerPausedForClientSite(int clientSiteId)
+        {
+            return _context.KpiSendScheduleClientSites
+                .Any(z => z.ClientSiteId == clientSiteId && z.Schedule.IsHrTimerPaused);
         }
 
         public KpiSendSchedule GetSendScheduleById(int scheduleId)

@@ -70,13 +70,16 @@ namespace CityWatch.Kpi.Services
         private readonly IPatrolDataReportService _patrolDataReportService;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
+        private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
 
         public ReportGenerator(IOptions<Settings> settings,
             IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
-            ILogger<ReportGenerator> logger, IPatrolDataReportService patrolDataReportService, IGuardLogDataProvider guardLogDataProvider,IClientSiteWandDataProvider clientSiteWandDataProvider)
+            ILogger<ReportGenerator> logger, IPatrolDataReportService patrolDataReportService, IGuardLogDataProvider guardLogDataProvider,IClientSiteWandDataProvider clientSiteWandDataProvider,
+            IKpiSchedulesDataProvider kpiSchedulesDataProvider)
         {
+            _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
             _viewDataService = viewDataService;
             _clientDataProvider = clientDataProvider;
             _logger = logger;
@@ -143,9 +146,17 @@ namespace CityWatch.Kpi.Services
             var GuradIds = monthlyDataGuard.Select(z => z.GuardId).ToArray();
             var monthlyDataGuardCompliance = _viewDataService.GetKpiGuardDetailsComplianceData(GuradIds);
 
+            // Verify the 2 hr switch against the site's own schedules before writing the column,
+            // rather than trusting what the caller passed. isHrTimerPaused defaults to false, so
+            // every caller that does not supply it - the Dropbox upload job, the Dashboard - was
+            // silently reporting the measure for sites that had asked not to be. See
+            // IsHrTimerPausedForClientSite for why the answer is per site, not per schedule.
+            var hrTimerPaused = isHrTimerPaused ||
+                _kpiSchedulesDataProvider.IsHrTimerPausedForClientSite(_clientSiteKpiSetting.ClientSiteId);
+
             var monthlyData = _viewDataService.GetKpiReportData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
-            var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults, isHrTimerPaused);
-            CreateReportDataSummary(tableData, monthlyData, isHrTimerPaused);
+            var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults, hrTimerPaused);
+            CreateReportDataSummary(tableData, monthlyData, hrTimerPaused);
             var clientsiteLogBook = _viewDataService.GetTagStatusPendingForSpecificClientSite(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
 
             var tableSitemartwands = CreateGuardWandScanDetails(clientsiteLogBook);

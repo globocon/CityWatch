@@ -125,6 +125,11 @@ $(function () {
 
     /***** KPI Report *****/
 
+    // Set from the server on every report load, before the rows are drawn. Starts true so a
+    // response that somehow omits it hides the column rather than showing a measure a site may
+    // have asked not to be reported on.
+    var kpiHrTimerPaused = true;
+
     var gridReport = $('#monthly_kpi_report').DataTable({
         paging: false,
         searching: false,
@@ -173,7 +178,9 @@ $(function () {
                 $('td', row).eq(8).addClass('cell-below-limit');
             }
 
-            if (data.isAcceptableLogFreq === null) {
+            // DAILY LOG 2HR TIMER. kpiHrTimerPaused is what the server verified against this
+            // site's schedules, so the column reads the same here as it does in the PDF.
+            if (kpiHrTimerPaused || data.isAcceptableLogFreq === null) {
                 $('td', row).eq(12).html('-');
             }
             else {
@@ -250,6 +257,8 @@ $(function () {
             $('#alertRegenerateTable').hide();
             clearKpiResults();
             if (response.success) {
+                // Must be set before draw(): createdRow reads it for the 2 hr timer column.
+                kpiHrTimerPaused = response.isHrTimerPaused === true;
                 gridReport.rows.add(response.data.dailyKpiResults).draw();
                 const pdfName = response.fileName !== '' ? '../Pdf/Output/' + response.fileName : '#';
                 $('#btnExportPdf').attr('href', pdfName);
@@ -295,9 +304,11 @@ $(function () {
         // footer row 1 - averages
         $('#report_footer_1').find('th:eq(6)').text(parseFloat(response.data.wandFqAverage).toFixed(2));
 
-        $('#report_footer_1').find('th:eq(7)').text(parseInt(response.data.notInAcceptableLogFreqCount));
-        $('#report_footer_1').find('th:eq(8)').text(parseInt(response.data.irCountTotal));
-        $('#report_footer_1').find('th:eq(9)').text(parseInt(response.data.alarmCountTotal));
+        // Same verification as the daily cells and the PDF: a site that asked not to be measured
+        // on the 2 hr timer must not have the count of days over 2 hr totalled up for it either.
+        $('#report_footer_1').find('th:eq(8)').text(kpiHrTimerPaused ? '-' : parseInt(response.data.notInAcceptableLogFreqCount));
+        $('#report_footer_1').find('th:eq(9)').text(parseInt(response.data.irCountTotal));
+        $('#report_footer_1').find('th:eq(10)').text(parseInt(response.data.alarmCountTotal));
 
         //p2-48 adhoc shift expexted vs actual hrs-start
         $('#report_footer_3').find('th:eq(1)').text(parseFloat(response.data.totalExpectedEmployeeHours).toFixed(2));
@@ -332,10 +343,10 @@ $(function () {
 
         const siteScorePercentage = response.data.siteScorePercentage ? parseFloat(response.data.siteScorePercentage).toFixed(2) : 0;
         if (siteScorePercentage >= 100)
-            $('#report_footer_2').find('th:eq(7)').removeClass().addClass('cell-avg-above-limit');
+            $('#report_footer_2').find('th:eq(8)').removeClass().addClass('cell-avg-above-limit');
         else
-            $('#report_footer_2').find('th:eq(7)').removeClass().addClass('cell-avg-below-limit');
-        $('#report_footer_2').find('th:eq(7)').text(siteScorePercentage + ' %');
+            $('#report_footer_2').find('th:eq(8)').removeClass().addClass('cell-avg-below-limit');
+        $('#report_footer_2').find('th:eq(8)').text(siteScorePercentage + ' %');
     }
 
     function clearKpiResults() {
@@ -349,15 +360,15 @@ $(function () {
         $('#report_footer_1').find('th:eq(2)').text('');
         $('#report_footer_1').find('th:eq(4)').text('');
         $('#report_footer_1').find('th:eq(5)').text('');
-        $('#report_footer_1').find('th:eq(7)').text('');
+        $('#report_footer_1').find('th:eq(8)').text('');
 
         $('#report_footer_2').find('th:eq(2)').removeClass();
         $('#report_footer_2').find('th:eq(2)').text('');
         $('#report_footer_2').find('th:eq(4)').removeClass();
         $('#report_footer_2').find('th:eq(4)').text('');
         $('#report_footer_2').find('th:eq(5)').text('');
-        $('#report_footer_2').find('th:eq(7)').removeClass();
-        $('#report_footer_2').find('th:eq(7)').text('');
+        $('#report_footer_2').find('th:eq(8)').removeClass();
+        $('#report_footer_2').find('th:eq(8)').text('');
     }
 
     $('#btnExportPdf').on('click', function () {

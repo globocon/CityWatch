@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Kpi.Models;
 using iText.IO.Image;
@@ -40,9 +41,12 @@ namespace CityWatch.Kpi.Services
         private readonly string _graphImageRootDir;
         private readonly IViewDataService _viewDataService;
         private readonly IPatrolDataReportService _patrolDataReportService;
+        private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
         public WeeklySummaryReportGenerator(IWebHostEnvironment webHostEnvironment,
-            IViewDataService viewDataService, IPatrolDataReportService patrolDataReportService)
+            IViewDataService viewDataService, IPatrolDataReportService patrolDataReportService,
+            IKpiSchedulesDataProvider kpiSchedulesDataProvider)
         {
+            _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
             _viewDataService = viewDataService;
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
@@ -340,6 +344,12 @@ namespace CityWatch.Kpi.Services
         {
             string text = "-";
             var bgColor = COLOR_WHITE;
+
+            // Verify against the site's own schedules as well as the one being run: this summary
+            // covers many sites, and a site can be paused on a different schedule from this one.
+            isHrTimerPaused = isHrTimerPaused ||
+                _kpiSchedulesDataProvider.IsHrTimerPausedForClientSite(dailyKpiResult.ClientSiteId);
+
             if (!isHrTimerPaused && dailyKpiResult.IsAcceptableLogFreq.HasValue)
             {
                 bgColor = dailyKpiResult.IsAcceptableLogFreq.Value ? CELL_BG_GREEN : CELL_BG_RED;

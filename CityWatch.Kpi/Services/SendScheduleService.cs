@@ -696,8 +696,8 @@ namespace CityWatch.Kpi.Services
                 coverSheetType = CoverSheetType.Monthly;
 
             ISummaryReportGenerator summaryReportGenerator = coverSheetType == CoverSheetType.Weekly ?
-                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService) :
-                new MonthlySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService);
+                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService, _kpiSchedulesDataProvider) :
+                new MonthlySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService, _kpiSchedulesDataProvider);
             var summaryReportFromDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today.AddDays(-6) : reportStartDate;
             var summaryReportToDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today : reportEndDate;
             var summaryFileName = summaryReportGenerator.GeneratePdfReport(schedule, summaryReportFromDate, summaryReportToDate);
@@ -729,8 +729,8 @@ namespace CityWatch.Kpi.Services
                 coverSheetType = CoverSheetType.Monthly;
 
             ISummaryReportGenerator summaryReportGenerator = coverSheetType == CoverSheetType.Weekly ?
-                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService) :
-                new MonthlySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService);
+                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService, _kpiSchedulesDataProvider) :
+                new MonthlySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService, _kpiSchedulesDataProvider);
             var summaryReportFromDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today.AddDays(-6) : reportStartDate;
             var summaryReportToDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today : reportEndDate;
             string StartDate = reportStartDate.ToString("MM/dd/yyyy");

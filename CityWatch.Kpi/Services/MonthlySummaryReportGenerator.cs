@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Kpi.Models;
 using iText.IO.Image;
@@ -60,12 +61,15 @@ namespace CityWatch.Kpi.Services
 
         private readonly IViewDataService _viewDataService;
         private readonly IPatrolDataReportService _patrolDataReportService;
+        private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
 
         public MonthlySummaryReportGenerator(IWebHostEnvironment webHostEnvironment,
            IViewDataService viewDataService,
-           IPatrolDataReportService patrolDataReportService)
+           IPatrolDataReportService patrolDataReportService,
+           IKpiSchedulesDataProvider kpiSchedulesDataProvider)
         {
             _viewDataService = viewDataService;
+            _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
             _patrolDataReportService = patrolDataReportService;
 
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
@@ -714,6 +718,11 @@ namespace CityWatch.Kpi.Services
                 if (clientData.ClientSiteKpiSetting == null)
                     continue;
 
+                // Verify against this site's own schedules as well as the one being run: this
+                // summary covers many sites, and a site can be paused on a different schedule.
+                var siteHrTimerPaused = isHrTimerPaused ||
+                    _kpiSchedulesDataProvider.IsHrTimerPausedForClientSite(clientData.ClientSiteKpiSetting.ClientSiteId);
+
                 for (int row = 0; row < 2; row++)
                 {
                     if (row == 0)
@@ -741,7 +750,7 @@ namespace CityWatch.Kpi.Services
                     if (row == 0)
                     {
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{shiftFilledVsRoster.GetValueOrDefault():0.00} %")));
-                        var logReportsVsRosterValue = isHrTimerPaused ? 0 : logReportsVsRoster.GetValueOrDefault();
+                        var logReportsVsRosterValue = siteHrTimerPaused ? 0 : logReportsVsRoster.GetValueOrDefault();
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{logReportsVsRosterValue:0.00} %")));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(guardCompetency)));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{kpiForFlir.GetValueOrDefault():0.00} %")));
@@ -754,7 +763,7 @@ namespace CityWatch.Kpi.Services
                         var logReportsVsRosterStatus = "N/A";
                         var logReportsVsRosterColor = COLOR_DEFAULT;
                         var HrRecords= clientData.ClientSiteKpiSetting.Notes?.SingleOrDefault(z => z.ForMonth == new DateTime(fromDate.Year, fromDate.Month, 1))?.HRRecords ?? string.Empty;
-                        if (!isHrTimerPaused)
+                        if (!siteHrTimerPaused)
                         {
                             logReportsVsRosterStatus = uploadGuardLogEnabled ? (logReportsVsRoster.HasValue ? (logReportsVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A") : "N/A";
                             logReportsVsRosterColor = uploadGuardLogEnabled ? (logReportsVsRoster.HasValue ? (logReportsVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT) : COLOR_DEFAULT;
