@@ -1,0 +1,87 @@
+@model CityWatch.Web.Pages.roster.BookingModel
+@* Booking > PCAR tab: create / edit a PCAR route profile and its ordered site list (moved from Kpi _TimeSheetSchedulePopup "pcar-modal"). *@
+<div class="modal" tabindex="-1" role="dialog" id="pcarRouteModal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header py-2 position-relative">
+                <h5 class="modal-title mb-0"><i class="fa fa-calendar" aria-hidden="true"></i> Manage PCAR Routes</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="position:absolute; top:8px; right:10px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body p-2">
+                <form id="frm_pcar_route" onsubmit="return false;">
+                    <input type="hidden" id="pcarRouteId" name="id" value="0">
+
+                    <!-- Route name and smart wand: the route profile -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-1">
+                                <label class="small mb-0" for="pcarRouteName">PCAR Route Name</label>
+                                <input type="text" class="form-control form-control-sm" id="pcarRouteName" name="pcarroutename" maxlength="50" />
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="flex-grow-1">
+                                <div class="form-group mb-1">
+                                    <label class="small mb-0" for="pcarSmartWandAllocation">PCAR Smart Wand Allocation</label>
+                                    <select class="form-control form-control-sm" id="pcarSmartWandAllocation" name="smartwandallocation" asp-items="@Model.PcarSmartWandOptions"></select>
+                                </div>
+                            </div>
+                            <button type="button" id="btnCreatePcarProfile" class="btn btn-sm btn-success mb-1 ml-2">
+                                <i class="fa fa-plus mr-1"></i>Create Profile
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="my-1">
+
+                    <!-- Route details: enabled once the profile exists -->
+                    <div class="card mt-1" id="pcarRouteDetailsSection" style="pointer-events:none; opacity:0.4;">
+                        <div class="card-header bg-primary text-white py-1 d-flex justify-content-between align-items-center">
+                            <strong class="mb-0 small">PCAR Route Details</strong>
+                            <button class="btn btn-sm btn-light py-0 px-2 d-flex align-items-center" type="button"
+                                    data-toggle="collapse" data-target="#pcarRouteDetailsBody" aria-expanded="true" aria-controls="pcarRouteDetailsBody">
+                                <i class="fa fa-chevron-down"></i>
+                            </button>
+                        </div>
+
+                        <div class="collapse show" id="pcarRouteDetailsBody">
+                            <div class="card-body p-2">
+                                <div class="row align-items-end">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-1">
+                                            <label class="small mb-0" for="pcarClientType">Client Type</label>
+                                            <select class="form-control form-control-sm" id="pcarClientType" asp-items="@Model.PcarClientTypeOptions"></select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-1">
+                                            <label class="small mb-0" for="pcarClientSite">Client Site</label>
+                                            <select class="form-control form-control-sm" id="pcarClientSite"></select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-sm btn-success mb-1" id="btnAddSiteToPcarRoute">
+                                            <i class="fa fa-plus mr-1"></i>Add Site to Route
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <hr class="my-1">
+
+                                <!-- One block per site, in route order (built by pcarroutes.js) -->
+                                <div id="pcarSitesContainer" class="mb-2" style="max-height: 500px; overflow-y: auto; overflow-x: hidden;"></div>
+
+                                <hr class="my-1">
+
+                                <button type="button" id="btnSavePcarRoute" class="btn btn-sm btn-primary py-1 px-2"><i class="fa fa-save mr-1"></i>Save PCAR Routes</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

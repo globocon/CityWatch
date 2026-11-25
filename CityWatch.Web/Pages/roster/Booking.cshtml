@@ -94,6 +94,9 @@
         @if (Model.RosterAccessRole != "ROEditor")
         {
             <li class="nav-item">
+                <a class="nav-link @(Model.ActiveTab == "pcar" ? "active" : "")" id="pcar-tab" data-toggle="tab" href="#pcar" role="tab" aria-controls="pcar" aria-selected="false"><i class="fa fa-car mr-1"></i>PCAR</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link @(Model.ActiveTab == "settings" ? "active" : "")" id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="false"><i class="fa fa-cog mr-1"></i>Settings</a>
             </li>
         }
@@ -476,8 +479,16 @@
             </div>
         </div>
     </div>
+        @if (Model.RosterAccessRole != "ROEditor")
+        {
+            <partial name="_PcarRoutesTab" model="Model" />
+        }
     </div>
     </div>
+    @if (Model.RosterAccessRole != "ROEditor")
+    {
+        <partial name="_PcarRouteModal" model="Model" />
+    }
 
     <!-- Hidden Utils -->
     <input type="file" id="coverUploadInput" style="display:none;" accept=".pdf" />
@@ -1451,6 +1462,7 @@
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+    <script src="~/js/pcarroutes.js" asp-append-version="true"></script>
     <script>
         /* ── Booking page dark-mode: dynamic style injection ──
            CSS cascade order: dynamically-injected <style> tags are LAST,
@@ -1662,6 +1674,8 @@
             // Tab activation
             if (activeTab === 'groups') {
                 $('#groups-tab').tab('show');
+            } else if (activeTab === 'pcar' && $('#pcar-tab').length) {
+                $('#pcar-tab').tab('show');
             } else {
                 $('#projects-tab').tab('show');
             }
