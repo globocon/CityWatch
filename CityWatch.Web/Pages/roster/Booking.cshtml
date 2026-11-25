@@ -94,10 +94,10 @@
         @if (Model.RosterAccessRole != "ROEditor")
         {
             <li class="nav-item">
-                <a class="nav-link @(Model.ActiveTab == "settings" ? "active" : "")" id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="false"><i class="fa fa-cog mr-1"></i>Settings</a>
+                <a class="nav-link @(Model.ActiveTab == "pcar" ? "active" : "")" id="pcar-tab" data-toggle="tab" href="#pcar" role="tab" aria-controls="pcar" aria-selected="false"><i class="fa fa-car mr-1"></i>PCAR</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link @(Model.ActiveTab == "pcar" ? "active" : "")" id="pcar-tab" data-toggle="tab" href="#pcar" role="tab" aria-controls="pcar" aria-selected="false"><i class="fa fa-car mr-1"></i>PCAR</a>
+                <a class="nav-link @(Model.ActiveTab == "settings" ? "active" : "")" id="settings-tab" data-toggle="tab" href="#settings" role="tab" aria-controls="settings" aria-selected="false"><i class="fa fa-cog mr-1"></i>Settings</a>
             </li>
         }
     </ul>
