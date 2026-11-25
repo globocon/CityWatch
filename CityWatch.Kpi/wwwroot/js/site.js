@@ -125,6 +125,11 @@ $(function () {
 
     /***** KPI Report *****/
 
+    // Set from the server on every report load, before the rows are drawn. Starts true so a
+    // response that somehow omits it hides the column rather than showing a measure a site may
+    // have asked not to be reported on.
+    var kpiHrTimerPaused = true;
+
     var gridReport = $('#monthly_kpi_report').DataTable({
         paging: false,
         searching: false,
@@ -173,7 +178,9 @@ $(function () {
                 $('td', row).eq(8).addClass('cell-below-limit');
             }
 
-            if (data.isAcceptableLogFreq === null) {
+            // DAILY LOG 2HR TIMER. kpiHrTimerPaused is what the server verified against this
+            // site's schedules, so the column reads the same here as it does in the PDF.
+            if (kpiHrTimerPaused || data.isAcceptableLogFreq === null) {
                 $('td', row).eq(12).html('-');
             }
             else {
@@ -250,6 +257,8 @@ $(function () {
             $('#alertRegenerateTable').hide();
             clearKpiResults();
             if (response.success) {
+                // Must be set before draw(): createdRow reads it for the 2 hr timer column.
+                kpiHrTimerPaused = response.isHrTimerPaused === true;
                 gridReport.rows.add(response.data.dailyKpiResults).draw();
                 const pdfName = response.fileName !== '' ? '../Pdf/Output/' + response.fileName : '#';
                 $('#btnExportPdf').attr('href', pdfName);

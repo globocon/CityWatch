@@ -23,6 +23,7 @@ namespace CityWatch.Kpi.Pages
         private readonly IImportJobDataProvider _importJobDataProvider;
         private readonly IImportDataService _importDataService;
         public readonly IKpiDataProvider _kpiDataProvider;
+        private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
         private readonly IUserAuthenticationService _userAuthentication;
 
         public DashboardModel(IViewDataService viewDataService,
@@ -30,8 +31,10 @@ namespace CityWatch.Kpi.Pages
             IImportDataService importDataService,
             IClientDataProvider clientDataProvider,
             IReportGenerator kpiReportGenerator,
-            IKpiDataProvider kpiDataProvider)
+            IKpiDataProvider kpiDataProvider,
+            IKpiSchedulesDataProvider kpiSchedulesDataProvider)
         {
+            _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
             _viewDataService = viewDataService;
             _kpiReportGenerator = kpiReportGenerator;
             _clientDataProvider = clientDataProvider;
@@ -251,9 +254,15 @@ namespace CityWatch.Kpi.Pages
                     Date = startDate.ToString("MMM yyyy")
                 };
                 var data = _viewDataService.GetKpiReportData(siteId, startDate, endDate);
-                
-                var fileName = _kpiReportGenerator.GeneratePdfReport(siteId, startDate, endDate);
-                return new JsonResult(new { success = true, header, data, fileName });
+
+                // The DAILY LOG 2HR TIMER column on screen has to answer the same question the
+                // PDF does. This page has no schedule in hand - the operator picked a site - so
+                // the switch is verified against that site's own schedules, and the column is
+                // dashed when any of them has it on.
+                var isHrTimerPaused = _kpiSchedulesDataProvider.IsHrTimerPausedForClientSite(siteId);
+
+                var fileName = _kpiReportGenerator.GeneratePdfReport(siteId, startDate, endDate, isHrTimerPaused);
+                return new JsonResult(new { success = true, header, data, fileName, isHrTimerPaused });
             }
             return new JsonResult(new { success = false });
         }

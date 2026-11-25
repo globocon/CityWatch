@@ -281,7 +281,7 @@ namespace CityWatch.Kpi.Services.FastReport
 
                 // Legacy order: ProjectName is normalised first, then the cover sheet is built.
                 schedule.ProjectName = GetScheduleIdentifier(schedule);
-                summaryFile = CreateSummaryReport(schedule, reportStartDate, reportEndDate, viewDataService, patrolDataReportService);
+                summaryFile = CreateSummaryReport(schedule, reportStartDate, reportEndDate, viewDataService, schedulesProvider, patrolDataReportService);
                 job.Append("Summary cover page built.");
 
                 // -------- Stage: merge --------
@@ -444,6 +444,7 @@ namespace CityWatch.Kpi.Services.FastReport
             DateTime reportStartDate,
             DateTime reportEndDate,
             IViewDataService viewDataService,
+            IKpiSchedulesDataProvider kpiSchedulesDataProvider,
             IPatrolDataReportService patrolDataReportService)
         {
             var coverSheetType = schedule.CoverSheetType;
@@ -451,8 +452,8 @@ namespace CityWatch.Kpi.Services.FastReport
                 coverSheetType = CoverSheetType.Monthly;
 
             ISummaryReportGenerator summaryReportGenerator = coverSheetType == CoverSheetType.Weekly
-                ? new WeeklySummaryReportGenerator(_webHostEnvironment, viewDataService, patrolDataReportService)
-                : new MonthlySummaryReportGenerator(_webHostEnvironment, viewDataService, patrolDataReportService);
+                ? new WeeklySummaryReportGenerator(_webHostEnvironment, viewDataService, patrolDataReportService, kpiSchedulesDataProvider)
+                : new MonthlySummaryReportGenerator(_webHostEnvironment, viewDataService, patrolDataReportService, kpiSchedulesDataProvider);
 
             var summaryFromDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today.AddDays(-6) : reportStartDate;
             var summaryToDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today : reportEndDate;
