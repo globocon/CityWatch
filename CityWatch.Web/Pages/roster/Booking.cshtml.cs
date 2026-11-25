@@ -21,7 +21,7 @@ using CityWatch.Web.Helpers;
 
 namespace CityWatch.Web.Pages.roster
 {
-    public class BookingModel : PageModel
+    public partial class BookingModel : PageModel
     {
         private readonly ILogger<BookingModel> _logger;
         private readonly IViewDataService _viewDataService;
@@ -30,6 +30,8 @@ namespace CityWatch.Web.Pages.roster
         private readonly IRosterReportGenerator _rosterReportGenerator;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IAlertEmailServices _alertEmailServices;
+        private readonly IConfigDataProvider _configDataProvider;
+        private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
 
         public BookingModel(
             ILogger<BookingModel> logger,
@@ -38,7 +40,9 @@ namespace CityWatch.Web.Pages.roster
             IClientDataProvider clientDataProvider,
             IRosterReportGenerator rosterReportGenerator,
             IWebHostEnvironment webHostEnvironment,
-            IAlertEmailServices alertEmailServices)
+            IAlertEmailServices alertEmailServices,
+            IConfigDataProvider configDataProvider,
+            IKpiSchedulesDataProvider kpiSchedulesDataProvider)
         {
             _logger = logger;
             _viewDataService = viewDataService;
@@ -47,6 +51,8 @@ namespace CityWatch.Web.Pages.roster
             _rosterReportGenerator = rosterReportGenerator;
             _webHostEnvironment = webHostEnvironment;
             _alertEmailServices = alertEmailServices;
+            _configDataProvider = configDataProvider;
+            _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
         }
 
         public DateTime StartDate { get; set; }
@@ -170,6 +176,10 @@ namespace CityWatch.Web.Pages.roster
             IsLocked = EndDate < firstDayOfCurrentMonth;
 
             PopulateWeeklyHolidays();
+
+            // PCAR tab (moved from Kpi Admin/Settings > PCAR Routes): its dropdowns are only needed when the tab is shown.
+            if (RosterAccessRole != "ROEditor")
+                PopulatePcarDropdowns();
         }
 
         private void PopulateWeeklyHolidays()

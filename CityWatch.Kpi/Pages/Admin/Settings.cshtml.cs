@@ -2303,77 +2303,6 @@ namespace CityWatch.Kpi.Pages.Admin
 
 
 
-        public JsonResult OnPostCreateProfile([FromForm] int routeId, [FromForm] string pcarroutename, [FromForm] int smartwandallocation)
-        {
-            if (string.IsNullOrWhiteSpace(pcarroutename))
-                return new JsonResult(new { success = false, message = "Route name is required." });
-
-            // NEW VALIDATION
-            if (smartwandallocation == 0)
-                return new JsonResult(new { success = false, message = "Please select at least one Smart Wand Allocation." });
-
-            // Call your validated save method
-            var result = _kpiSchedulesDataProvider.SavePcarrouteMaster(
-                routeId == 0 ? (int?)null : routeId,
-                pcarroutename,
-                smartwandallocation
-            );
-
-            // Validation failed?
-            if (!result.success)
-            {
-                return new JsonResult(new
-                {
-                    success = false,
-                    message = result.message
-                });
-            }
-
-            // Success — return new or updated route
-            return new JsonResult(new
-            {
-                success = true,
-                message = result.message,
-                routeId = result.route.Id
-            });
-        }
-
-
-
-        public JsonResult OnPostDeletePCarProfile(int RouteId)
-        {
-
-
-            var result = _kpiSchedulesDataProvider.DeletePcarrouteProfile(RouteId);
-
-            if (!result)
-            {
-                return new JsonResult(new
-                {
-                    success = false,
-                    message = "Failed to delete profile."
-                });
-            }
-
-            return new JsonResult(new
-            {
-                success = true,
-                message = "Profile deleted successfully.",
-                routeId = RouteId
-            });
-        }
-
-
-        public JsonResult OnPostSaveRouteDetails([FromBody] PcarRouteSaveViewModel model)
-        {
-            if (model.PcarRouteId == 0 || model.SiteSchedules == null || !model.SiteSchedules.Any())
-                return new JsonResult(new { success = false, message = "Invalid Profile or Client Sites." });
-
-            _kpiSchedulesDataProvider.SavePcarrouteDetails(model);
-            return new JsonResult(new { success = true });
-        }
-
-
         public JsonResult OnGetKpiTimesheetSchedules(int type, string searchTerm)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -3076,49 +3005,6 @@ namespace CityWatch.Kpi.Pages.Admin
             }
         }
 
-
-        public JsonResult OnGetPCARProfiles()
-        {
-            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
-            if (userId == 0 && Request.Query.ContainsKey("uId"))
-            {
-                if (int.TryParse(Request.Query["uId"], out int parsedUId))
-                {
-                    userId = parsedUId;
-                }
-            }
-
-            if (userId != 0)
-            {
-                return new JsonResult(_kpiSchedulesDataProvider.GetPCARProfilesUsingUserId(userId));
-            }
-            else
-            {
-                // Super Admin / Guard fallback (Original code didn't filter by GuardId for PCAR Routes)
-                return new JsonResult(_kpiSchedulesDataProvider.GetPCARProfilesAll());
-            }
-        }
-
-        public JsonResult OnGetPCARRouteDetails(int id)
-        {
-
-            return (_configDataProvider.GetPCARRouteDetails(id));
-
-        }
-
-        public JsonResult OnPostRemovePcarRouteSites([FromBody] RemoveRouteSitesModel model)
-        {
-            var result = _configDataProvider.RemovePCarDeatils(model.PcarRouteId, model.ClientSiteIds);
-
-            return new JsonResult(new { success = result });
-        }
-
-        public class RemoveRouteSitesModel
-        {
-            public int PcarRouteId { get; set; }
-            public List<int> ClientSiteIds { get; set; }
-        }
 
         public JsonResult OnPostSaveKpiKVSchedule(KpiKVScheduleViewModel kpiSendKVViewModel)
         {

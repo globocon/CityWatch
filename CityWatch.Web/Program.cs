@@ -39,6 +39,7 @@ builder.Services.AddCityWatchTracking(builder.Configuration); // Tracking featur
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
 builder.Services.AddScoped<IClientDataProvider, ClientDataProvider>();
 builder.Services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
+builder.Services.AddScoped<IKpiSchedulesDataProvider, KpiSchedulesDataProvider>(); // Booking > PCAR tab
 builder.Services.AddScoped<IViewDataService, ViewDataService>();
 builder.Services.AddScoped<IIrDataProvider, IrDataProvider>();
 builder.Services.AddScoped<IUserDataProvider, UserDataProvider>();
