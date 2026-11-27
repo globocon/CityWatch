@@ -3094,6 +3094,7 @@ namespace CityWatch.Data.Providers
                 id = route.Id,
                 pcarroutename = route.Pcarroutename,
                 smartwandallocation = route.Smartwandallocation,
+                pcarId = route.PcarId,
                 routeDetails = route.RouteDetails.OrderBy(rd => rd.OrderNo).Select(rd => new
                 {
                     clientSiteId = rd.ClientSiteId,

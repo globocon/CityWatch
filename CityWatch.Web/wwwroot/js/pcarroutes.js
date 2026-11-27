@@ -58,39 +58,9 @@ $(function () {
         ]
     });
 
-    // PCAR filter: routes whose smart wand belongs to the chosen patrol car. Later reloads keep the filter.
+    // PCAR filter: routes whose PCAR (PcarRoute.PcarId) is the chosen patrol car. Later reloads keep the filter.
     $('#pcarFilterPatrolCar').on('change', function () {
         gridPcarRoutes.reload({ patrolCarId: $(this).val() || '' });
-    });
-
-    /* ---------- PCAR -> Smart Wand (modal) ---------- */
-
-    // Every smart wand as rendered, with its patrol car (ClientSiteSmartWands.PatrolCarId).
-    const pcarAllWands = $('#pcarSmartWandAllocation option').filter(function () { return $(this).val() !== ''; })
-        .map(function () {
-            return { id: $(this).val(), text: $(this).text(), patrolCarId: String($(this).data('patrol-car-id') || '') };
-        }).get();
-
-    // Rebuilds the Smart Wand list with only the chosen car's wands - none until a PCAR is chosen.
-    // Selects selectedWandId when it is in the list; otherwise a car's only wand. keepWandId is always
-    // listed, so editing a route whose wand has no car does not lose its wand.
-    function fillPcarSmartWands(patrolCarId, selectedWandId, keepWandId) {
-        const wands = pcarAllWands.filter(w =>
-            (patrolCarId && w.patrolCarId === String(patrolCarId)) || (keepWandId && w.id === String(keepWandId)));
-        const $select = $('#pcarSmartWandAllocation').empty()
-            .append($('<option>').val('').text(patrolCarId || wands.length ? 'Select' : 'Select a PCAR first'));
-        wands.forEach(w => $select.append($('<option>').val(w.id).text(w.text).attr('data-patrol-car-id', w.patrolCarId)));
-
-        if (selectedWandId && wands.some(w => w.id === String(selectedWandId)))
-            $select.val(String(selectedWandId));
-        else if (patrolCarId && wands.length === 1)
-            $select.val(wands[0].id);
-        else
-            $select.val('');
-    }
-
-    $('#pcarPatrolCar').on('change', function () {
-        fillPcarSmartWands($(this).val(), $('#pcarSmartWandAllocation').val());
     });
 
     /* ---------- Modal state ---------- */
@@ -111,13 +81,12 @@ $(function () {
     }
 
     // Bootstrap fires this before the Edit click handler below runs, so this reset comes first.
-    // The popup's PCAR starts on the tab's PCAR filter (Add); Edit then sets it to the route's car.
+    // The popup's PCAR starts on the tab's PCAR filter (Add); Edit then sets it to the route's PCAR.
+    // The Smart Wand list always holds every available wand; PCAR and wand are chosen independently.
     $('#pcarRouteModal').on('show.bs.modal', function (e) {
         if (e.target !== this) return; // ignore the collapse inside the modal
         $(this).find('input, select').val('');
-        const tabPatrolCarId = $('#pcarFilterPatrolCar').val() || '';
-        $('#pcarPatrolCar').val(tabPatrolCarId);
-        fillPcarSmartWands(tabPatrolCarId, '');
+        $('#pcarPatrolCar').val($('#pcarFilterPatrolCar').val() || '');
         $('#pcarRouteId').val(0);
         $('#pcarClientSite').html('');
         $('#pcarSitesContainer').empty();
@@ -154,11 +123,12 @@ $(function () {
             const routeDetails = data.routeDetails || [];
 
             $('#pcarRouteName').val(data.pcarroutename);
-            // The route's patrol car is its smart wand's car; show it and list that car's wands.
-            const wand = pcarAllWands.find(w => w.id === String(data.smartwandallocation));
-            const patrolCarId = wand ? wand.patrolCarId : '';
-            $('#pcarPatrolCar').val(patrolCarId);
-            fillPcarSmartWands(patrolCarId, data.smartwandallocation, data.smartwandallocation);
+            // Saved PCAR (PcarRoute.PcarId) and smart wand. A PCAR no longer ticked as a patrol car is not in
+            // the list, so it shows "Select" and must be chosen again before the profile can be updated.
+            $('#pcarPatrolCar').val(data.pcarId ? String(data.pcarId) : '');
+            if ($('#pcarPatrolCar').val() === null) $('#pcarPatrolCar').val('');
+            $('#pcarSmartWandAllocation').val(String(data.smartwandallocation));
+            if ($('#pcarSmartWandAllocation').val() === null) $('#pcarSmartWandAllocation').val('');
 
             $.each(routeDetails, function (index, rd) {
                 $('#pcarSitesContainer').append(createPcarSiteBlock(rd.clientSiteId, rd.clientSiteName, rd, index + 1));
@@ -176,7 +146,7 @@ $(function () {
         });
     }
 
-    /* ---------- Profile (name + smart wand) ---------- */
+    /* ---------- Profile (name + PCAR + smart wand) ---------- */
 
     $('#btnCreatePcarProfile').on('click', function () {
         $.ajax({
@@ -185,6 +155,7 @@ $(function () {
             data: {
                 routeId: parseInt($('#pcarRouteId').val()) || 0,
                 pcarroutename: $('#pcarRouteName').val(),
+                pcarId: parseInt($('#pcarPatrolCar').val()) || 0,
                 smartwandallocation: parseInt($('#pcarSmartWandAllocation').val()) || 0
             },
             headers: pcarHeaders()

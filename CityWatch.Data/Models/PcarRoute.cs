@@ -25,6 +25,12 @@ namespace CityWatch.Data.Models
         [ForeignKey("Smartwandallocation")]
         public ClientSiteSmartWand SmartWand { get; set; }   // Navigation property
 
+        /// <summary>
+        /// The route's patrol car: IncidentReportPositions.Id with IsPatrolCar (C4i Fields > IR > Position,
+        /// "Patrol Cars ?" ticked). Chosen with the smart wand when the profile is saved; DbScript 388 / 389.
+        /// </summary>
+        public int? PcarId { get; set; }
+
         public DateTime CreatedOn { get; set; } = DateTime.Now;
 
         // Navigation Property
