@@ -1,0 +1,1 @@
+alter table IncidentReportFields add  ClientSiteIds nvarchar(Max)

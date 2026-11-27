@@ -1,0 +1,33 @@
+@model CityWatch.Web.Pages.roster.BookingModel
+@* Booking > PCAR tab: patrol car route profiles. Moved from Kpi Admin/Settings > "PCAR Routes" (P9 Issue 44 Step 1A).
+   Behaviour lives in wwwroot/js/pcarroutes.js; handlers in Booking.Pcar.cs. *@
+<div class="tab-pane fade @(Model.ActiveTab == "pcar" ? "show active" : "")" id="pcar" role="tabpanel" aria-labelledby="pcar-tab">
+    <div class="card shadow-sm border-0 mt-3" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 font-weight-bold"><i class="fa fa-car mr-2"></i>PCAR Routes</h5>
+                <button type="button" class="btn btn-success" id="btnAddPcarRoute" data-toggle="modal" data-target="#pcarRouteModal">
+                    <i class="fa fa-plus mr-2"></i>Add PCAR Routes
+                </button>
+            </div>
+
+            @* Grid filter. Patrol cars = C4i Fields > IR > Position with "Patrol Cars ?" ticked; a route's car is its
+               smart wand's car. Add PCAR Routes starts the popup on the car chosen here. *@
+            <div class="form-row align-items-center mb-2">
+                <div class="col-auto">
+                    <label class="mb-0 font-weight-bold" for="pcarFilterPatrolCar">PCAR</label>
+                </div>
+                <div class="col-auto">
+                    <select class="form-control form-control-sm" id="pcarFilterPatrolCar" style="width: 260px;">
+                        <option value="">All</option>
+                        @foreach (var car in Model.PcarPatrolCarOptions)
+                        {
+                            <option value="@car.Value">@car.Text</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <table class="table" id="pcar_routes_grid"></table>
+        </div>
+    </div>
+</div>

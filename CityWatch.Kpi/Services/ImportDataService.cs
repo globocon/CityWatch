@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Kpi.Helpers;
@@ -6,9 +7,13 @@ using CityWatch.Kpi.Models;
 using Dropbox.Api;
 using Dropbox.Api.Common;
 using Dropbox.Api.Files;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SMSGlobal.api;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -46,16 +51,19 @@ namespace CityWatch.Kpi.Services
         private readonly CityWatchDbContext _dbContext;
         private readonly IImportJobDataProvider _importJobDataProvider;
         private readonly IClientDataProvider _clientDataProvider;
+        private readonly IGuardLogDataProvider _guardLogDataProvider = null;
 
         public ImportDataService(IOptions<Settings> settings,
             CityWatchDbContext dbContext,
             IImportJobDataProvider importJobDataProvider,
-            IClientDataProvider clientDataProvider)
+            IClientDataProvider clientDataProvider,
+            IGuardLogDataProvider guardLogDataProvider)
         {
             _settings = settings.Value;
             _dbContext = dbContext;
             _importJobDataProvider = importJobDataProvider;
             _clientDataProvider = clientDataProvider;
+            _guardLogDataProvider = guardLogDataProvider;
         }
 
         /// <summary>
@@ -102,6 +110,9 @@ namespace CityWatch.Kpi.Services
 
             runLog.AppendFormat(GetFormattedLogMessage($"Job (id={item.Id}) run started"));
 
+            var dailyFqCounts = await GetDailyFqCounts(datesToProcess, item.ClientSiteId);
+            runLog.AppendFormat(GetFormattedLogMessage("Daily FQ data collected"));
+
             // Get IR count
             var irCounts = await GetIrCount(datesToProcess, item.ClientSiteId);
             runLog.AppendFormat(GetFormattedLogMessage("IR count collected"));
@@ -118,9 +129,18 @@ namespace CityWatch.Kpi.Services
             var wandScanCounts = await GetWandScansCount(clientSiteKpiSetting, datesToProcess);
             runLog.AppendFormat(GetFormattedLogMessage("Wand scans count collected"));
 
+            // Get NFCandBLE WAND Scan count
+            var dailyLogTimersNFCandBLE = await GetDailyLogTimerNFCandBLE(datesToProcess, item.ClientSiteId);
+            runLog.AppendFormat(GetFormattedLogMessage("Daily log data collected"));
+
+
             // Get employee hours
             var employeeHours = GetEmployeeHours(clientSiteKpiSetting, datesToProcess);
             runLog.AppendFormat(GetFormattedLogMessage("Employee hours collected"));
+
+
+            
+
 
             // Create and save daily KPI data
             var dailyKpis = new List<DailyClientSiteKpi>();
@@ -133,6 +153,9 @@ namespace CityWatch.Kpi.Services
                 var wandScanCount = wandScanCounts.GetValueOrDefault(date, 0);
                 var employeeHour = employeeHours.GetValueOrDefault(date, 0);
                 var acceptableLogFreq = dailyLogTimers.ContainsKey(date) && dailyLogTimers[date] != null ? dailyLogTimers[date].IsAcceptable : null;
+                var NFCandBLE = dailyLogTimersNFCandBLE.ContainsKey(date) && dailyLogTimersNFCandBLE[date] != null ? dailyLogTimersNFCandBLE[date].Count : 0;
+                var fq = dailyFqCounts.TryGetValue(date, out var fqValue)? fqValue?.Count ?? 0 : 0;
+
 
                 var kpi = new DailyClientSiteKpi()
                 {
@@ -144,6 +167,8 @@ namespace CityWatch.Kpi.Services
                     WandScanCount = pastDate ? wandScanCount : null,
                     EmployeeHours = pastDate ? employeeHour : null,
                     IsAcceptableLogFreq = acceptableLogFreq,
+                    WandScanNFCandBLE= pastDate ? NFCandBLE : 0,
+                    WandScanFq = pastDate ? fq : 0,
                 };
                 dailyKpis.Add(kpi);
             }
@@ -182,6 +207,8 @@ namespace CityWatch.Kpi.Services
                     existingDateKpi.WandScanCount = kpi.WandScanCount;
                     existingDateKpi.FireOrAlarmCount = kpi.FireOrAlarmCount;
                     existingDateKpi.IsAcceptableLogFreq = kpi.IsAcceptableLogFreq;
+                    existingDateKpi.WandScanNFCandBLE=  kpi.WandScanNFCandBLE ?? 0;
+                    existingDateKpi.WandScanFq = kpi.WandScanFq ?? 0;
                 }
                 else
                 {
@@ -243,7 +270,257 @@ namespace CityWatch.Kpi.Services
             }
             return isAcceptableLogFreq;
         }
-    
+
+
+
+
+        private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyLogTimerNFCandBLE(List<DateTime> kpiDates, int clientSiteId)
+        {
+            var dailyLogCounts = new Dictionary<DateTime, DailyIrCount>();
+
+            DateTime startDate = kpiDates.Min();
+            DateTime endDate = kpiDates.Max();
+
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                int scanCount = 0;
+
+                // Daily Guard Log
+                var logBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, date);
+                if (logBook != null)
+                {
+                    var guardLogs = _guardLogDataProvider.GetGuardLogs(logBook.Id, logBook.Date)
+                        .Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal);
+
+                    scanCount += guardLogs.Count();
+                }
+
+                // Fusion Log
+                //var logBook2 = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.FusionLog, date);
+                //if (logBook2 != null)
+                //{
+                //    var fusionLogs = _guardLogDataProvider.GetGuardLogs(logBook2.Id, logBook2.Date)
+                //        .Where(x => x.WAND_TAG_ENTRY_TYPE != ScanningType.Normal);
+
+                //    scanCount += fusionLogs.Count();
+                //}
+
+                dailyLogCounts[date] = new DailyIrCount
+                {
+                    Date = date,
+                    Count = scanCount
+                };
+            }
+
+            return dailyLogCounts;
+        }
+
+        private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyFqCounts(
+    List<DateTime> kpiDates,
+    int clientSiteId)
+        {
+            var result = new Dictionary<DateTime, DailyIrCount>();
+
+            try
+            {
+                if (kpiDates == null || !kpiDates.Any())
+                    return result;
+
+                var onlyDates = kpiDates.Select(d => d.Date).ToList();
+                var fromDate = onlyDates.Min();
+                var toDate = onlyDates.Max();
+
+                // Load from the new DailyWandFq table
+                var fqRows = await _dbContext.DailyWandFq
+                    .Where(x => x.ClientSiteId == clientSiteId
+                                && x.FqDate >= fromDate
+                                && x.FqDate <= toDate)
+                    .OrderBy(x => x.FqDate)
+                    .ToListAsync();
+
+                // Add existing dates
+                foreach (var fq in fqRows)
+                {
+                    result[fq.FqDate] = new DailyIrCount
+                    {
+                        Date = fq.FqDate,
+                        Count = fq.Fq
+                    };
+                }
+
+                // Fill missing KPI dates with zero
+                foreach (var date in onlyDates)
+                {
+                    if (!result.ContainsKey(date))
+                    {
+                        result[date] = new DailyIrCount
+                        {
+                            Date = date,
+                            Count = 0
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // optional: log the exception (if you have logging)
+                Console.WriteLine("GetDailyFqCounts Error: " + ex.Message);
+
+                // ensure a safe return value
+                foreach (var date in kpiDates)
+                {
+                    var d = date.Date;
+                    if (!result.ContainsKey(d))
+                    {
+                        result[d] = new DailyIrCount
+                        {
+                            Date = d,
+                            Count = 0
+                        };
+                    }
+                }
+            }
+
+            return result;
+        }
+
+
+
+
+
+
+
+        //   private async Task<Dictionary<DateTime, DailyIrCount>> GetDailyFqCounts(
+        //List<DateTime> kpiDates,
+        //int clientSiteId)
+        //   {
+        //       if (kpiDates == null || !kpiDates.Any())
+        //           return new Dictionary<DateTime, DailyIrCount>();
+
+        //       DateTime fromDate = kpiDates.Min();
+        //       DateTime toDate = kpiDates.Max();
+        //       // 1. Load timezone (default fallback same as SP)
+        //       var timezone = await _dbContext.ClientSiteKpiSettings
+        //           .Where(x => x.ClientSiteId == clientSiteId)
+        //           .Select(x => x.TimezoneString)
+        //           .FirstOrDefaultAsync()
+        //           ?? "AUS Eastern Standard Time";
+
+        //       TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+
+        //       // 2. Equivalent to SiteTags CTE
+        //       var siteTags = await _dbContext.ClientSiteSmartWandTags
+        //           .Where(x => x.IsDeleted == false && x.ClientSiteId == clientSiteId)
+        //           .Select(x => new
+        //           {
+        //               x.ClientSiteId,
+        //               TagUId = x.UId,
+        //               x.FqBypass
+        //           })
+        //           .ToListAsync();
+
+        //       // 3. Equivalent to TagHits CTE  
+        //       var tagHits = await _dbContext.ClientSiteSmartWandTagsHitLogs
+        //           .Where(x => x.LoggedInClientSiteId == clientSiteId)
+        //           .ToListAsync();
+
+        //       var tagHitsLocal = tagHits
+        //           .Select(h =>
+        //           {
+        //               var localDate = TimeZoneInfo.ConvertTimeFromUtc(h.HitUtcDateTime, tz).Date;
+
+        //               return new
+        //               {
+        //                   ClientSiteId = h.LoggedInClientSiteId,
+        //                   h.TagUId,
+        //                   HitLocalDate = localDate
+        //               };
+        //           })
+        //           .Where(h => h.HitLocalDate >= fromDate.Date && h.HitLocalDate <= toDate.Date)
+        //           .ToList();
+
+        //       // 4. Equivalent to TagScanCounts CTE  
+        //       var tagScanCounts =
+        //           from t in siteTags
+        //           join h in tagHitsLocal
+        //               on new { t.ClientSiteId, t.TagUId } equals new { h.ClientSiteId, h.TagUId }
+        //               into gj
+        //           from hit in gj.DefaultIfEmpty()
+        //           group hit by new
+        //           {
+        //               t.ClientSiteId,
+        //               t.TagUId,
+        //               t.FqBypass,
+        //               Date = hit?.HitLocalDate
+        //           }
+        //           into g
+        //           select new
+        //           {
+        //               g.Key.ClientSiteId,
+        //               g.Key.TagUId,
+        //               g.Key.FqBypass,
+        //               g.Key.Date,
+        //               ScanCount = g.Count(x => x != null)
+        //           };
+
+        //       var tagScanList = tagScanCounts.ToList();
+
+        //       // 5. Final SELECT (Completed rounds per date)
+        //       var result =
+        //           tagScanList
+        //           .Where(x => x.FqBypass == false)         // Only non-bypassed tags
+        //           .Where(x => x.Date != null)         // Prevent null
+        //           .GroupBy(x => x.Date.Value)
+        //           .Select(g => new DailyIrCount
+        //           {
+        //               Date = g.Key,
+        //               Count = g.Min(x => x.ScanCount)
+        //           })
+        //           .OrderBy(x => x.Date)
+        //           .ToList();
+
+        //       // FIX: return dictionary
+        //       return result.ToDictionary(x => x.Date, x => x);
+
+        //       //// Get the date range
+        //       //DateTime fromDate = kpiDates.Min();
+        //       //DateTime toDate = kpiDates.Max();
+        //       //// Create strongly-typed SQL parameters
+        //       //var pClientId = new SqlParameter("@ClientId", clientSiteId);
+
+        //       //var pFrom = new SqlParameter("@FromDate", fromDate)
+        //       //{
+        //       //    DbType = System.Data.DbType.Date
+        //       //};
+
+        //       //var pTo = new SqlParameter("@ToDate", toDate)
+        //       //{
+        //       //    DbType = System.Data.DbType.Date
+        //       //};
+
+        //       //// ⭐ IMPORTANT: use named parameters, NOT {0},{1},{2}
+        //       //var spResult =  _dbContext.Set<DailyNFCCount>()
+        //       //    .FromSqlRaw(
+        //       //        "EXEC GetCompletedRoundsPerDate @ClientId, @FromDate, @ToDate",
+        //       //        pClientId, pFrom, pTo)
+        //       //    .ToList();
+        //       //// Call the stored procedure
+        //       ////        var spResult = await _dbContext.Set<DailyIrCount>()
+        //       ////.FromSqlRaw(
+        //       ////    "EXEC [dbo].[GetCompletedRoundsPerDate] @ClientId = {0}, @FromDate = {1}, @ToDate = {2}",
+        //       ////    clientSiteId, fromDate, toDate)
+        //       ////.ToListAsync();
+
+        //       //var result = spResult.ToDictionary(x => x.Date, x => x);
+
+        //       //return result;
+        //   }
+
+
+
+
+
+
         private async Task<Dictionary<DateTime, int>> GetImageCount(ClientSiteKpiSetting clientSiteKpiSetting, DateTime reportDate, List<DateTime> kpiDates)
         {
             var dbxItemCount = new Dictionary<string, int>();
@@ -389,6 +666,7 @@ namespace CityWatch.Kpi.Services
         {
             var wandScans = new Dictionary<DateTime, int>();
             var results = new List<DailyWandScanCount>();
+            var results2 = new List<DailyWandScanCount>();
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_settings.WandApiUrl);
@@ -405,13 +683,37 @@ namespace CityWatch.Kpi.Services
                     var resultString = await response.Content.ReadAsStringAsync();
                     results = JsonSerializer.Deserialize<List<DailyWandScanCount>>(resultString);
                 }
+
+
+                /* New KoiosClientSiteId update 22/11/2023 dileep start */
+                if (clientSiteKpiSetting.KoiosClientSiteIdB != null)
+                {
+                    if (!string.IsNullOrEmpty(clientSiteKpiSetting.KoiosClientSiteIdB.ToString()))
+                    {
+                        var url2 = $"reports-api/daily_data/?agency=citywatch&start_date={kpiDates.Min().ToString("yyyy-MM-dd")}" +
+                                   $"&end_date={kpiDates.Max().ToString("yyyy-MM-dd")}" +
+                                   $"&site_id={clientSiteKpiSetting.KoiosClientSiteIdB}" +
+                                   $"&limit=-1";
+                        HttpResponseMessage response2 = await client.GetAsync(url2);
+                        if (response2.IsSuccessStatusCode)
+                        {
+                            var resultString2 = await response2.Content.ReadAsStringAsync();
+                            results2 = JsonSerializer.Deserialize<List<DailyWandScanCount>>(resultString2);
+                        }
+
+                    }
+                }
+                /* New KoiosClientSiteId update 22/11/2023 dileep end */
             }
 
 
             foreach (var date in kpiDates)
             {
                 var wandScanResult = results.SingleOrDefault(x => x.Date == date)?.Count;
-                wandScans.Add(date, wandScanResult.GetValueOrDefault());
+                /* New KoiosClientSiteId update 22/11/2023 dileep start */
+                var wandScanResult2 = results2.SingleOrDefault(x => x.Date == date)?.Count;
+                /* New KoiosClientSiteId update 22/11/2023 dileep end  added the smartwand result2 with result */
+                wandScans.Add(date, wandScanResult.GetValueOrDefault()+ wandScanResult2.GetValueOrDefault());
             }
 
             return wandScans;

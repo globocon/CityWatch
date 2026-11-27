@@ -1,4 +1,4 @@
-﻿using CityWatch.Data.Models;
+using CityWatch.Data.Models;
 using System;
 using System.Linq;
 
@@ -29,7 +29,23 @@ namespace CityWatch.Kpi.Models
 
         public int? ImageCount { get { return _dailyClientSiteKpi.ImageCount; } }
 
-        public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount; } }
+        //public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount; } }
+        //public int? WandScanCount { get { return _dailyClientSiteKpi.WandScanCount+ _dailyClientSiteKpi.WandScanNFCandBLE; } }
+
+        public int? WandScanCount
+        {
+            get
+            {
+                int? count = _dailyClientSiteKpi.WandScanCount;
+
+                if (_dailyClientSiteKpi.WandScanNFCandBLE.HasValue && _dailyClientSiteKpi.WandScanNFCandBLE.Value != 0)
+                {
+                    count += _dailyClientSiteKpi.WandScanNFCandBLE.Value;
+                }
+
+                return count;
+            }
+        }
 
         public int? IncidentCount { get { return _dailyClientSiteKpi.IncidentCount; } }
 
@@ -38,6 +54,21 @@ namespace CityWatch.Kpi.Models
         public int DailyKpiClientSiteId { get { return _dailyClientSiteKpi.Id; } }        
 
         public string NameOfDay { get { return _dailyClientSiteKpi.Date.DayOfWeek.ToString(); } }
+
+        // Modified to return null for days with 0 effective employee hours (e.g. off-days for weekend-only sites).
+        // This ensures downstream reports display 'N/A' rather than incorrectly defaulting to '0'.
+        public int? WandScanFq
+        {
+            get
+            {
+                if (_dailyClientSiteKpi.EffectiveEmployeeHours.HasValue &&
+                    _dailyClientSiteKpi.EffectiveEmployeeHours.Value == 0 &&
+                    Date <= DateTime.Today)
+                    return null;
+
+                return _dailyClientSiteKpi.WandScanFq;
+            }
+        }
 
         public decimal? ImageCountPerHr
         {
@@ -66,6 +97,29 @@ namespace CityWatch.Kpi.Models
             }
         }
 
+        //public decimal? WandScanCountPerHr
+        //{
+        //    get
+        //    {
+        //        if (_dailyClientSiteKpi.EffectiveEmployeeHours.HasValue &&
+        //            _dailyClientSiteKpi.EffectiveEmployeeHours.Value == 0 &&
+        //            Date <= DateTime.Today)
+        //            return null;
+
+        //        if (_dailyClientSiteKpi.EffectiveEmployeeHours.GetValueOrDefault() > 0)
+        //        {
+        //            var divideBy = _dailyClientSiteKpi.EffectiveEmployeeHours.Value;
+        //            if (_clientSiteKpiSetting != null &&
+        //                _clientSiteKpiSetting.ClientSiteDayKpiSettings.SingleOrDefault(z => z.WeekDay == Date.DayOfWeek)?.PatrolFrequency == 1)
+        //                divideBy = 1;
+
+        //            return Math.Round((decimal)_dailyClientSiteKpi.WandScanCount.GetValueOrDefault() / divideBy, 1);
+        //        }
+
+        //        return decimal.Zero;
+        //    }
+        //}
+
         public decimal? WandScanCountPerHr
         {
             get
@@ -79,15 +133,21 @@ namespace CityWatch.Kpi.Models
                 {
                     var divideBy = _dailyClientSiteKpi.EffectiveEmployeeHours.Value;
                     if (_clientSiteKpiSetting != null &&
-                        _clientSiteKpiSetting.ClientSiteDayKpiSettings.SingleOrDefault(z => z.WeekDay == Date.DayOfWeek)?.PatrolFrequency == 1)
+                        _clientSiteKpiSetting.ClientSiteDayKpiSettings
+                            .SingleOrDefault(z => z.WeekDay == Date.DayOfWeek)?.PatrolFrequency == 1)
                         divideBy = 1;
 
-                    return Math.Round((decimal)_dailyClientSiteKpi.WandScanCount.GetValueOrDefault() / divideBy, 1);
+                    //  Combine both WandScanCount and WandScanNFCandBLE
+                    var totalWandScanCount = _dailyClientSiteKpi.WandScanCount.GetValueOrDefault()
+                                           + _dailyClientSiteKpi.WandScanNFCandBLE.GetValueOrDefault();
+
+                    return Math.Round((decimal)totalWandScanCount / divideBy, 1);
                 }
 
                 return decimal.Zero;
             }
         }
+
 
         public int? EffortCounterImage { get; set; }
 
@@ -116,5 +176,7 @@ namespace CityWatch.Kpi.Models
                 return decimal.Zero;
             }
         }
+
+      
     }
 }

@@ -30,5 +30,15 @@ namespace CityWatch.Web.API
 
             return new JsonResult(true);
         }
+        [Route("[action]", Name = "UploadLogsSecondRun")]
+        public JsonResult UploadSecondRun()
+        {
+            if (_webHostEnvironment.IsDevelopment())
+                throw new NotSupportedException("Dropbox upload not supported in development environment");
+
+            _siteLogUploadService.ProcessDailyGuardLogsSecondRun();
+
+            return new JsonResult(true);
+        }
     }
 }

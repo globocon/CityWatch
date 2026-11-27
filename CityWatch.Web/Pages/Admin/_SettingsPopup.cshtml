@@ -11,25 +11,25 @@
             <div class="modal-body">
                 <form>
                     <input type="hidden" id="userId" value="">
-                    <div class="form-group row">
+                    <div class="form-group row m-0 mb-3">
                         <label for="userName" class="col-sm-4 col-form-label">User Name</label>
                         <div class="col-sm-8">
                             <input type="text" class="form-control" id="userName">
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="form-group row m-0 mb-3">
                         <label for="userPassword" class="col-sm-4 col-form-label">Password</label>
                         <div class="col-sm-8">
                             <input type="password" class="form-control" id="userPassword">
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="form-group row m-0 mb-3">
                         <label for="userConfirmPassword" class="col-sm-4 col-form-label">Confirm Password</label>
                         <div class="col-sm-8">
                             <input type="password" class="form-control" id="userConfirmPassword">
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="form-group row m-0 mb-3">
                         <div class="col-sm-8">
                             <span id="user-modal-validation" class="text-danger hide"></span>
                         </div>
@@ -59,10 +59,181 @@
                 <button type="button" id="expandAllUserAccess" class="btn btn-light">Expand All</button>
                 <button type="button" id="collapseAllUserAccess" class="btn btn-light">Collapse All</button>
                 <hr />
+                <div style="display: inline-flex;">
+                <label for="clienttsitesFilter" style="margin-top:7px">3rd Party</label>&nbsp;
+                <select class="form-control" id="sel_ThirdParty_type" style="width:172px;">
+                    </select>
+                </div>
                 <div id="ucaTreeView"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" id="btnSaveUserAccess" class="btn btn-outline-primary" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tool modal -->
+<div class="modal" tabindex="-1" role="dialog" id="tools-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add / Delete  Button</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group row m-0 mb-2">
+                        <label for="pageType" class="ml-3 col-form-label">Button</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="pageType">
+                        </div>
+                        <button type="button" id="btnSavePageType" class="btn btn-outline-primary">Save</button>
+                    </div>
+                    <table class="table gj-grid gj-grid-bootstrap gj-grid-bootstrap-4 table-bordered table-sm" id="tools_settings">
+                        <thead>
+                            <tr data-role="caption">
+                                <th data-field="title" width="80%" style="text-align: left;">
+                                    <div data-role="title">Button</div>
+                                </th>
+                                <th data-field="" width="20%" style="text-align: center;">
+                                    <i class="fa fa-cogs" aria-hidden="true"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2" class="p-0 b-0">
+                                    <ul id="itemList" class="list-group d-block w-auto">
+                                        @if (@Model.ClientDataProvider.GetSiteLinksPageTypes() != null)
+                                        {
+
+                                            foreach (var item in @Model.ClientDataProvider.GetSiteLinksPageTypes())
+                                            {
+                                                <li class="list-group-item" id="attach_@item.Id" data-index="@item.Id" style="border-left: 0;border-right: 0;">
+                                                    @item.PageTypeName
+                                                    <i class="fa fa-trash-o ml-2 text-danger btn-delete-tools-type" title="Delete" style="cursor: pointer;float:right"></i>
+
+                                                </li>
+
+                                            }
+                                        }
+                                    </ul>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+
+                    <div class="form-group row">
+                        <div class="col-sm-8">
+                            <span id="pageType-modal-validation" class="text-danger hide"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Category modal -->
+<div class="modal" tabindex="-1" role="dialog" id="category-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Category</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group row">
+                        <label for="feedBackType" class="ml-3 col-form-label">Category</label>
+                        <div class="col-sm-7">
+                            <input type="text" class="form-control" id="feedBackType">
+                        </div>
+                        <button type="button" id="btnSaveFeedBackType" class="btn btn-outline-primary">Save</button>
+                    </div>
+                    <table class="table gj-grid gj-grid-bootstrap gj-grid-bootstrap-4 table-bordered table-sm" id="feedbackType_settings">
+                        <thead>
+                            <tr data-role="caption">
+                                <th data-field="title" width="80%" style="text-align: left;">
+                                    <div data-role="title">Category</div>
+                                </th>
+                                <th data-field="" width="20%" style="text-align: center;">
+                                    <i class="fa fa-cogs" aria-hidden="true"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2" class="p-0 b-0">
+                                    <ul id="itemfeedbackList" class="list-group d-block w-auto">
+                                        @if (@Model.ConfigDataProiver.GetFeedbackTypes() != null)
+                                        {
+
+                                            foreach (var item in @Model.ConfigDataProiver.GetFeedbackTypes())
+                                            {
+                                                <li class="list-group-item" id="attach_@item.Id" data-index="@item.Id" style="border-left: 0;border-right: 0;">
+                                                    @item.Name
+                                                    <i class="fa fa-trash-o ml-2 text-danger btn-delete-feedback-type" title="Delete" style="cursor: pointer;float:right"></i>
+
+                                                </li>
+
+                                            }
+                                        }
+                                    </ul>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+
+                    <div class="form-group row">
+                        <div class="col-sm-8">
+                            <span id="feedBackType-modal-validation" class="text-danger hide"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Lock Site selection modal -->
+<div class="modal" tabindex="-1" role="dialog" id="user-client-access-modal-lock">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-user" aria-hidden="true"></i>HR Document Lock for Client Sites</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row m-0 mb-3">
+                    <label for="userName" class="col-sm-4 col-form-label">Lock HR Record </label>
+                    <div class="col-sm-8">
+                        <div class="custom-control custom-switch custom-control-inline pt-2" title="Lock HR Record">
+                            <input type="checkbox" class="custom-control-input" id="lockHRRcord" name="lockHRRcord">
+                            <label class="custom-control-label" for="lockHRRcord"></label>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="user-access-for-idlock" value="0" />
+                <button type="button" id="grantAllUserAccesslock" class="btn btn-light">Grant All</button>
+                <button type="button" id="revokeAllUserAccesslock" class="btn btn-light">Revoke All</button>
+                <button type="button" id="expandAllUserAccesslock" class="btn btn-light">Expand All</button>
+                <button type="button" id="collapseAllUserAccesslock" class="btn btn-light">Collapse All</button>
+                <hr />
+                <div id="ucaTreeViewlock"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSaveUserAccesslock" class="btn btn-outline-primary" data-dismiss="modal">Save</button>
             </div>
         </div>
     </div>

@@ -1,0 +1,84 @@
+@* RoosterHub > PCAR ROUTE: guard sign-in, then a read-only "PCAR Routes" view (P9 Issue 44 Step 2).
+   Same layout as Booking > PCAR > Manage PCAR Routes, but only the route can be chosen; nothing can be edited.
+   Behaviour: wwwroot/js/pcarrouteviewer.js; handlers: Roster.PcarRoutes.cs. *@
+
+<!----------------- PCAR ROUTE access (guard) -------------------->
+<div class="modal fade" id="mdlAuthPcarRouteAccess" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="PcarRouteAccessLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="PcarRouteAccessLabel">PCAR Route Access Authentication</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">Requires PCAR or ADMIN - ROSTER access.</p>
+                <form id="frmPcarRouteAccess" onsubmit="return false;">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="PcarRouteAuth_LicenseNo">Security License No.</label>
+                            <input class="form-control" id="PcarRouteAuth_LicenseNo" placeholder="Enter License No" autocomplete="off">
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label for="PcarRouteAuth_PIN">HR PIN</label>
+                            <input type="password" class="form-control" id="PcarRouteAuth_PIN" placeholder="Enter PIN" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col text-right">
+                            <button type="submit" class="btn btn-primary" id="btnPcarRouteAccessConfirm" title="Verify access">
+                                <i class="fa fa-key mr-2"></i>Verify
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div id="PcarRouteAccessValidationSummary" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- PCAR Routes (read only) -------------------->
+<div class="modal fade" id="mdlPcarRouteViewer" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="PcarRouteViewerLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header py-2 position-relative">
+                <h5 class="modal-title mb-0" id="PcarRouteViewerLabel"><i class="fa fa-calendar" aria-hidden="true"></i> PCAR Routes <small class="text-muted">(read only)</small></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="position:absolute; top:8px; right:10px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body p-2">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-1">
+                            <label class="small mb-0" for="pcarViewerRoute">PCAR Route Name</label>
+                            <select class="form-control form-control-sm" id="pcarViewerRoute"></select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-1">
+                            <label class="small mb-0" for="pcarViewerSmartWand">PCAR Smart Wand Allocation</label>
+                            <input type="text" class="form-control form-control-sm" id="pcarViewerSmartWand" readonly tabindex="-1" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-1">
+                    <div class="card-header bg-primary text-white py-1">
+                        <strong class="mb-0 small">PCAR Route Details</strong>
+                    </div>
+                    <div class="card-body p-2">
+                        <div id="pcarViewerSites" style="max-height: 560px; overflow-y: auto; overflow-x: hidden;">
+                            <p class="text-muted small mb-0">Select a PCAR Route Name to see its sites.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
