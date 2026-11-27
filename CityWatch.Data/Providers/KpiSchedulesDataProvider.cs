@@ -61,7 +61,7 @@ namespace CityWatch.Data.Providers
 
 
         //PcarRoute
-        public (bool success, string message, PcarRoute route) SavePcarrouteMaster(   int? routeId, string routeName, int smartwandId);
+        public (bool success, string message, PcarRoute route) SavePcarrouteMaster(   int? routeId, string routeName, int smartwandId, int pcarId);
         public bool SavePcarrouteDetails(PcarRouteSaveViewModel model);
         public List<PcarRouteGridDto> GetPCARProfilesAll();
         public bool DeletePcarrouteProfile(int routeId);
@@ -461,7 +461,7 @@ namespace CityWatch.Data.Providers
         }
 
         public (bool success, string message, PcarRoute route) SavePcarrouteMaster(
-     int? routeId, string routeName, int smartwandId)
+     int? routeId, string routeName, int smartwandId, int pcarId)
         {
             // Normalize name for comparison
             string normalizedName = routeName.Trim().ToLower();
@@ -498,6 +498,7 @@ namespace CityWatch.Data.Providers
 
                 route.Pcarroutename = routeName;
                 route.Smartwandallocation = smartwandId;
+                route.PcarId = pcarId;
 
                 _context.PcarRoute.Update(route);
             }
@@ -507,7 +508,8 @@ namespace CityWatch.Data.Providers
                 route = new PcarRoute
                 {
                     Pcarroutename = routeName,
-                    Smartwandallocation = smartwandId
+                    Smartwandallocation = smartwandId,
+                    PcarId = pcarId
                 };
 
                 _context.PcarRoute.Add(route);
@@ -927,7 +929,7 @@ namespace CityWatch.Data.Providers
          Pcarroutename = r.Pcarroutename,
          Smartwandallocation = r.Smartwandallocation,
          SmartWandId = r.SmartWand.SmartWandId,
-         PatrolCarId = r.SmartWand.PatrolCarId,
+         PatrolCarId = r.PcarId,
          PhoneNumber = Regex.Replace(r.SmartWand.PhoneNumber, pattern, "").Trim() ,
          Sites = string.Join(", ", r.RouteDetails.Select(d => d.ClientSite.Name))
      })
@@ -1116,7 +1118,7 @@ namespace CityWatch.Data.Providers
                    Pcarroutename = r.Pcarroutename,
                    Smartwandallocation = r.Smartwandallocation,
                    SmartWandId = r.SmartWand.SmartWandId,
-                   PatrolCarId = r.SmartWand.PatrolCarId,
+                   PatrolCarId = r.PcarId,
                    PhoneNumber = Regex.Replace(r.SmartWand.PhoneNumber, pattern, "").Trim(),
                    Sites = string.Join(", ", r.RouteDetails.Select(d => d.ClientSite.Name))
                })
@@ -1135,7 +1137,7 @@ namespace CityWatch.Data.Providers
         public string SmartWandId { get; set; }
         public string PhoneNumber { get; set; }
         public string Sites { get; set; }
-        /// <summary>Patrol car of the route's smart wand (ClientSiteSmartWands.PatrolCarId = IncidentReportPositions.Id).</summary>
+        /// <summary>The route's patrol car, PcarRoute.PcarId (= IncidentReportPositions.Id).</summary>
         public int? PatrolCarId { get; set; }
         /// <summary>Patrol car (position) name; filled in by the caller, not by the query.</summary>
         public string PatrolCarName { get; set; }

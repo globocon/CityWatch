@@ -16,31 +16,23 @@ namespace CityWatch.Web.Pages.roster
     /// </summary>
     public partial class BookingModel
     {
-        public List<PcarSmartWandOption> PcarSmartWandOptions { get; set; } = new();
+        /// <summary>Modal's Smart Wand dropdown: every available smart wand, whichever PCAR is chosen.</summary>
+        public List<SelectListItem> PcarSmartWandOptions { get; set; } = new();
         public List<SelectListItem> PcarClientTypeOptions { get; set; } = new();
         /// <summary>
         /// The PCAR dropdowns (grid filter and modal): Admin/Settings > C4i Fields, module IR, field type
         /// Position, with "Patrol Cars ?" ticked - i.e. IncidentReportPositions where IsPatrolCar.
+        /// The modal's choice is saved as PcarRoute.PcarId.
         /// </summary>
         public List<SelectListItem> PcarPatrolCarOptions { get; set; } = new();
-
-        /// <summary>A smart wand of the modal's dropdown, with the patrol car it belongs to (ClientSiteSmartWands.PatrolCarId).</summary>
-        public class PcarSmartWandOption
-        {
-            public int Id { get; set; }
-            public string Text { get; set; }
-            public int? PatrolCarId { get; set; }
-        }
 
         private void PopulatePcarDropdowns()
         {
             // Smart wand text is "<SmartWandId> <phone>", with any "[R<n>]" marker stripped from the phone (as in Kpi).
-            PcarSmartWandOptions = _configDataProvider.GetSmartWandList().Select(sw => new PcarSmartWandOption
-            {
-                Id = sw.Id,
-                Text = sw.SmartWandId + " " + Regex.Replace(sw.PhoneNumber ?? "", @"\[R\d+\]", "").Trim(),
-                PatrolCarId = sw.PatrolCarId
-            }).ToList();
+            PcarSmartWandOptions = new List<SelectListItem> { new SelectListItem("Select", "", true) };
+            PcarSmartWandOptions.AddRange(_configDataProvider.GetSmartWandList().Select(sw => new SelectListItem(
+                sw.SmartWandId + " " + Regex.Replace(sw.PhoneNumber ?? "", @"\[R\d+\]", "").Trim(),
+                sw.Id.ToString())));
 
             PcarPatrolCarOptions = GetPcarPatrolCars()
                 .Select(p => new SelectListItem(p.Name, p.Id.ToString()))
@@ -124,7 +116,9 @@ namespace CityWatch.Web.Pages.roster
             return new JsonResult(sites);
         }
 
-        public JsonResult OnPostPcarCreateProfile([FromForm] int routeId, [FromForm] string pcarroutename, [FromForm] int smartwandallocation)
+        /// <summary>Create / update a profile: route name, PCAR (saved as PcarRoute.PcarId) and smart wand.</summary>
+        public JsonResult OnPostPcarCreateProfile([FromForm] int routeId, [FromForm] string pcarroutename,
+            [FromForm] int pcarId, [FromForm] int smartwandallocation)
         {
             if (IsPcarAccessDenied)
                 return PcarAccessDeniedResult();
@@ -132,13 +126,20 @@ namespace CityWatch.Web.Pages.roster
             if (string.IsNullOrWhiteSpace(pcarroutename))
                 return new JsonResult(new { success = false, message = "Route name is required." });
 
+            if (pcarId == 0)
+                return new JsonResult(new { success = false, message = "Please select a PCAR." });
+
+            if (!_context.IncidentReportPositions.Any(p => p.Id == pcarId && p.IsPatrolCar))
+                return new JsonResult(new { success = false, message = "The selected PCAR is no longer a patrol car. Please select another." });
+
             if (smartwandallocation == 0)
                 return new JsonResult(new { success = false, message = "Please select at least one Smart Wand Allocation." });
 
             var result = _kpiSchedulesDataProvider.SavePcarrouteMaster(
                 routeId == 0 ? (int?)null : routeId,
                 pcarroutename,
-                smartwandallocation);
+                smartwandallocation,
+                pcarId);
 
             if (!result.success)
                 return new JsonResult(new { success = false, message = result.message });
