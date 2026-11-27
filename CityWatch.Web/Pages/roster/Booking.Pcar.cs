@@ -29,10 +29,14 @@ namespace CityWatch.Web.Pages.roster
         private void PopulatePcarDropdowns()
         {
             // Smart wand text is "<SmartWandId> <phone>", with any "[R<n>]" marker stripped from the phone (as in Kpi).
+            // Both lists sorted by their text (smart wand by SmartWandId, PCAR by name), numbers compared as numbers.
             PcarSmartWandOptions = new List<SelectListItem> { new SelectListItem("Select", "", true) };
-            PcarSmartWandOptions.AddRange(_configDataProvider.GetSmartWandList().Select(sw => new SelectListItem(
-                sw.SmartWandId + " " + Regex.Replace(sw.PhoneNumber ?? "", @"\[R\d+\]", "").Trim(),
-                sw.Id.ToString())));
+            PcarSmartWandOptions.AddRange(_configDataProvider.GetSmartWandList()
+                .OrderBy(sw => PcarNaturalSortKey(sw.SmartWandId))
+                .ThenBy(sw => sw.Id)
+                .Select(sw => new SelectListItem(
+                    sw.SmartWandId + " " + Regex.Replace(sw.PhoneNumber ?? "", @"\[R\d+\]", "").Trim(),
+                    sw.Id.ToString())));
 
             PcarPatrolCarOptions = GetPcarPatrolCars()
                 .Select(p => new SelectListItem(p.Name, p.Id.ToString()))
@@ -44,8 +48,17 @@ namespace CityWatch.Web.Pages.roster
         private List<IncidentReportPosition> GetPcarPatrolCars() =>
             _context.IncidentReportPositions
                 .Where(p => p.IsPatrolCar)
-                .OrderBy(p => p.Name)
+                .AsEnumerable()
+                .OrderBy(p => PcarNaturalSortKey(p.Name))
+                .ThenBy(p => p.Id)
                 .ToList();
+
+        /// <summary>
+        /// Sort key that orders the numbers inside a name by value, not character by character:
+        /// "M2" before "M10", "R7" before "R10". Case-insensitive.
+        /// </summary>
+        private static string PcarNaturalSortKey(string text) =>
+            Regex.Replace((text ?? "").Trim().ToUpperInvariant(), @"\d+", m => m.Value.PadLeft(10, '0'));
 
         /// <summary>
         /// The user whose site access limits what the PCAR tab lists: a "User" login sees only its own sites,
